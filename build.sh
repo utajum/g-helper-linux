@@ -74,18 +74,14 @@ rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR"
 
 cp "$PUBLISH_DIR/ghelper-linux" "$DIST_DIR/"
-cp "$PUBLISH_DIR"/lib*.so "$DIST_DIR/" 2>/dev/null || true
 chmod +x "$DIST_DIR/ghelper-linux"
 
 # Summary
 BINARY_SIZE=$(du -sh "$DIST_DIR/ghelper-linux" | cut -f1)
-TOTAL_SIZE=$(du -sh "$DIST_DIR" | cut -f1)
-FILE_COUNT=$(ls -1 "$DIST_DIR" | wc -l)
 
 echo ""
 echo "=== Build Complete ==="
-echo "  Binary:  $BINARY_SIZE  (ghelper-linux)"
-echo "  Total:   $TOTAL_SIZE  ($FILE_COUNT files)"
+echo "  Binary:  $BINARY_SIZE  (ghelper-linux, single file — native libs embedded)"
 echo "  Output:  $DIST_DIR/"
 echo ""
 echo "Run it:"

@@ -1,6 +1,6 @@
 # G-Helper for Linux
 
-A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the lightweight ASUS laptop control utility. Built with .NET 8 Native AOT + Avalonia UI, it produces a single ~28 MB binary that runs on any x64 Linux desktop with zero runtime dependencies.
+A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the lightweight ASUS laptop control utility. Built with .NET 8 Native AOT + Avalonia UI, it produces a single ~43 MB binary that runs on any x64 Linux desktop with zero runtime dependencies.
 
 ## Features
 
@@ -103,7 +103,6 @@ Both `install.sh` and `install-local.sh` set up the same things:
 | What | Where |
 |------|-------|
 | Binary | `/usr/local/bin/ghelper-linux` |
-| Shared libraries | `/usr/local/lib/` (libHarfBuzzSharp, libSkiaSharp) |
 | udev rules | `/etc/udev/rules.d/90-ghelper.rules` |
 | Desktop entry | `/usr/share/applications/ghelper-linux.desktop` |
 | Autostart | `~/.config/autostart/ghelper-linux.desktop` |
