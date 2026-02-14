@@ -20,7 +20,9 @@ namespace GHelper.Linux.Platform.Linux;
 /// </summary>
 public class LinuxAsusWmi : IAsusWmi
 {
-    private string? _asusHwmonDir;
+    private string? _asusFanHwmonDir;  // Fan curve control hwmon
+    private string? _asusBaseHwmonDir; // Base ASUS hwmon (temps, etc.)
+    private string? _cpuTempHwmonDir;  // CPU temperature hwmon (coretemp/k10temp)
     private string? _batteryDir;
     private Thread? _eventThread;
     private volatile bool _eventListening;
@@ -29,13 +31,33 @@ public class LinuxAsusWmi : IAsusWmi
 
     public LinuxAsusWmi()
     {
-        _asusHwmonDir = SysfsHelper.FindHwmonByName("asus_nb_wmi");
+        // Discover hwmon devices — names vary by kernel version:
+        //   Kernel <6.x:  "asus_nb_wmi" (single device for fans + temps)
+        //   Kernel 6.x+:  "asus_custom_fan_curve" (fans) + "asus" (base) + "coretemp"/"k10temp" (CPU)
+        _asusFanHwmonDir = SysfsHelper.FindHwmonByName("asus_nb_wmi")
+                        ?? SysfsHelper.FindHwmonByName("asus_custom_fan_curve");
+
+        _asusBaseHwmonDir = SysfsHelper.FindHwmonByName("asus")
+                         ?? _asusFanHwmonDir;  // Fallback to fan hwmon if no separate base
+
+        _cpuTempHwmonDir = SysfsHelper.FindHwmonByName("coretemp")   // Intel
+                        ?? SysfsHelper.FindHwmonByName("k10temp");    // AMD
+
         _batteryDir = SysfsHelper.FindBattery();
 
-        if (_asusHwmonDir != null)
-            Helpers.Logger.WriteLine($"ASUS hwmon found: {_asusHwmonDir}");
+        // Log discovery results
+        SysfsHelper.LogAllHwmon();
+
+        if (_asusFanHwmonDir != null)
+            Helpers.Logger.WriteLine($"ASUS fan hwmon: {_asusFanHwmonDir}");
         else
-            Helpers.Logger.WriteLine("WARNING: asus_nb_wmi hwmon not found. Fan/thermal features unavailable.");
+            Helpers.Logger.WriteLine("WARNING: ASUS fan hwmon not found. Fan curve features unavailable.");
+
+        if (_asusBaseHwmonDir != null)
+            Helpers.Logger.WriteLine($"ASUS base hwmon: {_asusBaseHwmonDir}");
+
+        if (_cpuTempHwmonDir != null)
+            Helpers.Logger.WriteLine($"CPU temp hwmon: {_cpuTempHwmonDir}");
 
         if (_batteryDir != null)
             Helpers.Logger.WriteLine($"Battery found: {_batteryDir}");
@@ -112,15 +134,17 @@ public class LinuxAsusWmi : IAsusWmi
 
     public int GetFanRpm(int fanIndex)
     {
-        if (_asusHwmonDir == null) return -1;
+        // Try fan curve hwmon first, then base hwmon
+        var hwmon = _asusFanHwmonDir ?? _asusBaseHwmonDir;
+        if (hwmon == null) return -1;
         // Linux fan_input is in RPM, G-Helper expects RPM
         return SysfsHelper.ReadInt(
-            Path.Combine(_asusHwmonDir, $"fan{fanIndex + 1}_input"), -1);
+            Path.Combine(hwmon, $"fan{fanIndex + 1}_input"), -1);
     }
 
     public byte[]? GetFanCurve(int fanIndex)
     {
-        if (_asusHwmonDir == null) return null;
+        if (_asusFanHwmonDir == null) return null;
 
         var curve = new byte[16];
         int pwmIndex = fanIndex + 1;
@@ -129,13 +153,13 @@ public class LinuxAsusWmi : IAsusWmi
         {
             // Temperature in millidegrees → degrees
             int tempMilli = SysfsHelper.ReadInt(
-                Path.Combine(_asusHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"), -1);
+                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"), -1);
             if (tempMilli < 0) return null;
             curve[i] = (byte)(tempMilli / 1000);
 
             // PWM 0-255 → percentage 0-100
             int pwm = SysfsHelper.ReadInt(
-                Path.Combine(_asusHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"), -1);
+                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"), -1);
             if (pwm < 0) return null;
             curve[8 + i] = (byte)(pwm * 100 / 255);
         }
@@ -145,23 +169,23 @@ public class LinuxAsusWmi : IAsusWmi
 
     public void SetFanCurve(int fanIndex, byte[] curve)
     {
-        if (_asusHwmonDir == null || curve.Length != 16) return;
+        if (_asusFanHwmonDir == null || curve.Length != 16) return;
 
         int pwmIndex = fanIndex + 1;
 
         // First set pwm_enable to 2 (automatic/curve mode)
-        SysfsHelper.WriteInt(Path.Combine(_asusHwmonDir, $"pwm{pwmIndex}_enable"), 2);
+        SysfsHelper.WriteInt(Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_enable"), 2);
 
         for (int i = 0; i < 8; i++)
         {
             // Degrees → millidegrees
             SysfsHelper.WriteInt(
-                Path.Combine(_asusHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"),
+                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"),
                 curve[i] * 1000);
 
             // Percentage 0-100 → PWM 0-255
             SysfsHelper.WriteInt(
-                Path.Combine(_asusHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"),
+                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"),
                 curve[8 + i] * 255 / 100);
         }
     }
@@ -274,10 +298,17 @@ public class LinuxAsusWmi : IAsusWmi
 
     private int GetCpuTemp()
     {
-        // Try asus hwmon first
-        if (_asusHwmonDir != null)
+        // Try dedicated CPU temp hwmon (coretemp/k10temp) — package temp
+        if (_cpuTempHwmonDir != null)
         {
-            int temp = SysfsHelper.ReadInt(Path.Combine(_asusHwmonDir, "temp1_input"), -1);
+            int temp = SysfsHelper.ReadInt(Path.Combine(_cpuTempHwmonDir, "temp1_input"), -1);
+            if (temp > 0) return temp / 1000;
+        }
+
+        // Try ASUS base hwmon
+        if (_asusBaseHwmonDir != null)
+        {
+            int temp = SysfsHelper.ReadInt(Path.Combine(_asusBaseHwmonDir, "temp1_input"), -1);
             if (temp > 0) return temp / 1000;
         }
 
@@ -305,7 +336,7 @@ public class LinuxAsusWmi : IAsusWmi
 
     private int GetGpuTemp()
     {
-        // Try NVIDIA hwmon
+        // Try NVIDIA hwmon (cached lookup, no repeated filesystem scan)
         var nvidiaHwmon = SysfsHelper.FindHwmonByName("nvidia");
         if (nvidiaHwmon != null)
         {

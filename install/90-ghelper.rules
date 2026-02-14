@@ -80,6 +80,18 @@ ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="intel_pstate", \
 ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="acpi_cpufreq", \
   RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/cpufreq/boost ] && chmod 0666 /sys/devices/system/cpu/cpufreq/boost'"
 
+# ── ACPI platform profile ──
+# Allow non-root to set platform profile (balanced/performance/low-power)
+ACTION=="add|change", SUBSYSTEM=="acpi", \
+  RUN+="/bin/sh -c '[ -f /sys/firmware/acpi/platform_profile ] && chmod 0666 /sys/firmware/acpi/platform_profile'"
+
+# ── Fan curves (asus_custom_fan_curve hwmon, newer kernels) ──
+SUBSYSTEM=="hwmon", ATTR{name}=="asus_custom_fan_curve", \
+  RUN+="/bin/sh -c 'for f in /sys/class/hwmon/%k/pwm*_auto_point*; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
+
+SUBSYSTEM=="hwmon", ATTR{name}=="asus_custom_fan_curve", \
+  RUN+="/bin/sh -c 'for f in /sys/class/hwmon/%k/pwm*_enable; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
+
 # ── ASUS WMI input device (hotkeys) ──
 # Grant read access to the event device so non-root can receive Fn-key events
 SUBSYSTEM=="input", ATTRS{name}=="Asus WMI hotkeys", TAG+="uaccess"

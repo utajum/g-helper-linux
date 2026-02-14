@@ -83,9 +83,23 @@ public static class SysfsHelper
     /// <summary>
     /// Find the hwmon device for a given driver name (e.g., "asus_nb_wmi", "amdgpu", "nvidia").
     /// Returns the hwmon directory path or null.
-    /// Tries exact match first, then normalized match (underscores ↔ dashes), then partial match.
+    /// Tries exact match first, then normalized match (underscores ↔ dashes).
+    /// Results are cached to avoid repeated filesystem scans during sensor polling.
     /// </summary>
+    private static readonly Dictionary<string, string?> _hwmonCache = new();
+
     public static string? FindHwmonByName(string driverName)
+    {
+        // Return cached result (including null = "not found")
+        if (_hwmonCache.TryGetValue(driverName, out var cached))
+            return cached;
+
+        string? result = FindHwmonByNameUncached(driverName);
+        _hwmonCache[driverName] = result;
+        return result;
+    }
+
+    private static string? FindHwmonByNameUncached(string driverName)
     {
         try
         {
@@ -94,8 +108,6 @@ public static class SysfsHelper
             // Normalize: asus_nb_wmi ↔ asus-nb-wmi
             string normalized = driverName.Replace('_', '-');
             string withUnderscores = driverName.Replace('-', '_');
-
-            string? partialMatch = null;
 
             foreach (var hwmonDir in Directory.GetDirectories(Hwmon))
             {
@@ -111,29 +123,28 @@ public static class SysfsHelper
                 if (name.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
                     name.Equals(withUnderscores, StringComparison.OrdinalIgnoreCase))
                     return hwmonDir;
-
-                // Partial match (e.g., "asus" matches "asus_wmi_sensors")
-                if (partialMatch == null && name.Contains(driverName.Split('_')[0], StringComparison.OrdinalIgnoreCase))
-                    partialMatch = hwmonDir;
             }
-
-            // Log all hwmon names for debugging if exact match failed
-            if (partialMatch == null)
-            {
-                foreach (var hwmonDir in Directory.GetDirectories(Hwmon))
-                {
-                    var name = ReadAttribute(Path.Combine(hwmonDir, "name"));
-                    Helpers.Logger.WriteLine($"  hwmon: {Path.GetFileName(hwmonDir)} = {name ?? "(no name)"}");
-                }
-            }
-
-            return partialMatch;
         }
         catch (Exception ex)
         {
             Helpers.Logger.WriteLine($"SysfsHelper.FindHwmonByName({driverName}) failed", ex);
         }
         return null;
+    }
+
+    /// <summary>Log all hwmon devices once at startup for diagnostics.</summary>
+    public static void LogAllHwmon()
+    {
+        try
+        {
+            if (!Directory.Exists(Hwmon)) return;
+            foreach (var hwmonDir in Directory.GetDirectories(Hwmon))
+            {
+                var name = ReadAttribute(Path.Combine(hwmonDir, "name"));
+                Helpers.Logger.WriteLine($"  hwmon: {Path.GetFileName(hwmonDir)} = {name ?? "(no name)"}");
+            }
+        }
+        catch { }
     }
 
     /// <summary>

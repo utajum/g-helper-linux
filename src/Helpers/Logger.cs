@@ -3,6 +3,7 @@ namespace GHelper.Linux.Helpers;
 /// <summary>
 /// Simple file logger (ported from G-Helper's Logger.cs).
 /// Logs to ~/.config/ghelper-linux/log.txt
+/// Console output only when --verbose flag is passed.
 /// </summary>
 public static class Logger
 {
@@ -12,6 +13,9 @@ public static class Logger
 
     private static readonly string LogFile = Path.Combine(LogDir, "log.txt");
     private static readonly object _lock = new();
+
+    /// <summary>When true, also write log lines to stdout.</summary>
+    public static bool Verbose { get; set; }
 
     public static void WriteLine(string message)
     {
@@ -23,7 +27,8 @@ public static class Logger
             {
                 File.AppendAllText(LogFile, line + Environment.NewLine);
             }
-            Console.WriteLine(line);
+            if (Verbose)
+                Console.WriteLine(line);
         }
         catch
         {
