@@ -45,12 +45,15 @@ public class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Tray-primary app — no main window on start
+            // Keep running when window is closed (tray icon keeps app alive)
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             MainWindowInstance = new MainWindow();
 
-            // Set up tray icon
+            // Show main window on startup (like Windows G-Helper)
+            desktop.MainWindow = MainWindowInstance;
+
+            // Set up tray icon (secondary access method)
             SetupTrayIcon(desktop);
 
             // Start hotkey listener

@@ -122,10 +122,10 @@ public partial class MainWindow : Window
 
     private void SetPerformanceMode(int mode)
     {
-        App.Wmi?.SetThrottleThermalPolicy(mode);
+        App.Mode?.SetPerformanceMode(mode);
         _currentPerfMode = mode;
         RefreshPerformanceMode();
-        Helpers.Logger.WriteLine($"Performance mode → {mode}");
+        App.UpdateTrayIcon();
     }
 
     private void ButtonSilent_Click(object? sender, RoutedEventArgs e) => SetPerformanceMode(2);
