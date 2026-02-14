@@ -42,15 +42,15 @@ lsmod | grep asus
 
 ## Installation
 
-### Download and install
-
-One command — downloads the latest release and installs everything:
+### One-liner install
 
 ```bash
-git clone https://github.com/utajum/g-helper-linux.git
-cd g-helper-linux
-sudo ./install/install.sh
+curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/install.sh | sudo bash
 ```
+
+Downloads the latest release and installs the binary, udev rules, desktop entry, and autostart.
+
+### Manual download
 
 Or just grab the binary and run it directly:
 
@@ -140,8 +140,6 @@ See `install/90-ghelper.rules` for the full list of sysfs permissions.
 
 Config is stored in `~/.config/ghelper-linux/config.json`. It uses the same JSON key format as Windows G-Helper, so fan curves and mode settings are compatible.
 
-Log output goes to `~/.config/ghelper-linux/log.txt`.
-
 ## Project Structure
 
 ```
@@ -157,7 +155,7 @@ g-helper-linux/
     App.axaml / App.axaml.cs              # Avalonia app + tray icon
     GHelper.Linux.csproj                  # Project file (AOT config)
     Helpers/
-      Logger.cs                           # File logger
+      Logger.cs                           # Console logger
       AppConfig.cs                        # Configuration (JSON, AOT-safe)
     Mode/
       Modes.cs                            # Performance mode definitions

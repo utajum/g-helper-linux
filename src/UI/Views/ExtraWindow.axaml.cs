@@ -189,14 +189,7 @@ public partial class ExtraWindow : Window
 
     private void ButtonOpenLog_Click(object? sender, RoutedEventArgs e)
     {
-        var logPath = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".config", "ghelper-linux", "log.txt");
-
-        if (System.IO.File.Exists(logPath))
-        {
-            // Open with system text editor
-            Platform.Linux.SysfsHelper.RunCommand("xdg-open", logPath);
-        }
+        // No log file — logging goes to stdout only.
+        // Users can run from terminal to see output.
     }
 }
