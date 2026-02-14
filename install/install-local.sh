@@ -42,11 +42,12 @@ for lib in "$DIST_DIR"/lib*.so; do
 done
 ldconfig 2>/dev/null || true
 
-# 2. Install udev rules
+# 2. Install udev rules and reload
 echo "[2/6] Installing udev rules..."
 install -m 644 "$SCRIPT_DIR/90-ghelper.rules" /etc/udev/rules.d/90-ghelper.rules
-udevadm control --reload-rules 2>/dev/null || true
-udevadm trigger 2>/dev/null || true
+udevadm control --reload-rules
+udevadm trigger
+echo "       udev rules reloaded and triggered"
 
 # 3. Install desktop entry
 echo "[3/6] Installing desktop entry..."
@@ -84,10 +85,8 @@ echo "=== Installation Complete ==="
 echo ""
 echo "  Binary:    /usr/local/bin/ghelper-linux"
 echo "  Libraries: /usr/local/lib/lib*.so"
-echo "  udev:      /etc/udev/rules.d/90-ghelper.rules"
+echo "  udev:      /etc/udev/rules.d/90-ghelper.rules  (reloaded)"
 echo "  Desktop:   /usr/share/applications/ghelper-linux.desktop"
 echo "  Autostart: ~/.config/autostart/ghelper-linux.desktop"
-echo ""
-echo "Reboot or run: sudo udevadm control --reload-rules && sudo udevadm trigger"
 echo ""
 echo "Launch: ghelper-linux"

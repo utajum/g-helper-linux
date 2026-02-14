@@ -47,11 +47,12 @@ done
 echo "[3/6] Installing binary to /usr/local/bin/..."
 install -m 755 "$WORK_DIR/ghelper-linux" /usr/local/bin/ghelper-linux
 
-# Install udev rules
+# Install udev rules and reload
 echo "[4/6] Installing udev rules..."
 install -m 644 "$WORK_DIR/90-ghelper.rules" /etc/udev/rules.d/90-ghelper.rules
-udevadm control --reload-rules 2>/dev/null || true
-udevadm trigger 2>/dev/null || true
+udevadm control --reload-rules
+udevadm trigger
+echo "       udev rules reloaded and triggered"
 
 # Install desktop entry
 echo "[5/6] Installing desktop entry..."
@@ -71,10 +72,8 @@ echo ""
 echo "=== Installation Complete ==="
 echo ""
 echo "  Binary:    /usr/local/bin/ghelper-linux"
-echo "  udev:      /etc/udev/rules.d/90-ghelper.rules"
+echo "  udev:      /etc/udev/rules.d/90-ghelper.rules  (reloaded)"
 echo "  Desktop:   /usr/share/applications/ghelper-linux.desktop"
 echo "  Autostart: ~/.config/autostart/ghelper-linux.desktop"
-echo ""
-echo "Reboot or run: sudo udevadm control --reload-rules && sudo udevadm trigger"
 echo ""
 echo "Launch: ghelper-linux"
