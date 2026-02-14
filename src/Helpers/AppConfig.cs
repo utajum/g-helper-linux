@@ -289,9 +289,44 @@ public static class AppConfig
     public static bool IsAlly() => ContainsModel("RC7");
 
     public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("UM560") || ContainsModel("GZ302");
-    public static bool IsSingleColor() => ContainsModel("GA401") || ContainsModel("FX517Z") || ContainsModel("FX516P") || ContainsModel("X13") || Is("no_rgb");
+    public static bool IsSingleColor() => ContainsModel("GA401") || ContainsModel("FX517Z") || ContainsModel("FX516P") || ContainsModel("X13") || ContainsModel("FA617N") || ContainsModel("FA617X") || NoAura() || Is("no_rgb");
     public static bool IsNoOverdrive() => Is("no_overdrive");
     public static bool IsOLED() => ContainsModel("OLED") || ContainsModel("M7600") || ContainsModel("UX64") || ContainsModel("UX34");
+
+    // ── RGB/AURA model detection ──
+    public static bool IsVivoZenPro() => ContainsModel("Vivobook") || ContainsModel("Zenbook") || ContainsModel("ProArt") || ContainsModel("EXPERTBOOK") || ContainsModel(" V16");
+    public static bool NoAura() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("GA502IU") || ContainsModel("HN7306");
+    public static bool IsAdvancedRGB() => IsStrix() || ContainsModel("GX650");
+    public static bool IsBacklightZones() => IsStrix();
+
+    public static bool IsStrixLimitedRGB() =>
+        ContainsModel("G614PM") || ContainsModel("G614PP") || ContainsModel("G614PR") || ContainsModel("G512LI") ||
+        ContainsModel("G513R") || ContainsModel("G713QM") || ContainsModel("G713PV") || ContainsModel("G513IE") ||
+        ContainsModel("G713RC") || ContainsModel("G713IC") || ContainsModel("G713PU") || ContainsModel("G513QM") ||
+        ContainsModel("G513QC") || ContainsModel("G531G") || ContainsModel("G615JMR") || ContainsModel("G615LM") ||
+        ContainsModel("G815LR");
+
+    public static bool IsPossible4ZoneRGB() =>
+        ContainsModel("G614JI_") || ContainsModel("G614JV_") || ContainsModel("G614JZ") ||
+        ContainsModel("G614JU") || IsStrixLimitedRGB();
+
+    public static bool Is4ZoneRGB() => IsPossible4ZoneRGB() && !Is("per_key_rgb");
+
+    public static bool IsNoDirectRGB() =>
+        ContainsModel("GA503") || ContainsModel("G533Q") || ContainsModel("GU502") ||
+        ContainsModel("GU603") || IsSlash() || IsAlly();
+
+    public static bool IsSlash() => ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605");
+
+    public static bool IsInputBacklight() => ContainsModel("GA503") || IsSlash() || IsVivoZenPro();
+
+    public static bool IsHardwareFnLock() => IsVivoZenPro() || ContainsModel("GZ302EA");
+
+    public static bool IsInvertedFNLock() => ContainsModel("M140") || ContainsModel("S550") || ContainsModel("P540") || IsTUF();
+
+    public static bool IsStrixNumpad() => ContainsModel("G713R");
+
+    public static bool IsOnBattery(string name) => Get(name) == 2;
 
     public static bool IsChargeLimit6080() =>
         ContainsModel("H760") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") ||

@@ -3,7 +3,7 @@
         x:Class="GHelper.Linux.UI.Views.MainWindow"
         Title="G-Helper"
         Width="462"
-        Height="700"
+        Height="860"
         MinWidth="380"
         MinHeight="500"
         WindowStartupLocation="CenterScreen"
@@ -188,20 +188,40 @@
                         </Grid>
                     </Border>
 
+                    <!-- Backlight + FnLock row -->
                     <UniformGrid Rows="1" Margin="0,4">
                         <Button x:Name="buttonKeyboard" Classes="ghelper"
                                 Margin="0,0,4,0" Click="ButtonKeyboard_Click">
                             <TextBlock Text="Backlight" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                        <Button x:Name="buttonKeyboardColor" Classes="ghelper"
-                                Margin="2,0" Click="ButtonKeyboardColor_Click">
-                            <TextBlock Text="Color" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                         <Button x:Name="buttonFnLock" Classes="ghelper"
                                 Margin="4,0,0,0" Click="ButtonFnLock_Click">
                             <TextBlock Text="Fn Lock" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                     </UniformGrid>
+
+                    <!-- AURA Mode + Speed + Color row -->
+                    <Grid ColumnDefinitions="*,80,44,44" Margin="0,4" x:Name="panelAura">
+                        <ComboBox x:Name="comboAuraMode" Grid.Column="0"
+                                  Height="32" Margin="0,0,4,0"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="ComboAuraMode_Changed" />
+                        <ComboBox x:Name="comboAuraSpeed" Grid.Column="1"
+                                  Height="32" Margin="2,0"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="ComboAuraSpeed_Changed" />
+                        <Button x:Name="buttonColor1" Grid.Column="2"
+                                Height="32" Width="36" Margin="2,0"
+                                Click="ButtonColor1_Click"
+                                ToolTip.Tip="Primary color"
+                                Background="#FFFFFF" />
+                        <Button x:Name="buttonColor2" Grid.Column="3"
+                                Height="32" Width="36" Margin="2,0,0,0"
+                                Click="ButtonColor2_Click"
+                                ToolTip.Tip="Secondary color"
+                                Background="#000000"
+                                IsVisible="False" />
+                    </Grid>
                 </StackPanel>
             </Border>
 

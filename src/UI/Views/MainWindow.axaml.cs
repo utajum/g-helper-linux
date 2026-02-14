@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
+using GHelper.Linux.USB;
 
 namespace GHelper.Linux.UI.Views;
 
@@ -284,7 +285,10 @@ public partial class MainWindow : Window
         Helpers.Logger.WriteLine($"MiniLED mode → {next}");
     }
 
-    // ── Keyboard ──
+    // ── Keyboard / AURA ──
+
+    private bool _auraInitialized = false;
+    private bool _suppressAuraEvents = false;
 
     private void RefreshKeyboard()
     {
@@ -304,6 +308,242 @@ public partial class MainWindow : Window
             };
             labelBacklight.Text = $"Backlight: {level}";
         }
+
+        // Init FnLock button state
+        UpdateFnLockButton(Helpers.AppConfig.Is("fn_lock"));
+
+        InitAura();
+    }
+
+    private void InitAura()
+    {
+        if (_auraInitialized) return;
+        _auraInitialized = true;
+
+        bool hasAura = Aura.IsAvailable();
+        panelAura.IsVisible = hasAura;
+
+        if (!hasAura)
+        {
+            Helpers.Logger.WriteLine("No AURA HID device found — RGB controls hidden");
+            return;
+        }
+
+        Helpers.Logger.WriteLine("AURA HID device found — initializing RGB controls");
+
+        // Load saved values
+        Aura.Mode = (AuraMode)Helpers.AppConfig.Get("aura_mode");
+        Aura.Speed = (AuraSpeed)Helpers.AppConfig.Get("aura_speed");
+        Aura.SetColor(Helpers.AppConfig.Get("aura_color", unchecked((int)0xFFFFFFFF)));
+        Aura.SetColor2(Helpers.AppConfig.Get("aura_color2", 0));
+
+        _suppressAuraEvents = true;
+
+        // Populate mode combo
+        var modes = Aura.GetModes();
+        comboAuraMode.Items.Clear();
+        int selectedModeIdx = 0;
+        int idx = 0;
+        foreach (var kv in modes)
+        {
+            comboAuraMode.Items.Add(new ComboBoxItem { Content = kv.Value, Tag = (int)kv.Key });
+            if (kv.Key == Aura.Mode) selectedModeIdx = idx;
+            idx++;
+        }
+        comboAuraMode.SelectedIndex = selectedModeIdx;
+
+        // Populate speed combo
+        var speeds = Aura.GetSpeeds();
+        comboAuraSpeed.Items.Clear();
+        int selectedSpeedIdx = 0;
+        idx = 0;
+        foreach (var kv in speeds)
+        {
+            comboAuraSpeed.Items.Add(new ComboBoxItem { Content = kv.Value, Tag = (int)kv.Key });
+            if (kv.Key == Aura.Speed) selectedSpeedIdx = idx;
+            idx++;
+        }
+        comboAuraSpeed.SelectedIndex = selectedSpeedIdx;
+
+        _suppressAuraEvents = false;
+
+        // Update color button backgrounds and second color visibility
+        UpdateColorButtons();
+    }
+
+    private void UpdateColorButtons()
+    {
+        buttonColor1.Background = new SolidColorBrush(
+            Color.FromRgb(Aura.ColorR, Aura.ColorG, Aura.ColorB));
+        buttonColor2.Background = new SolidColorBrush(
+            Color.FromRgb(Aura.Color2R, Aura.Color2G, Aura.Color2B));
+        buttonColor2.IsVisible = Aura.HasSecondColor();
+
+        // Hide color buttons for modes that don't use color
+        buttonColor1.IsVisible = Aura.UsesColor();
+    }
+
+    private void ComboAuraMode_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressAuraEvents) return;
+        if (comboAuraMode.SelectedItem is ComboBoxItem item && item.Tag is int modeVal)
+        {
+            Helpers.AppConfig.Set("aura_mode", modeVal);
+            Aura.Mode = (AuraMode)modeVal;
+            UpdateColorButtons();
+            ApplyAuraAsync();
+        }
+    }
+
+    private void ComboAuraSpeed_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressAuraEvents) return;
+        if (comboAuraSpeed.SelectedItem is ComboBoxItem item && item.Tag is int speedVal)
+        {
+            Helpers.AppConfig.Set("aura_speed", speedVal);
+            Aura.Speed = (AuraSpeed)speedVal;
+            ApplyAuraAsync();
+        }
+    }
+
+    private void ButtonColor1_Click(object? sender, RoutedEventArgs e)
+    {
+        ShowColorPicker("aura_color", Aura.ColorR, Aura.ColorG, Aura.ColorB, (r, g, b) =>
+        {
+            Aura.ColorR = r;
+            Aura.ColorG = g;
+            Aura.ColorB = b;
+            Helpers.AppConfig.Set("aura_color", Aura.GetColorArgb());
+            UpdateColorButtons();
+            ApplyAuraAsync();
+        });
+    }
+
+    private void ButtonColor2_Click(object? sender, RoutedEventArgs e)
+    {
+        ShowColorPicker("aura_color2", Aura.Color2R, Aura.Color2G, Aura.Color2B, (r, g, b) =>
+        {
+            Aura.Color2R = r;
+            Aura.Color2G = g;
+            Aura.Color2B = b;
+            Helpers.AppConfig.Set("aura_color2", Aura.GetColor2Argb());
+            UpdateColorButtons();
+            ApplyAuraAsync();
+        });
+    }
+
+    /// <summary>
+    /// Shows a simple color picker window.
+    /// Avalonia doesn't have a built-in color dialog, so we use a popup with sliders.
+    /// </summary>
+    private void ShowColorPicker(string configKey, byte initR, byte initG, byte initB, Action<byte, byte, byte> onColorSet)
+    {
+        var pickerWindow = new Window
+        {
+            Title = "Pick Color",
+            Width = 320,
+            Height = 280,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Background = new SolidColorBrush(Color.Parse("#1C1C1C")),
+            CanResize = false,
+            SystemDecorations = SystemDecorations.Full,
+        };
+
+        var preview = new Border
+        {
+            Width = 280,
+            Height = 50,
+            CornerRadius = new Avalonia.CornerRadius(6),
+            Background = new SolidColorBrush(Color.FromRgb(initR, initG, initB)),
+            Margin = new Avalonia.Thickness(0, 8, 0, 8),
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+        };
+
+        var sliderR = new Slider { Minimum = 0, Maximum = 255, Value = initR, Foreground = new SolidColorBrush(Color.FromRgb(255, 80, 80)) };
+        var sliderG = new Slider { Minimum = 0, Maximum = 255, Value = initG, Foreground = new SolidColorBrush(Color.FromRgb(80, 255, 80)) };
+        var sliderB = new Slider { Minimum = 0, Maximum = 255, Value = initB, Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 255)) };
+
+        var labelR = new TextBlock { Text = $"R: {initR}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 0) };
+        var labelG = new TextBlock { Text = $"G: {initG}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 0) };
+        var labelB = new TextBlock { Text = $"B: {initB}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 0) };
+
+        void UpdatePreview()
+        {
+            byte r = (byte)sliderR.Value;
+            byte g = (byte)sliderG.Value;
+            byte b = (byte)sliderB.Value;
+            preview.Background = new SolidColorBrush(Color.FromRgb(r, g, b));
+            labelR.Text = $"R: {r}";
+            labelG.Text = $"G: {g}";
+            labelB.Text = $"B: {b}";
+        }
+
+        sliderR.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
+        sliderG.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
+        sliderB.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
+
+        var btnOk = new Button { Content = "Apply", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 8, 0, 0), MinWidth = 100 };
+        btnOk.Click += (_, _) =>
+        {
+            onColorSet((byte)sliderR.Value, (byte)sliderG.Value, (byte)sliderB.Value);
+            pickerWindow.Close();
+        };
+
+        // Quick preset colors
+        var presetPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Spacing = 4, Margin = new Avalonia.Thickness(0, 4) };
+        var presets = new (byte R, byte G, byte B)[]
+        {
+            (255, 255, 255), (255, 0, 0), (0, 255, 0), (0, 0, 255),
+            (255, 255, 0), (0, 255, 255), (255, 0, 255), (255, 128, 0),
+        };
+        foreach (var (pr, pg, pb) in presets)
+        {
+            var btn = new Button
+            {
+                Width = 28, Height = 28,
+                Background = new SolidColorBrush(Color.FromRgb(pr, pg, pb)),
+                Margin = new Avalonia.Thickness(1),
+                BorderThickness = new Avalonia.Thickness(1),
+                BorderBrush = new SolidColorBrush(Color.Parse("#555555")),
+            };
+            byte cr = pr, cg = pg, cb = pb;
+            btn.Click += (_, _) =>
+            {
+                sliderR.Value = cr;
+                sliderG.Value = cg;
+                sliderB.Value = cb;
+            };
+            presetPanel.Children.Add(btn);
+        }
+
+        var stack = new StackPanel { Margin = new Avalonia.Thickness(16, 8) };
+        stack.Children.Add(preview);
+        stack.Children.Add(presetPanel);
+        stack.Children.Add(labelR);
+        stack.Children.Add(sliderR);
+        stack.Children.Add(labelG);
+        stack.Children.Add(sliderG);
+        stack.Children.Add(labelB);
+        stack.Children.Add(sliderB);
+        stack.Children.Add(btnOk);
+
+        pickerWindow.Content = stack;
+        pickerWindow.ShowDialog(this);
+    }
+
+    private void ApplyAuraAsync()
+    {
+        Task.Run(() =>
+        {
+            try
+            {
+                Aura.ApplyAura();
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine("ApplyAura error", ex);
+            }
+        });
     }
 
     private void ButtonKeyboard_Click(object? sender, RoutedEventArgs e)
@@ -317,16 +557,58 @@ public partial class MainWindow : Window
         RefreshKeyboard();
     }
 
-    private void ButtonKeyboardColor_Click(object? sender, RoutedEventArgs e)
-    {
-        // TODO: Open color picker for RGB keyboards
-        Helpers.Logger.WriteLine("Keyboard color picker not yet implemented");
-    }
-
     private void ButtonFnLock_Click(object? sender, RoutedEventArgs e)
     {
-        // TODO: Toggle Fn lock
-        Helpers.Logger.WriteLine("Fn lock toggle not yet implemented");
+        bool current = Helpers.AppConfig.Is("fn_lock");
+        bool newState = !current;
+
+        Helpers.AppConfig.Set("fn_lock", newState ? 1 : 0);
+
+        // Try hardware FnLock via sysfs
+        var fnLockPath = "/sys/devices/platform/asus-nb-wmi/fn_lock";
+        bool hasSysfs = Platform.Linux.SysfsHelper.Exists(fnLockPath);
+
+        if (hasSysfs)
+        {
+            bool inverted = Helpers.AppConfig.IsInvertedFNLock();
+            int writeVal = (newState ^ inverted) ? 1 : 0;
+            Platform.Linux.SysfsHelper.WriteInt(fnLockPath, writeVal);
+            Helpers.Logger.WriteLine($"FnLock sysfs → {writeVal}");
+        }
+
+        // Also try HID path for devices that need it
+        // [0x5A, 0xD0, 0x4E, 0x00=locked, 0x01=unlocked]
+        try
+        {
+            AsusHid.WriteInput(new byte[]
+            {
+                AsusHid.INPUT_ID, 0xD0, 0x4E, newState ? (byte)0x00 : (byte)0x01
+            }, "FnLock");
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"FnLock HID write failed: {ex.Message}");
+        }
+
+        // Update button visual
+        UpdateFnLockButton(newState);
+
+        App.System?.ShowNotification("G-Helper", newState ? "Fn Lock ON" : "Fn Lock OFF");
+        Helpers.Logger.WriteLine($"FnLock toggled → {(newState ? "ON" : "OFF")}");
+    }
+
+    private void UpdateFnLockButton(bool locked)
+    {
+        if (locked)
+        {
+            buttonFnLock.BorderBrush = AccentBrush;
+            buttonFnLock.BorderThickness = new Avalonia.Thickness(2);
+        }
+        else
+        {
+            buttonFnLock.BorderBrush = TransparentBrush;
+            buttonFnLock.BorderThickness = new Avalonia.Thickness(2);
+        }
     }
 
     // ── Battery ──
@@ -410,10 +692,19 @@ public partial class MainWindow : Window
         App.System?.SetAutostart(enabled);
     }
 
+    private UpdatesWindow? _updatesWindow;
+
     private void ButtonUpdates_Click(object? sender, RoutedEventArgs e)
     {
-        // TODO: Open updates check
-        Helpers.Logger.WriteLine("Updates check not yet implemented");
+        if (_updatesWindow == null || !_updatesWindow.IsVisible)
+        {
+            _updatesWindow = new UpdatesWindow();
+            _updatesWindow.Show();
+        }
+        else
+        {
+            _updatesWindow.Activate();
+        }
     }
 
     private void ButtonQuit_Click(object? sender, RoutedEventArgs e)
