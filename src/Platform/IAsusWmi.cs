@@ -92,6 +92,14 @@ public interface IAsusWmi : IDisposable
     /// <summary>Set TUF keyboard RGB color.</summary>
     void SetKeyboardRgb(byte r, byte g, byte b);
 
+    // ── FN Lock ──
+
+    /// <summary>Get FN Lock state. Returns -1 if unsupported, 0=off, 1=on.</summary>
+    int GetFnLock();
+
+    /// <summary>Set FN Lock state. true=locked (F1-F12 work as media keys).</summary>
+    void SetFnLock(bool enabled);
+
     // ── Events ──
 
     /// <summary>Fired when an ASUS WMI hotkey event occurs (Fn keys, lid, etc.).</summary>
