@@ -47,9 +47,18 @@ lsmod | grep asus
 ### Option 1: Download the pre-built binary
 
 ```bash
-# Download the release (when available)
-# chmod +x ghelper-linux
-# ./ghelper-linux
+# Download the latest release
+curl -sL https://github.com/utajum/g-helper-linux/releases/latest/download/ghelper-linux -o ghelper-linux
+chmod +x ghelper-linux
+./ghelper-linux
+```
+
+For full installation with desktop integration, udev rules, and autostart:
+```bash
+git clone https://github.com/utajum/g-helper-linux.git
+cd g-helper-linux
+mkdir -p dist && cp /path/to/ghelper-linux dist/
+sudo ./install/install.sh
 ```
 
 ### Option 2: Build from source
@@ -121,40 +130,30 @@ Run it:
 
 ## Permissions (udev rules)
 
-By default, writing to sysfs attributes requires root. To run G-Helper without `sudo`, create a udev rule:
+By default, writing to sysfs attributes requires root. The install script handles this automatically:
 
 ```bash
-sudo tee /etc/udev/rules.d/99-ghelper.rules << 'EOF'
-# ASUS WMI platform attributes
-SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/throttle_thermal_policy /sys/devices/platform/asus-nb-wmi/panel_od"
+sudo ./install/install.sh
+```
 
-# ASUS WMI bus attributes (GPU eco, MUX, MiniLED, PPT)
-SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", RUN+="/bin/sh -c 'for f in dgpu_disable gpu_mux_mode mini_led_mode ppt_pl1_spl ppt_pl2_sppt ppt_fppt nv_dynamic_boost nv_temp_target; do [ -f /sys/bus/platform/devices/asus-nb-wmi/$f ] && chmod 0666 /sys/bus/platform/devices/asus-nb-wmi/$f; done'"
+This installs udev rules (`install/90-ghelper.rules`) that grant non-root access to all ASUS hardware controls, plus the desktop entry, icon, and autostart. After installation, **reboot** or re-trigger udev:
 
-# Battery charge limit
-SUBSYSTEM=="power_supply", ATTR{type}=="Battery", RUN+="/bin/sh -c 'chmod 0666 /sys$devpath/charge_control_end_threshold 2>/dev/null'"
+```bash
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
 
-# Keyboard backlight
-SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", RUN+="/bin/chmod 0666 /sys$devpath/brightness /sys$devpath/multi_intensity"
+<details>
+<summary>Manual udev setup (without install script)</summary>
 
-# Fan curve hwmon (find and chmod all auto_point files)
-SUBSYSTEM=="hwmon", ATTR{name}=="asus_nb_wmi", RUN+="/bin/sh -c 'for f in /sys$devpath/pwm*_auto_point*; do [ -f $f ] && chmod 0666 $f; done; for f in /sys$devpath/pwm*_enable; do [ -f $f ] && chmod 0666 $f; done'"
-
-# CPU boost
-SUBSYSTEM=="cpu", RUN+="/bin/sh -c 'chmod 0666 /sys/devices/system/cpu/intel_pstate/no_turbo /sys/devices/system/cpu/cpufreq/boost 2>/dev/null'"
-
-# Backlight brightness
-SUBSYSTEM=="backlight", RUN+="/bin/chmod 0666 /sys$devpath/brightness"
-
-# ASUS WMI input device (for hotkey events)
-SUBSYSTEM=="input", ATTRS{name}=="*asus*wmi*", MODE="0666"
-EOF
-
+```bash
+sudo cp install/90-ghelper.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
 
-After creating the rules, **reboot** or re-trigger udev for the changes to take effect.
+The rules file covers: performance modes, power limits, fan curves, battery charge limit, keyboard backlight, GPU MUX/Eco mode, CPU boost, backlight brightness, and ASUS hotkey events. See `install/90-ghelper.rules` for full details.
+
+</details>
 
 ## Autostart on login
 
