@@ -77,7 +77,19 @@ public partial class MainWindow : Window
             string cpuTempStr = cpuTemp > 0 ? $"{cpuTemp}°C" : "--";
             string gpuTempStr = gpuTemp > 0 ? $"{gpuTemp}°C" : "--";
             string cpuFanStr = cpuFan > 0 ? $"{cpuFan} RPM" : "--";
-            string gpuFanStr = gpuFan > 0 ? $"{gpuFan} RPM" : "--";
+            
+            // GPU fan: might be RPM or percentage from nvidia-smi
+            string gpuFanStr;
+            if (gpuFan > 0)
+                gpuFanStr = $"{gpuFan} RPM";
+            else if (gpuFan <= -2)
+            {
+                // Encoded percentage: -2 - percent
+                int percent = -(gpuFan + 2);
+                gpuFanStr = $"{percent}%";
+            }
+            else
+                gpuFanStr = "--";
 
             labelCPUFan.Text = $"CPU: {cpuTempStr}  Fan: {cpuFanStr}";
             labelGPUFan.Text = $"GPU: {gpuTempStr}  Fan: {gpuFanStr}";

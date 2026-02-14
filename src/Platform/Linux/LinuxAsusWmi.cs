@@ -136,10 +136,43 @@ public class LinuxAsusWmi : IAsusWmi
     {
         // Try fan curve hwmon first, then base hwmon
         var hwmon = _asusFanHwmonDir ?? _asusBaseHwmonDir;
-        if (hwmon == null) return -1;
-        // Linux fan_input is in RPM, G-Helper expects RPM
-        return SysfsHelper.ReadInt(
-            Path.Combine(hwmon, $"fan{fanIndex + 1}_input"), -1);
+        if (hwmon != null)
+        {
+            int rpm = SysfsHelper.ReadInt(
+                Path.Combine(hwmon, $"fan{fanIndex + 1}_input"), -1);
+            if (rpm > 0) return rpm;
+        }
+
+        // For GPU fan (index 1), try nvidia-smi as fallback
+        // nvidia-smi returns percentage, we return -2 to indicate "percentage mode"
+        if (fanIndex == 1)
+        {
+            try
+            {
+                var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=fan.speed --format=csv,noheader,nounits");
+                if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int fanPercent) && fanPercent >= 0)
+                    return -2 - fanPercent; // Encode: -2 means "percentage", value is -(2 + percent)
+            }
+            catch { /* nvidia-smi not available */ }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Get GPU fan speed as percentage from nvidia-smi (0-100).
+    /// Returns null if unavailable.
+    /// </summary>
+    public int? GetGpuFanPercent()
+    {
+        try
+        {
+            var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=fan.speed --format=csv,noheader,nounits");
+            if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int fanPercent) && fanPercent >= 0)
+                return fanPercent;
+        }
+        catch { }
+        return null;
     }
 
     public byte[]? GetFanCurve(int fanIndex)
@@ -351,6 +384,15 @@ public class LinuxAsusWmi : IAsusWmi
             int temp = SysfsHelper.ReadInt(Path.Combine(amdHwmon, "temp1_input"), -1);
             if (temp > 0) return temp / 1000;
         }
+
+        // Fallback: try nvidia-smi (proprietary driver doesn't always expose hwmon)
+        try
+        {
+            var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=temperature.gpu --format=csv,noheader,nounits");
+            if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int smiTemp) && smiTemp > 0)
+                return smiTemp;
+        }
+        catch { /* nvidia-smi not available */ }
 
         return -1;
     }
