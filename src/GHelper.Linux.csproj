@@ -48,4 +48,18 @@
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
   </ItemGroup>
 
+  <!--
+    Embed native .so libraries as resources for single-binary deployment.
+    At runtime, NativeLibExtractor extracts them to ~/.cache/ghelper-linux/libs/
+    and preloads them before SkiaSharp/Avalonia initializes.
+  -->
+  <Target Name="EmbedNativeLibraries" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <EmbeddedResource Include="$(NuGetPackageRoot)skiasharp.nativeassets.linux/**/runtimes/linux-x64/native/libSkiaSharp.so"
+                        LogicalName="libSkiaSharp.so" />
+      <EmbeddedResource Include="$(NuGetPackageRoot)harfbuzzsharp.nativeassets.linux/**/runtimes/linux-x64/native/libHarfBuzzSharp.so"
+                        LogicalName="libHarfBuzzSharp.so" />
+    </ItemGroup>
+  </Target>
+
 </Project>

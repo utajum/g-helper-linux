@@ -30,17 +30,9 @@ if [[ ! -f "$DIST_DIR/ghelper-linux" ]]; then
     exit 1
 fi
 
-# 1. Install binary
+# 1. Install binary (single file — native libs are embedded)
 echo "[1/6] Installing binary to /usr/local/bin/..."
 install -m 755 "$DIST_DIR/ghelper-linux" /usr/local/bin/ghelper-linux
-
-# Install shared libraries
-for lib in "$DIST_DIR"/lib*.so; do
-    if [[ -f "$lib" ]]; then
-        cp "$lib" /usr/local/lib/
-    fi
-done
-ldconfig 2>/dev/null || true
 
 # 2. Install udev rules and reload
 echo "[2/6] Installing udev rules..."

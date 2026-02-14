@@ -388,6 +388,7 @@ public partial class MainWindow : Window
         if (_suppressAuraEvents) return;
         if (comboAuraMode.SelectedItem is ComboBoxItem item && item.Tag is int modeVal)
         {
+            Helpers.Logger.WriteLine($"AURA mode changed → {(AuraMode)modeVal}");
             Helpers.AppConfig.Set("aura_mode", modeVal);
             Aura.Mode = (AuraMode)modeVal;
             UpdateColorButtons();
@@ -442,7 +443,7 @@ public partial class MainWindow : Window
         {
             Title = "Pick Color",
             Width = 320,
-            Height = 280,
+            Height = 420,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Background = new SolidColorBrush(Color.Parse("#1C1C1C")),
             CanResize = false,
@@ -463,9 +464,23 @@ public partial class MainWindow : Window
         var sliderG = new Slider { Minimum = 0, Maximum = 255, Value = initG, Foreground = new SolidColorBrush(Color.FromRgb(80, 255, 80)) };
         var sliderB = new Slider { Minimum = 0, Maximum = 255, Value = initB, Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 255)) };
 
-        var labelR = new TextBlock { Text = $"R: {initR}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 0) };
-        var labelG = new TextBlock { Text = $"G: {initG}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 0) };
-        var labelB = new TextBlock { Text = $"B: {initB}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 0) };
+        var labelR = new TextBlock { Text = $"R: {initR}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
+        var labelG = new TextBlock { Text = $"G: {initG}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
+        var labelB = new TextBlock { Text = $"B: {initB}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
+
+        // Hex color input
+        var hexLabel = new TextBlock { Text = "Hex:", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 6, 0, 0), FontSize = 11 };
+        var hexInput = new TextBox
+        {
+            Text = $"#{initR:X2}{initG:X2}{initB:X2}",
+            Width = 100,
+            Height = 28,
+            FontSize = 12,
+            Margin = new Avalonia.Thickness(4, 2, 0, 0),
+            Background = new SolidColorBrush(Color.Parse("#262626")),
+            Foreground = Brushes.White,
+        };
+        bool _suppressHexUpdate = false;
 
         void UpdatePreview()
         {
@@ -476,13 +491,49 @@ public partial class MainWindow : Window
             labelR.Text = $"R: {r}";
             labelG.Text = $"G: {g}";
             labelB.Text = $"B: {b}";
+            if (!_suppressHexUpdate)
+                hexInput.Text = $"#{r:X2}{g:X2}{b:X2}";
         }
 
         sliderR.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
         sliderG.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
         sliderB.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
 
-        var btnOk = new Button { Content = "Apply", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 8, 0, 0), MinWidth = 100 };
+        // Parse hex input when user types
+        hexInput.TextChanged += (_, _) =>
+        {
+            var text = hexInput.Text?.Trim() ?? "";
+            if (!text.StartsWith("#")) text = "#" + text;
+            if (text.Length == 7)
+            {
+                try
+                {
+                    var c = Color.Parse(text);
+                    _suppressHexUpdate = true;
+                    sliderR.Value = c.R;
+                    sliderG.Value = c.G;
+                    sliderB.Value = c.B;
+                    _suppressHexUpdate = false;
+                    preview.Background = new SolidColorBrush(c);
+                    labelR.Text = $"R: {c.R}";
+                    labelG.Text = $"G: {c.G}";
+                    labelB.Text = $"B: {c.B}";
+                }
+                catch { }
+            }
+        };
+
+        var btnOk = new Button
+        {
+            Content = "Apply",
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            Margin = new Avalonia.Thickness(0, 12, 0, 0),
+            MinWidth = 120,
+            MinHeight = 34,
+            Background = new SolidColorBrush(Color.Parse("#4CC2FF")),
+            Foreground = Brushes.Black,
+            FontWeight = Avalonia.Media.FontWeight.Bold,
+        };
         btnOk.Click += (_, _) =>
         {
             onColorSet((byte)sliderR.Value, (byte)sliderG.Value, (byte)sliderB.Value);
@@ -516,9 +567,14 @@ public partial class MainWindow : Window
             presetPanel.Children.Add(btn);
         }
 
+        var hexRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 4) };
+        hexRow.Children.Add(hexLabel);
+        hexRow.Children.Add(hexInput);
+
         var stack = new StackPanel { Margin = new Avalonia.Thickness(16, 8) };
         stack.Children.Add(preview);
         stack.Children.Add(presetPanel);
+        stack.Children.Add(hexRow);
         stack.Children.Add(labelR);
         stack.Children.Add(sliderR);
         stack.Children.Add(labelG);

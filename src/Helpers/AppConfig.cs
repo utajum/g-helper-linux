@@ -39,6 +39,8 @@ public static class AppConfig
     private static long _lastWrite;
 
     private static string? _model;
+    private static string? _modelShort;
+    private static string? _bios;
 
     static AppConfig()
     {
@@ -273,13 +275,39 @@ public static class AppConfig
         return model;
     }
 
+    /// <summary>Get BIOS version and model short name from DMI bios_version.</summary>
+    public static (string? bios, string? modelShort) GetBiosAndModel()
+    {
+        if (_bios != null && _modelShort != null) return (_bios, _modelShort);
+
+        string? biosVer = Platform.Linux.SysfsHelper.ReadAttribute(
+            Path.Combine(Platform.Linux.SysfsHelper.DmiId, "bios_version"));
+
+        if (biosVer != null)
+        {
+            string[] results = biosVer.Split(".");
+            if (results.Length > 1)
+            {
+                _modelShort = results[0];
+                _bios = results[1];
+            }
+            else
+            {
+                _modelShort = biosVer;
+            }
+        }
+
+        return (_bios, _modelShort);
+    }
+
     public static bool ContainsModel(string contains)
     {
         return GetModel().Contains(contains, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ── Model queries (ported from Windows AppConfig) ──
+    // ── Model queries (ported from Windows AppConfig — all 67 methods) ──
 
+    // Brand / family
     public static bool IsTUF() => ContainsModel("TUF") || ContainsModel("TX Gaming") || ContainsModel("TX Air");
     public static bool IsROG() => ContainsModel("ROG");
     public static bool IsStrix() => ContainsModel("Strix") || ContainsModel("Scar") || ContainsModel("G703G");
@@ -287,54 +315,120 @@ public static class AppConfig
     public static bool IsProArt() => ContainsModel("ProArt");
     public static bool IsDUO() => ContainsModel("Duo") || ContainsModel("GX550") || ContainsModel("GX551") || ContainsModel("GX650") || ContainsModel("UX840") || ContainsModel("UX482");
     public static bool IsAlly() => ContainsModel("RC7");
-
-    public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("UM560") || ContainsModel("GZ302");
-    public static bool IsSingleColor() => ContainsModel("GA401") || ContainsModel("FX517Z") || ContainsModel("FX516P") || ContainsModel("X13") || ContainsModel("FA617N") || ContainsModel("FA617X") || NoAura() || Is("no_rgb");
-    public static bool IsNoOverdrive() => Is("no_overdrive");
-    public static bool IsOLED() => ContainsModel("OLED") || ContainsModel("M7600") || ContainsModel("UX64") || ContainsModel("UX34");
-
-    // ── RGB/AURA model detection ──
+    public static bool IsASUS() => ContainsModel("ROG") || ContainsModel("TUF") || ContainsModel("Vivobook") || ContainsModel("Zenbook");
     public static bool IsVivoZenPro() => ContainsModel("Vivobook") || ContainsModel("Zenbook") || ContainsModel("ProArt") || ContainsModel("EXPERTBOOK") || ContainsModel(" V16");
+
+    // Specific model variants
+    public static bool IsARCNM() => ContainsModel("GZ301VIC");
+    public static bool IsZ1325() => ContainsModel("GZ302E");
+    public static bool IsZ13() => ContainsModel("Z13");
+    public static bool IsPZ13() => ContainsModel("PZ13");
+    public static bool IsS17() => ContainsModel("S17");
+    public static bool IsX13() => ContainsModel("X13");
+    public static bool IsG14AMD() => ContainsModel("GA402R");
+    public static bool IsFA401EA() => ContainsModel("FA401EA");
+    public static bool IsAdvantageEdition() => ContainsModel("13QY");
+
+    // GPU / power management
+    public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("UM560") || ContainsModel("GZ302") || IsFA401EA();
+    public static bool IsAMDiGPU() => ContainsModel("GV301RA") || ContainsModel("GV302XA") || ContainsModel("GZ302") || IsFA401EA() || IsAlly();
+    public static bool IsGPUFix() => Is("gpu_fix") || (ContainsModel("GA402X") && IsNotFalse("gpu_fix"));
+    public static bool IsForceSetGPUMode() => Is("gpu_mode_force_set") || (ContainsModel("503") && IsNotFalse("gpu_mode_force_set"));
+    public static bool IsNVPlatform() => Is("nv_platform");
+    public static bool IsShutdownReset() => Is("shutdown_reset") || ContainsModel("FX507Z");
+    public static bool IsStopAC() => IsAlly() || Is("stop_ac");
+
+    // Dynamic boost
+    public static bool DynamicBoost5() => ContainsModel("GZ301ZE");
+    public static bool DynamicBoost15() => ContainsModel("FX507ZC4") || ContainsModel("GA403UM") || ContainsModel("GU605CP") || ContainsModel("FX608J") || ContainsModel("FX608L") || ContainsModel("FA608U") || ContainsModel("FA608P") || ContainsModel("FA608W") || ContainsModel("FA401K") || ContainsModel("FA401UM") || ContainsModel("FA401UH");
+    public static bool DynamicBoost20() => ContainsModel("GU605") || ContainsModel("GA605");
+
+    // Performance mode
+    public static bool NoAutoUltimate() => ContainsModel("G614") || ContainsModel("GU604") || ContainsModel("FX507") || ContainsModel("G513") || ContainsModel("FA617") || ContainsModel("G834") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("GU603VV");
+    public static bool IsAlwaysUltimate() => ContainsModel("FA507NUR") || ContainsModel("FA506NCR") || ContainsModel("FA507NVR");
+    public static bool IsManualModeRequired() => IsMode("auto_apply_power") && (Is("manual_mode") || ContainsModel("G733"));
+    public static bool IsModeReapplyRequired() => Is("mode_reapply") || ContainsModel("FA401");
+    public static bool IsResetRequired() => ContainsModel("GA403") || ContainsModel("FA507XV");
+    public static bool IsPowerRequired() => ContainsModel("FX507") || ContainsModel("FX517") || ContainsModel("FX707");
+
+    // Fan control
+    public static bool IsFanRequired() => ContainsModel("GA402X") || ContainsModel("GU604") || ContainsModel("G513") || ContainsModel("G713R") || ContainsModel("G713P") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("G634J") || ContainsModel("G834J") || ContainsModel("G614J") || ContainsModel("G814J") || ContainsModel("FX507V") || ContainsModel("FX507ZV") || ContainsModel("FX608") || ContainsModel("G614F") || ContainsModel("G614R") || ContainsModel("G733") || ContainsModel("H7606");
+    public static bool IsClampFanDots() => Is("fan_clamp") || (IsTUF() && IsNotFalse("fan_clamp"));
+
+    // RGB / AURA
+    public static bool IsSingleColor() => ContainsModel("GA401") || ContainsModel("FX517Z") || ContainsModel("FX516P") || ContainsModel("X13") || IsARCNM() || ContainsModel("FA617N") || ContainsModel("FA617X") || NoAura() || Is("no_rgb");
     public static bool NoAura() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("GA502IU") || ContainsModel("HN7306");
     public static bool IsAdvancedRGB() => IsStrix() || ContainsModel("GX650");
-    public static bool IsBacklightZones() => IsStrix();
-
+    public static bool IsBacklightZones() => IsStrix() || IsZ13();
     public static bool IsStrixLimitedRGB() =>
         ContainsModel("G614PM") || ContainsModel("G614PP") || ContainsModel("G614PR") || ContainsModel("G512LI") ||
         ContainsModel("G513R") || ContainsModel("G713QM") || ContainsModel("G713PV") || ContainsModel("G513IE") ||
         ContainsModel("G713RC") || ContainsModel("G713IC") || ContainsModel("G713PU") || ContainsModel("G513QM") ||
         ContainsModel("G513QC") || ContainsModel("G531G") || ContainsModel("G615JMR") || ContainsModel("G615LM") ||
         ContainsModel("G815LR");
-
     public static bool IsPossible4ZoneRGB() =>
         ContainsModel("G614JI_") || ContainsModel("G614JV_") || ContainsModel("G614JZ") ||
         ContainsModel("G614JU") || IsStrixLimitedRGB();
-
     public static bool Is4ZoneRGB() => IsPossible4ZoneRGB() && !Is("per_key_rgb");
-
     public static bool IsNoDirectRGB() =>
         ContainsModel("GA503") || ContainsModel("G533Q") || ContainsModel("GU502") ||
         ContainsModel("GU603") || IsSlash() || IsAlly();
-
     public static bool IsSlash() => ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605");
+    public static bool IsSlashAura() => ContainsModel("GA605") || ContainsModel("GU605C") || ContainsModel("GA403W") || ContainsModel("GA403UM") || ContainsModel("GA403UP") || ContainsModel("GA403UH");
+    public static bool IsAnimeMatrix() => ContainsModel("GA401") || ContainsModel("GA402") || ContainsModel("GU604V") || ContainsModel("G835") || ContainsModel("G815") || ContainsModel("G635") || ContainsModel("G615");
 
+    // Dynamic Lighting
+    public static bool IsDynamicLighting() => IsSlash() || IsIntelHX() || IsTUF() || IsZ13();
+    public static bool IsDynamicLightingOnly() => ContainsModel("S560") || ContainsModel("M540") || ContainsModel("UX760");
+    public static bool IsDynamicLightingInit() => ContainsModel("FA608") || Is("lighting_init");
+
+    // Keyboard / input
     public static bool IsInputBacklight() => ContainsModel("GA503") || IsSlash() || IsVivoZenPro();
-
     public static bool IsHardwareFnLock() => IsVivoZenPro() || ContainsModel("GZ302EA");
-
     public static bool IsInvertedFNLock() => ContainsModel("M140") || ContainsModel("S550") || ContainsModel("P540") || IsTUF();
-
     public static bool IsStrixNumpad() => ContainsModel("G713R");
+    public static bool NoMKeys() => (ContainsModel("Z13") && !IsARCNM()) || ContainsModel("FX706") || ContainsModel("FA706") || ContainsModel("FA506") || ContainsModel("FX506") || ContainsModel("Duo") || ContainsModel("FX505");
+    public static bool IsM4Button() => IsDUO() || ContainsModel("GZ302EA");
+    public static bool MediaKeys() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("G712L") || ContainsModel("GX502L");
+    public static bool IsHardwareHotkeys() => ContainsModel("FX506");
+    public static bool IsHardwareTouchpadToggle() => ContainsModel("FA507");
+    public static bool IsNoFNV() => ContainsModel("FX507") || ContainsModel("FX707");
 
-    public static bool IsOnBattery(string name) => Get(name) == 2;
+    // CPU platform
+    public static bool IsIntelHX() => ContainsModel("G814") || ContainsModel("G614") || ContainsModel("G834") || ContainsModel("G634") || ContainsModel("G835") || ContainsModel("G635") || ContainsModel("G815") || ContainsModel("G615");
+    public static bool Is8Ecores() => ContainsModel("FX507Z") || ContainsModel("GU603ZV");
+    public static bool IsAMDLight() => ContainsModel("GA402X") || ContainsModel("GA605") || ContainsModel("GA403") || ContainsModel("FA507N") || ContainsModel("FA507X") || ContainsModel("FA707N") || ContainsModel("FA707X") || ContainsModel("GZ302");
 
-    public static bool IsChargeLimit6080() =>
-        ContainsModel("H760") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") ||
-        ContainsModel("GA503R") || (IsTUF() && !(ContainsModel("FX507Z") || ContainsModel("FA617") || ContainsModel("FA607")));
-
+    // Display
+    public static bool IsOLED() =>
+        ContainsModel("OLED") || IsSlash() || ContainsModel("M7600") || ContainsModel("UX64") ||
+        ContainsModel("UX34") || ContainsModel("UX53") || ContainsModel("K360") || ContainsModel("X150") ||
+        ContainsModel("M340") || ContainsModel("M350") || ContainsModel("K650") || ContainsModel("UM53") ||
+        ContainsModel("K660") || ContainsModel("UX84") || ContainsModel("M650") || ContainsModel("M550") ||
+        ContainsModel("M540") || ContainsModel("K340") || ContainsModel("K350") || ContainsModel("M140") ||
+        ContainsModel("S540") || ContainsModel("S550") || ContainsModel("M7400") || ContainsModel("N650") ||
+        ContainsModel("HN7306") || ContainsModel("H760") || ContainsModel("UX5406") || ContainsModel("M5606") ||
+        ContainsModel("X513") || ContainsModel("N7400") || ContainsModel("UX760");
+    public static bool IsNoOverdrive() => Is("no_overdrive");
+    public static bool SwappedBrightness() => ContainsModel("FA506IEB") || ContainsModel("FA506IH") || ContainsModel("FA506IC") || ContainsModel("FA506II") || ContainsModel("FX506LU") || ContainsModel("FX506IC") || ContainsModel("FX506LH") || ContainsModel("FA506IV") || ContainsModel("FA706IC") || ContainsModel("FA706IH");
+    public static bool SaveDimming() => Is("save_dimming");
     public static bool IsForceMiniled() =>
         ContainsModel("G834JYR") || ContainsModel("G834JZR") || ContainsModel("G634JZR") ||
-        ContainsModel("G835LW") || ContainsModel("G835LX") || Is("force_miniled");
+        ContainsModel("G835LW") || ContainsModel("G835LX") || ContainsModel("G635LW") ||
+        ContainsModel("G635LX") || Is("force_miniled");
+
+    // Form factor / misc
+    public static bool HasTabletMode() => ContainsModel("X16") || ContainsModel("X13") || ContainsModel("Z13");
+    public static bool IsSleepBacklight() => ContainsModel("FA617") || ContainsModel("FX507");
+    public static bool IsNoSleepEvent() => ContainsModel("FX505");
+    public static bool NoWMI() => ContainsModel("GL704G") || ContainsModel("GM501G") || ContainsModel("GX501G");
+
+    // UI / config-only
+    public static bool IsBWIcon() => Is("bw_icon");
+    public static bool IsAutoStatusLed() => Is("auto_status_led");
+
+    // Battery-specific config check (original logic: fallback to zone config if bat-specific not set)
+    public static bool IsOnBattery(string zone) => Get(zone + "_bat", Get(zone)) != 0;
 
     // ── Helpers ──
 
