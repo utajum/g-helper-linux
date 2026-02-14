@@ -42,6 +42,9 @@ public partial class UpdatesWindow : Window
         "ROG Font V1.5",
     };
 
+    private const string AppVersion = "1.0.0";
+    private const string GitHubRepo = "utajum/g-helper-linux";
+
     private string? _model;
     private string? _biosVersion;
     private int _updatesCount = 0;
@@ -76,7 +79,7 @@ public partial class UpdatesWindow : Window
 
         var modelName = App.System?.GetModelName() ?? "Unknown";
         Title = $"BIOS & Driver Updates: {modelName} ({_model} BIOS {_biosVersion ?? "?"})";
-        labelAppVersion.Text = $"G-Helper Linux v1.0.0 — {modelName}";
+        labelAppVersion.Text = $"G-Helper Linux v{AppVersion} — {modelName}";
 
         _updatesCount = 0;
         labelUpdates.Text = "Checking...";
@@ -87,6 +90,13 @@ public partial class UpdatesWindow : Window
         panelBios.Children.Add(new TextBlock { Text = "Loading BIOS info...", Foreground = ColorDim, FontSize = 12 });
         panelDrivers.Children.Clear();
         panelDrivers.Children.Add(new TextBlock { Text = "Loading drivers...", Foreground = ColorDim, FontSize = 12 });
+
+        // Check for G-Helper Linux self-update
+        panelSelfUpdate.Children.Clear();
+        panelSelfUpdate.Children.Add(labelSelfUpdateStatus);
+        labelSelfUpdateStatus.Text = "Checking for updates...";
+        labelSelfUpdateStatus.Foreground = ColorDim;
+        Task.Run(async () => await CheckSelfUpdateAsync());
 
         string rogParam = Helpers.AppConfig.IsROG() ? "&systemCode=rog" : "";
 
@@ -105,6 +115,218 @@ public partial class UpdatesWindow : Window
                 $"https://rog.asus.com/support/webapi/product/GetPDDrivers?website=global&model={_model}&cpu={_model}&osid=52{rogParam}",
                 isBios: false);
         });
+    }
+
+    private async Task CheckSelfUpdateAsync()
+    {
+        try
+        {
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + AppVersion);
+            http.Timeout = TimeSpan.FromSeconds(10);
+
+            // GitHub API: get latest release
+            var json = await http.GetStringAsync($"https://api.github.com/repos/{GitHubRepo}/releases/latest");
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var tagName = root.GetProperty("tag_name").GetString() ?? "";
+            var latestVersion = tagName.TrimStart('v');
+            var releaseUrl = root.GetProperty("html_url").GetString() ?? $"https://github.com/{GitHubRepo}/releases/latest";
+
+            // Find the binary download URL
+            var downloadUrl = $"https://github.com/{GitHubRepo}/releases/latest/download/ghelper-linux";
+            if (root.TryGetProperty("assets", out var assets))
+            {
+                for (int i = 0; i < assets.GetArrayLength(); i++)
+                {
+                    var name = assets[i].GetProperty("name").GetString() ?? "";
+                    if (name == "ghelper-linux")
+                    {
+                        downloadUrl = assets[i].GetProperty("browser_download_url").GetString() ?? downloadUrl;
+                        break;
+                    }
+                }
+            }
+
+            var isNewer = CompareVersions(latestVersion, AppVersion) > 0;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                panelSelfUpdate.Children.Clear();
+
+                if (isNewer)
+                {
+                    _updatesCount++;
+                    labelUpdates.Text = $"Updates available: {_updatesCount}";
+                    labelUpdates.Foreground = ColorRed;
+                    labelUpdates.FontWeight = FontWeight.Bold;
+
+                    var row = new StackPanel { Spacing = 6 };
+
+                    row.Children.Add(new TextBlock
+                    {
+                        Text = $"New version available: v{latestVersion}  (current: v{AppVersion})",
+                        Foreground = ColorRed,
+                        FontSize = 12,
+                        FontWeight = FontWeight.Bold,
+                    });
+
+                    var btnRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+
+                    var btnUpdate = new Button
+                    {
+                        Content = "Download & Install",
+                        MinWidth = 130,
+                        Foreground = ColorWhite,
+                    };
+                    btnUpdate.Click += async (_, _) =>
+                    {
+                        btnUpdate.IsEnabled = false;
+                        btnUpdate.Content = "Downloading...";
+                        await Task.Run(async () => await DownloadAndInstallUpdate(downloadUrl, btnUpdate));
+                    };
+                    btnRow.Children.Add(btnUpdate);
+
+                    var btnRelease = new Button
+                    {
+                        Content = "View Release",
+                        MinWidth = 100,
+                        Foreground = ColorDim,
+                        Background = Brushes.Transparent,
+                        BorderThickness = new Avalonia.Thickness(0),
+                        Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                    };
+                    string url = releaseUrl;
+                    btnRelease.Click += (_, _) =>
+                    {
+                        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+                        catch { }
+                    };
+                    btnRow.Children.Add(btnRelease);
+
+                    row.Children.Add(btnRow);
+                    panelSelfUpdate.Children.Add(row);
+                }
+                else
+                {
+                    panelSelfUpdate.Children.Add(new TextBlock
+                    {
+                        Text = $"v{AppVersion} — Up to date",
+                        Foreground = ColorGreen,
+                        FontSize = 12,
+                    });
+                }
+            });
+
+            Helpers.Logger.WriteLine($"Self-update: current=v{AppVersion} latest=v{latestVersion} newer={isNewer}");
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"Self-update check failed: {ex.Message}");
+            Dispatcher.UIThread.Post(() =>
+            {
+                panelSelfUpdate.Children.Clear();
+                panelSelfUpdate.Children.Add(new TextBlock
+                {
+                    Text = $"v{AppVersion} — Could not check for updates",
+                    Foreground = ColorDim,
+                    FontSize = 12,
+                });
+            });
+        }
+    }
+
+    private async Task DownloadAndInstallUpdate(string downloadUrl, Button btn)
+    {
+        try
+        {
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + AppVersion);
+            http.Timeout = TimeSpan.FromMinutes(5);
+
+            var tmpPath = Path.Combine(Path.GetTempPath(), "ghelper-linux-update");
+            using (var stream = await http.GetStreamAsync(downloadUrl))
+            using (var fs = File.Create(tmpPath))
+            {
+                await stream.CopyToAsync(fs);
+            }
+
+            // Make executable
+#pragma warning disable CA1416
+            File.SetUnixFileMode(tmpPath,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+#pragma warning restore CA1416
+
+            // Replace the current binary
+            var currentBinary = Environment.ProcessPath;
+            if (currentBinary != null && File.Exists(currentBinary))
+            {
+                var backupPath = currentBinary + ".bak";
+                File.Copy(currentBinary, backupPath, overwrite: true);
+                File.Move(tmpPath, currentBinary, overwrite: true);
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    btn.Content = "Restart to apply";
+                    btn.IsEnabled = true;
+                    btn.Click -= null!; // clear old handlers
+                    btn.Click += (_, _) =>
+                    {
+                        // Restart the app
+                        Process.Start(new ProcessStartInfo(currentBinary) { UseShellExecute = false });
+                        Environment.Exit(0);
+                    };
+                });
+
+                Helpers.Logger.WriteLine($"Self-update: downloaded and replaced binary. Restart required.");
+            }
+            else
+            {
+                // Can't determine current binary path — save to downloads
+                var savePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "Downloads", "ghelper-linux");
+                File.Move(tmpPath, savePath, overwrite: true);
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    btn.Content = "Saved to ~/Downloads";
+                    btn.IsEnabled = false;
+                });
+
+                Helpers.Logger.WriteLine($"Self-update: saved to {savePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"Self-update download failed: {ex.Message}");
+            Dispatcher.UIThread.Post(() =>
+            {
+                btn.Content = "Download failed";
+                btn.IsEnabled = true;
+            });
+        }
+    }
+
+    /// <summary>
+    /// Compare two semver strings. Returns >0 if a > b, 0 if equal, &lt;0 if a &lt; b.
+    /// </summary>
+    private static int CompareVersions(string a, string b)
+    {
+        var partsA = a.Split('.');
+        var partsB = b.Split('.');
+        var len = Math.Max(partsA.Length, partsB.Length);
+
+        for (int i = 0; i < len; i++)
+        {
+            int numA = i < partsA.Length && int.TryParse(partsA[i], out var na) ? na : 0;
+            int numB = i < partsB.Length && int.TryParse(partsB[i], out var nb) ? nb : 0;
+            if (numA != numB) return numA - numB;
+        }
+        return 0;
     }
 
     private struct DriverInfo

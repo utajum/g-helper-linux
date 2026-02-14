@@ -53,6 +53,14 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- G-Helper Linux self-update -->
+            <TextBlock Text="G-Helper Linux" Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,4" />
+            <Border Background="#262626" CornerRadius="6" Padding="10,6">
+                <StackPanel x:Name="panelSelfUpdate" Spacing="4">
+                    <TextBlock x:Name="labelSelfUpdateStatus" Text="Checking for updates..." Foreground="#999999" FontSize="12" />
+                </StackPanel>
+            </Border>
+
             <!-- BIOS Section -->
             <TextBlock Text="BIOS" Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,4" />
             <Border Background="#262626" CornerRadius="6" Padding="8">
