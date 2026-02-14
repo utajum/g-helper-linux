@@ -1,8 +1,36 @@
-# G-Helper for Linux
+<div align="center">
 
-A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the lightweight ASUS laptop control utility. Built with .NET 8 Native AOT + Avalonia UI, it produces a single ~43 MB binary that runs on any x64 Linux desktop with zero runtime dependencies.
+```
+   ████▓▒░      ░░░░░░   █  █  ████   █     ████   ████▓▒  ████▓▒░
+  █▓▒   _       ░░░░░░   █  █  █▓▒_   █     █  █   █▓▒_    █▓▒  █
+  █▓▒  ███      ██████   ████  ███    █     ████   ███     ████▓▀
+  █▓▒    █               █  █  █▓▒    █     █      █▓▒     █▓▒ █
+   ████▓▒       ░░░░░░   █  █  ████   ████  █      ████    █▓▒  █
+ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+         ╔══[ SYSTEM ]════════════════════════════════╗
+         ║  >_ KERNEL: LINUX                          ║ 
+         ║  >_ STATUS: ONLINE...                      ║
+         ╚═══════════════════════════════[ 0x1F4 ]════╝
+           ╔══════════════════════════════════════╗
+           ║  ASUS LAPTOP CONTROL FOR LINUX       ║
+           ╚══════════════════════════════════════╝
+```
 
-## Features
+A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the lightweight ASUS laptop control utility. Built with .NET 8 Native AOT + Avalonia UI, it produces a single ~43 MB binary that runs on any x64 Linux desktop with **zero runtime dependencies**.
+
+**`> ESTABLISHING CONNECTION TO ASUS HARDWARE...`**
+
+**`> CONNECTION SECURED :: FULL CONTROL ACTIVE`**
+
+🔧 *Control your ASUS laptop like a pro. ROG mode activated.* 🔧
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
+
+</div>
+
+---
+
+## `░▒▓█ 0x00 :: FEATURES █▓▒░`
 
 - **Performance modes** — Silent, Balanced, Turbo (same as Windows G-Helper)
 - **Custom fan curves** — Interactive 8-point drag-to-edit chart per fan
@@ -17,7 +45,7 @@ A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the li
 - **Hotkey support** — Listens for ASUS Fn key events via evdev
 - **Auto-start** — XDG autostart .desktop file integration
 
-## Requirements
+## `░▒▓█ 0x01 :: SYSTEM REQUIREMENTS █▓▒░`
 
 - **OS:** Ubuntu 22.04+ / Debian 12+ / Fedora 38+ / Arch (any x64 Linux with glibc)
 - **Desktop:** X11 or Wayland (X11 recommended for full xrandr support)
@@ -29,7 +57,7 @@ lsmod | grep asus
 # Should show: asus_nb_wmi, asus_wmi
 ```
 
-### Kernel version feature matrix
+### `> KERNEL VERSION FEATURE MATRIX`
 
 | Feature | Min Kernel |
 |---------|-----------|
@@ -40,9 +68,9 @@ lsmod | grep asus
 | NVIDIA Dynamic Boost / Temp Target | 6.2 |
 | MiniLED mode control | 6.9 |
 
-## Installation
+## `░▒▓█ 0x02 :: INSTALLATION █▓▒░`
 
-### One-liner install
+### `> ONE-LINER INSTALL`
 
 ```bash
 curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/install.sh | sudo bash
@@ -50,7 +78,7 @@ curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/
 
 Downloads the latest release and installs the binary, udev rules, desktop entry, and autostart.
 
-### Manual download
+### `> MANUAL DOWNLOAD`
 
 Or just grab the binary and run it directly:
 
@@ -60,7 +88,7 @@ chmod +x ghelper-linux
 ./ghelper-linux
 ```
 
-### Build from source
+### `> BUILD FROM SOURCE`
 
 Install prerequisites:
 
@@ -96,7 +124,7 @@ cd src && dotnet publish -c Release
 
 </details>
 
-## What the install scripts do
+## `░▒▓█ 0x02a :: INSTALL SCRIPT OPERATIONS █▓▒░`
 
 Both `install.sh` and `install-local.sh` set up the same things:
 
@@ -135,11 +163,11 @@ See `install/90-ghelper.rules` for the full list of sysfs permissions.
 
 </details>
 
-## Configuration
+## `░▒▓█ 0x03 :: CONFIGURATION █▓▒░`
 
 Config is stored in `~/.config/ghelper-linux/config.json`. It uses the same JSON key format as Windows G-Helper, so fan curves and mode settings are compatible.
 
-## Project Structure
+## `░▒▓█ 0x04 :: PROJECT STRUCTURE █▓▒░`
 
 ```
 g-helper-linux/
@@ -183,7 +211,7 @@ g-helper-linux/
         *.png, *.ico                      # Image assets
 ```
 
-## How it works
+## `░▒▓█ 0x05 :: ARCHITECTURE █▓▒░`
 
 G-Helper for Linux communicates with ASUS hardware through the same ACPI device IDs as the Windows version, but via the Linux kernel's `asus-wmi` driver instead of Windows ATKACPI:
 
@@ -198,12 +226,64 @@ G-Helper for Linux communicates with ASUS hardware through the same ACPI device 
 | Task Scheduler autostart | XDG `~/.config/autostart/*.desktop` |
 | WinForms UI | Avalonia UI (cross-platform) |
 
-## Credits
+## `░▒▓█ 0x06 :: SUPPORT THE GRID █▓▒░`
+
+```
+> INITIATING DONATION PROTOCOL...
+> THERMAL LEVELS: CRITICALLY HIGH
+```
+
+<div align="center">
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
+
+</div>
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   If this tool keeps your ASUS laptop running cool and responsive,         │
+│   consider fueling development with some caffeinated tokens.               │
+│                                                                             │
+│   > Every coffee = More device support                                      │
+│   > Every coffee = Faster bug fixes                                         │
+│   > Every coffee = Developer happiness++                                    │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## `░▒▓█ 0x07 :: CREDITS █▓▒░`
 
 - [G-Helper](https://github.com/seerge/g-helper) by seerge — the original Windows utility this is ported from
 - [Avalonia UI](https://avaloniaui.net/) — cross-platform .NET UI framework
 - [asus-wmi kernel driver](https://github.com/torvalds/linux/tree/master/drivers/platform/x86) — Linux kernel ASUS WMI support
 
-## License
+---
+
+## `░▒▓█ 0x08 :: LICENSE █▓▒░`
 
 Same license as the original G-Helper project.
+
+---
+
+<div align="center">
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║   ░▒▓█ CONNECTION TERMINATED :: END OF TRANSMISSION █▓▒░                     ║
+║                                                                              ║
+║   > Keep your ASUS laptop running at peak performance                        ║
+║   > Monitor your thermals and fan curves                                     ║
+║   > Trust no one. Control everything.                                        ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+**`> SESSION_END :: 0x00000000`**
+
+</div>
