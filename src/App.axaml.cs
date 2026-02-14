@@ -158,27 +158,46 @@ public class App : Application
 
     private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
     {
-        var trayIcon = new TrayIcon
+        // Tray icons on Linux use D-Bus StatusNotifierItem (SNI) protocol.
+        // This requires a valid DBUS_SESSION_BUS_ADDRESS — running with plain
+        // 'sudo' breaks this. Use udev rules for non-root access instead,
+        // or run with: sudo -E ./ghelper-linux
+        var dbusAddr = Environment.GetEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS");
+        if (string.IsNullOrEmpty(dbusAddr))
         {
-            ToolTipText = $"G-Helper — {Modes.GetCurrentName()}",
-            IsVisible = true,
-            Menu = CreateTrayMenu(desktop)
-        };
+            Logger.WriteLine("WARNING: DBUS_SESSION_BUS_ADDRESS not set — tray icon will not appear.");
+            Logger.WriteLine("  Tip: Install udev rules to run without sudo, or use: sudo -E ./ghelper-linux");
+        }
 
-        // Load tray icon from embedded assets
         try
         {
-            var uri = new Uri("avares://ghelper-linux/UI/Assets/standard.ico");
-            trayIcon.Icon = new WindowIcon(AssetLoader.Open(uri));
+            var trayIcon = new TrayIcon
+            {
+                ToolTipText = $"G-Helper — {Modes.GetCurrentName()}",
+                IsVisible = true,
+                Menu = CreateTrayMenu(desktop)
+            };
+
+            // Load tray icon from embedded assets
+            try
+            {
+                var uri = new Uri("avares://ghelper-linux/UI/Assets/standard.ico");
+                trayIcon.Icon = new WindowIcon(AssetLoader.Open(uri));
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine("Could not load tray icon image", ex);
+            }
+
+            trayIcon.Clicked += (_, _) => ToggleMainWindow();
+            TrayIconInstance = trayIcon;
+
+            Logger.WriteLine("Tray icon created successfully");
         }
         catch (Exception ex)
         {
-            Logger.WriteLine("Could not load tray icon", ex);
+            Logger.WriteLine("Tray icon setup failed (D-Bus/SNI unavailable)", ex);
         }
-
-        trayIcon.Clicked += (_, _) => ToggleMainWindow();
-
-        TrayIconInstance = trayIcon;
     }
 
     /// <summary>Update tray icon and tooltip to reflect current performance mode.</summary>
