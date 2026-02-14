@@ -1,0 +1,27 @@
+# Build outputs
+src/bin/
+src/obj/
+dist/
+
+# IDE / Editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+
+# Rider
+*.sln.iml
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# NuGet (packages restored on build)
+*.nupkg

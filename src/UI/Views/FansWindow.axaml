@@ -1,0 +1,105 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:GHelper.Linux.UI.Controls"
+        x:Class="GHelper.Linux.UI.Views.FansWindow"
+        Title="Fans &amp; Power"
+        Width="700"
+        Height="620"
+        MinWidth="500"
+        MinHeight="400"
+        WindowStartupLocation="CenterScreen"
+        Background="#1C1C1C">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ═══════════════════ HEADER ═══════════════════ -->
+        <Border Grid.Row="0" Classes="panel-header" Margin="10,10,10,5">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Classes="header" Text="Fan Curves" FontSize="14" />
+                    <TextBlock x:Name="labelMode" Classes="label-dim"
+                               Text="Mode: Balanced" />
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="buttonApplyFans" Classes="ghelper"
+                        Content="Apply" Margin="4,0"
+                        Click="ButtonApplyFans_Click" />
+                <Button Grid.Column="2" x:Name="buttonReset" Classes="ghelper"
+                        Content="Reset" Margin="4,0"
+                        Click="ButtonReset_Click" />
+                <CheckBox Grid.Column="3" x:Name="checkApplyFans"
+                          Content="Auto-apply" Margin="8,0,0,0"
+                          VerticalAlignment="Center"
+                          Checked="CheckApplyFans_Changed"
+                          Unchecked="CheckApplyFans_Changed" />
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════════ CHARTS ═══════════════════ -->
+        <Grid Grid.Row="1" Margin="10,5" RowDefinitions="*,*">
+            <!-- CPU Fan Chart -->
+            <controls:FanCurveChart x:Name="chartCPU"
+                                     Grid.Row="0"
+                                     Margin="0,0,0,5"
+                                     FanLabel="CPU Fan"
+                                     LineColor="#3AAEEF" />
+
+            <!-- GPU Fan Chart -->
+            <controls:FanCurveChart x:Name="chartGPU"
+                                     Grid.Row="1"
+                                     Margin="0,5,0,0"
+                                     FanLabel="GPU Fan"
+                                     LineColor="#FF2020" />
+        </Grid>
+
+        <!-- ═══════════════════ POWER LIMITS ═══════════════════ -->
+        <Border Grid.Row="2" Classes="panel" Margin="10,5,10,10">
+            <StackPanel>
+                <TextBlock Classes="header" Text="Power Limits" Margin="0,0,0,8" />
+
+                <!-- PPT SPL (PL1) -->
+                <Grid ColumnDefinitions="120,*,50" Margin="0,4">
+                    <TextBlock Grid.Column="0" Text="CPU PL1 (SPL)"
+                               Classes="label-dim" VerticalAlignment="Center" />
+                    <Slider Grid.Column="1" x:Name="sliderPL1"
+                            Minimum="5" Maximum="120" Value="45"
+                            TickFrequency="5"
+                            ValueChanged="SliderPL1_ValueChanged" />
+                    <TextBlock Grid.Column="2" x:Name="labelPL1" Classes="value"
+                               Text="45W" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+
+                <!-- PPT SPPT (PL2) -->
+                <Grid ColumnDefinitions="120,*,50" Margin="0,4">
+                    <TextBlock Grid.Column="0" Text="CPU PL2 (SPPT)"
+                               Classes="label-dim" VerticalAlignment="Center" />
+                    <Slider Grid.Column="1" x:Name="sliderPL2"
+                            Minimum="5" Maximum="150" Value="65"
+                            TickFrequency="5"
+                            ValueChanged="SliderPL2_ValueChanged" />
+                    <TextBlock Grid.Column="2" x:Name="labelPL2" Classes="value"
+                               Text="65W" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Grid>
+
+                <!-- CPU Boost -->
+                <Grid ColumnDefinitions="120,*" Margin="0,8,0,0">
+                    <TextBlock Grid.Column="0" Text="CPU Boost"
+                               Classes="label-dim" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <Button x:Name="buttonBoostOff" Classes="ghelper"
+                                Content="Off" Click="ButtonBoostOff_Click" />
+                        <Button x:Name="buttonBoostOn" Classes="ghelper"
+                                Content="On" Click="ButtonBoostOn_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Sensor readings -->
+                <TextBlock x:Name="labelSensors" Classes="label-dim"
+                           Text="" Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+
+    </Grid>
+
+</Window>

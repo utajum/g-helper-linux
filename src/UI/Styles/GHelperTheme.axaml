@@ -1,0 +1,120 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        G-Helper exact color scheme (from RForm.cs):
+        Dark:  formBack=#1C1C1C  buttonMain=#373737  buttonSecond=#262626  foreMain=#F0F0F0  chartMain=#232323
+        Light: SystemColors defaults
+        
+        We force dark mode and match pixel-perfect.
+    -->
+
+    <Style Selector="Window">
+        <Setter Property="Background" Value="#1C1C1C" />
+        <Setter Property="Foreground" Value="#F0F0F0" />
+        <Setter Property="FontFamily" Value="Segoe UI, Ubuntu, DejaVu Sans, Liberation Sans, sans-serif" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Panel backgrounds matching G-Helper's dark theme -->
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="#262626" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Margin" Value="3" />
+    </Style>
+
+    <Style Selector="Border.panel-header">
+        <Setter Property="Background" Value="#373737" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="Margin" Value="2" />
+    </Style>
+
+    <!-- Buttons matching RButton.cs rounded style -->
+    <Style Selector="Button.ghelper">
+        <Setter Property="Background" Value="#373737" />
+        <Setter Property="Foreground" Value="#F0F0F0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Button.ghelper:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#454545" />
+    </Style>
+
+    <Style Selector="Button.ghelper-active">
+        <Setter Property="Background" Value="#373737" />
+        <Setter Property="Foreground" Value="#F0F0F0" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="BorderBrush" Value="#4CC2FF" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <!-- ComboBox styling -->
+    <Style Selector="ComboBox">
+        <Setter Property="Background" Value="#373737" />
+        <Setter Property="Foreground" Value="#F0F0F0" />
+        <Setter Property="CornerRadius" Value="5" />
+    </Style>
+
+    <!-- Slider styling -->
+    <Style Selector="Slider">
+        <Setter Property="Foreground" Value="#4CC2FF" />
+    </Style>
+
+    <!-- CheckBox styling -->
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="#F0F0F0" />
+    </Style>
+
+    <!-- TextBlock defaults -->
+    <Style Selector="TextBlock">
+        <Setter Property="Foreground" Value="#F0F0F0" />
+    </Style>
+
+    <Style Selector="TextBlock.header">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="#F0F0F0" />
+    </Style>
+
+    <Style Selector="TextBlock.label-dim">
+        <Setter Property="Foreground" Value="#A0A0A0" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style Selector="TextBlock.value">
+        <Setter Property="Foreground" Value="#4CC2FF" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <!-- Separator -->
+    <Style Selector="Separator">
+        <Setter Property="Background" Value="#333333" />
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="0,5" />
+    </Style>
+
+    <!-- TabControl styling for main sections -->
+    <Style Selector="TabControl">
+        <Setter Property="Background" Value="#1C1C1C" />
+    </Style>
+
+    <Style Selector="TabItem">
+        <Setter Property="Foreground" Value="#A0A0A0" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style Selector="TabItem:selected">
+        <Setter Property="Foreground" Value="#F0F0F0" />
+    </Style>
+
+</Styles>

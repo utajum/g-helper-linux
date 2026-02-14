@@ -1,0 +1,141 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GHelper.Linux.UI.Views.ExtraWindow"
+        Title="Extra Settings"
+        Width="500"
+        Height="550"
+        MinWidth="400"
+        MinHeight="400"
+        WindowStartupLocation="CenterScreen"
+        Background="#1C1C1C">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10" Spacing="5">
+
+            <!-- ═══════════════════ DISPLAY SETTINGS ═══════════════════ -->
+            <Border Classes="panel">
+                <StackPanel>
+                    <Border Classes="panel-header" Margin="0,0,0,8">
+                        <TextBlock Classes="header" Text="Display" />
+                    </Border>
+
+                    <!-- Brightness -->
+                    <Grid ColumnDefinitions="120,*,50" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="Brightness"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderBrightness"
+                                Minimum="0" Maximum="100" Value="100"
+                                ValueChanged="SliderBrightness_ValueChanged" />
+                        <TextBlock Grid.Column="2" x:Name="labelBrightness"
+                                   Classes="value" Text="100%"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <!-- Panel Overdrive -->
+                    <CheckBox x:Name="checkOverdrive" Content="Panel Overdrive"
+                              Margin="0,4"
+                              Checked="CheckOverdrive_Changed"
+                              Unchecked="CheckOverdrive_Changed" />
+
+                    <!-- Gamma -->
+                    <Grid ColumnDefinitions="120,*,50" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="Gamma"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderGamma"
+                                Minimum="50" Maximum="200" Value="100"
+                                TickFrequency="10"
+                                ValueChanged="SliderGamma_ValueChanged" />
+                        <TextBlock Grid.Column="2" x:Name="labelGamma"
+                                   Classes="value" Text="1.00"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════ POWER MANAGEMENT ═══════════════════ -->
+            <Border Classes="panel">
+                <StackPanel>
+                    <Border Classes="panel-header" Margin="0,0,0,8">
+                        <TextBlock Classes="header" Text="Power Management" />
+                    </Border>
+
+                    <!-- Platform Profile -->
+                    <Grid ColumnDefinitions="120,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="Platform Profile"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboPlatformProfile"
+                                  Width="200" SelectionChanged="ComboPlatformProfile_Changed">
+                            <ComboBoxItem Content="low-power" />
+                            <ComboBoxItem Content="balanced" />
+                            <ComboBoxItem Content="performance" />
+                        </ComboBox>
+                    </Grid>
+
+                    <!-- ASPM Policy -->
+                    <Grid ColumnDefinitions="120,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="PCIe ASPM"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboAspm"
+                                  Width="200" SelectionChanged="ComboAspm_Changed">
+                            <ComboBoxItem Content="default" />
+                            <ComboBoxItem Content="performance" />
+                            <ComboBoxItem Content="powersave" />
+                            <ComboBoxItem Content="powersupersave" />
+                        </ComboBox>
+                    </Grid>
+
+                    <!-- Battery Health -->
+                    <TextBlock x:Name="labelBatteryHealth" Classes="label-dim"
+                               Text="Battery health: --%" Margin="0,8,0,0" />
+                    <TextBlock x:Name="labelPowerDraw" Classes="label-dim"
+                               Text="Power draw: -- mW" Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════ SYSTEM INFO ═══════════════════ -->
+            <Border Classes="panel">
+                <StackPanel>
+                    <Border Classes="panel-header" Margin="0,0,0,8">
+                        <TextBlock Classes="header" Text="System Info" />
+                    </Border>
+
+                    <TextBlock x:Name="labelModel" Classes="label-dim"
+                               Text="Model: --" />
+                    <TextBlock x:Name="labelBios" Classes="label-dim"
+                               Text="BIOS: --" Margin="0,4,0,0" />
+                    <TextBlock x:Name="labelKernel" Classes="label-dim"
+                               Text="Kernel: --" Margin="0,4,0,0" />
+                    <TextBlock x:Name="labelAsusWmi" Classes="label-dim"
+                               Text="asus-wmi: --" Margin="0,4,0,0" />
+                    <TextBlock x:Name="labelFeatures" Classes="label-dim"
+                               Text="" Margin="0,4,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════ ADVANCED ═══════════════════ -->
+            <Border Classes="panel">
+                <StackPanel>
+                    <Border Classes="panel-header" Margin="0,0,0,8">
+                        <TextBlock Classes="header" Text="Advanced" />
+                    </Border>
+
+                    <CheckBox x:Name="checkAutoApplyPower" Content="Auto-apply power limits on mode change"
+                              Margin="0,4"
+                              Checked="CheckAutoApplyPower_Changed"
+                              Unchecked="CheckAutoApplyPower_Changed" />
+
+                    <CheckBox x:Name="checkScreenAuto" Content="Auto-switch refresh rate (AC/Battery)"
+                              Margin="0,4"
+                              Checked="CheckScreenAuto_Changed"
+                              Unchecked="CheckScreenAuto_Changed" />
+
+                    <Button x:Name="buttonOpenLog" Classes="ghelper"
+                            Content="Open Log File" Margin="0,8,0,0"
+                            Click="ButtonOpenLog_Click" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+
+</Window>

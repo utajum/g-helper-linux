@@ -1,0 +1,89 @@
+# G-Helper Linux — udev rules for non-root access to ASUS hardware controls
+# Install: sudo cp 90-ghelper.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
+#
+# These rules grant read/write access to ASUS sysfs attributes for members of
+# the "input" group (or any user with a login session via uaccess).
+
+# ── asus-nb-wmi platform device ──
+# Performance modes, power limits, panel overdrive, etc.
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{throttle_thermal_policy}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/throttle_thermal_policy"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{panel_od}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/panel_od"
+
+# PPT power limits (kernel 6.2+)
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{ppt_pl1_spl}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/ppt_pl1_spl"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{ppt_pl2_sppt}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/ppt_pl2_sppt"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{ppt_fppt}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/ppt_fppt"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{nv_dynamic_boost}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/nv_dynamic_boost"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{nv_temp_target}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/nv_temp_target"
+
+# ── asus-nb-wmi bus device ──
+# GPU Eco mode, MUX switch, Mini LED
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{dgpu_disable}!="", \
+  RUN+="/bin/chmod 0666 /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{gpu_mux_mode}!="", \
+  RUN+="/bin/chmod 0666 /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{mini_led_mode}!="", \
+  RUN+="/bin/chmod 0666 /sys/bus/platform/devices/asus-nb-wmi/mini_led_mode"
+
+# ── Battery charge limit ──
+SUBSYSTEM=="power_supply", ATTR{type}=="Battery", \
+  ATTR{charge_control_end_threshold}!="", \
+  RUN+="/bin/chmod 0666 $sys$devpath/charge_control_end_threshold"
+
+# ── Keyboard backlight ──
+SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
+  RUN+="/bin/chmod 0666 /sys/class/leds/asus::kbd_backlight/brightness"
+
+SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
+  ATTR{multi_intensity}!="", \
+  RUN+="/bin/chmod 0666 /sys/class/leds/asus::kbd_backlight/multi_intensity"
+
+# ── Fan curves (hwmon) ──
+# The asus_nb_wmi hwmon exposes pwm auto_point files for fan curve control.
+# We make them writable for non-root users.
+SUBSYSTEM=="hwmon", ATTR{name}=="asus_nb_wmi", \
+  RUN+="/bin/sh -c 'for f in /sys/class/hwmon/%k/pwm*_auto_point*; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
+
+SUBSYSTEM=="hwmon", ATTR{name}=="asus_nb_wmi", \
+  RUN+="/bin/sh -c 'for f in /sys/class/hwmon/%k/pwm*_enable; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
+
+# ── CPU boost ──
+# Intel
+ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="intel_pstate", \
+  RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/intel_pstate/no_turbo ] && chmod 0666 /sys/devices/system/cpu/intel_pstate/no_turbo'"
+
+# AMD / generic cpufreq
+ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="acpi_cpufreq", \
+  RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/cpufreq/boost ] && chmod 0666 /sys/devices/system/cpu/cpufreq/boost'"
+
+# ── ASUS WMI input device (hotkeys) ──
+# Grant read access to the event device so non-root can receive Fn-key events
+SUBSYSTEM=="input", ATTRS{name}=="Asus WMI hotkeys", TAG+="uaccess"
+
+# ── Backlight ──
+SUBSYSTEM=="backlight", ACTION=="add", \
+  RUN+="/bin/chmod 0666 /sys%p/brightness"
