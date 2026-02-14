@@ -55,9 +55,43 @@ public class LinuxPowerManager : IPowerManager
 
     public void SetPlatformProfile(string profile)
     {
-        // /sys/firmware/acpi/platform_profile accepts: "low-power", "balanced", "performance"
+        // /sys/firmware/acpi/platform_profile accepts a subset of: "low-power", "balanced", "performance", "quiet"
+        // Available profiles vary by firmware — read platform_profile_choices first
         if (SysfsHelper.Exists(SysfsHelper.PlatformProfile))
         {
+            string? choices = SysfsHelper.ReadAttribute(SysfsHelper.PlatformProfileChoices);
+            if (choices != null)
+            {
+                // choices is space-separated, e.g. "low-power balanced performance"
+                var available = choices.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                if (!available.Contains(profile))
+                {
+                    // Try mapping to closest available:
+                    //   "low-power" → "quiet" → "balanced"
+                    //   "performance" → "balanced"
+                    string? fallback = profile switch
+                    {
+                        "low-power" when available.Contains("quiet") => "quiet",
+                        "low-power" when available.Contains("balanced") => "balanced",
+                        "performance" when available.Contains("balanced") => "balanced",
+                        "quiet" when available.Contains("low-power") => "low-power",
+                        _ => null
+                    };
+
+                    if (fallback != null)
+                    {
+                        Helpers.Logger.WriteLine($"Platform profile '{profile}' not available, using '{fallback}' (choices: {choices})");
+                        profile = fallback;
+                    }
+                    else
+                    {
+                        Helpers.Logger.WriteLine($"Platform profile '{profile}' not supported (choices: {choices}), skipping");
+                        return;
+                    }
+                }
+            }
+
             SysfsHelper.WriteAttribute(SysfsHelper.PlatformProfile, profile);
             return;
         }

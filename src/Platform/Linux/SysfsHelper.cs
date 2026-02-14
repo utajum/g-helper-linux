@@ -24,6 +24,7 @@ public static class SysfsHelper
     public const string IntelPstate = "/sys/devices/system/cpu/intel_pstate";
     public const string DmiId = "/sys/class/dmi/id";
     public const string PlatformProfile = "/sys/firmware/acpi/platform_profile";
+    public const string PlatformProfileChoices = "/sys/firmware/acpi/platform_profile_choices";
     public const string PcieAspm = "/sys/module/pcie_aspm/parameters/policy";
 
     /// <summary>Read a sysfs attribute as a trimmed string. Returns null on failure.</summary>
@@ -82,6 +83,7 @@ public static class SysfsHelper
     /// <summary>
     /// Find the hwmon device for a given driver name (e.g., "asus_nb_wmi", "amdgpu", "nvidia").
     /// Returns the hwmon directory path or null.
+    /// Tries exact match first, then normalized match (underscores ↔ dashes), then partial match.
     /// </summary>
     public static string? FindHwmonByName(string driverName)
     {
@@ -89,13 +91,43 @@ public static class SysfsHelper
         {
             if (!Directory.Exists(Hwmon)) return null;
 
+            // Normalize: asus_nb_wmi ↔ asus-nb-wmi
+            string normalized = driverName.Replace('_', '-');
+            string withUnderscores = driverName.Replace('-', '_');
+
+            string? partialMatch = null;
+
             foreach (var hwmonDir in Directory.GetDirectories(Hwmon))
             {
                 var namePath = Path.Combine(hwmonDir, "name");
                 var name = ReadAttribute(namePath);
-                if (name != null && name.Equals(driverName, StringComparison.OrdinalIgnoreCase))
+                if (name == null) continue;
+
+                // Exact match
+                if (name.Equals(driverName, StringComparison.OrdinalIgnoreCase))
                     return hwmonDir;
+
+                // Normalized match (underscore vs dash)
+                if (name.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals(withUnderscores, StringComparison.OrdinalIgnoreCase))
+                    return hwmonDir;
+
+                // Partial match (e.g., "asus" matches "asus_wmi_sensors")
+                if (partialMatch == null && name.Contains(driverName.Split('_')[0], StringComparison.OrdinalIgnoreCase))
+                    partialMatch = hwmonDir;
             }
+
+            // Log all hwmon names for debugging if exact match failed
+            if (partialMatch == null)
+            {
+                foreach (var hwmonDir in Directory.GetDirectories(Hwmon))
+                {
+                    var name = ReadAttribute(Path.Combine(hwmonDir, "name"));
+                    Helpers.Logger.WriteLine($"  hwmon: {Path.GetFileName(hwmonDir)} = {name ?? "(no name)"}");
+                }
+            }
+
+            return partialMatch;
         }
         catch (Exception ex)
         {
