@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+
+permissions:
+  contents: write
+
+jobs:
+  # First job: determine the version
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
+    steps:
+      - name: Get latest release version from GitHub API
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Use GitHub API to get the latest release (more reliable than git tags)
+          LATEST_RELEASE=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name' 2>/dev/null || echo "")
+          echo "Latest release: $LATEST_RELEASE"
+
+          if [ -z "$LATEST_RELEASE" ]; then
+            NEW_VERSION="v1.0.0"
+          else
+            VERSION=${LATEST_RELEASE#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            NEW_PATCH=$((PATCH + 1))
+            NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+          fi
+          echo "New version: $NEW_VERSION"
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+
+  # Build the native AOT binary
+  build:
+    needs: [version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Install Native AOT dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Restore packages
+        run: dotnet restore src/ --runtime linux-x64
+
+      - name: Publish Native AOT binary
+        run: |
+          dotnet publish src/ -c Release --no-restore \
+            -p:Version="${{ needs.version.outputs.new_version }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghelper-linux
+          path: src/bin/Release/net8.0/linux-x64/publish/ghelper-linux
+
+  # Create release with all artifacts
+  release:
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cp artifacts/ghelper-linux/ghelper-linux release/
+          chmod +x release/ghelper-linux
+          ls -la release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.new_version }}
+          name: Release ${{ needs.version.outputs.new_version }}
+          body: |
+            ## G-Helper Linux ${{ needs.version.outputs.new_version }}
+
+            ASUS laptop control utility for Linux — native AOT binary, no runtime needed.
+
+            ### Download
+
+            | Platform | File | Description |
+            |----------|------|-------------|
+            | **Linux x64** | `ghelper-linux` | Native AOT standalone binary |
+
+            ### Installation
+
+            ```bash
+            # Download binary
+            curl -sL https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.new_version }}/ghelper-linux -o ghelper-linux
+            chmod +x ghelper-linux
+
+            # Run it
+            ./ghelper-linux
+            ```
+
+            Or use the install script from the repo for desktop integration (udev rules, .desktop file).
+
+            ---
+            *Auto-generated release from commit ${{ github.sha }}*
+          files: |
+            release/ghelper-linux
+          generate_release_notes: true
