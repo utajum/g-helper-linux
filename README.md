@@ -103,28 +103,36 @@ dotnet run
 
 #### Publish as native AOT binary (production)
 
+Use the build script:
+```bash
+cd g-helper-linux
+./build.sh
+```
+
+Or manually:
 ```bash
 cd g-helper-linux/src
 dotnet publish -c Release
 ```
 
-The output is in `bin/Release/net8.0/linux-x64/publish/`:
+The output is in `dist/` (or `src/bin/Release/net8.0/linux-x64/publish/` for manual builds):
 ```
 ghelper-linux          # 28 MB native ELF binary
 libHarfBuzzSharp.so    # 2.1 MB (text rendering)
 libSkiaSharp.so        # 8.9 MB (Skia rendering engine)
 ```
 
-Copy all three files to your desired location:
+Then install with the install script:
 ```bash
-sudo mkdir -p /opt/ghelper-linux
-sudo cp bin/Release/net8.0/linux-x64/publish/ghelper-linux /opt/ghelper-linux/
-sudo cp bin/Release/net8.0/linux-x64/publish/lib*.so /opt/ghelper-linux/
-sudo chmod +x /opt/ghelper-linux/ghelper-linux
+sudo ./install/install.sh
 ```
 
-Run it:
+Or copy manually:
 ```bash
+sudo mkdir -p /opt/ghelper-linux
+sudo cp dist/ghelper-linux /opt/ghelper-linux/
+sudo cp dist/lib*.so /opt/ghelper-linux/
+sudo chmod +x /opt/ghelper-linux/ghelper-linux
 /opt/ghelper-linux/ghelper-linux
 ```
 
