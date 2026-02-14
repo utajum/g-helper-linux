@@ -658,6 +658,9 @@ public partial class MainWindow : Window
             Helpers.Logger.WriteLine($"FnLock HID write failed: {ex.Message}");
         }
 
+        // Update software FnLock if applicable (for laptops without hardware support)
+        App.Input?.SetFnLock(newState);
+
         // Update button visual
         UpdateFnLockButton(newState);
 

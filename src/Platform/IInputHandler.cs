@@ -25,4 +25,7 @@ public interface IInputHandler : IDisposable
 
     /// <summary>Stop listening for input events.</summary>
     void StopListening();
+
+    /// <summary>Set software FnLock state (for laptops without hardware support).</summary>
+    void SetFnLock(bool enabled);
 }
