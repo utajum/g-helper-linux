@@ -19,13 +19,11 @@ A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the li
 
 ## Requirements
 
-### System
 - **OS:** Ubuntu 22.04+ / Debian 12+ / Fedora 38+ / Arch (any x64 Linux with glibc)
 - **Desktop:** X11 or Wayland (X11 recommended for full xrandr support)
 - **Kernel:** 6.2+ recommended, 6.9+ for all features
+- **Kernel module:** `asus-nb-wmi` must be loaded (it is by default on ASUS laptops)
 
-### Kernel modules
-The `asus-nb-wmi` kernel module must be loaded (it is by default on ASUS laptops):
 ```bash
 lsmod | grep asus
 # Should show: asus_nb_wmi, asus_wmi
@@ -42,146 +40,101 @@ lsmod | grep asus
 | NVIDIA Dynamic Boost / Temp Target | 6.2 |
 | MiniLED mode control | 6.9 |
 
-## Quick Start
+## Installation
 
-### Option 1: Download the pre-built binary
+### Download and install
+
+One command — downloads the latest release and installs everything:
 
 ```bash
-# Download the latest release
+git clone https://github.com/utajum/g-helper-linux.git
+cd g-helper-linux
+sudo ./install/install.sh
+```
+
+Or just grab the binary and run it directly:
+
+```bash
 curl -sL https://github.com/utajum/g-helper-linux/releases/latest/download/ghelper-linux -o ghelper-linux
 chmod +x ghelper-linux
 ./ghelper-linux
 ```
 
-For full installation with desktop integration, udev rules, and autostart:
-```bash
-git clone https://github.com/utajum/g-helper-linux.git
-cd g-helper-linux
-mkdir -p dist && cp /path/to/ghelper-linux dist/
-sudo ./install/install.sh
-```
+### Build from source
 
-### Option 2: Build from source
+Install prerequisites:
 
-#### Prerequisites
-
-Install the .NET 8 SDK:
 ```bash
 # Ubuntu/Debian
-sudo apt install dotnet-sdk-8.0
+sudo apt install dotnet-sdk-8.0 clang zlib1g-dev
 
 # Fedora
-sudo dnf install dotnet-sdk-8.0
+sudo dnf install dotnet-sdk-8.0 clang zlib-devel
 
 # Arch
-sudo pacman -S dotnet-sdk
-
-# Or use the official Microsoft installer:
-# https://dotnet.microsoft.com/download/dotnet/8.0
+sudo pacman -S dotnet-sdk clang
 ```
 
-Install build dependencies (for AOT native compilation):
-```bash
-# Ubuntu/Debian
-sudo apt install clang zlib1g-dev
-
-# Fedora
-sudo dnf install clang zlib-devel
-
-# Arch
-sudo pacman -S clang
-```
-
-#### Build and run (development)
+Build and install:
 
 ```bash
-cd g-helper-linux/src
-dotnet restore
-dotnet build
-dotnet run
-```
-
-#### Publish as native AOT binary (production)
-
-Use the build script:
-```bash
-cd g-helper-linux
 ./build.sh
+sudo ./install/install-local.sh
 ```
 
-Or manually:
-```bash
-cd g-helper-linux/src
-dotnet publish -c Release
-```
-
-The output is in `dist/` (or `src/bin/Release/net8.0/linux-x64/publish/` for manual builds):
-```
-ghelper-linux          # 28 MB native ELF binary
-libHarfBuzzSharp.so    # 2.1 MB (text rendering)
-libSkiaSharp.so        # 8.9 MB (Skia rendering engine)
-```
-
-Then install with the install script:
-```bash
-sudo ./install/install.sh
-```
-
-Or copy manually:
-```bash
-sudo mkdir -p /opt/ghelper-linux
-sudo cp dist/ghelper-linux /opt/ghelper-linux/
-sudo cp dist/lib*.so /opt/ghelper-linux/
-sudo chmod +x /opt/ghelper-linux/ghelper-linux
-/opt/ghelper-linux/ghelper-linux
-```
-
-## Permissions (udev rules)
-
-By default, writing to sysfs attributes requires root. The install script handles this automatically:
+<details>
+<summary>Manual build commands</summary>
 
 ```bash
-sudo ./install/install.sh
+# Development (JIT, fast iteration)
+cd src && dotnet restore && dotnet run
+
+# Production (Native AOT)
+cd src && dotnet publish -c Release
+# Output: src/bin/Release/net8.0/linux-x64/publish/ghelper-linux
 ```
 
-This installs udev rules (`install/90-ghelper.rules`) that grant non-root access to all ASUS hardware controls, plus the desktop entry, icon, and autostart. After installation, **reboot** or re-trigger udev:
+</details>
+
+## What the install scripts do
+
+Both `install.sh` and `install-local.sh` set up the same things:
+
+| What | Where |
+|------|-------|
+| Binary | `/usr/local/bin/ghelper-linux` |
+| Shared libraries | `/usr/local/lib/` (libHarfBuzzSharp, libSkiaSharp) |
+| udev rules | `/etc/udev/rules.d/90-ghelper.rules` |
+| Desktop entry | `/usr/share/applications/ghelper-linux.desktop` |
+| Autostart | `~/.config/autostart/ghelper-linux.desktop` |
+
+The difference: `install.sh` downloads the release binary, `install-local.sh` uses the local build from `dist/`.
+
+The udev rules grant non-root access to all ASUS sysfs controls (performance modes, fan curves, power limits, battery charge limit, keyboard backlight, GPU MUX, CPU boost, backlight brightness, and hotkey events).
+
+After installation, **reboot** or reload udev:
 
 ```bash
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
 <details>
-<summary>Manual udev setup (without install script)</summary>
+<summary>Manual setup (without install scripts)</summary>
 
 ```bash
+# udev rules
 sudo cp install/90-ghelper.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# Desktop entry + autostart
+sudo cp install/ghelper-linux.desktop /usr/share/applications/
+mkdir -p ~/.config/autostart
+cp install/ghelper-linux.desktop ~/.config/autostart/
 ```
 
-The rules file covers: performance modes, power limits, fan curves, battery charge limit, keyboard backlight, GPU MUX/Eco mode, CPU boost, backlight brightness, and ASUS hotkey events. See `install/90-ghelper.rules` for full details.
+See `install/90-ghelper.rules` for the full list of sysfs permissions.
 
 </details>
-
-## Autostart on login
-
-Use the built-in checkbox in the app footer, or manually:
-
-```bash
-mkdir -p ~/.config/autostart
-cat > ~/.config/autostart/ghelper-linux.desktop << EOF
-[Desktop Entry]
-Type=Application
-Name=G-Helper
-Comment=ASUS Laptop Control (Linux)
-Exec=/opt/ghelper-linux/ghelper-linux
-Icon=ghelper-linux
-Terminal=false
-Categories=System;HardwareSettings;
-StartupNotify=false
-X-GNOME-Autostart-enabled=true
-EOF
-```
 
 ## Configuration
 
@@ -193,47 +146,44 @@ Log output goes to `~/.config/ghelper-linux/log.txt`.
 
 ```
 g-helper-linux/
-  GHelper.Linux.sln
+  build.sh                                # Build script (Native AOT)
+  install/
+    install.sh                            # Download + install (end users)
+    install-local.sh                      # Install from local build (developers)
+    90-ghelper.rules                      # udev rules
+    ghelper-linux.desktop                 # Desktop entry
   src/
-    Program.cs                          # Entry point
-    App.axaml / App.axaml.cs            # Avalonia app + tray icon
-    GHelper.Linux.csproj                # Project file (AOT config)
-    TrimmerRoots.xml                    # AOT trimmer config
+    Program.cs                            # Entry point
+    App.axaml / App.axaml.cs              # Avalonia app + tray icon
+    GHelper.Linux.csproj                  # Project file (AOT config)
     Helpers/
-      Logger.cs                         # File logger
-      AppConfig.cs                      # Configuration (JSON, AOT-safe)
+      Logger.cs                           # File logger
+      AppConfig.cs                        # Configuration (JSON, AOT-safe)
     Mode/
-      Modes.cs                          # Performance mode definitions
-      ModeControl.cs                    # Mode change orchestrator
+      Modes.cs                            # Performance mode definitions
+      ModeControl.cs                      # Mode change orchestrator
     Platform/
-      IAsusWmi.cs                       # ASUS hardware interface
-      IPowerManager.cs                  # CPU boost, battery, ASPM
-      IGpuControl.cs                    # GPU monitoring/overclocking
-      IDisplayControl.cs                # Brightness, refresh rate, gamma
-      IInputHandler.cs                  # Hotkey events
-      IAudioControl.cs                  # Mic/speaker mute
-      ISystemIntegration.cs             # Model detection, notifications
       Linux/
-        SysfsHelper.cs                  # Core sysfs read/write utility
-        LinuxAsusWmi.cs                 # asus-wmi sysfs + evdev events
-        LinuxPowerManager.cs            # CPU boost, platform profile
-        LinuxDisplayControl.cs          # Backlight, xrandr, gamma
-        LinuxNvidiaGpuControl.cs        # nvidia-smi monitoring
-        LinuxAmdGpuControl.cs           # amdgpu sysfs monitoring
-        LinuxAudioControl.cs            # PulseAudio/PipeWire
-        LinuxInputHandler.cs            # evdev event forwarding
-        LinuxSystemIntegration.cs       # DMI sysfs, XDG autostart
+        SysfsHelper.cs                    # Core sysfs read/write utility
+        LinuxAsusWmi.cs                   # asus-wmi sysfs + evdev events
+        LinuxPowerManager.cs              # CPU boost, platform profile
+        LinuxDisplayControl.cs            # Backlight, xrandr, gamma
+        LinuxNvidiaGpuControl.cs          # nvidia-smi monitoring
+        LinuxAmdGpuControl.cs             # amdgpu sysfs monitoring
+        LinuxAudioControl.cs              # PulseAudio/PipeWire
+        LinuxInputHandler.cs              # evdev event forwarding
+        LinuxSystemIntegration.cs         # DMI sysfs, XDG autostart
     UI/
       Styles/
-        GHelperTheme.axaml              # Dark theme (pixel-perfect match)
+        GHelperTheme.axaml                # Dark theme
       Controls/
-        FanCurveChart.cs                # Custom interactive fan curve chart
+        FanCurveChart.cs                  # Interactive fan curve chart
       Views/
-        MainWindow.axaml / .cs          # Main settings (Performance, GPU, Screen, etc.)
-        FansWindow.axaml / .cs          # Fan curve editor + power limits
-        ExtraWindow.axaml / .cs         # Display, power, system info, advanced
+        MainWindow.axaml / .cs            # Main settings window
+        FansWindow.axaml / .cs            # Fan curve editor + power limits
+        ExtraWindow.axaml / .cs           # Display, power, system info
       Assets/
-        *.png, *.ico                    # 85 image assets from G-Helper
+        *.png, *.ico                      # Image assets
 ```
 
 ## How it works
