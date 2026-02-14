@@ -62,11 +62,19 @@ jobs:
       - name: Publish Native AOT binary
         run: dotnet publish src/ -c Release --no-restore
 
-      - name: Upload artifact
+      - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
           name: ghelper-linux
           path: src/bin/Release/net8.0/linux-x64/publish/ghelper-linux
+
+      - name: Upload native libs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-libs
+          path: |
+            src/bin/Release/net8.0/linux-x64/publish/libSkiaSharp.so
+            src/bin/Release/net8.0/linux-x64/publish/libHarfBuzzSharp.so
 
   # Create release with all artifacts
   release:
@@ -82,6 +90,8 @@ jobs:
         run: |
           mkdir -p release
           cp artifacts/ghelper-linux/ghelper-linux release/
+          cp artifacts/native-libs/libSkiaSharp.so release/
+          cp artifacts/native-libs/libHarfBuzzSharp.so release/
           chmod +x release/ghelper-linux
           ls -la release/
 
@@ -95,27 +105,31 @@ jobs:
 
             ASUS laptop control utility for Linux — native AOT binary, no runtime needed.
 
-            ### Download
-
-            | Platform | File | Description |
-            |----------|------|-------------|
-            | **Linux x64** | `ghelper-linux` | Native AOT standalone binary |
-
-            ### Installation
+            ### Quick Install
 
             ```bash
-            # Download binary
-            curl -sL https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.new_version }}/ghelper-linux -o ghelper-linux
-            chmod +x ghelper-linux
-
-            # Run it
-            ./ghelper-linux
+            curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/install.sh | sudo bash
             ```
 
-            Or use the install script from the repo for desktop integration (udev rules, .desktop file).
+            ### Manual Install
+
+            Download all 3 files, place them in the same directory, and run:
+
+            | File | Description |
+            |------|-------------|
+            | `ghelper-linux` | Main binary |
+            | `libSkiaSharp.so` | Skia graphics library |
+            | `libHarfBuzzSharp.so` | HarfBuzz text shaping library |
+
+            ```bash
+            chmod +x ghelper-linux
+            ./ghelper-linux
+            ```
 
             ---
             *Auto-generated release from commit ${{ github.sha }}*
           files: |
             release/ghelper-linux
+            release/libSkiaSharp.so
+            release/libHarfBuzzSharp.so
           generate_release_notes: true

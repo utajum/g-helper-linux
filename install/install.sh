@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # G-Helper Linux — Download & Install
-# Downloads the latest release binary and installs it system-wide.
+# Downloads the latest release and installs it system-wide.
 #
 # Usage:
 #   curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/install.sh | sudo bash
@@ -10,6 +10,7 @@ set -euo pipefail
 #   sudo ./install/install.sh
 
 REPO="utajum/g-helper-linux"
+INSTALL_DIR="/opt/ghelper-linux"
 
 echo "=== G-Helper Linux Installer ==="
 echo ""
@@ -25,13 +26,15 @@ fi
 WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
 
-# Download latest release binary
+# Download latest release files
 echo "[1/6] Downloading latest release..."
-if ! curl -fsSL "https://github.com/$REPO/releases/latest/download/ghelper-linux" -o "$WORK_DIR/ghelper-linux"; then
-    echo "ERROR: Failed to download. Check your internet connection."
-    echo "       https://github.com/$REPO/releases"
-    exit 1
-fi
+for file in ghelper-linux libSkiaSharp.so libHarfBuzzSharp.so; do
+    if ! curl -fsSL "https://github.com/$REPO/releases/latest/download/$file" -o "$WORK_DIR/$file"; then
+        echo "ERROR: Failed to download $file. Check your internet connection."
+        echo "       https://github.com/$REPO/releases"
+        exit 1
+    fi
+done
 chmod +x "$WORK_DIR/ghelper-linux"
 
 # Download install assets (udev rules, desktop entry) from repo
@@ -43,9 +46,15 @@ for file in 90-ghelper.rules ghelper-linux.desktop; do
     fi
 done
 
-# Install binary
-echo "[3/6] Installing binary to /usr/local/bin/..."
-install -m 755 "$WORK_DIR/ghelper-linux" /usr/local/bin/ghelper-linux
+# Install binary + native libs to /opt/ghelper-linux/
+echo "[3/6] Installing to $INSTALL_DIR/..."
+mkdir -p "$INSTALL_DIR"
+install -m 755 "$WORK_DIR/ghelper-linux" "$INSTALL_DIR/ghelper-linux"
+install -m 755 "$WORK_DIR/libSkiaSharp.so" "$INSTALL_DIR/libSkiaSharp.so"
+install -m 755 "$WORK_DIR/libHarfBuzzSharp.so" "$INSTALL_DIR/libHarfBuzzSharp.so"
+
+# Create symlink in PATH
+ln -sf "$INSTALL_DIR/ghelper-linux" /usr/local/bin/ghelper-linux
 
 # Install udev rules and reload
 echo "[4/6] Installing udev rules..."
@@ -71,7 +80,8 @@ fi
 echo ""
 echo "=== Installation Complete ==="
 echo ""
-echo "  Binary:    /usr/local/bin/ghelper-linux"
+echo "  App dir:   $INSTALL_DIR/ (binary + native libs)"
+echo "  Symlink:   /usr/local/bin/ghelper-linux"
 echo "  udev:      /etc/udev/rules.d/90-ghelper.rules  (reloaded)"
 echo "  Desktop:   /usr/share/applications/ghelper-linux.desktop"
 echo "  Autostart: ~/.config/autostart/ghelper-linux.desktop"

@@ -39,9 +39,6 @@ if ! command -v clang &>/dev/null; then
 fi
 
 # Clean previous build artifacts
-# Note: We only remove bin/ (not obj/) because the AOT compiler needs the
-# intermediate obj/native/ directory structure. dotnet clean's "error: Deleting file"
-# messages are cosmetic, not actual errors.
 echo ""
 echo "[1/4] Cleaning previous build..."
 rm -rf "$SRC_DIR/bin/Release" 2>/dev/null || true
@@ -54,9 +51,6 @@ if ! dotnet restore "$SRC_DIR" --runtime linux-x64 -q; then
 fi
 
 # Publish as native AOT
-# Note: MSBuild Avalonia build tasks emit verbose "error: Deleting file" lines
-# during the clean phase of publish that are NOT actual errors. We capture the
-# exit code and check for the actual binary to determine success.
 echo "[3/4] Compiling native AOT binary (this may take a minute)..."
 dotnet publish "$SRC_DIR" -c Release --no-restore 2>&1 | grep -v "^.*error : Deleting file" || true
 
@@ -76,12 +70,22 @@ mkdir -p "$DIST_DIR"
 cp "$PUBLISH_DIR/ghelper-linux" "$DIST_DIR/"
 chmod +x "$DIST_DIR/ghelper-linux"
 
+# Copy native .so libraries (required at runtime, loaded from same directory)
+for lib in libSkiaSharp.so libHarfBuzzSharp.so; do
+    if [[ -f "$PUBLISH_DIR/$lib" ]]; then
+        cp "$PUBLISH_DIR/$lib" "$DIST_DIR/"
+    fi
+done
+
 # Summary
 BINARY_SIZE=$(du -sh "$DIST_DIR/ghelper-linux" | cut -f1)
+TOTAL_SIZE=$(du -sh "$DIST_DIR" | cut -f1)
+FILE_COUNT=$(ls -1 "$DIST_DIR" | wc -l)
 
 echo ""
 echo "=== Build Complete ==="
-echo "  Binary:  $BINARY_SIZE  (ghelper-linux, single file — native libs embedded)"
+echo "  Binary:  $BINARY_SIZE  (ghelper-linux)"
+echo "  Total:   $TOTAL_SIZE  ($FILE_COUNT files)"
 echo "  Output:  $DIST_DIR/"
 echo ""
 echo "Run it:"
