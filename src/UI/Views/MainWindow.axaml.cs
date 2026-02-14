@@ -748,6 +748,21 @@ public partial class MainWindow : Window
         App.System?.SetAutostart(enabled);
     }
 
+    private ExtraWindow? _extraWindow;
+
+    private void ButtonExtra_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_extraWindow == null || !_extraWindow.IsVisible)
+        {
+            _extraWindow = new ExtraWindow();
+            _extraWindow.Show();
+        }
+        else
+        {
+            _extraWindow.Activate();
+        }
+    }
+
     private UpdatesWindow? _updatesWindow;
 
     private void ButtonUpdates_Click(object? sender, RoutedEventArgs e)
