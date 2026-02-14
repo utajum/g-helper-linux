@@ -57,8 +57,9 @@ jobs:
 
       - name: Publish Native AOT binary
         run: |
+          VERSION="${{ needs.version.outputs.new_version }}"
           dotnet publish src/ -c Release --no-restore \
-            -p:Version="${{ needs.version.outputs.new_version }}"
+            -p:Version="${VERSION#v}"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
