@@ -48,6 +48,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Patch version in .csproj
+        run: |
+          VERSION=${{ needs.version.outputs.new_version }}
+          VERSION=${VERSION#v}
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" src/GHelper.Linux.csproj
+          echo "Updated .csproj version to: ${VERSION}"
+          grep "<Version>" src/GHelper.Linux.csproj
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:

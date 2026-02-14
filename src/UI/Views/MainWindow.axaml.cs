@@ -736,7 +736,7 @@ public partial class MainWindow : Window
         if (sys == null) return;
 
         string model = sys.GetModelName() ?? "Unknown ASUS";
-        labelVersion.Text = $"G-Helper Linux v1.0.0 — {model}";
+        labelVersion.Text = $"G-Helper Linux v{Helpers.AppConfig.AppVersion} — {model}";
 
         // Check autostart status
         checkStartup.IsChecked = sys.IsAutostartEnabled();

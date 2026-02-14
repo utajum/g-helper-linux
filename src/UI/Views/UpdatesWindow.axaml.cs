@@ -42,7 +42,6 @@ public partial class UpdatesWindow : Window
         "ROG Font V1.5",
     };
 
-    private const string AppVersion = "1.0.0";
     private const string GitHubRepo = "utajum/g-helper-linux";
 
     private string? _model;
@@ -79,7 +78,7 @@ public partial class UpdatesWindow : Window
 
         var modelName = App.System?.GetModelName() ?? "Unknown";
         Title = $"BIOS & Driver Updates: {modelName} ({_model} BIOS {_biosVersion ?? "?"})";
-        labelAppVersion.Text = $"G-Helper Linux v{AppVersion} — {modelName}";
+        labelAppVersion.Text = $"G-Helper Linux v{Helpers.AppConfig.AppVersion} — {modelName}";
 
         _updatesCount = 0;
         labelUpdates.Text = "Checking...";
@@ -122,7 +121,7 @@ public partial class UpdatesWindow : Window
         try
         {
             using var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + AppVersion);
+            http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + Helpers.AppConfig.AppVersion);
             http.Timeout = TimeSpan.FromSeconds(10);
 
             // GitHub API: get latest release
@@ -149,7 +148,7 @@ public partial class UpdatesWindow : Window
                 }
             }
 
-            var isNewer = CompareVersions(latestVersion, AppVersion) > 0;
+            var isNewer = CompareVersions(latestVersion, Helpers.AppConfig.AppVersion) > 0;
 
             Dispatcher.UIThread.Post(() =>
             {
@@ -166,7 +165,7 @@ public partial class UpdatesWindow : Window
 
                     row.Children.Add(new TextBlock
                     {
-                        Text = $"New version available: v{latestVersion}  (current: v{AppVersion})",
+                        Text = $"New version available: v{latestVersion}  (current: v{Helpers.AppConfig.AppVersion})",
                         Foreground = ColorRed,
                         FontSize = 12,
                         FontWeight = FontWeight.Bold,
@@ -212,14 +211,14 @@ public partial class UpdatesWindow : Window
                 {
                     panelSelfUpdate.Children.Add(new TextBlock
                     {
-                        Text = $"v{AppVersion} — Up to date",
+                        Text = $"v{Helpers.AppConfig.AppVersion} — Up to date",
                         Foreground = ColorGreen,
                         FontSize = 12,
                     });
                 }
             });
 
-            Helpers.Logger.WriteLine($"Self-update: current=v{AppVersion} latest=v{latestVersion} newer={isNewer}");
+            Helpers.Logger.WriteLine($"Self-update: current=v{Helpers.AppConfig.AppVersion} latest=v{latestVersion} newer={isNewer}");
         }
         catch (Exception ex)
         {
@@ -229,7 +228,7 @@ public partial class UpdatesWindow : Window
                 panelSelfUpdate.Children.Clear();
                 panelSelfUpdate.Children.Add(new TextBlock
                 {
-                    Text = $"v{AppVersion} — Could not check for updates",
+                    Text = $"v{Helpers.AppConfig.AppVersion} — Could not check for updates",
                     Foreground = ColorDim,
                     FontSize = 12,
                 });
@@ -242,7 +241,7 @@ public partial class UpdatesWindow : Window
         try
         {
             using var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + AppVersion);
+            http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + Helpers.AppConfig.AppVersion);
             http.Timeout = TimeSpan.FromMinutes(5);
 
             var tmpPath = Path.Combine(Path.GetTempPath(), "ghelper-linux-update");

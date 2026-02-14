@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -41,6 +42,22 @@ public static class AppConfig
     private static string? _model;
     private static string? _modelShort;
     private static string? _bios;
+
+    /// <summary>
+    /// Get the app version from assembly metadata (set by .csproj &lt;Version&gt; or CI).
+    /// Returns "1.0.0" as fallback if metadata is unavailable.
+    /// </summary>
+    public static string AppVersion
+    {
+        get
+        {
+            var attr = typeof(AppConfig).Assembly
+                .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>();
+            // Strip commit hash if present (e.g., "1.0.7+abc123" → "1.0.7")
+            var version = attr?.InformationalVersion?.Split('+')[0] ?? "1.0.0";
+            return version;
+        }
+    }
 
     static AppConfig()
     {
