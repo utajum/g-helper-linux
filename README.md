@@ -1,3 +1,6 @@
+[![G-Helper for Linux](screenshot.png)](screenshot.png)
+
+*Click on the screenshot to view full size.*
 
 ```
  ██████╗       ██╗  ██╗███████╗██╗     ██████╗ ███████╗██████╗ 
@@ -29,14 +32,6 @@ Since `asusctl` doesn't really care about Ubuntu, I decided to port most functio
 The application is tested on KDE but other desktop environments should also work.
 
 Pull requests and feature requests are welcome!
-
----
-
-## `░▒▓█ ╔══[ SCREENSHOT ]══╗ █▓▒░`
-
-<a href="screenshot.png">
-<img src="screenshot.png" alt="G-Helper for Linux" width="100%"/>
-</a>
 
 ---
 
