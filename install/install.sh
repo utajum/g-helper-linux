@@ -148,7 +148,10 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
+
 echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
+echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
 echo "${GREEN}  ▸ TARGET${RESET} ${DIM}............................${RESET} ${CYAN}$INSTALL_DIR/${RESET}"
 echo "${GREEN}  ▸ SOURCE${RESET} ${DIM}............................${RESET} ${CYAN}github.com/$REPO${RESET}"
 
@@ -211,6 +214,12 @@ if [[ "$(readlink -f /usr/local/bin/ghelper 2>/dev/null)" == "$INSTALL_DIR/ghelp
 else
     ln -sf "$INSTALL_DIR/ghelper" /usr/local/bin/ghelper
     _inject "symlink → /usr/local/bin/ghelper"
+fi
+
+# Fix ownership so the real user can run ghelper without root
+if [[ -n "$REAL_USER" ]]; then
+    chown -R "$REAL_USER:$REAL_USER" "$INSTALL_DIR"
+    _info "ownership → ${BOLD}$REAL_USER:$REAL_USER${RESET} on $INSTALL_DIR/"
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -319,7 +328,6 @@ _inject "desktop entry → $DESKTOP_DEST"
 
 _step 6 "AUTOSTART IMPLANT"
 
-REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
     AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"

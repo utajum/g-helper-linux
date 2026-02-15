@@ -138,7 +138,10 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
+
 echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
+echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
 echo "${GREEN}  ▸ SOURCE${RESET} ${DIM}............................${RESET} ${CYAN}$DIST_DIR/${RESET}"
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -317,7 +320,6 @@ fi
 
 _step 6 "AUTOSTART IMPLANT"
 
-REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
     AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
