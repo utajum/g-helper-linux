@@ -220,9 +220,17 @@ public partial class FansWindow : Window
             bool isEcoMode = wmi.GetGpuEco();
             if (!isEcoMode && App.GpuControl?.IsAvailable() == true)
             {
-                int? gpuLoad = App.GpuControl.GetGpuUse();
-                if (gpuLoad.HasValue && gpuLoad.Value >= 0)
-                    gpuLoadStr = $" Load: {gpuLoad.Value}%";
+                try
+                {
+                    int? gpuLoad = App.GpuControl.GetGpuUse();
+                    if (gpuLoad.HasValue && gpuLoad.Value >= 0)
+                        gpuLoadStr = $" Load: {gpuLoad.Value}%";
+                }
+                catch (Exception)
+                {
+                    // Silently ignore GPU query errors during transitions
+                    Helpers.Logger.WriteLine("FansWindow: GPU load query failed");
+                }
             }
 
             string info = $"CPU: {(cpuTemp > 0 ? $"{cpuTemp}°C" : "--")} / {(cpuFan > 0 ? $"{cpuFan} RPM" : "--")}   " +

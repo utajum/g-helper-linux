@@ -15,6 +15,8 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _refreshTimer;
     private int _currentPerfMode = -1;
     private int _currentGpuMode = -1;  // 0=Eco, 1=Standard, 2=Optimized
+    private DateTime _lastGpuModeChange = DateTime.MinValue;  // Track when GPU mode last changed
+    private readonly TimeSpan _gpuModeChangeGracePeriod = TimeSpan.FromSeconds(3);  // Grace period after mode change
 
     // Accent colors matching G-Helper's RForm.cs
     private static readonly IBrush AccentBrush = new SolidColorBrush(Color.Parse("#4CC2FF"));
@@ -91,14 +93,23 @@ public partial class MainWindow : Window
             else
                 gpuFanStr = "--";
 
-            // GPU load: only show when dGPU is active (not in Eco mode)
+            // GPU load: only show when dGPU is active (not in Eco mode) and not during mode transition
             string gpuLoadStr = "";
             bool isEcoMode = wmi.GetGpuEco();
-            if (!isEcoMode && App.GpuControl?.IsAvailable() == true)
+            bool inGracePeriod = (DateTime.Now - _lastGpuModeChange) < _gpuModeChangeGracePeriod;
+            if (!isEcoMode && !inGracePeriod && App.GpuControl?.IsAvailable() == true)
             {
-                int? gpuLoad = App.GpuControl.GetGpuUse();
-                if (gpuLoad.HasValue && gpuLoad.Value >= 0)
-                    gpuLoadStr = $" Load: {gpuLoad.Value}%";
+                try
+                {
+                    int? gpuLoad = App.GpuControl.GetGpuUse();
+                    if (gpuLoad.HasValue && gpuLoad.Value >= 0)
+                        gpuLoadStr = $" Load: {gpuLoad.Value}%";
+                }
+                catch (Exception)
+                {
+                    // Silently ignore GPU query errors (e.g., GPU being disabled)
+                    Helpers.Logger.WriteLine("GPU load query failed (GPU may be transitioning)");
+                }
             }
 
             labelCPUFan.Text = $"CPU: {cpuTempStr}  Fan: {cpuFanStr}";
@@ -217,6 +228,7 @@ public partial class MainWindow : Window
 
     private void ButtonEco_Click(object? sender, RoutedEventArgs e)
     {
+        _lastGpuModeChange = DateTime.Now;
         App.Wmi?.SetGpuEco(true);
         _currentGpuMode = 0;
         RefreshGpuMode();
@@ -224,6 +236,7 @@ public partial class MainWindow : Window
 
     private void ButtonStandard_Click(object? sender, RoutedEventArgs e)
     {
+        _lastGpuModeChange = DateTime.Now;
         App.Wmi?.SetGpuEco(false);
         // Don't change MUX — leave it in hybrid mode
         _currentGpuMode = 1;
@@ -232,6 +245,7 @@ public partial class MainWindow : Window
 
     private void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
     {
+        _lastGpuModeChange = DateTime.Now;
         App.Wmi?.SetGpuEco(false);
         // MUX switch requires reboot notification
         if (App.Wmi?.GetGpuMuxMode() != 0)

@@ -242,6 +242,12 @@ public static class SysfsHelper
     /// <summary>Run a shell command and return stdout. Returns null on failure.</summary>
     public static string? RunCommand(string command, string args = "")
     {
+        return RunCommandWithTimeout(command, args, 5000);
+    }
+
+    /// <summary>Run a shell command with specified timeout (milliseconds).</summary>
+    public static string? RunCommandWithTimeout(string command, string args, int timeoutMs)
+    {
         try
         {
             var psi = new System.Diagnostics.ProcessStartInfo
@@ -257,10 +263,25 @@ public static class SysfsHelper
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) return null;
 
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit(5000);
-
-            return proc.ExitCode == 0 ? output : null;
+            // Read output with timeout
+            var outputTask = proc.StandardOutput.ReadToEndAsync();
+            if (outputTask.Wait(timeoutMs))
+            {
+                var output = outputTask.Result.Trim();
+                proc.WaitForExit(100); // Give a moment for exit code
+                return proc.ExitCode == 0 ? output : null;
+            }
+            else
+            {
+                // Timeout - kill the process
+                try
+                {
+                    proc.Kill();
+                    Helpers.Logger.WriteLine($"RunCommand timeout: {command} {args}");
+                }
+                catch { /* Ignore kill errors */ }
+                return null;
+            }
         }
         catch (Exception ex)
         {
