@@ -324,7 +324,6 @@ if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
     AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
     mkdir -p "$AUTOSTART_DIR"
-    chown "$REAL_USER:$REAL_USER" "/home/$REAL_USER/.config" "$AUTOSTART_DIR" 2>/dev/null || true
     install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"
     chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
     _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
