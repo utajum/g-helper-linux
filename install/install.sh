@@ -63,6 +63,47 @@ udevadm control --reload-rules
 udevadm trigger
 echo "       udev rules reloaded and triggered"
 
+# Apply permissions immediately for already-loaded modules/devices
+# (udev trigger may not re-fire for modules loaded at boot)
+echo "       Applying sysfs permissions..."
+for f in \
+    /sys/devices/platform/asus-nb-wmi/throttle_thermal_policy \
+    /sys/devices/platform/asus-nb-wmi/panel_od \
+    /sys/devices/platform/asus-nb-wmi/ppt_pl1_spl \
+    /sys/devices/platform/asus-nb-wmi/ppt_pl2_sppt \
+    /sys/devices/platform/asus-nb-wmi/ppt_fppt \
+    /sys/devices/platform/asus-nb-wmi/nv_dynamic_boost \
+    /sys/devices/platform/asus-nb-wmi/nv_temp_target \
+    /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable \
+    /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode \
+    /sys/bus/platform/devices/asus-nb-wmi/mini_led_mode \
+    /sys/module/pcie_aspm/parameters/policy \
+    /sys/firmware/acpi/platform_profile \
+    /sys/devices/system/cpu/intel_pstate/no_turbo \
+    /sys/devices/system/cpu/cpufreq/boost \
+    /sys/class/leds/asus::kbd_backlight/brightness \
+    /sys/class/leds/asus::kbd_backlight/multi_intensity; do
+    [ -f "$f" ] && chmod 0666 "$f" 2>/dev/null && echo "         ✓ $f" || true
+done
+# Battery charge limit
+for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do
+    [ -f "$f" ] && chmod 0666 "$f" 2>/dev/null && echo "         ✓ $f" || true
+done
+# Backlight
+for f in /sys/class/backlight/*/brightness; do
+    [ -f "$f" ] && chmod 0666 "$f" 2>/dev/null && echo "         ✓ $f" || true
+done
+# Fan curves (hwmon)
+for hwmon in /sys/class/hwmon/hwmon*; do
+    name=$(cat "$hwmon/name" 2>/dev/null)
+    if [[ "$name" == "asus_nb_wmi" || "$name" == "asus_custom_fan_curve" ]]; then
+        for f in "$hwmon"/pwm*_auto_point* "$hwmon"/pwm*_enable; do
+            [ -f "$f" ] && chmod 0666 "$f" 2>/dev/null || true
+        done
+        echo "         ✓ $hwmon ($name fan curves)"
+    fi
+done
+
 # Install desktop entry
 echo "[5/6] Installing desktop entry..."
 install -m 644 "$WORK_DIR/ghelper-linux.desktop" /usr/share/applications/ghelper-linux.desktop
