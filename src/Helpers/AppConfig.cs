@@ -401,8 +401,6 @@ public static class AppConfig
 
     // Keyboard / input
     public static bool IsInputBacklight() => ContainsModel("GA503") || IsSlash() || IsVivoZenPro();
-    public static bool IsHardwareFnLock() => IsVivoZenPro() || ContainsModel("GZ302EA");
-    public static bool IsInvertedFNLock() => ContainsModel("M140") || ContainsModel("S550") || ContainsModel("P540") || IsTUF();
     public static bool IsStrixNumpad() => ContainsModel("G713R");
     public static bool NoMKeys() => (ContainsModel("Z13") && !IsARCNM()) || ContainsModel("FX706") || ContainsModel("FA706") || ContainsModel("FA506") || ContainsModel("FX506") || ContainsModel("Duo") || ContainsModel("FX505");
     public static bool IsM4Button() => IsDUO() || ContainsModel("GZ302EA");

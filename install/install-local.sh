@@ -71,7 +71,7 @@ if [[ -n "$REAL_USER" ]]; then
 fi
 
 # 7. Summary
-echo "[7/7] Done."
+echo "[6/6] Done."
 echo ""
 echo "=== Installation Complete ==="
 echo ""
