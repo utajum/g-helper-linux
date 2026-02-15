@@ -71,7 +71,7 @@ public class ModeControl
 
         if (notify)
         {
-            App.System?.ShowNotification("G-Helper", $"Mode: {Modes.GetName(mode)}");
+            App.System?.ShowNotification("Performance", Modes.GetName(mode), "preferences-system-performance");
         }
     }
 

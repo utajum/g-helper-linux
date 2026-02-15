@@ -265,7 +265,7 @@ public class App : Application
 
             case "aura":
                 string modeName = Aura.CycleAuraMode();
-                System?.ShowNotification("G-Helper", $"Aura: {modeName}");
+                System?.ShowNotification("Aura", modeName, "preferences-desktop-color");
                 // Refresh main window keyboard section if visible
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     MainWindowInstance?.RefreshKeyboard());
@@ -282,22 +282,24 @@ public class App : Application
             case "micmute":
                 Audio?.ToggleMicMute();
                 bool micMuted = Audio?.IsMicMuted() ?? false;
-                System?.ShowNotification("G-Helper",
-                    micMuted ? "Microphone muted" : "Microphone unmuted");
+                System?.ShowNotification("Microphone",
+                    micMuted ? "Muted" : "Unmuted",
+                    micMuted ? "microphone-sensitivity-muted" : "microphone-sensitivity-high");
                 break;
 
             case "mute":
                 Audio?.ToggleSpeakerMute();
                 bool spkMuted = Audio?.IsSpeakerMuted() ?? false;
-                System?.ShowNotification("G-Helper",
-                    spkMuted ? "Speaker muted" : "Speaker unmuted");
+                System?.ShowNotification("Speaker",
+                    spkMuted ? "Muted" : "Unmuted",
+                    spkMuted ? "audio-volume-muted" : "audio-volume-high");
                 break;
 
             case "gpu_eco":
                 bool currentEco = Wmi?.GetGpuEco() ?? false;
                 Wmi?.SetGpuEco(!currentEco);
                 string gpuStatus = !currentEco ? "Eco (iGPU only)" : "Standard (dGPU)";
-                System?.ShowNotification("G-Helper", $"GPU: {gpuStatus}");
+                System?.ShowNotification("GPU Mode", gpuStatus, "video-display");
                 Logger.WriteLine($"GPU Eco toggled → {gpuStatus}");
                 break;
 
@@ -308,23 +310,26 @@ public class App : Application
             case "overdrive":
                 bool currentOd = Wmi?.GetPanelOverdrive() ?? false;
                 Wmi?.SetPanelOverdrive(!currentOd);
-                System?.ShowNotification("G-Helper",
-                    !currentOd ? "Panel Overdrive ON" : "Panel Overdrive OFF");
+                System?.ShowNotification("Panel Overdrive",
+                    !currentOd ? "Enabled" : "Disabled",
+                    "preferences-desktop-display");
                 break;
 
             case "miniled":
                 int currentMiniLed = Wmi?.GetMiniLedMode() ?? 0;
                 int nextMiniLed = currentMiniLed == 0 ? 1 : 0;
                 Wmi?.SetMiniLedMode(nextMiniLed);
-                System?.ShowNotification("G-Helper",
-                    nextMiniLed == 1 ? "MiniLED ON" : "MiniLED OFF");
+                System?.ShowNotification("Mini LED",
+                    nextMiniLed == 1 ? "Enabled" : "Disabled",
+                    "preferences-desktop-display");
                 break;
 
             case "camera":
                 bool camOn = LinuxSystemIntegration.IsCameraEnabled();
                 LinuxSystemIntegration.SetCameraEnabled(!camOn);
-                System?.ShowNotification("G-Helper",
-                    !camOn ? "Camera enabled" : "Camera disabled");
+                System?.ShowNotification("Camera",
+                    !camOn ? "Enabled" : "Disabled",
+                    !camOn ? "camera-on" : "camera-off");
                 break;
 
             case "touchpad":
@@ -332,8 +337,9 @@ public class App : Application
                 if (tpOn.HasValue)
                 {
                     LinuxSystemIntegration.SetTouchpadEnabled(!tpOn.Value);
-                    System?.ShowNotification("G-Helper",
-                        !tpOn.Value ? "Touchpad enabled" : "Touchpad disabled");
+                    System?.ShowNotification("Touchpad",
+                        !tpOn.Value ? "Enabled" : "Disabled",
+                        !tpOn.Value ? "input-touchpad-on" : "input-touchpad-off");
                 }
                 break;
         }
@@ -362,7 +368,7 @@ public class App : Application
         }
 
         display.SetRefreshRate(nextRate);
-        System?.ShowNotification("G-Helper", $"Refresh rate: {nextRate}Hz");
+        System?.ShowNotification("Display", $"Refresh rate: {nextRate}Hz", "video-display");
     }
 
     private void CycleKeyboardBrightness(bool up)
@@ -370,7 +376,15 @@ public class App : Application
         int current = Wmi?.GetKeyboardBrightness() ?? 0;
         int next = up ? Math.Min(current + 1, 3) : Math.Max(current - 1, 0);
         Wmi?.SetKeyboardBrightness(next);
-        System?.ShowNotification("G-Helper", $"Keyboard brightness: {next}");
+        string level = next switch
+        {
+            0 => "Off  ○○○",
+            1 => "Low  ●○○",
+            2 => "Medium  ●●○",
+            3 => "High  ●●●",
+            _ => $"Level {next}"
+        };
+        System?.ShowNotification("Keyboard", level, "keyboard-brightness");
     }
 
     private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
@@ -537,7 +551,7 @@ public class App : Application
         Wmi?.SetGpuEco(ecoEnabled);
         string status = ecoEnabled ? "Eco (iGPU only)" : "Standard (dGPU)";
         Logger.WriteLine($"GPU mode: {status}");
-        System?.ShowNotification("G-Helper", $"GPU: {status}");
+        System?.ShowNotification("GPU Mode", status, "video-display");
     }
 
     private void Shutdown(IClassicDesktopStyleApplicationLifetime desktop)

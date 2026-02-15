@@ -94,9 +94,19 @@ public class LinuxSystemIntegration : ISystemIntegration
         {
             Helpers.Logger.WriteLine($"ShowNotification: {title} - {body}");
             
-            var args = iconName != null
-                ? $"-i {iconName} \"{title}\" \"{body}\""
-                : $"\"{title}\" \"{body}\"";
+            // Build notify-send args:
+            //   -a "G-Helper"  → app name shown in notification center
+            //   -e             → transient (auto-dismiss, won't pile up in history)
+            //   -i ICON        → context-appropriate Breeze/freedesktop icon
+            //   -h string:x-canonical-private-synchronous:TAG
+            //                  → same-tagged notifications replace each other (no stacking)
+            var tag = title.Replace(" ", "").ToLowerInvariant();
+            var args = $"-a \"G-Helper\" -e -h string:x-canonical-private-synchronous:{tag}";
+            
+            if (iconName != null)
+                args += $" -i {iconName}";
+            
+            args += $" \"{title}\" \"{body}\"";
             
             var result = SysfsHelper.RunCommand("notify-send", args);
             if (result == null)

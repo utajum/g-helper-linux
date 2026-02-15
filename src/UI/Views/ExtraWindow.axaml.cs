@@ -440,8 +440,9 @@ public partial class ExtraWindow : Window
         if (_suppressEvents) return;
         bool enabled = checkCamera.IsChecked ?? true;
         LinuxSystemIntegration.SetCameraEnabled(enabled);
-        App.System?.ShowNotification("G-Helper",
-            enabled ? "Camera enabled" : "Camera disabled");
+        App.System?.ShowNotification("Camera",
+            enabled ? "Enabled" : "Disabled",
+            enabled ? "camera-on" : "camera-off");
     }
 
     private void CheckTouchpad_Changed(object? sender, RoutedEventArgs e)
@@ -449,8 +450,9 @@ public partial class ExtraWindow : Window
         if (_suppressEvents) return;
         bool enabled = checkTouchpad.IsChecked ?? true;
         LinuxSystemIntegration.SetTouchpadEnabled(enabled);
-        App.System?.ShowNotification("G-Helper",
-            enabled ? "Touchpad enabled" : "Touchpad disabled");
+        App.System?.ShowNotification("Touchpad",
+            enabled ? "Enabled" : "Disabled",
+            enabled ? "input-touchpad-on" : "input-touchpad-off");
     }
 
     private void CheckTouchscreen_Changed(object? sender, RoutedEventArgs e)
@@ -458,8 +460,9 @@ public partial class ExtraWindow : Window
         if (_suppressEvents) return;
         bool enabled = checkTouchscreen.IsChecked ?? true;
         LinuxSystemIntegration.SetTouchscreenEnabled(enabled);
-        App.System?.ShowNotification("G-Helper",
-            enabled ? "Touchscreen enabled" : "Touchscreen disabled");
+        App.System?.ShowNotification("Touchscreen",
+            enabled ? "Enabled" : "Disabled",
+            "preferences-desktop-touchscreen");
     }
 
     // ═══════════════════ POWER MANAGEMENT ═══════════════════
@@ -639,7 +642,7 @@ public partial class ExtraWindow : Window
             else
             {
                 Helpers.Logger.WriteLine("Logs are written to stdout — run the app from a terminal to see output");
-                App.System?.ShowNotification("G-Helper", "Logs are written to stdout — run from terminal to see output");
+                App.System?.ShowNotification("G-Helper", "Logs are written to stdout — run from terminal to see output", "dialog-information");
             }
         }
         catch (Exception ex)

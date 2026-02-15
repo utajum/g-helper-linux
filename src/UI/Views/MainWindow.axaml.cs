@@ -256,8 +256,8 @@ public partial class MainWindow : Window
         });
 
         // Show reboot notification immediately
-        App.System?.ShowNotification("G-Helper",
-            "Eco mode set — You must reboot for changes to take effect");
+        App.System?.ShowNotification("GPU Mode",
+            "Eco mode set — reboot required", "system-reboot");
         labelTipGPU.Text = "You must reboot for changes to take effect";
     }
 
@@ -286,8 +286,8 @@ public partial class MainWindow : Window
         });
 
         // Show reboot notification immediately
-        App.System?.ShowNotification("G-Helper",
-            "Standard mode set — You must reboot for changes to take effect");
+        App.System?.ShowNotification("GPU Mode",
+            "Standard mode set — reboot required", "system-reboot");
         labelTipGPU.Text = "You must reboot for changes to take effect";
     }
 
@@ -316,8 +316,8 @@ public partial class MainWindow : Window
         });
 
         // Show reboot notification immediately
-        App.System?.ShowNotification("G-Helper",
-            "Optimized mode set — You must reboot for changes to take effect");
+        App.System?.ShowNotification("GPU Mode",
+            "Optimized mode set — reboot required", "system-reboot");
         labelTipGPU.Text = "You must reboot for changes to take effect";
     }
 
