@@ -215,7 +215,7 @@ public class App : Application
             // Load tray icon from embedded assets
             try
             {
-                var uri = new Uri("avares://ghelper-linux/UI/Assets/standard.ico");
+                var uri = new Uri("avares://ghelper-linux/UI/Assets/favicon.ico");
                 trayIcon.Icon = new WindowIcon(AssetLoader.Open(uri));
             }
             catch (Exception ex)

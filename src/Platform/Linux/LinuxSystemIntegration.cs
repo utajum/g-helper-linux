@@ -92,10 +92,17 @@ public class LinuxSystemIntegration : ISystemIntegration
     {
         try
         {
+            Helpers.Logger.WriteLine($"ShowNotification: {title} - {body}");
+            
             var args = iconName != null
                 ? $"-i {iconName} \"{title}\" \"{body}\""
                 : $"\"{title}\" \"{body}\"";
-            SysfsHelper.RunCommand("notify-send", args);
+            
+            var result = SysfsHelper.RunCommand("notify-send", args);
+            if (result == null)
+            {
+                Helpers.Logger.WriteLine("notify-send failed (returned null)");
+            }
         }
         catch (Exception ex)
         {

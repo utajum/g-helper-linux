@@ -11,7 +11,7 @@
         ExtendClientAreaToDecorationsHint="False"
         SystemDecorations="Full"
         Background="#1C1C1C"
-        Icon="avares://ghelper-linux/UI/Assets/standard.ico">
+        Icon="avares://ghelper-linux/UI/Assets/favicon.ico">
 
     <Window.Styles>
         <!-- Active performance button gets accent border -->

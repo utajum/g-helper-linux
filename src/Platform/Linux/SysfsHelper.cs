@@ -265,10 +265,20 @@ public static class SysfsHelper
 
             // Read output with timeout
             var outputTask = proc.StandardOutput.ReadToEndAsync();
+            var errorTask = proc.StandardError.ReadToEndAsync();
+            
             if (outputTask.Wait(timeoutMs))
             {
                 var output = outputTask.Result.Trim();
+                var errorOutput = errorTask.IsCompleted ? errorTask.Result.Trim() : "";
+                
                 proc.WaitForExit(100); // Give a moment for exit code
+                
+                if (proc.ExitCode != 0 && !string.IsNullOrEmpty(errorOutput))
+                {
+                    Helpers.Logger.WriteLine($"RunCommand({command} {args}) failed with exit code {proc.ExitCode}: {errorOutput}");
+                }
+                
                 return proc.ExitCode == 0 ? output : null;
             }
             else
