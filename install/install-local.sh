@@ -178,18 +178,15 @@ _install_file "$DIST_DIR/ghelper" "$BINARY_DEST" 755 "ghelper binary" || true
 
 _step 3 "DEPLOYING UDEV RULESET"
 
-UDEV_CHANGED=0
-_install_file "$SCRIPT_DIR/90-ghelper.rules" "$UDEV_DEST" 644 "udev rules" && UDEV_CHANGED=0 || UDEV_CHANGED=1
+# Always write + reload + trigger udev rules unconditionally.
+# The rules list may grow between releases, and the daemon may not have
+# loaded them even if the file on disk looks the same.
+install -m 644 "$SCRIPT_DIR/90-ghelper.rules" "$UDEV_DEST"
+_inject "udev rules → $UDEV_DEST"
 
-if [[ $UDEV_CHANGED -eq 1 ]]; then
-    udevadm control --reload-rules
-    _info "udev daemon reloaded (rules changed)"
-else
-    _info "${DIM}udev rules unchanged — skipping daemon reload${RESET}"
-fi
+udevadm control --reload-rules
+_info "udev daemon reloaded"
 
-# Always trigger — re-fires RUN commands to re-apply sysfs permissions
-# (permissions are lost on reboot / module reload even if rules file is unchanged)
 udevadm trigger
 _info "udev trigger fired — re-applying all RUN commands"
 
