@@ -268,7 +268,9 @@ _info "sysfs summary: ${GREEN}${CHMOD_APPLIED} armed${RESET} / ${DIM}${CHMOD_SKI
 
 _step 5 "DESKTOP INTEGRATION LAYER"
 
-_install_file "$SCRIPT_DIR/ghelper.desktop" "$DESKTOP_DEST" 644 "desktop entry" || true
+# Always overwrite — .desktop entry may have new categories, keywords, or exec path
+install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$DESKTOP_DEST"
+_inject "desktop entry → $DESKTOP_DEST"
 
 # Icon
 ICON_SRC="$PROJECT_DIR/src/UI/Assets/favicon.ico"
@@ -321,13 +323,9 @@ if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
     mkdir -p "$AUTOSTART_DIR"
 
-    if [[ -f "$AUTOSTART_DEST" ]] && cmp -s "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"; then
-        _skip "autostart already deployed for user ${BOLD}$REAL_USER${RESET}"
-    else
-        install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"
-        chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
-        _inject "autostart for user ${BOLD}$REAL_USER${RESET}"
-    fi
+    install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"
+    chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
+    _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
 else
     _warn "Could not determine real user — skipping autostart"
 fi
