@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  G-HELPER LINUX — LOCAL DEPLOYMENT SEQUENCE                                 ║
-# ║  Installs from local build (dist/) produced by build.sh                     ║
-# ║  100% idempotent — safe to re-run infinitely                                ║
+# ║  G-HELPER LINUX — LOCAL DEPLOYMENT SEQUENCE                                  ║
+# ║  Installs from local build (dist/) produced by build.sh                      ║
+# ║  100% idempotent — safe to re-run infinitely                                 ║
 # ║                                                                              ║
 # ║  ./build.sh && sudo ./install/install-local.sh                               ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
@@ -122,7 +122,7 @@ echo "${DIM}    ░▒▓██████████████████�
 echo ""
 echo "${MAGENTA}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
 echo "${MAGENTA}${BOLD}    ║${RESET}  ${BOLD}LOCAL DEPLOYMENT SEQUENCE${RESET}              ${DIM}rev 1.0${RESET}       ${MAGENTA}${BOLD}║${RESET}"
-echo "${MAGENTA}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: VERIFY → INJECT → ARM → ACTIVATE${RESET}        ${MAGENTA}${BOLD}║${RESET}"
+echo "${MAGENTA}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: VERIFY → INJECT → ARM → ACTIVATE${RESET}          ${MAGENTA}${BOLD}║${RESET}"
 echo "${MAGENTA}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
 echo ""
 sleep 0.3

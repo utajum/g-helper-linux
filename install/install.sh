@@ -132,7 +132,7 @@ echo "${DIM}    ░▒▓██████████████████�
 echo ""
 echo "${CYAN}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
 echo "${CYAN}${BOLD}    ║${RESET}  ${BOLD}REMOTE DEPLOYMENT SEQUENCE${RESET}            ${DIM}rev 1.0${RESET}       ${CYAN}${BOLD}║${RESET}"
-echo "${CYAN}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: DOWNLOAD → VERIFY → INJECT → ARM${RESET}        ${CYAN}${BOLD}║${RESET}"
+echo "${CYAN}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: DOWNLOAD → VERIFY → INJECT → ARM${RESET}          ${CYAN}${BOLD}║${RESET}"
 echo "${CYAN}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
 echo ""
 sleep 0.3
