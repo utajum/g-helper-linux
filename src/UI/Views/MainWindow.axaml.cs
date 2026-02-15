@@ -172,6 +172,7 @@ public partial class MainWindow : Window
         if (_fansWindow == null || !_fansWindow.IsVisible)
         {
             _fansWindow = new FansWindow();
+            if (Helpers.AppConfig.Is("topmost")) _fansWindow.Topmost = true;
             _fansWindow.Show();
         }
         else
@@ -787,6 +788,7 @@ public partial class MainWindow : Window
         if (_extraWindow == null || !_extraWindow.IsVisible)
         {
             _extraWindow = new ExtraWindow();
+            if (Helpers.AppConfig.Is("topmost")) _extraWindow.Topmost = true;
             _extraWindow.Show();
         }
         else
@@ -802,6 +804,7 @@ public partial class MainWindow : Window
         if (_updatesWindow == null || !_updatesWindow.IsVisible)
         {
             _updatesWindow = new UpdatesWindow();
+            if (Helpers.AppConfig.Is("topmost")) _updatesWindow.Topmost = true;
             _updatesWindow.Show();
         }
         else

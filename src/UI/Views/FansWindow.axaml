@@ -9,7 +9,7 @@
         MinHeight="400"
         WindowStartupLocation="CenterScreen"
         Background="#1C1C1C"
-        Icon="avares://ghelper-linux/UI/Assets/favicon.ico">
+        Icon="avares://ghelper-linux/UI/Assets/standard.ico">
 
     <Grid RowDefinitions="Auto,*,Auto">
 

@@ -50,6 +50,7 @@ public class App : Application
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             MainWindowInstance = new MainWindow();
+            if (AppConfig.Is("topmost")) MainWindowInstance.Topmost = true;
 
             // Show main window on startup (like Windows G-Helper)
             desktop.MainWindow = MainWindowInstance;
@@ -65,6 +66,10 @@ public class App : Application
 
             // Update tray icon to match current mode
             UpdateTrayIcon();
+
+            // Restore clamshell mode if it was enabled
+            if (AppConfig.Is("toggle_clamshell_mode"))
+                UI.Views.ExtraWindow.StartClamshellInhibit();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -215,7 +220,8 @@ public class App : Application
             // Load tray icon from embedded assets
             try
             {
-                var uri = new Uri("avares://ghelper-linux/UI/Assets/favicon.ico");
+                string iconName = AppConfig.IsBWIcon() ? "dark-standard.ico" : "standard.ico";
+                var uri = new Uri($"avares://ghelper-linux/UI/Assets/{iconName}");
                 trayIcon.Icon = new WindowIcon(AssetLoader.Open(uri));
             }
             catch (Exception ex)
@@ -247,13 +253,15 @@ public class App : Application
 
             TrayIconInstance.ToolTipText = $"G-Helper — {name}";
 
-            // Select icon based on base mode
+            bool bw = AppConfig.IsBWIcon();
+
+            // Select icon based on base mode and B&W preference
             string iconName = baseMode switch
             {
-                0 => "standard.ico",   // Balanced
-                1 => "ultimate.ico",   // Turbo
-                2 => "eco.ico",        // Silent
-                _ => "standard.ico"
+                0 => bw ? "dark-standard.ico" : "standard.ico",   // Balanced
+                1 => bw ? "dark-standard.ico" : "ultimate.ico",   // Turbo (no dark-ultimate, use dark-standard)
+                2 => bw ? "dark-eco.ico"      : "eco.ico",        // Silent
+                _ => bw ? "dark-standard.ico" : "standard.ico"
             };
 
             try
@@ -264,6 +272,21 @@ public class App : Application
             catch
             {
                 // Ignore — icon may not exist
+            }
+        });
+    }
+
+    /// <summary>Apply Topmost setting to all currently open windows.</summary>
+    public static void SetTopmostAll(bool topmost)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                foreach (var window in desktop.Windows)
+                {
+                    window.Topmost = topmost;
+                }
             }
         });
     }
@@ -344,6 +367,7 @@ public class App : Application
         Logger.WriteLine("Shutting down...");
 
         // Cleanup
+        UI.Views.ExtraWindow.StopClamshellInhibit();
         Input?.Dispose();
         Wmi?.Dispose();
 

@@ -96,11 +96,6 @@ SUBSYSTEM=="hwmon", ATTR{name}=="asus_custom_fan_curve", \
 # Grant read access to the event device so non-root can receive Fn-key events
 SUBSYSTEM=="input", ATTRS{name}=="Asus WMI hotkeys", TAG+="uaccess"
 
-# ── FnLock ──
-SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
-  ATTR{fn_lock}!="", \
-  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/fn_lock"
-
 # ── ASUS HID devices (AURA RGB keyboard control) ──
 # Grant read/write access to ASUS HID raw devices for non-root AURA control
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0b05", MODE="0666"
@@ -110,10 +105,6 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="0b05", MODE="0666"
 SUBSYSTEM=="backlight", ACTION=="add", \
   RUN+="/bin/chmod 0666 /sys%p/brightness"
 
-# ── Software FnLock (evdev grab + uinput injection) ──
-# Grant access to uinput for creating virtual input devices
-KERNEL=="uinput", MODE="0666"
-KERNEL=="input", SUBSYSTEM=="input", MODE="0666"
-
-# Allow access to all input event devices (needed for SoftwareFnLock keyboard grab)
-SUBSYSTEM=="input", KERNEL=="event*", MODE="0666", TAG+="uaccess"
+# ── PCIe ASPM policy ──
+ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="pcie_aspm", \
+  RUN+="/bin/sh -c '[ -f /sys/module/pcie_aspm/parameters/policy ] && chmod 0666 /sys/module/pcie_aspm/parameters/policy'"

@@ -8,107 +8,10 @@
         MinHeight="500"
         WindowStartupLocation="CenterScreen"
         Background="#1C1C1C"
-        Icon="avares://ghelper-linux/UI/Assets/favicon.ico">
+        Icon="avares://ghelper-linux/UI/Assets/standard.ico">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10" Spacing="5">
-
-            <!-- ═══════════════════ KEY BINDINGS ═══════════════════ -->
-            <Border Classes="panel" x:Name="panelBindings">
-                <StackPanel>
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <TextBlock Classes="header" Text="Key Bindings" />
-                    </Border>
-
-                    <!-- M1 -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowM1">
-                        <TextBlock Grid.Column="0" x:Name="labelM1" Text="M1"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboM1" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textM1" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- M2 -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowM2">
-                        <TextBlock Grid.Column="0" x:Name="labelM2" Text="M2"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboM2" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textM2" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- M3 -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowM3">
-                        <TextBlock Grid.Column="0" x:Name="labelM3" Text="M3"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboM3" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textM3" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- M4 / ROG -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowM4">
-                        <TextBlock Grid.Column="0" x:Name="labelM4" Text="M4/ROG"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboM4" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textM4" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- Fn+F4 -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowFnF4">
-                        <TextBlock Grid.Column="0" x:Name="labelFnF4" Text="Fn+F4"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboFnF4" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textFnF4" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- Fn+C -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowFnC">
-                        <TextBlock Grid.Column="0" x:Name="labelFnC" Text="Fn+C"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboFnC" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textFnC" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- Fn+V -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowFnV">
-                        <TextBlock Grid.Column="0" x:Name="labelFnV" Text="Fn+V"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboFnV" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textFnV" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-
-                    <!-- Fn+NumpadEnter (TUF only) -->
-                    <Grid ColumnDefinitions="70,*,120" Margin="0,2" x:Name="rowFnE" IsVisible="False">
-                        <TextBlock Grid.Column="0" x:Name="labelFnE" Text="Fn+NumEnt"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" x:Name="comboFnE" Height="28" Margin="4,0"
-                                  HorizontalAlignment="Stretch" MaxDropDownHeight="300" />
-                        <TextBox Grid.Column="2" x:Name="textFnE" Height="28" Margin="4,0,0,0"
-                                 Watermark="Custom cmd"
-                                 Background="#262626" Foreground="#F0F0F0" FontSize="11" />
-                    </Grid>
-                </StackPanel>
-            </Border>
 
             <!-- ═══════════════════ KEYBOARD BACKLIGHT ═══════════════════ -->
             <Border Classes="panel">
@@ -137,32 +40,6 @@
                         <ComboBox Grid.Column="1" x:Name="comboKbdSpeed"
                                   Width="120" Height="28"
                                   SelectionChanged="ComboKbdSpeed_Changed" />
-                    </Grid>
-
-                    <!-- Backlight Timeout (battery) -->
-                    <Grid ColumnDefinitions="120,*,50" Margin="0,4">
-                        <TextBlock Grid.Column="0" Text="Timeout (Battery)"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <Slider Grid.Column="1" x:Name="sliderBacklightTimeout"
-                                Minimum="0" Maximum="600" Value="60"
-                                TickFrequency="10"
-                                ValueChanged="SliderBacklightTimeout_ValueChanged" />
-                        <TextBlock Grid.Column="2" x:Name="labelBacklightTimeout"
-                                   Classes="value" Text="60s"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Grid>
-
-                    <!-- Backlight Timeout (plugged in) -->
-                    <Grid ColumnDefinitions="120,*,50" Margin="0,4">
-                        <TextBlock Grid.Column="0" Text="Timeout (AC)"
-                                   Classes="label-dim" VerticalAlignment="Center" />
-                        <Slider Grid.Column="1" x:Name="sliderBacklightTimeoutAC"
-                                Minimum="0" Maximum="600" Value="0"
-                                TickFrequency="10"
-                                ValueChanged="SliderBacklightTimeoutAC_ValueChanged" />
-                        <TextBlock Grid.Column="2" x:Name="labelBacklightTimeoutAC"
-                                   Classes="value" Text="Off"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
 
                     <!-- Power Zone Checkboxes -->
@@ -287,7 +164,7 @@
                               Checked="CheckBWIcon_Changed"
                               Unchecked="CheckBWIcon_Changed" />
 
-                    <CheckBox x:Name="checkClamshell" Content="Toggle Clamshell Mode (disable sleep on lid close)"
+                    <CheckBox x:Name="checkClamshell" Content="Clamshell Mode (disable sleep on lid close)"
                               Margin="0,4"
                               Checked="CheckClamshell_Changed"
                               Unchecked="CheckClamshell_Changed" />
@@ -365,15 +242,6 @@
                               Margin="0,4"
                               Checked="CheckAutoApplyPower_Changed"
                               Unchecked="CheckAutoApplyPower_Changed" />
-
-                    <CheckBox x:Name="checkScreenAuto" Content="Auto-switch refresh rate (AC/Battery)"
-                              Margin="0,4"
-                              Checked="CheckScreenAuto_Changed"
-                              Unchecked="CheckScreenAuto_Changed" />
-
-                    <Button x:Name="buttonOpenLog" Classes="ghelper"
-                            Content="Open Log File" Margin="0,8,0,0"
-                            Click="ButtonOpenLog_Click" />
                 </StackPanel>
             </Border>
 
