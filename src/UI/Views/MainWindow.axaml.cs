@@ -17,9 +17,6 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _refreshTimer;
     private int _currentPerfMode = -1;
     private int _currentGpuMode = -1;  // 0=Eco, 1=Standard, 2=Optimized
-    private DateTime _lastGpuModeChange = DateTime.MinValue;  // Track when GPU mode last changed
-    private readonly TimeSpan _gpuModeChangeGracePeriod = TimeSpan.FromSeconds(3);  // Grace period after mode change
-    private bool _gpuModeSwitchInProgress = false;  // Prevent concurrent GPU mode switches
 
     // Accent colors matching G-Helper's RForm.cs
     private static readonly IBrush AccentBrush = new SolidColorBrush(Color.Parse("#4CC2FF"));
@@ -60,9 +57,7 @@ public partial class MainWindow : Window
     {
         RefreshPerformanceMode();
         RefreshGpuMode();
-        RefreshScreen();
         RefreshBattery();
-        RefreshKeyboard();
         RefreshSensorData();
         RefreshFooter();
     }
@@ -96,11 +91,10 @@ public partial class MainWindow : Window
             else
                 gpuFanStr = "--";
 
-            // GPU load: only show when dGPU is active (not in Eco mode) and not during mode transition
+            // GPU load: only show when dGPU is active (not in Eco mode)
             string gpuLoadStr = "";
             bool isEcoMode = wmi.GetGpuEco();
-            bool inGracePeriod = (DateTime.Now - _lastGpuModeChange) < _gpuModeChangeGracePeriod;
-            if (!isEcoMode && !inGracePeriod && App.GpuControl?.IsAvailable() == true)
+            if (!isEcoMode && App.GpuControl?.IsAvailable() == true)
             {
                 try
                 {
@@ -229,512 +223,89 @@ public partial class MainWindow : Window
         SetButtonActive(buttonOptimized, _currentGpuMode == 2);
     }
 
-    private async void ButtonEco_Click(object? sender, RoutedEventArgs e)
+    private void ButtonEco_Click(object? sender, RoutedEventArgs e)
     {
-        if (_gpuModeSwitchInProgress) return;
-        await SwitchGpuModeAsync(0, () =>
-        {
-            App.Wmi?.SetGpuEco(true);
-        });
-    }
-
-    private async void ButtonStandard_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_gpuModeSwitchInProgress) return;
-        await SwitchGpuModeAsync(1, () =>
-        {
-            App.Wmi?.SetGpuEco(false);
-            // Don't change MUX — leave it in hybrid mode
-        });
-    }
-
-    private async void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_gpuModeSwitchInProgress) return;
-        await SwitchGpuModeAsync(2, () =>
-        {
-            App.Wmi?.SetGpuEco(false);
-            // MUX switch requires reboot notification
-            if (App.Wmi?.GetGpuMuxMode() != 0)
-            {
-                App.Wmi?.SetGpuMuxMode(0);
-            }
-        });
-    }
-
-    private async Task SwitchGpuModeAsync(int targetMode, Action switchAction)
-    {
-        _gpuModeSwitchInProgress = true;
-        _lastGpuModeChange = DateTime.Now;
-
-        try
-        {
-            // Disable all GPU buttons and show "Switching..."
-            SetGpuButtonsEnabled(false);
-            SetGpuButtonText("Switching...");
-
-            // Show tip for Optimized mode
-            if (targetMode == 2 && App.Wmi?.GetGpuMuxMode() != 0)
-            {
-                labelTipGPU.Text = "MUX switch to dGPU direct — reboot required!";
-            }
-
-            // Run the actual switch on background thread
-            await Task.Run(() =>
-            {
-                switchAction();
-                // Give kernel time to complete the operation
-                Thread.Sleep(500);
-            });
-
-            _currentGpuMode = targetMode;
-
-            // Allow time for GPU to stabilize before querying
-            await Task.Delay(1000);
-        }
-        finally
-        {
-            // Re-enable buttons and restore state
-            SetGpuButtonsEnabled(true);
-            RestoreGpuButtonText();
-            RefreshGpuMode();
-            _gpuModeSwitchInProgress = false;
-        }
-    }
-
-    private void SetGpuButtonsEnabled(bool enabled)
-    {
-        buttonEco.IsEnabled = enabled;
-        buttonStandard.IsEnabled = enabled;
-        buttonOptimized.IsEnabled = enabled;
-    }
-
-    private void SetGpuButtonText(string text)
-    {
-        // Find the TextBlock inside each button and change it
-        if (buttonEco.Content is StackPanel ecoPanel)
-        {
-            var textBlock = ecoPanel.Children.OfType<TextBlock>().LastOrDefault();
-            if (textBlock != null) textBlock.Text = text;
-        }
-        if (buttonStandard.Content is StackPanel stdPanel)
-        {
-            var textBlock = stdPanel.Children.OfType<TextBlock>().LastOrDefault();
-            if (textBlock != null) textBlock.Text = text;
-        }
-        if (buttonOptimized.Content is StackPanel optPanel)
-        {
-            var textBlock = optPanel.Children.OfType<TextBlock>().LastOrDefault();
-            if (textBlock != null) textBlock.Text = text;
-        }
-    }
-
-    private void RestoreGpuButtonText()
-    {
-        if (buttonEco.Content is StackPanel ecoPanel)
-        {
-            var textBlock = ecoPanel.Children.OfType<TextBlock>().LastOrDefault();
-            if (textBlock != null) textBlock.Text = "Eco";
-        }
-        if (buttonStandard.Content is StackPanel stdPanel)
-        {
-            var textBlock = stdPanel.Children.OfType<TextBlock>().LastOrDefault();
-            if (textBlock != null) textBlock.Text = "Standard";
-        }
-        if (buttonOptimized.Content is StackPanel optPanel)
-        {
-            var textBlock = optPanel.Children.OfType<TextBlock>().LastOrDefault();
-            if (textBlock != null) textBlock.Text = "Optimized";
-        }
-    }
-
-    // ── Screen ──
-
-    private void RefreshScreen()
-    {
-        var display = App.Display;
-        if (display == null) return;
-
-        int hz = display.GetRefreshRate();
-        if (hz > 0)
-        {
-            labelScreenHz.Text = $"{hz} Hz";
-
-            // Update max refresh button label
-            var rates = display.GetAvailableRefreshRates();
-            if (rates.Count > 0)
-            {
-                int maxHz = rates[0];
-                labelHighRefresh.Text = $"{maxHz}Hz";
-            }
-        }
-
-        // Check for MiniLED support
-        bool hasMiniLed = App.Wmi?.IsFeatureSupported("mini_led_mode") ?? false;
-        buttonMiniled.IsVisible = hasMiniLed;
-    }
-
-    private void ButtonScreenAuto_Click(object? sender, RoutedEventArgs e)
-    {
-        // TODO: Toggle auto screen refresh rate
-        Helpers.Logger.WriteLine("Screen auto not yet implemented");
-    }
-
-    private void Button60Hz_Click(object? sender, RoutedEventArgs e)
-    {
-        App.Display?.SetRefreshRate(60);
-        RefreshScreen();
-    }
-
-    private void Button120Hz_Click(object? sender, RoutedEventArgs e)
-    {
-        var rates = App.Display?.GetAvailableRefreshRates();
-        if (rates != null && rates.Count > 0)
-            App.Display?.SetRefreshRate(rates[0]); // Use max available
-        else
-            App.Display?.SetRefreshRate(120);
-        RefreshScreen();
-    }
-
-    private void ButtonMiniled_Click(object? sender, RoutedEventArgs e)
-    {
-        var wmi = App.Wmi;
-        if (wmi == null) return;
-
-        int current = wmi.GetMiniLedMode();
-        int next = current switch
-        {
-            0 => 1,
-            1 => 2,
-            _ => 0
-        };
-        wmi.SetMiniLedMode(next);
-        Helpers.Logger.WriteLine($"MiniLED mode → {next}");
-    }
-
-    // ── Keyboard / AURA ──
-
-    private bool _auraInitialized = false;
-    private bool _suppressAuraEvents = false;
-
-    private void RefreshKeyboard()
-    {
-        var wmi = App.Wmi;
-        if (wmi == null) return;
-
-        int brightness = wmi.GetKeyboardBrightness();
-        if (brightness >= 0)
-        {
-            string level = brightness switch
-            {
-                0 => "Off",
-                1 => "Low",
-                2 => "Medium",
-                3 => "High",
-                _ => $"Level {brightness}"
-            };
-            labelBacklight.Text = $"Backlight: {level}";
-        }
-
-        InitAura();
-    }
-
-    private void InitAura()
-    {
-        if (_auraInitialized) return;
-        _auraInitialized = true;
-
-        bool hasAura = Aura.IsAvailable();
-        panelAura.IsVisible = hasAura;
-
-        if (!hasAura)
-        {
-            Helpers.Logger.WriteLine("No AURA HID device found — RGB controls hidden");
-            return;
-        }
-
-        Helpers.Logger.WriteLine("AURA HID device found — initializing RGB controls");
-
-        // Load saved values
-        Aura.Mode = (AuraMode)Helpers.AppConfig.Get("aura_mode");
-        Aura.Speed = (AuraSpeed)Helpers.AppConfig.Get("aura_speed");
-        Aura.SetColor(Helpers.AppConfig.Get("aura_color", unchecked((int)0xFFFFFFFF)));
-        Aura.SetColor2(Helpers.AppConfig.Get("aura_color2", 0));
-
-        _suppressAuraEvents = true;
-
-        // Populate mode combo
-        var modes = Aura.GetModes();
-        comboAuraMode.Items.Clear();
-        int selectedModeIdx = 0;
-        int idx = 0;
-        foreach (var kv in modes)
-        {
-            comboAuraMode.Items.Add(new ComboBoxItem { Content = kv.Value, Tag = (int)kv.Key });
-            if (kv.Key == Aura.Mode) selectedModeIdx = idx;
-            idx++;
-        }
-        comboAuraMode.SelectedIndex = selectedModeIdx;
-
-        // Populate speed combo
-        var speeds = Aura.GetSpeeds();
-        comboAuraSpeed.Items.Clear();
-        int selectedSpeedIdx = 0;
-        idx = 0;
-        foreach (var kv in speeds)
-        {
-            comboAuraSpeed.Items.Add(new ComboBoxItem { Content = kv.Value, Tag = (int)kv.Key });
-            if (kv.Key == Aura.Speed) selectedSpeedIdx = idx;
-            idx++;
-        }
-        comboAuraSpeed.SelectedIndex = selectedSpeedIdx;
-
-        _suppressAuraEvents = false;
-
-        // Update color button backgrounds and second color visibility
-        UpdateColorButtons();
-    }
-
-    private void UpdateColorButtons()
-    {
-        buttonColor1.Background = new SolidColorBrush(
-            Color.FromRgb(Aura.ColorR, Aura.ColorG, Aura.ColorB));
-        buttonColor2.Background = new SolidColorBrush(
-            Color.FromRgb(Aura.Color2R, Aura.Color2G, Aura.Color2B));
-        buttonColor2.IsVisible = Aura.HasSecondColor();
-
-        // Hide color buttons for modes that don't use color
-        buttonColor1.IsVisible = Aura.UsesColor();
-    }
-
-    private void ComboAuraMode_Changed(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_suppressAuraEvents) return;
-        if (comboAuraMode.SelectedItem is ComboBoxItem item && item.Tag is int modeVal)
-        {
-            Helpers.Logger.WriteLine($"AURA mode changed → {(AuraMode)modeVal}");
-            Helpers.AppConfig.Set("aura_mode", modeVal);
-            Aura.Mode = (AuraMode)modeVal;
-            UpdateColorButtons();
-            ApplyAuraAsync();
-        }
-    }
-
-    private void ComboAuraSpeed_Changed(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_suppressAuraEvents) return;
-        if (comboAuraSpeed.SelectedItem is ComboBoxItem item && item.Tag is int speedVal)
-        {
-            Helpers.AppConfig.Set("aura_speed", speedVal);
-            Aura.Speed = (AuraSpeed)speedVal;
-            ApplyAuraAsync();
-        }
-    }
-
-    private void ButtonColor1_Click(object? sender, RoutedEventArgs e)
-    {
-        ShowColorPicker("aura_color", Aura.ColorR, Aura.ColorG, Aura.ColorB, (r, g, b) =>
-        {
-            Aura.ColorR = r;
-            Aura.ColorG = g;
-            Aura.ColorB = b;
-            Helpers.AppConfig.Set("aura_color", Aura.GetColorArgb());
-            UpdateColorButtons();
-            ApplyAuraAsync();
-        });
-    }
-
-    private void ButtonColor2_Click(object? sender, RoutedEventArgs e)
-    {
-        ShowColorPicker("aura_color2", Aura.Color2R, Aura.Color2G, Aura.Color2B, (r, g, b) =>
-        {
-            Aura.Color2R = r;
-            Aura.Color2G = g;
-            Aura.Color2B = b;
-            Helpers.AppConfig.Set("aura_color2", Aura.GetColor2Argb());
-            UpdateColorButtons();
-            ApplyAuraAsync();
-        });
-    }
-
-    /// <summary>
-    /// Shows a simple color picker window.
-    /// Avalonia doesn't have a built-in color dialog, so we use a popup with sliders.
-    /// </summary>
-    private void ShowColorPicker(string configKey, byte initR, byte initG, byte initB, Action<byte, byte, byte> onColorSet)
-    {
-        var pickerWindow = new Window
-        {
-            Title = "Pick Color",
-            Width = 320,
-            Height = 420,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = new SolidColorBrush(Color.Parse("#1C1C1C")),
-            CanResize = false,
-            SystemDecorations = SystemDecorations.Full,
-        };
-
-        var preview = new Border
-        {
-            Width = 280,
-            Height = 50,
-            CornerRadius = new Avalonia.CornerRadius(6),
-            Background = new SolidColorBrush(Color.FromRgb(initR, initG, initB)),
-            Margin = new Avalonia.Thickness(0, 8, 0, 8),
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-        };
-
-        var sliderR = new Slider { Minimum = 0, Maximum = 255, Value = initR, Foreground = new SolidColorBrush(Color.FromRgb(255, 80, 80)) };
-        var sliderG = new Slider { Minimum = 0, Maximum = 255, Value = initG, Foreground = new SolidColorBrush(Color.FromRgb(80, 255, 80)) };
-        var sliderB = new Slider { Minimum = 0, Maximum = 255, Value = initB, Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 255)) };
-
-        var labelR = new TextBlock { Text = $"R: {initR}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
-        var labelG = new TextBlock { Text = $"G: {initG}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
-        var labelB = new TextBlock { Text = $"B: {initB}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
-
-        // Hex color input
-        var hexLabel = new TextBlock { Text = "Hex:", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 6, 0, 0), FontSize = 11 };
-        var hexInput = new TextBox
-        {
-            Text = $"#{initR:X2}{initG:X2}{initB:X2}",
-            Width = 100,
-            Height = 28,
-            FontSize = 12,
-            Margin = new Avalonia.Thickness(4, 2, 0, 0),
-            Background = new SolidColorBrush(Color.Parse("#262626")),
-            Foreground = Brushes.White,
-        };
-        bool _suppressHexUpdate = false;
-
-        void UpdatePreview()
-        {
-            byte r = (byte)sliderR.Value;
-            byte g = (byte)sliderG.Value;
-            byte b = (byte)sliderB.Value;
-            preview.Background = new SolidColorBrush(Color.FromRgb(r, g, b));
-            labelR.Text = $"R: {r}";
-            labelG.Text = $"G: {g}";
-            labelB.Text = $"B: {b}";
-            if (!_suppressHexUpdate)
-                hexInput.Text = $"#{r:X2}{g:X2}{b:X2}";
-        }
-
-        sliderR.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
-        sliderG.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
-        sliderB.PropertyChanged += (_, e) => { if (e.Property.Name == "Value") UpdatePreview(); };
-
-        // Parse hex input when user types
-        hexInput.TextChanged += (_, _) =>
-        {
-            var text = hexInput.Text?.Trim() ?? "";
-            if (!text.StartsWith("#")) text = "#" + text;
-            if (text.Length == 7)
-            {
-                try
-                {
-                    var c = Color.Parse(text);
-                    _suppressHexUpdate = true;
-                    sliderR.Value = c.R;
-                    sliderG.Value = c.G;
-                    sliderB.Value = c.B;
-                    _suppressHexUpdate = false;
-                    preview.Background = new SolidColorBrush(c);
-                    labelR.Text = $"R: {c.R}";
-                    labelG.Text = $"G: {c.G}";
-                    labelB.Text = $"B: {c.B}";
-                }
-                catch { }
-            }
-        };
-
-        var btnOk = new Button
-        {
-            Content = "Apply",
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-            Margin = new Avalonia.Thickness(0, 12, 0, 0),
-            MinWidth = 120,
-            MinHeight = 34,
-            Background = new SolidColorBrush(Color.Parse("#4CC2FF")),
-            Foreground = Brushes.Black,
-            FontWeight = Avalonia.Media.FontWeight.Bold,
-        };
-        btnOk.Click += (_, _) =>
-        {
-            onColorSet((byte)sliderR.Value, (byte)sliderG.Value, (byte)sliderB.Value);
-            pickerWindow.Close();
-        };
-
-        // Quick preset colors
-        var presetPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Spacing = 4, Margin = new Avalonia.Thickness(0, 4) };
-        var presets = new (byte R, byte G, byte B)[]
-        {
-            (255, 255, 255), (255, 0, 0), (0, 255, 0), (0, 0, 255),
-            (255, 255, 0), (0, 255, 255), (255, 0, 255), (255, 128, 0),
-        };
-        foreach (var (pr, pg, pb) in presets)
-        {
-            var btn = new Button
-            {
-                Width = 28, Height = 28,
-                Background = new SolidColorBrush(Color.FromRgb(pr, pg, pb)),
-                Margin = new Avalonia.Thickness(1),
-                BorderThickness = new Avalonia.Thickness(1),
-                BorderBrush = new SolidColorBrush(Color.Parse("#555555")),
-            };
-            byte cr = pr, cg = pg, cb = pb;
-            btn.Click += (_, _) =>
-            {
-                sliderR.Value = cr;
-                sliderG.Value = cg;
-                sliderB.Value = cb;
-            };
-            presetPanel.Children.Add(btn);
-        }
-
-        var hexRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Margin = new Avalonia.Thickness(0, 4) };
-        hexRow.Children.Add(hexLabel);
-        hexRow.Children.Add(hexInput);
-
-        var stack = new StackPanel { Margin = new Avalonia.Thickness(16, 8) };
-        stack.Children.Add(preview);
-        stack.Children.Add(presetPanel);
-        stack.Children.Add(hexRow);
-        stack.Children.Add(labelR);
-        stack.Children.Add(sliderR);
-        stack.Children.Add(labelG);
-        stack.Children.Add(sliderG);
-        stack.Children.Add(labelB);
-        stack.Children.Add(sliderB);
-        stack.Children.Add(btnOk);
-
-        pickerWindow.Content = stack;
-        pickerWindow.ShowDialog(this);
-    }
-
-    private void ApplyAuraAsync()
-    {
+        // Update UI immediately
+        _currentGpuMode = 0;
+        RefreshGpuMode();
+        
+        // Fire-and-forget sysfs write
         Task.Run(() =>
         {
             try
             {
-                Aura.ApplyAura();
+                App.Wmi?.SetGpuEco(true);
             }
             catch (Exception ex)
             {
-                Helpers.Logger.WriteLine("ApplyAura error", ex);
+                Helpers.Logger.WriteLine($"Eco mode switch failed: {ex.Message}");
             }
         });
+        
+        // Show reboot notification immediately
+        App.System?.ShowNotification("G-Helper", 
+            "Eco mode set — You must reboot for changes to take effect");
+        labelTipGPU.Text = "You must reboot for changes to take effect";
     }
 
-    private void ButtonKeyboard_Click(object? sender, RoutedEventArgs e)
+    private void ButtonStandard_Click(object? sender, RoutedEventArgs e)
     {
-        var wmi = App.Wmi;
-        if (wmi == null) return;
+        // Update UI immediately
+        _currentGpuMode = 1;
+        RefreshGpuMode();
+        
+        // Fire-and-forget sysfs write
+        Task.Run(() =>
+        {
+            try
+            {
+                App.Wmi?.SetGpuEco(false);
+                // MUX=1 for hybrid mode
+                if (App.Wmi?.GetGpuMuxMode() != 1)
+                {
+                    App.Wmi?.SetGpuMuxMode(1);
+                }
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine($"Standard mode switch failed: {ex.Message}");
+            }
+        });
+        
+        // Show reboot notification immediately
+        App.System?.ShowNotification("G-Helper", 
+            "Standard mode set — You must reboot for changes to take effect");
+        labelTipGPU.Text = "You must reboot for changes to take effect";
+    }
 
-        int current = wmi.GetKeyboardBrightness();
-        int next = (current + 1) % 4; // Cycle 0→1→2→3→0
-        wmi.SetKeyboardBrightness(next);
-        RefreshKeyboard();
+    private void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
+    {
+        // Update UI immediately
+        _currentGpuMode = 2;
+        RefreshGpuMode();
+        
+        // Fire-and-forget sysfs write
+        Task.Run(() =>
+        {
+            try
+            {
+                App.Wmi?.SetGpuEco(false);
+                // MUX=0 for dGPU direct
+                if (App.Wmi?.GetGpuMuxMode() != 0)
+                {
+                    App.Wmi?.SetGpuMuxMode(0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine($"Optimized mode switch failed: {ex.Message}");
+            }
+        });
+        
+        // Show reboot notification immediately
+        App.System?.ShowNotification("G-Helper", 
+            "Optimized mode set — You must reboot for changes to take effect");
+        labelTipGPU.Text = "You must reboot for changes to take effect";
     }
 
     // ── Battery ──
@@ -859,6 +430,65 @@ public partial class MainWindow : Window
         {
             desktop.Shutdown();
         }
+    }
+
+    // ── Stub Event Handlers (TODO: Implement) ──
+
+    private void ButtonScreenAuto_Click(object? sender, RoutedEventArgs e)
+    {
+        Helpers.Logger.WriteLine("Screen Auto mode clicked — not yet implemented");
+    }
+
+    private void Button60Hz_Click(object? sender, RoutedEventArgs e)
+    {
+        App.Display?.SetRefreshRate(60);
+        Helpers.Logger.WriteLine("Screen refresh rate set to 60Hz");
+    }
+
+    private void Button120Hz_Click(object? sender, RoutedEventArgs e)
+    {
+        App.Display?.SetRefreshRate(165); // Or get max from display
+        Helpers.Logger.WriteLine("Screen refresh rate set to 165Hz");
+    }
+
+    private void ButtonMiniled_Click(object? sender, RoutedEventArgs e)
+    {
+        Helpers.Logger.WriteLine("MiniLED mode clicked — not yet implemented");
+    }
+
+    private void ButtonKeyboard_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            int current = App.Wmi?.GetKeyboardBrightness() ?? 0;
+            int next = (current + 1) % 4; // Cycle 0->1->2->3->0
+            App.Wmi?.SetKeyboardBrightness(next);
+            Helpers.Logger.WriteLine($"Keyboard backlight: {current} -> {next}");
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine("Failed to cycle keyboard brightness", ex);
+        }
+    }
+
+    private void ComboAuraMode_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        // TODO: Implement AURA mode change
+    }
+
+    private void ComboAuraSpeed_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        // TODO: Implement AURA speed change
+    }
+
+    private void ButtonColor1_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Show color picker for primary color
+    }
+
+    private void ButtonColor2_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Show color picker for secondary color
     }
 
     // ── UI Helpers ──
