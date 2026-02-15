@@ -132,6 +132,42 @@ public static class SysfsHelper
         return null;
     }
 
+    /// <summary>Find a hwmon device by name that also contains a specific file (e.g., "fan1_input").
+    /// Tries names in order, returning the first match that has the required file.</summary>
+    public static string? FindHwmonByNameWithFile(string requiredFile, params string[] names)
+    {
+        try
+        {
+            if (!Directory.Exists(Hwmon)) return null;
+
+            foreach (var name in names)
+            {
+                foreach (var hwmonDir in Directory.GetDirectories(Hwmon))
+                {
+                    var namePath = Path.Combine(hwmonDir, "name");
+                    var hwmonName = ReadAttribute(namePath);
+                    if (hwmonName == null) continue;
+
+                    // Match name (with underscore/dash normalization)
+                    string normalized = name.Replace('_', '-');
+                    string withUnderscores = name.Replace('-', '_');
+
+                    bool nameMatch = hwmonName.Equals(name, StringComparison.OrdinalIgnoreCase)
+                                  || hwmonName.Equals(normalized, StringComparison.OrdinalIgnoreCase)
+                                  || hwmonName.Equals(withUnderscores, StringComparison.OrdinalIgnoreCase);
+
+                    if (nameMatch && File.Exists(Path.Combine(hwmonDir, requiredFile)))
+                        return hwmonDir;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"SysfsHelper.FindHwmonByNameWithFile({requiredFile}) failed", ex);
+        }
+        return null;
+    }
+
     /// <summary>Log all hwmon devices once at startup for diagnostics.</summary>
     public static void LogAllHwmon()
     {

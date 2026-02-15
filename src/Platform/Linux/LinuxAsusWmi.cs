@@ -20,9 +20,10 @@ namespace GHelper.Linux.Platform.Linux;
 /// </summary>
 public class LinuxAsusWmi : IAsusWmi
 {
-    private string? _asusFanHwmonDir;  // Fan curve control hwmon
-    private string? _asusBaseHwmonDir; // Base ASUS hwmon (temps, etc.)
-    private string? _cpuTempHwmonDir;  // CPU temperature hwmon (coretemp/k10temp)
+    private string? _asusFanRpmHwmonDir;   // Hwmon with fan*_input files (RPM reading)
+    private string? _asusFanCurveHwmonDir; // Hwmon with pwm*_auto_point* files (fan curve control)
+    private string? _asusBaseHwmonDir;     // Base ASUS hwmon (temps, etc.)
+    private string? _cpuTempHwmonDir;      // CPU temperature hwmon (coretemp/k10temp)
     private string? _batteryDir;
     private Thread? _eventThread;
     private volatile bool _eventListening;
@@ -32,13 +33,25 @@ public class LinuxAsusWmi : IAsusWmi
     public LinuxAsusWmi()
     {
         // Discover hwmon devices — names vary by kernel version:
-        //   Kernel <6.x:  "asus_nb_wmi" (single device for fans + temps)
-        //   Kernel 6.x+:  "asus_custom_fan_curve" (fans) + "asus" (base) + "coretemp"/"k10temp" (CPU)
-        _asusFanHwmonDir = SysfsHelper.FindHwmonByName("asus_nb_wmi")
-                        ?? SysfsHelper.FindHwmonByName("asus_custom_fan_curve");
+        //   Kernel <6.x:  "asus_nb_wmi" (single hwmon for fans + temps + curves)
+        //   Kernel 6.x+:  "asus" (base, has fan*_input for RPM)
+        //                  "asus_custom_fan_curve" (has pwm*_auto_point* for curve control, NO fan RPM)
+        //                  "coretemp"/"k10temp" (CPU temp)
+        //
+        // Fan RPM: find hwmon that actually has fan1_input
+        _asusFanRpmHwmonDir = SysfsHelper.FindHwmonByNameWithFile("fan1_input",
+                                  "asus", "asus_nb_wmi", "asus_custom_fan_curve")
+                           ?? SysfsHelper.FindHwmonByName("asus_nb_wmi")
+                           ?? SysfsHelper.FindHwmonByName("asus");
+
+        // Fan curves: prefer asus_custom_fan_curve (has pwm*_auto_point*), fallback to RPM hwmon
+        _asusFanCurveHwmonDir = SysfsHelper.FindHwmonByName("asus_custom_fan_curve")
+                             ?? SysfsHelper.FindHwmonByName("asus_nb_wmi")
+                             ?? _asusFanRpmHwmonDir;
 
         _asusBaseHwmonDir = SysfsHelper.FindHwmonByName("asus")
-                         ?? _asusFanHwmonDir;  // Fallback to fan hwmon if no separate base
+                         ?? SysfsHelper.FindHwmonByName("asus_nb_wmi")
+                         ?? _asusFanRpmHwmonDir;
 
         _cpuTempHwmonDir = SysfsHelper.FindHwmonByName("coretemp")   // Intel
                         ?? SysfsHelper.FindHwmonByName("k10temp");    // AMD
@@ -48,10 +61,15 @@ public class LinuxAsusWmi : IAsusWmi
         // Log discovery results
         SysfsHelper.LogAllHwmon();
 
-        if (_asusFanHwmonDir != null)
-            Helpers.Logger.WriteLine($"ASUS fan hwmon: {_asusFanHwmonDir}");
+        if (_asusFanRpmHwmonDir != null)
+            Helpers.Logger.WriteLine($"ASUS fan RPM hwmon: {_asusFanRpmHwmonDir}");
         else
-            Helpers.Logger.WriteLine("WARNING: ASUS fan hwmon not found. Fan curve features unavailable.");
+            Helpers.Logger.WriteLine("WARNING: No hwmon with fan*_input found. Fan RPM unavailable.");
+
+        if (_asusFanCurveHwmonDir != null)
+            Helpers.Logger.WriteLine($"ASUS fan curve hwmon: {_asusFanCurveHwmonDir}");
+        else
+            Helpers.Logger.WriteLine("WARNING: ASUS fan curve hwmon not found. Fan curve features unavailable.");
 
         if (_asusBaseHwmonDir != null)
             Helpers.Logger.WriteLine($"ASUS base hwmon: {_asusBaseHwmonDir}");
@@ -134,8 +152,8 @@ public class LinuxAsusWmi : IAsusWmi
 
     public int GetFanRpm(int fanIndex)
     {
-        // Try fan curve hwmon first, then base hwmon
-        var hwmon = _asusFanHwmonDir ?? _asusBaseHwmonDir;
+        // Use the hwmon that has fan*_input files (RPM sensors)
+        var hwmon = _asusFanRpmHwmonDir ?? _asusBaseHwmonDir;
         if (hwmon != null)
         {
             int rpm = SysfsHelper.ReadInt(
@@ -177,7 +195,7 @@ public class LinuxAsusWmi : IAsusWmi
 
     public byte[]? GetFanCurve(int fanIndex)
     {
-        if (_asusFanHwmonDir == null) return null;
+        if (_asusFanCurveHwmonDir == null) return null;
 
         var curve = new byte[16];
         int pwmIndex = fanIndex + 1;
@@ -186,13 +204,13 @@ public class LinuxAsusWmi : IAsusWmi
         {
             // Temperature in millidegrees → degrees
             int tempMilli = SysfsHelper.ReadInt(
-                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"), -1);
+                Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"), -1);
             if (tempMilli < 0) return null;
             curve[i] = (byte)(tempMilli / 1000);
 
             // PWM 0-255 → percentage 0-100
             int pwm = SysfsHelper.ReadInt(
-                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"), -1);
+                Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"), -1);
             if (pwm < 0) return null;
             curve[8 + i] = (byte)(pwm * 100 / 255);
         }
@@ -202,23 +220,23 @@ public class LinuxAsusWmi : IAsusWmi
 
     public void SetFanCurve(int fanIndex, byte[] curve)
     {
-        if (_asusFanHwmonDir == null || curve.Length != 16) return;
+        if (_asusFanCurveHwmonDir == null || curve.Length != 16) return;
 
         int pwmIndex = fanIndex + 1;
 
         // First set pwm_enable to 2 (automatic/curve mode)
-        SysfsHelper.WriteInt(Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_enable"), 2);
+        SysfsHelper.WriteInt(Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_enable"), 2);
 
         for (int i = 0; i < 8; i++)
         {
             // Degrees → millidegrees
             SysfsHelper.WriteInt(
-                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"),
+                Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"),
                 curve[i] * 1000);
 
             // Percentage 0-100 → PWM 0-255
             SysfsHelper.WriteInt(
-                Path.Combine(_asusFanHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"),
+                Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"),
                 curve[8 + i] * 255 / 100);
         }
     }
