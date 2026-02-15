@@ -25,6 +25,12 @@
             ╚══════════════════════════════════════╝
 ```
 
+## `░▒▓█ ╔══[ WEBSITE ]══╗ █▓▒░`
+
+**[g-helper-linux.elevatech.xyz](https://g-helper-linux.elevatech.xyz)**
+
+---
+
 ## `░▒▓█ ╔══[ MOTIVATION ]══╗ █▓▒░`
 
 Since `asusctl` doesn't really care about Ubuntu, I decided to port most functionality from the original [G-Helper](https://github.com/seerge/g-helper) for Windows.
