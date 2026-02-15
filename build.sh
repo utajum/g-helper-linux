@@ -2,7 +2,7 @@
 set -uo pipefail
 
 # G-Helper Linux — Build Script
-# Compiles the project as a native AOT binary and copies output to g-helper-linux/dist/
+# Compiles the project as a native AOT binary and copies output to dist/
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="$SCRIPT_DIR/src"
@@ -55,9 +55,9 @@ echo "[3/4] Compiling native AOT binary (this may take a minute)..."
 dotnet publish "$SRC_DIR" -c Release --no-restore 2>&1 | grep -v "^.*error : Deleting file" || true
 
 # Verify the binary was produced
-if [[ ! -f "$PUBLISH_DIR/ghelper-linux" ]]; then
+if [[ ! -f "$PUBLISH_DIR/ghelper" ]]; then
     echo ""
-    echo "ERROR: Build failed — binary not found at $PUBLISH_DIR/ghelper-linux"
+    echo "ERROR: Build failed — binary not found at $PUBLISH_DIR/ghelper"
     echo "Run 'dotnet publish src/ -c Release' manually to see full errors."
     exit 1
 fi
@@ -67,8 +67,8 @@ echo "[4/4] Copying to dist/..."
 rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR"
 
-cp "$PUBLISH_DIR/ghelper-linux" "$DIST_DIR/"
-chmod +x "$DIST_DIR/ghelper-linux"
+cp "$PUBLISH_DIR/ghelper" "$DIST_DIR/"
+chmod +x "$DIST_DIR/ghelper"
 
 # Copy native .so libraries (required at runtime, loaded from same directory)
 for lib in libSkiaSharp.so libHarfBuzzSharp.so; do
@@ -78,15 +78,15 @@ for lib in libSkiaSharp.so libHarfBuzzSharp.so; do
 done
 
 # Summary
-BINARY_SIZE=$(du -sh "$DIST_DIR/ghelper-linux" | cut -f1)
+BINARY_SIZE=$(du -sh "$DIST_DIR/ghelper" | cut -f1)
 TOTAL_SIZE=$(du -sh "$DIST_DIR" | cut -f1)
 FILE_COUNT=$(ls -1 "$DIST_DIR" | wc -l)
 
 echo ""
 echo "=== Build Complete ==="
-echo "  Binary:  $BINARY_SIZE  (ghelper-linux)"
+echo "  Binary:  $BINARY_SIZE  (ghelper)"
 echo "  Total:   $TOTAL_SIZE  ($FILE_COUNT files)"
 echo "  Output:  $DIST_DIR/"
 echo ""
 echo "Run it:"
-echo "  $DIST_DIR/ghelper-linux"
+echo "  $DIST_DIR/ghelper"

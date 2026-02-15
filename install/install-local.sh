@@ -24,15 +24,15 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Verify local build exists
-if [[ ! -f "$DIST_DIR/ghelper-linux" ]]; then
-    echo "ERROR: No binary found at $DIST_DIR/ghelper-linux"
+if [[ ! -f "$DIST_DIR/ghelper" ]]; then
+    echo "ERROR: No binary found at $DIST_DIR/ghelper"
     echo "Run ./build.sh first, or use ./install/install.sh to download the latest release."
     exit 1
 fi
 
 # 1. Install binary (single file — native libs are embedded)
 echo "[1/6] Installing binary to /usr/local/bin/..."
-install -m 755 "$DIST_DIR/ghelper-linux" /usr/local/bin/ghelper-linux
+install -m 755 "$DIST_DIR/ghelper" /usr/local/bin/ghelper
 
 # 2. Install udev rules and reload
 echo "[2/6] Installing udev rules..."
@@ -84,7 +84,7 @@ done
 
 # 3. Install desktop entry
 echo "[3/6] Installing desktop entry..."
-install -m 644 "$SCRIPT_DIR/ghelper-linux.desktop" /usr/share/applications/ghelper-linux.desktop
+install -m 644 "$SCRIPT_DIR/ghelper.desktop" /usr/share/applications/ghelper.desktop
 
 # 4. Install icon
 echo "[4/6] Installing icon..."
@@ -92,11 +92,11 @@ ICON_SRC="$PROJECT_DIR/src/UI/Assets/favicon.ico"
 if [[ -f "$ICON_SRC" ]]; then
     mkdir -p /usr/share/icons/hicolor/64x64/apps
     if command -v convert &>/dev/null; then
-        convert "$ICON_SRC[0]" /usr/share/icons/hicolor/64x64/apps/ghelper-linux.png 2>/dev/null
+        convert "$ICON_SRC[0]" /usr/share/icons/hicolor/64x64/apps/ghelper.png 2>/dev/null
     else
-        cp "$ICON_SRC" /usr/share/icons/hicolor/64x64/apps/ghelper-linux.ico
-        sed -i 's|Icon=ghelper-linux|Icon=/usr/share/icons/hicolor/64x64/apps/ghelper-linux.ico|' \
-            /usr/share/applications/ghelper-linux.desktop
+        cp "$ICON_SRC" /usr/share/icons/hicolor/64x64/apps/ghelper.ico
+        sed -i 's|Icon=ghelper|Icon=/usr/share/icons/hicolor/64x64/apps/ghelper.ico|' \
+            /usr/share/applications/ghelper.desktop
     fi
     gtk-update-icon-cache /usr/share/icons/hicolor 2>/dev/null || true
 fi
@@ -107,8 +107,8 @@ REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
     mkdir -p "$AUTOSTART_DIR"
-    install -m 644 "$SCRIPT_DIR/ghelper-linux.desktop" "$AUTOSTART_DIR/ghelper-linux.desktop"
-    chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DIR/ghelper-linux.desktop"
+    install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DIR/ghelper.desktop"
+    chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DIR/ghelper.desktop"
 fi
 
 # 7. Summary
@@ -116,9 +116,9 @@ echo "[6/6] Done."
 echo ""
 echo "=== Installation Complete ==="
 echo ""
-echo "  Binary:    /usr/local/bin/ghelper-linux"
+echo "  Binary:    /usr/local/bin/ghelper"
 echo "  udev:      /etc/udev/rules.d/90-ghelper.rules  (reloaded)"
-echo "  Desktop:   /usr/share/applications/ghelper-linux.desktop"
-echo "  Autostart: ~/.config/autostart/ghelper-linux.desktop"
+echo "  Desktop:   /usr/share/applications/ghelper.desktop"
+echo "  Autostart: ~/.config/autostart/ghelper.desktop"
 echo ""
-echo "Launch: ghelper-linux"
+echo "Launch: ghelper"

@@ -108,10 +108,20 @@ public class LinuxPowerManager : IPowerManager
         return SysfsHelper.RunCommand("powerprofilesctl", "get") ?? "balanced";
     }
 
+    private bool _aspmWritable = true; // Assume writable until proven otherwise
+
     public void SetAspmPolicy(string policy)
     {
+        if (!_aspmWritable) return; // Kernel blocks writes on some systems (built-in module)
+
         if (SysfsHelper.Exists(SysfsHelper.PcieAspm))
-            SysfsHelper.WriteAttribute(SysfsHelper.PcieAspm, policy);
+        {
+            if (!SysfsHelper.WriteAttribute(SysfsHelper.PcieAspm, policy))
+            {
+                _aspmWritable = false;
+                Helpers.Logger.WriteLine("ASPM policy is read-only on this kernel — use boot param pcie_aspm.policy=... instead");
+            }
+        }
     }
 
     public string GetAspmPolicy()

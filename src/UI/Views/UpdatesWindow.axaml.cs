@@ -134,13 +134,13 @@ public partial class UpdatesWindow : Window
             var releaseUrl = root.GetProperty("html_url").GetString() ?? $"https://github.com/{GitHubRepo}/releases/latest";
 
             // Find the binary download URL
-            var downloadUrl = $"https://github.com/{GitHubRepo}/releases/latest/download/ghelper-linux";
+            var downloadUrl = $"https://github.com/{GitHubRepo}/releases/latest/download/ghelper";
             if (root.TryGetProperty("assets", out var assets))
             {
                 for (int i = 0; i < assets.GetArrayLength(); i++)
                 {
                     var name = assets[i].GetProperty("name").GetString() ?? "";
-                    if (name == "ghelper-linux")
+                    if (name == "ghelper")
                     {
                         downloadUrl = assets[i].GetProperty("browser_download_url").GetString() ?? downloadUrl;
                         break;
@@ -244,7 +244,7 @@ public partial class UpdatesWindow : Window
             http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + Helpers.AppConfig.AppVersion);
             http.Timeout = TimeSpan.FromMinutes(5);
 
-            var tmpPath = Path.Combine(Path.GetTempPath(), "ghelper-linux-update");
+            var tmpPath = Path.Combine(Path.GetTempPath(), "ghelper-update");
             using (var stream = await http.GetStreamAsync(downloadUrl))
             using (var fs = File.Create(tmpPath))
             {
@@ -287,7 +287,7 @@ public partial class UpdatesWindow : Window
                 // Can't determine current binary path — save to downloads
                 var savePath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Downloads", "ghelper-linux");
+                    "Downloads", "ghelper");
                 File.Move(tmpPath, savePath, overwrite: true);
 
                 Dispatcher.UIThread.Post(() =>

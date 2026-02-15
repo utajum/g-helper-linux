@@ -16,7 +16,7 @@ public class LinuxSystemIntegration : ISystemIntegration
         _autostartDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".config", "autostart");
-        _desktopFilePath = Path.Combine(_autostartDir, "ghelper-linux.desktop");
+        _desktopFilePath = Path.Combine(_autostartDir, "ghelper.desktop");
     }
 
     public string GetModelName()
@@ -57,14 +57,14 @@ public class LinuxSystemIntegration : ISystemIntegration
         if (enabled)
         {
             Directory.CreateDirectory(_autostartDir);
-            var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "ghelper-linux";
+            var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "ghelper";
             var desktop = $"""
                 [Desktop Entry]
                 Type=Application
                 Name=G-Helper
                 Comment=ASUS Laptop Control (Linux)
                 Exec={exePath}
-                Icon=ghelper-linux
+                Icon=ghelper
                 Terminal=false
                 Categories=System;HardwareSettings;
                 StartupNotify=false

@@ -73,8 +73,8 @@ jobs:
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ghelper-linux
-          path: src/bin/Release/net8.0/linux-x64/publish/ghelper-linux
+          name: ghelper
+          path: src/bin/Release/net8.0/linux-x64/publish/ghelper
 
       - name: Upload native libs artifact
         uses: actions/upload-artifact@v4
@@ -97,10 +97,10 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir -p release
-          cp artifacts/ghelper-linux/ghelper-linux release/
+          cp artifacts/ghelper/ghelper release/
           cp artifacts/native-libs/libSkiaSharp.so release/
           cp artifacts/native-libs/libHarfBuzzSharp.so release/
-          chmod +x release/ghelper-linux
+          chmod +x release/ghelper
           ls -la release/
 
       - name: Create Release
@@ -125,19 +125,19 @@ jobs:
 
             | File | Description |
             |------|-------------|
-            | `ghelper-linux` | Main binary |
+            | `ghelper` | Main binary |
             | `libSkiaSharp.so` | Skia graphics library |
             | `libHarfBuzzSharp.so` | HarfBuzz text shaping library |
 
             ```bash
-            chmod +x ghelper-linux
-            ./ghelper-linux
+            chmod +x ghelper
+            ./ghelper
             ```
 
             ---
             *Auto-generated release from commit ${{ github.sha }}*
           files: |
-            release/ghelper-linux
+            release/ghelper
             release/libSkiaSharp.so
             release/libHarfBuzzSharp.so
           generate_release_notes: true

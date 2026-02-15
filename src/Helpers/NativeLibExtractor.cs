@@ -7,8 +7,8 @@ namespace GHelper.Linux.Helpers;
 /// Ensures native libraries (libSkiaSharp.so, libHarfBuzzSharp.so) can be found at runtime.
 /// 
 /// Search order:
-///   1. Same directory as the binary (normal case when installed to /opt/ghelper-linux/)
-///   2. ~/.cache/ghelper-linux/libs/ (extracted from embedded resources)
+///   1. Same directory as the binary (normal case when installed to /opt/ghelper/)
+///   2. ~/.cache/ghelper/libs/ (extracted from embedded resources)
 ///   3. System library paths (LD_LIBRARY_PATH, /usr/lib, etc.)
 /// 
 /// Must be called BEFORE any SkiaSharp/Avalonia code runs.
@@ -17,7 +17,7 @@ public static class NativeLibExtractor
 {
     private static readonly string CacheDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".cache", "ghelper-linux", "libs");
+        ".cache", "ghelper", "libs");
 
     private static readonly string[] NativeLibs = ["libHarfBuzzSharp.so", "libSkiaSharp.so"];
 

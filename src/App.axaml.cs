@@ -200,12 +200,12 @@ public class App : Application
         // Tray icons on Linux use D-Bus StatusNotifierItem (SNI) protocol.
         // This requires a valid DBUS_SESSION_BUS_ADDRESS — running with plain
         // 'sudo' breaks this. Use udev rules for non-root access instead,
-        // or run with: sudo -E ./ghelper-linux
+        // or run with: sudo -E ./ghelper
         var dbusAddr = Environment.GetEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS");
         if (string.IsNullOrEmpty(dbusAddr))
         {
             Logger.WriteLine("WARNING: DBUS_SESSION_BUS_ADDRESS not set — tray icon will not appear.");
-            Logger.WriteLine("  Tip: Install udev rules to run without sudo, or use: sudo -E ./ghelper-linux");
+            Logger.WriteLine("  Tip: Install udev rules to run without sudo, or use: sudo -E ./ghelper");
         }
 
         try
@@ -221,7 +221,7 @@ public class App : Application
             try
             {
                 string iconName = AppConfig.IsBWIcon() ? "dark-standard.ico" : "standard.ico";
-                var uri = new Uri($"avares://ghelper-linux/UI/Assets/{iconName}");
+                var uri = new Uri($"avares://ghelper/UI/Assets/{iconName}");
                 trayIcon.Icon = new WindowIcon(AssetLoader.Open(uri));
             }
             catch (Exception ex)
@@ -266,7 +266,7 @@ public class App : Application
 
             try
             {
-                var uri = new Uri($"avares://ghelper-linux/UI/Assets/{iconName}");
+                var uri = new Uri($"avares://ghelper/UI/Assets/{iconName}");
                 TrayIconInstance.Icon = new WindowIcon(AssetLoader.Open(uri));
             }
             catch

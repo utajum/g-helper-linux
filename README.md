@@ -83,9 +83,9 @@ Downloads the latest release and installs the binary, udev rules, desktop entry,
 Or just grab the binary and run it directly:
 
 ```bash
-curl -sL https://github.com/utajum/g-helper-linux/releases/latest/download/ghelper-linux -o ghelper-linux
-chmod +x ghelper-linux
-./ghelper-linux
+curl -sL https://github.com/utajum/g-helper-linux/releases/latest/download/ghelper -o ghelper
+chmod +x ghelper
+./ghelper
 ```
 
 ### `> BUILD FROM SOURCE`
@@ -119,7 +119,7 @@ cd src && dotnet restore && dotnet run
 
 # Production (Native AOT)
 cd src && dotnet publish -c Release
-# Output: src/bin/Release/net8.0/linux-x64/publish/ghelper-linux
+# Output: src/bin/Release/net8.0/linux-x64/publish/ghelper
 ```
 
 </details>
@@ -130,10 +130,10 @@ Both `install.sh` and `install-local.sh` set up the same things:
 
 | What | Where |
 |------|-------|
-| Binary | `/usr/local/bin/ghelper-linux` |
+| Binary | `/usr/local/bin/ghelper` |
 | udev rules | `/etc/udev/rules.d/90-ghelper.rules` |
-| Desktop entry | `/usr/share/applications/ghelper-linux.desktop` |
-| Autostart | `~/.config/autostart/ghelper-linux.desktop` |
+| Desktop entry | `/usr/share/applications/ghelper.desktop` |
+| Autostart | `~/.config/autostart/ghelper.desktop` |
 
 The difference: `install.sh` downloads the release binary, `install-local.sh` uses the local build from `dist/`.
 
@@ -154,9 +154,9 @@ sudo cp install/90-ghelper.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 
 # Desktop entry + autostart
-sudo cp install/ghelper-linux.desktop /usr/share/applications/
+sudo cp install/ghelper.desktop /usr/share/applications/
 mkdir -p ~/.config/autostart
-cp install/ghelper-linux.desktop ~/.config/autostart/
+cp install/ghelper.desktop ~/.config/autostart/
 ```
 
 See `install/90-ghelper.rules` for the full list of sysfs permissions.
@@ -165,7 +165,7 @@ See `install/90-ghelper.rules` for the full list of sysfs permissions.
 
 ## `░▒▓█ 0x03 :: CONFIGURATION █▓▒░`
 
-Config is stored in `~/.config/ghelper-linux/config.json`. It uses the same JSON key format as Windows G-Helper, so fan curves and mode settings are compatible.
+Config is stored in `~/.config/ghelper/config.json`. It uses the same JSON key format as Windows G-Helper, so fan curves and mode settings are compatible.
 
 ## `░▒▓█ 0x04 :: PROJECT STRUCTURE █▓▒░`
 
@@ -176,7 +176,7 @@ g-helper-linux/
     install.sh                            # Download + install (end users)
     install-local.sh                      # Install from local build (developers)
     90-ghelper.rules                      # udev rules
-    ghelper-linux.desktop                 # Desktop entry
+    ghelper.desktop                       # Desktop entry
   src/
     Program.cs                            # Entry point
     App.axaml / App.axaml.cs              # Avalonia app + tray icon

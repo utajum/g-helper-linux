@@ -20,7 +20,7 @@
     <OptimizationPreference>Size</OptimizationPreference>
 
     <!-- App metadata -->
-    <AssemblyName>ghelper-linux</AssemblyName>
+    <AssemblyName>ghelper</AssemblyName>
     <RootNamespace>GHelper.Linux</RootNamespace>
     <!-- ApplicationIcon is Windows-only; on Linux we use .desktop file icon -->
     <Version>1.0.0</Version>
@@ -50,7 +50,7 @@
 
   <!--
     Embed native .so libraries as resources for single-binary deployment.
-    At runtime, NativeLibExtractor extracts them to ~/.cache/ghelper-linux/libs/
+    At runtime, NativeLibExtractor extracts them to ~/.cache/ghelper/libs/
     and preloads them before SkiaSharp/Avalonia initializes.
   -->
   <Target Name="EmbedNativeLibraries" BeforeTargets="PrepareForBuild">

@@ -5,7 +5,7 @@
 
     <Application.Styles>
         <FluentTheme />
-        <StyleInclude Source="avares://ghelper-linux/UI/Styles/GHelperTheme.axaml" />
+        <StyleInclude Source="avares://ghelper/UI/Styles/GHelperTheme.axaml" />
     </Application.Styles>
 
 </Application>
