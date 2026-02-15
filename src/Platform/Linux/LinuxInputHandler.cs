@@ -1,30 +1,29 @@
 namespace GHelper.Linux.Platform.Linux;
 
 /// <summary>
-/// Linux input event handler for ASUS hotkeys via evdev.
-/// The asus-nb-wmi kernel module creates an input device that reports
-/// Fn-key combos as KEY_* events. We listen on /dev/input/eventN.
-/// 
-/// Note: The actual event listening is done in LinuxAsusWmi.SubscribeEvents()
-/// which reads the evdev device. This class provides the higher-level
-/// hotkey registration interface.
+/// Linux input handler — forwards ASUS evdev events to the application layer.
+/// The asus-nb-wmi kernel module and asus HID driver create input devices that report
+/// ASUS-specific hotkey events (Fn+F5, ROG key, Fn+F4, etc.).
+///
+/// Events come from two sources:
+///   - USB HID "Asus Keyboard" (event8) — most Fn keys on newer kernels with asus HID driver
+///   - WMI "Asus WMI hotkeys" (event9) — fallback for some models/keys
 /// </summary>
 public class LinuxInputHandler : IInputHandler
 {
     public event Action<int>? HotkeyPressed;
+    public event Action<string>? KeyBindingPressed;
     private volatile bool _listening;
 
     public void StartListening()
     {
         _listening = true;
-        // Events are received from LinuxAsusWmi.WmiEvent
-        // Wire them through here
         if (App.Wmi != null)
         {
             App.Wmi.WmiEvent += OnWmiEvent;
+            App.Wmi.KeyBindingEvent += OnKeyBindingEvent;
             App.Wmi.SubscribeEvents();
         }
-
         Helpers.Logger.WriteLine("Input handler started");
     }
 
@@ -32,22 +31,23 @@ public class LinuxInputHandler : IInputHandler
     {
         _listening = false;
         if (App.Wmi != null)
+        {
             App.Wmi.WmiEvent -= OnWmiEvent;
-        
+            App.Wmi.KeyBindingEvent -= OnKeyBindingEvent;
+        }
         Helpers.Logger.WriteLine("Input handler stopped");
-    }
-
-    public void SetFnLock(bool enabled)
-    {
-        // Software FnLock not implemented in this handler
-        // Would require evdev grab and key remapping
-        Helpers.Logger.WriteLine($"SetFnLock({enabled}) - not implemented in LinuxInputHandler");
     }
 
     private void OnWmiEvent(int eventCode)
     {
         if (!_listening) return;
         HotkeyPressed?.Invoke(eventCode);
+    }
+
+    private void OnKeyBindingEvent(string bindingName)
+    {
+        if (!_listening) return;
+        KeyBindingPressed?.Invoke(bindingName);
     }
 
     public void Dispose()

@@ -25,6 +25,7 @@ public partial class ExtraWindow : Window
         {
             _suppressEvents = true;
             InitKeyboardBacklight();
+            InitKeyBindings();
             RefreshDisplay();
             RefreshOther();
             RefreshPower();
@@ -166,6 +167,52 @@ public partial class ExtraWindow : Window
 
         // Apply via HID
         Task.Run(() => Aura.ApplyPower());
+    }
+
+    // ═══════════════════ KEY BINDINGS ═══════════════════
+
+    /// <summary>Maps combo box controls to their config key names.</summary>
+    private readonly Dictionary<ComboBox, string> _keyBindingCombos = new();
+
+    private void InitKeyBindings()
+    {
+        _keyBindingCombos[comboKeyM4] = "m4";
+        _keyBindingCombos[comboKeyFnF4] = "fnf4";
+        _keyBindingCombos[comboKeyFnF5] = "fnf5";
+
+        foreach (var (combo, bindingName) in _keyBindingCombos)
+        {
+            PopulateKeyBindingCombo(combo, bindingName);
+        }
+    }
+
+    private void PopulateKeyBindingCombo(ComboBox combo, string bindingName)
+    {
+        combo.Items.Clear();
+
+        string currentAction = App.GetKeyAction(bindingName);
+        int selectedIdx = 0;
+        int idx = 0;
+
+        foreach (var (actionId, displayName) in App.AvailableKeyActions)
+        {
+            combo.Items.Add(new ComboBoxItem { Content = displayName, Tag = actionId });
+            if (actionId == currentAction) selectedIdx = idx;
+            idx++;
+        }
+
+        combo.SelectedIndex = selectedIdx;
+    }
+
+    private void ComboKeyBinding_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        if (sender is not ComboBox combo) return;
+        if (!_keyBindingCombos.TryGetValue(combo, out string? bindingName)) return;
+        if (combo.SelectedItem is not ComboBoxItem item || item.Tag is not string actionId) return;
+
+        Helpers.AppConfig.Set(bindingName, actionId);
+        Helpers.Logger.WriteLine($"Key binding: {bindingName} → {actionId}");
     }
 
     // ═══════════════════ DISPLAY ═══════════════════

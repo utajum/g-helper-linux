@@ -430,21 +430,85 @@ public class LinuxAsusWmi : IAsusWmi
 
     private void EventLoop()
     {
-        // Find the asus-wmi input device in /dev/input/
-        string? inputDevice = FindAsusInputDevice();
-        if (inputDevice == null)
+        // Find all ASUS input devices.
+        // On newer kernels with the 'asus' HID driver, hotkey events come from the
+        // USB N-KEY Device ("Asus Keyboard" = event8), NOT from "Asus WMI hotkeys" (event9).
+        // We listen on ALL discovered ASUS input devices simultaneously using poll().
+        var devices = FindAsusInputDevices();
+        if (devices.Count == 0)
         {
-            Helpers.Logger.WriteLine("WARNING: Could not find asus-wmi input device for hotkey events");
+            Helpers.Logger.WriteLine("WARNING: Could not find any ASUS input device for hotkey events");
             return;
         }
 
-        Helpers.Logger.WriteLine($"Listening for ASUS events on {inputDevice}");
+        foreach (var dev in devices)
+            Helpers.Logger.WriteLine($"Listening for ASUS events on {dev}");
 
+        var streams = new List<FileStream>();
         try
         {
-            using var fs = new FileStream(inputDevice, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var buffer = new byte[24]; // sizeof(struct input_event) on 64-bit
+            foreach (var dev in devices)
+            {
+                try
+                {
+                    streams.Add(new FileStream(dev, FileMode.Open, FileAccess.Read, FileShare.Read));
+                }
+                catch (Exception ex)
+                {
+                    Helpers.Logger.WriteLine($"Could not open {dev}: {ex.Message}");
+                }
+            }
 
+            if (streams.Count == 0)
+            {
+                Helpers.Logger.WriteLine("WARNING: Could not open any ASUS input devices");
+                return;
+            }
+
+            // If only one device, use simple blocking read
+            if (streams.Count == 1)
+            {
+                ReadEventsFromStream(streams[0]);
+            }
+            else
+            {
+                // Multiple devices: read each in its own thread
+                var threads = new List<Thread>();
+                foreach (var stream in streams)
+                {
+                    var s = stream; // capture for closure
+                    var t = new Thread(() => ReadEventsFromStream(s))
+                    {
+                        Name = $"AsusWmi-Reader-{Path.GetFileName(s.Name)}",
+                        IsBackground = true
+                    };
+                    t.Start();
+                    threads.Add(t);
+                }
+                // Wait for all reader threads (they'll exit when _eventListening = false)
+                foreach (var t in threads)
+                    t.Join();
+            }
+        }
+        catch (Exception ex)
+        {
+            if (_eventListening)
+                Helpers.Logger.WriteLine("Event loop error", ex);
+        }
+        finally
+        {
+            foreach (var fs in streams)
+            {
+                try { fs.Dispose(); } catch { }
+            }
+        }
+    }
+
+    private void ReadEventsFromStream(FileStream fs)
+    {
+        var buffer = new byte[24]; // sizeof(struct input_event) on 64-bit
+        try
+        {
             while (_eventListening)
             {
                 int bytesRead = fs.Read(buffer, 0, 24);
@@ -458,48 +522,24 @@ public class LinuxAsusWmi : IAsusWmi
                     // EV_KEY = 1, key press = value 1
                     if (type == 1 && value == 1)
                     {
-                        int mappedEvent = MapLinuxKeyToGHelperEvent(code);
-                        if (mappedEvent > 0)
+                        string mappedKey = MapLinuxKeyToBindingName(code);
+                        if (mappedKey != "")
                         {
-                            Helpers.Logger.WriteLine($"ASUS event: key={code} → event={mappedEvent}");
-                            WmiEvent?.Invoke(mappedEvent);
+                            Helpers.Logger.WriteLine($"ASUS event: key={code} (0x{code:X}) → {mappedKey}");
+                            KeyBindingEvent?.Invoke(mappedKey);
                         }
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            if (_eventListening)
-                Helpers.Logger.WriteLine("Event loop error", ex);
-        }
-    }
-
-    private string? FindAsusInputDevice()
-    {
-        try
-        {
-            // Read /proc/bus/input/devices to find the asus-wmi input device
-            if (!File.Exists("/proc/bus/input/devices")) return null;
-
-            var content = File.ReadAllText("/proc/bus/input/devices");
-            var sections = content.Split("\n\n", StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var section in sections)
-            {
-                if (section.Contains("asus", StringComparison.OrdinalIgnoreCase) &&
-                    section.Contains("wmi", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Extract event device number
-                    foreach (var line in section.Split('\n'))
-                    {
-                        if (line.StartsWith("H: Handlers="))
+                        else
                         {
-                            var parts = line.Split(' ');
-                            foreach (var part in parts)
+                            // Also fire legacy numeric event for non-configurable keys
+                            int legacyEvent = MapLinuxKeyToLegacyEvent(code);
+                            if (legacyEvent > 0)
                             {
-                                if (part.StartsWith("event"))
-                                    return $"/dev/input/{part}";
+                                Helpers.Logger.WriteLine($"ASUS event: key={code} (0x{code:X}) → legacy={legacyEvent}");
+                                WmiEvent?.Invoke(legacyEvent);
+                            }
+                            else
+                            {
+                                Helpers.Logger.WriteLine($"ASUS event: key={code} (0x{code:X}) → unmapped");
                             }
                         }
                     }
@@ -508,18 +548,100 @@ public class LinuxAsusWmi : IAsusWmi
         }
         catch (Exception ex)
         {
-            Helpers.Logger.WriteLine("FindAsusInputDevice failed", ex);
+            if (_eventListening)
+                Helpers.Logger.WriteLine($"Reader error on {fs.Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>Find all ASUS input devices in /dev/input/.</summary>
+    private static List<string> FindAsusInputDevices()
+    {
+        var result = new List<string>();
+        try
+        {
+            if (!File.Exists("/proc/bus/input/devices")) return result;
+
+            var content = File.ReadAllText("/proc/bus/input/devices");
+            var sections = content.Split("\n\n", StringSplitOptions.RemoveEmptyEntries);
+
+            // Priority: USB keyboard first ("Asus Keyboard"), then WMI ("Asus WMI hotkeys")
+            foreach (var section in sections)
+            {
+                if (!section.Contains("asus", StringComparison.OrdinalIgnoreCase)) continue;
+
+                bool isKeyboard = section.Contains("keyboard", StringComparison.OrdinalIgnoreCase);
+                bool isWmi = section.Contains("wmi", StringComparison.OrdinalIgnoreCase);
+
+                if (isKeyboard || isWmi)
+                {
+                    string? eventDev = ExtractEventDevice(section);
+                    if (eventDev != null)
+                    {
+                        // USB keyboard first in the list (higher priority)
+                        if (isKeyboard && !isWmi)
+                            result.Insert(0, eventDev);
+                        else
+                            result.Add(eventDev);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine("FindAsusInputDevices failed", ex);
+        }
+        return result;
+    }
+
+    private static string? ExtractEventDevice(string section)
+    {
+        foreach (var line in section.Split('\n'))
+        {
+            if (line.StartsWith("H: Handlers="))
+            {
+                var parts = line.Split(' ');
+                foreach (var part in parts)
+                {
+                    if (part.StartsWith("event"))
+                        return $"/dev/input/{part.Trim()}";
+                }
+            }
         }
         return null;
     }
 
-    /// <summary>Map Linux KEY_* codes to G-Helper WMI event codes.</summary>
-    private static int MapLinuxKeyToGHelperEvent(ushort linuxKeyCode)
+    /// <summary>
+    /// Fired for configurable keys (m4, fnf4, fnf5).
+    /// The string is the binding name that maps to AppConfig key.
+    /// </summary>
+    public event Action<string>? KeyBindingEvent;
+
+    /// <summary>
+    /// Map Linux KEY_* codes to configurable key binding names.
+    /// These are keys the user can assign actions to.
+    /// </summary>
+    private static string MapLinuxKeyToBindingName(ushort linuxKeyCode)
     {
         return linuxKeyCode switch
         {
-            // KEY_PROG1 (148) or KEY_F20 (190) → ROG key (56)
-            148 or 190 => 56,
+            // KEY_PROG1 (148) = ROG/M5 key → configurable as "m4" (Windows G-Helper naming)
+            148 or 190 => "m4",
+            // KEY_PROG3 (202) = Fn+F4 Aura key → configurable as "fnf4"
+            202 => "fnf4",
+            // KEY_PROG4 (203) = Fn+F5 / M4 performance key → configurable as "fnf5"
+            203 => "fnf5",
+            _ => ""
+        };
+    }
+
+    /// <summary>
+    /// Map Linux KEY_* codes to legacy G-Helper event codes for non-configurable keys
+    /// (keyboard brightness, touchpad, etc.).
+    /// </summary>
+    private static int MapLinuxKeyToLegacyEvent(ushort linuxKeyCode)
+    {
+        return linuxKeyCode switch
+        {
             // KEY_KBDILLUMUP (229) → Fn+F3 (196)
             229 => 196,
             // KEY_KBDILLUMDOWN (230) → Fn+F2 (197)
@@ -536,8 +658,10 @@ public class LinuxAsusWmi : IAsusWmi
             224 => 16,
             // KEY_BRIGHTNESSUP (225) → Brightness up (32)
             225 => 32,
-            // KEY_PROG4 (202) → Fn+F5 performance cycle (174)
-            202 => 174,
+            // KEY_FN_ESC (407) → Fn+ESC FnLock toggle (78)
+            407 => 78,
+            // KEY_MICMUTE (248/505) → Mic mute (124 = M3 default)
+            248 or 505 => 124,
             _ => -1
         };
     }

@@ -189,6 +189,42 @@
                 </StackPanel>
             </Border>
 
+            <!-- ═══════════════════ KEY BINDINGS ═══════════════════ -->
+            <Border Classes="panel">
+                <StackPanel>
+                    <Border Classes="panel-header" Margin="0,0,0,8">
+                        <TextBlock Classes="header" Text="Key Bindings" />
+                    </Border>
+
+                    <!-- ROG / M5 Key -->
+                    <Grid ColumnDefinitions="180,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="ROG / M5 Key"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboKeyM4"
+                                  Width="220" Height="28"
+                                  SelectionChanged="ComboKeyBinding_Changed" />
+                    </Grid>
+
+                    <!-- Fn+F4 (Aura) -->
+                    <Grid ColumnDefinitions="180,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="Fn+F4 (Aura)"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboKeyFnF4"
+                                  Width="220" Height="28"
+                                  SelectionChanged="ComboKeyBinding_Changed" />
+                    </Grid>
+
+                    <!-- Fn+F5 / M4 (Performance) -->
+                    <Grid ColumnDefinitions="180,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Text="Fn+F5 / M4"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboKeyFnF5"
+                                  Width="220" Height="28"
+                                  SelectionChanged="ComboKeyBinding_Changed" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <!-- ═══════════════════ POWER MANAGEMENT ═══════════════════ -->
             <Border Classes="panel">
                 <StackPanel>

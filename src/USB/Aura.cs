@@ -400,6 +400,39 @@ public static class Aura
     };
 
     /// <summary>
+    /// Cycle to the next (or previous) aura mode and apply it.
+    /// direction: +1 = forward, -1 = backward.
+    /// Returns the name of the new mode for notification display.
+    /// </summary>
+    public static string CycleAuraMode(int direction = 1)
+    {
+        var modes = GetModes();
+        var modeKeys = new List<AuraMode>(modes.Keys);
+
+        if (modeKeys.Count == 0)
+            return "No modes";
+
+        // Current mode
+        var current = (AuraMode)AppConfig.Get("aura_mode");
+        int currentIdx = modeKeys.IndexOf(current);
+
+        // If current mode not found in list, start from 0
+        if (currentIdx < 0) currentIdx = 0;
+
+        // Advance
+        int nextIdx = (currentIdx + direction + modeKeys.Count) % modeKeys.Count;
+        var nextMode = modeKeys[nextIdx];
+
+        // Save and apply
+        AppConfig.Set("aura_mode", (int)nextMode);
+        ApplyAura();
+
+        string modeName = modes[nextMode];
+        Logger.WriteLine($"CycleAuraMode: {modes.GetValueOrDefault(current, "?")} → {modeName}");
+        return modeName;
+    }
+
+    /// <summary>
     /// Apply the full AURA mode (read config, set mode+color on device).
     /// This is the main entry point for applying keyboard lighting.
     /// </summary>

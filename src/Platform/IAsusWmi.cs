@@ -97,6 +97,9 @@ public interface IAsusWmi : IDisposable
     /// <summary>Fired when an ASUS WMI hotkey event occurs (Fn keys, lid, etc.).</summary>
     event Action<int>? WmiEvent;
 
+    /// <summary>Fired for configurable key bindings (m4, fnf4, fnf5).</summary>
+    event Action<string>? KeyBindingEvent;
+
     /// <summary>Start listening for WMI/evdev events.</summary>
     void SubscribeEvents();
 

@@ -133,7 +133,7 @@ public partial class MainWindow : Window
 
     // ── Performance Mode ──
 
-    private void RefreshPerformanceMode()
+    public void RefreshPerformanceMode()
     {
         var wmi = App.Wmi;
         if (wmi == null) return;
@@ -392,7 +392,7 @@ public partial class MainWindow : Window
     private bool _auraInitialized = false;
     private bool _suppressAuraEvents = false;
 
-    private void RefreshKeyboard()
+    public void RefreshKeyboard()
     {
         var wmi = App.Wmi;
         if (wmi == null) return;

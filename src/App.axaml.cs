@@ -8,6 +8,7 @@ using GHelper.Linux.Mode;
 using GHelper.Linux.Platform;
 using GHelper.Linux.Platform.Linux;
 using GHelper.Linux.UI.Views;
+using GHelper.Linux.USB;
 
 namespace GHelper.Linux;
 
@@ -28,11 +29,47 @@ public class App : Application
     public static MainWindow? MainWindowInstance { get; private set; }
     public static TrayIcon? TrayIconInstance { get; set; }
 
-    // G-Helper WMI event codes (from original source)
-    private const int EventPerformanceCycle = 174; // Fn+F5
+    // Legacy event codes for non-configurable keys
     private const int EventKbBrightnessUp = 196;   // Fn+F3
     private const int EventKbBrightnessDown = 197;  // Fn+F2
-    private const int EventRogKey = 56;             // ROG button
+
+    /// <summary>
+    /// Available actions for configurable key bindings (app-internal only).
+    /// Keys = action ID stored in config, Values = display name for UI.
+    /// </summary>
+    public static readonly Dictionary<string, string> AvailableKeyActions = new()
+    {
+        { "none",            "None" },
+        { "ghelper",         "Toggle G-Helper" },
+        { "performance",     "Cycle Performance Mode" },
+        { "aura",            "Cycle Aura Mode" },
+        { "brightness_up",   "Keyboard Brightness Up" },
+        { "brightness_down", "Keyboard Brightness Down" },
+        { "micmute",         "Toggle Microphone Mute" },
+        { "mute",            "Toggle Speaker Mute" },
+        { "gpu_eco",         "Toggle GPU Eco Mode" },
+        { "screen_refresh",  "Cycle Screen Refresh Rate" },
+        { "overdrive",       "Toggle Panel Overdrive" },
+        { "miniled",         "Toggle MiniLED" },
+        { "camera",          "Toggle Camera" },
+        { "touchpad",        "Toggle Touchpad" },
+    };
+
+    /// <summary>Default actions for each configurable key (matches Windows G-Helper).</summary>
+    private static readonly Dictionary<string, string> DefaultKeyActions = new()
+    {
+        { "m4",   "ghelper" },     // ROG/M5 key → toggle window
+        { "fnf4", "aura" },        // Fn+F4 → cycle aura mode
+        { "fnf5", "performance" }, // Fn+F5 / M4 → cycle performance mode
+    };
+
+    /// <summary>Human-readable names for configurable keys (for UI labels).</summary>
+    public static readonly Dictionary<string, string> ConfigurableKeyNames = new()
+    {
+        { "m4",   "ROG / M5 Key" },
+        { "fnf4", "Fn+F4 (Aura)" },
+        { "fnf5", "Fn+F5 / M4 (Performance)" },
+    };
 
     public override void Initialize()
     {
@@ -155,36 +192,177 @@ public class App : Application
         if (Input == null) return;
 
         Input.HotkeyPressed += OnHotkeyPressed;
+        Input.KeyBindingPressed += OnKeyBindingPressed;
         Input.StartListening();
     }
 
+    /// <summary>Handle non-configurable hotkey events (brightness, etc.).</summary>
     private void OnHotkeyPressed(int eventCode)
     {
         Logger.WriteLine($"Hotkey event: {eventCode}");
 
         switch (eventCode)
         {
-            case EventPerformanceCycle:
-                // Fn+F5 — cycle performance modes
-                Mode?.CyclePerformanceMode();
-                UpdateTrayIcon();
-                break;
-
             case EventKbBrightnessUp:
-                // Fn+F3 — keyboard brightness up
                 CycleKeyboardBrightness(up: true);
                 break;
 
             case EventKbBrightnessDown:
-                // Fn+F2 — keyboard brightness down
+                CycleKeyboardBrightness(up: false);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handle configurable key binding events.
+    /// Reads the assigned action from config, falls back to default.
+    /// </summary>
+    private void OnKeyBindingPressed(string bindingName)
+    {
+        // Read configured action, fall back to default
+        string? action = AppConfig.GetString(bindingName);
+        if (string.IsNullOrEmpty(action) || !AvailableKeyActions.ContainsKey(action))
+        {
+            DefaultKeyActions.TryGetValue(bindingName, out action);
+            action ??= "none";
+        }
+
+        Logger.WriteLine($"Key binding: {bindingName} → action={action}");
+        ExecuteKeyAction(action);
+    }
+
+    /// <summary>Get the current action for a configurable key binding.</summary>
+    public static string GetKeyAction(string bindingName)
+    {
+        string? action = AppConfig.GetString(bindingName);
+        if (string.IsNullOrEmpty(action) || !AvailableKeyActions.ContainsKey(action))
+        {
+            DefaultKeyActions.TryGetValue(bindingName, out action);
+            action ??= "none";
+        }
+        return action;
+    }
+
+    /// <summary>Execute a key action by its action ID.</summary>
+    private void ExecuteKeyAction(string action)
+    {
+        switch (action)
+        {
+            case "none":
+                break;
+
+            case "ghelper":
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => ToggleMainWindow());
+                break;
+
+            case "performance":
+                Mode?.CyclePerformanceMode();
+                UpdateTrayIcon();
+                // Refresh main window if visible
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    MainWindowInstance?.RefreshPerformanceMode());
+                break;
+
+            case "aura":
+                string modeName = Aura.CycleAuraMode();
+                System?.ShowNotification("G-Helper", $"Aura: {modeName}");
+                // Refresh main window keyboard section if visible
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    MainWindowInstance?.RefreshKeyboard());
+                break;
+
+            case "brightness_up":
+                CycleKeyboardBrightness(up: true);
+                break;
+
+            case "brightness_down":
                 CycleKeyboardBrightness(up: false);
                 break;
 
-            case EventRogKey:
-                // ROG button — toggle main window
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => ToggleMainWindow());
+            case "micmute":
+                Audio?.ToggleMicMute();
+                bool micMuted = Audio?.IsMicMuted() ?? false;
+                System?.ShowNotification("G-Helper",
+                    micMuted ? "Microphone muted" : "Microphone unmuted");
+                break;
+
+            case "mute":
+                Audio?.ToggleSpeakerMute();
+                bool spkMuted = Audio?.IsSpeakerMuted() ?? false;
+                System?.ShowNotification("G-Helper",
+                    spkMuted ? "Speaker muted" : "Speaker unmuted");
+                break;
+
+            case "gpu_eco":
+                bool currentEco = Wmi?.GetGpuEco() ?? false;
+                Wmi?.SetGpuEco(!currentEco);
+                string gpuStatus = !currentEco ? "Eco (iGPU only)" : "Standard (dGPU)";
+                System?.ShowNotification("G-Helper", $"GPU: {gpuStatus}");
+                Logger.WriteLine($"GPU Eco toggled → {gpuStatus}");
+                break;
+
+            case "screen_refresh":
+                CycleScreenRefreshRate();
+                break;
+
+            case "overdrive":
+                bool currentOd = Wmi?.GetPanelOverdrive() ?? false;
+                Wmi?.SetPanelOverdrive(!currentOd);
+                System?.ShowNotification("G-Helper",
+                    !currentOd ? "Panel Overdrive ON" : "Panel Overdrive OFF");
+                break;
+
+            case "miniled":
+                int currentMiniLed = Wmi?.GetMiniLedMode() ?? 0;
+                int nextMiniLed = currentMiniLed == 0 ? 1 : 0;
+                Wmi?.SetMiniLedMode(nextMiniLed);
+                System?.ShowNotification("G-Helper",
+                    nextMiniLed == 1 ? "MiniLED ON" : "MiniLED OFF");
+                break;
+
+            case "camera":
+                bool camOn = LinuxSystemIntegration.IsCameraEnabled();
+                LinuxSystemIntegration.SetCameraEnabled(!camOn);
+                System?.ShowNotification("G-Helper",
+                    !camOn ? "Camera enabled" : "Camera disabled");
+                break;
+
+            case "touchpad":
+                bool? tpOn = LinuxSystemIntegration.IsTouchpadEnabled();
+                if (tpOn.HasValue)
+                {
+                    LinuxSystemIntegration.SetTouchpadEnabled(!tpOn.Value);
+                    System?.ShowNotification("G-Helper",
+                        !tpOn.Value ? "Touchpad enabled" : "Touchpad disabled");
+                }
                 break;
         }
+    }
+
+    private void CycleScreenRefreshRate()
+    {
+        var display = Display;
+        if (display == null) return;
+
+        var rates = display.GetAvailableRefreshRates();
+        if (rates.Count < 2) return;
+
+        int current = display.GetRefreshRate();
+        rates.Sort();
+
+        // Find next rate (cycle: 60 → 120 → 165 → 60...)
+        int nextRate = rates[0];
+        for (int i = 0; i < rates.Count; i++)
+        {
+            if (rates[i] > current)
+            {
+                nextRate = rates[i];
+                break;
+            }
+        }
+
+        display.SetRefreshRate(nextRate);
+        System?.ShowNotification("G-Helper", $"Refresh rate: {nextRate}Hz");
     }
 
     private void CycleKeyboardBrightness(bool up)
