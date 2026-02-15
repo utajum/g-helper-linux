@@ -323,7 +323,8 @@ _step 6 "AUTOSTART IMPLANT"
 if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
     AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
-    mkdir -p "$AUTOSTART_DIR"
+    # Create dir as the real user so ownership is correct from the start
+    su -c "mkdir -p '$AUTOSTART_DIR'" "$REAL_USER"
     install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"
     chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
     _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
