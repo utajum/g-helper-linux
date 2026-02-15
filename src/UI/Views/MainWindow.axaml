@@ -275,7 +275,8 @@
                     <!-- Version + Updates + Quit -->
                     <Grid ColumnDefinitions="*,Auto,Auto">
                         <TextBlock Grid.Column="0" x:Name="labelVersion" Classes="label-dim"
-                                   Text="G-Helper Linux v1.0.0" VerticalAlignment="Center" />
+                                   Text="G-Helper Linux v1.0.0" VerticalAlignment="Center"
+                                   FontSize="12" />
                         <Button Grid.Column="1" x:Name="buttonUpdates" Classes="ghelper"
                                 Margin="0,0,4,0" Height="32"
                                 Click="ButtonUpdates_Click">
