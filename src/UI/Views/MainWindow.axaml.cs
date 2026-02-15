@@ -77,13 +77,12 @@ public partial class MainWindow : Window
             int gpuFan = wmi.GetFanRpm(1);
 
             string cpuTempStr = cpuTemp > 0 ? $"{cpuTemp}°C" : "--";
-            string gpuTempStr = gpuTemp > 0 ? $"{gpuTemp}°C" : "--";
-            string cpuFanStr = cpuFan > 0 ? $"{cpuFan} RPM" : "--";
+            string cpuFanStr = cpuFan > 0 ? $"{cpuFan}RPM" : "0RPM";
             
             // GPU fan: might be RPM or percentage from nvidia-smi
             string gpuFanStr;
             if (gpuFan > 0)
-                gpuFanStr = $"{gpuFan} RPM";
+                gpuFanStr = $"{gpuFan}RPM";
             else if (gpuFan <= -2)
             {
                 // Encoded percentage: -2 - percent
@@ -91,7 +90,13 @@ public partial class MainWindow : Window
                 gpuFanStr = $"{percent}%";
             }
             else
-                gpuFanStr = "--";
+                gpuFanStr = "0RPM";
+
+            // Match Windows layout: "CPU: 32°C Fan: 0RPM" on the right
+            labelCPUFan.Text = $"CPU: {cpuTempStr} Fan: {cpuFanStr}";
+
+            // GPU fan info — compact for right-aligned display
+            string gpuTempStr = gpuTemp > 0 ? $"{gpuTemp}°C" : "";
 
             // GPU load: only show when dGPU is active (not in Eco mode)
             string gpuLoadStr = "";
@@ -102,22 +107,22 @@ public partial class MainWindow : Window
                 {
                     int? gpuLoad = App.GpuControl.GetGpuUse();
                     if (gpuLoad.HasValue && gpuLoad.Value >= 0)
-                        gpuLoadStr = $" Load: {gpuLoad.Value}%";
+                        gpuLoadStr = $" {gpuLoad.Value}%";
                 }
                 catch (Exception)
                 {
-                    // Silently ignore GPU query errors (e.g., GPU being disabled)
                     Helpers.Logger.WriteLine("GPU load query failed (GPU may be transitioning)");
                 }
             }
 
-            labelCPUFan.Text = $"CPU: {cpuTempStr}  Fan: {cpuFanStr}";
-            labelGPUFan.Text = $"GPU: {gpuTempStr}{gpuLoadStr}  Fan: {gpuFanStr}";
+            labelGPUFan.Text = gpuTempStr.Length > 0
+                ? $"GPU: {gpuTempStr}{gpuLoadStr}  Fan: {gpuFanStr}"
+                : $"GPU Fan: {gpuFanStr}";
 
             // Mid fan if available
             int midFan = wmi.GetFanRpm(2);
             if (midFan > 0)
-                labelMidFan.Text = $"Mid fan: {midFan} RPM";
+                labelMidFan.Text = $"Mid Fan: {midFan}RPM";
         }
         catch (Exception ex)
         {
@@ -142,6 +147,8 @@ public partial class MainWindow : Window
             _ => "Unknown"
         };
 
+        // Combined header: "Mode: Balanced" (matches Windows layout)
+        labelPerf.Text = $"Mode: {modeName}";
         labelPerfMode.Text = modeName;
         UpdatePerfButtons();
     }
@@ -200,12 +207,14 @@ public partial class MainWindow : Window
 
         string modeName = _currentGpuMode switch
         {
-            0 => "Eco (iGPU)",
+            0 => "iGPU only",
             1 => "Standard",
             2 => "Optimized",
             _ => "Unknown"
         };
 
+        // Combined header: "GPU Mode: iGPU only" (matches Windows layout)
+        labelGPU.Text = $"GPU Mode: {modeName}";
         labelGPUMode.Text = modeName;
         UpdateGpuButtons();
 
@@ -321,6 +330,8 @@ public partial class MainWindow : Window
         int hz = display.GetRefreshRate();
         if (hz > 0)
         {
+            // Combined header: "Laptop Screen: 60Hz" (matches Windows layout)
+            labelScreen.Text = $"Laptop Screen: {hz}Hz";
             labelScreenHz.Text = $"{hz} Hz";
 
             // Update max refresh button label
@@ -460,13 +471,13 @@ public partial class MainWindow : Window
 
     private void UpdateColorButtons()
     {
-        buttonColor1.Background = new SolidColorBrush(
+        // Update color swatch in the "Color ■" button
+        colorSwatch1.Background = new SolidColorBrush(
             Color.FromRgb(Aura.ColorR, Aura.ColorG, Aura.ColorB));
         buttonColor2.Background = new SolidColorBrush(
             Color.FromRgb(Aura.Color2R, Aura.Color2G, Aura.Color2B));
-        buttonColor2.IsVisible = Aura.HasSecondColor();
 
-        // Hide color buttons for modes that don't use color
+        // Hide color button for modes that don't use color
         buttonColor1.IsVisible = Aura.UsesColor();
     }
 
@@ -712,19 +723,37 @@ public partial class MainWindow : Window
         {
             sliderBattery.Value = limit;
             labelBatteryLimit.Text = $"{limit}%";
-            labelBattery.Text = $"Charge limit: {limit}%";
+            // Combined header: "Battery Charge Limit: 80%" (matches Windows)
+            labelBattery.Text = $"Battery Charge Limit: {limit}%";
         }
 
-        // Show current charge info from power manager
+        // Show discharge/charge rate in battery section header (right side)
+        // and charge percentage in footer (like Windows "Charge: 71.5%")
         var power = App.Power;
         if (power != null)
         {
             int level = power.GetBatteryPercentage();
             bool acPlugged = power.IsOnAcPower();
+            int drainMw = power.GetBatteryDrainRate();
+
+            // Discharge/charge rate in battery header right column
+            if (drainMw != 0)
+            {
+                double watts = Math.Abs(drainMw) / 1000.0;
+                string rateStr = drainMw > 0
+                    ? $"Discharging: {watts:F1}W"
+                    : $"Charging: {watts:F1}W";
+                labelCharge.Text = rateStr;
+            }
+            else if (acPlugged)
+            {
+                labelCharge.Text = "Plugged in";
+            }
+
+            // Charge level in footer
             if (level >= 0)
             {
-                string status = acPlugged ? (level < 100 ? "Charging" : "Plugged in") : "On battery";
-                labelCharge.Text = $"{level}% {status}";
+                labelChargeFooter.Text = $"Charge: {level}%";
             }
         }
     }
@@ -733,32 +762,11 @@ public partial class MainWindow : Window
     {
         int limit = (int)e.NewValue;
         labelBatteryLimit.Text = $"{limit}%";
-        labelBattery.Text = $"Charge limit: {limit}%";
+        labelBattery.Text = $"Battery Charge Limit: {limit}%";
 
         // Debounce: only set after user stops dragging
         // For now, set immediately (G-Helper does too)
         App.Wmi?.SetBatteryChargeLimit(limit);
-    }
-
-    private void ButtonBattery60_Click(object? sender, RoutedEventArgs e)
-    {
-        sliderBattery.Value = 60;
-        App.Wmi?.SetBatteryChargeLimit(60);
-        RefreshBattery();
-    }
-
-    private void ButtonBattery80_Click(object? sender, RoutedEventArgs e)
-    {
-        sliderBattery.Value = 80;
-        App.Wmi?.SetBatteryChargeLimit(80);
-        RefreshBattery();
-    }
-
-    private void ButtonBattery100_Click(object? sender, RoutedEventArgs e)
-    {
-        sliderBattery.Value = 100;
-        App.Wmi?.SetBatteryChargeLimit(100);
-        RefreshBattery();
     }
 
     // ── Footer ──
@@ -769,7 +777,12 @@ public partial class MainWindow : Window
         if (sys == null) return;
 
         string model = sys.GetModelName() ?? "Unknown ASUS";
-        labelVersion.Text = $"G-Helper Linux v{Helpers.AppConfig.AppVersion} — {model}";
+
+        // Show model in window title (like Windows G-Helper)
+        Title = $"G-Helper — {model}";
+
+        // Version in footer
+        labelVersion.Text = $"Version: {Helpers.AppConfig.AppVersion}";
 
         // Check autostart status
         checkStartup.IsChecked = sys.IsAutostartEnabled();

@@ -24,22 +24,16 @@
         <Setter Property="Margin" Value="3" />
     </Style>
 
-    <Style Selector="Border.panel-header">
-        <Setter Property="Background" Value="#373737" />
-        <Setter Property="CornerRadius" Value="5" />
-        <Setter Property="Padding" Value="8" />
-        <Setter Property="Margin" Value="2" />
-    </Style>
-
-    <!-- Buttons matching RButton.cs rounded style -->
+    <!-- Buttons matching RButton.cs rounded style (borderRadius=5) -->
     <Style Selector="Button.ghelper">
         <Setter Property="Background" Value="#373737" />
         <Setter Property="Foreground" Value="#F0F0F0" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="8,6" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
     </Style>
 
@@ -47,15 +41,22 @@
         <Setter Property="Background" Value="#454545" />
     </Style>
 
-    <Style Selector="Button.ghelper-active">
+    <!-- Tall mode-selector buttons (perf/GPU) with icon above text -->
+    <Style Selector="Button.ghelper-tall">
         <Setter Property="Background" Value="#373737" />
         <Setter Property="Foreground" Value="#F0F0F0" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="4,8" />
+        <Setter Property="MinHeight" Value="68" />
         <Setter Property="BorderThickness" Value="2" />
-        <Setter Property="BorderBrush" Value="#4CC2FF" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Button.ghelper-tall:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#454545" />
     </Style>
 
     <!-- ComboBox styling -->

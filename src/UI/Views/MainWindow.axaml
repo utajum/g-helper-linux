@@ -14,12 +14,8 @@
         Icon="avares://ghelper/UI/Assets/favicon.ico">
 
     <Window.Styles>
-        <!-- Active performance button gets accent border -->
-        <Style Selector="Button.perf-active">
-            <Setter Property="BorderBrush" Value="#4CC2FF" />
-            <Setter Property="BorderThickness" Value="2" />
-        </Style>
-        <Style Selector="Button.gpu-active">
+        <!-- Active button gets accent border (perf, GPU, screen modes) -->
+        <Style Selector="Button.mode-active">
             <Setter Property="BorderBrush" Value="#4CC2FF" />
             <Setter Property="BorderThickness" Value="2" />
         </Style>
@@ -33,51 +29,44 @@
             <!-- ═══════════════════ PERFORMANCE SECTION ═══════════════════ -->
             <Border Classes="panel">
                 <StackPanel>
-                    <!-- Title row with icon and status -->
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="32,*,Auto">
-                            <!-- Icon placeholder -->
-                            <TextBlock Grid.Column="0" Text="⚡" FontSize="18"
-                                       VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                <TextBlock x:Name="labelPerf" Classes="header"
-                                           Text="Performance" />
-                                <TextBlock x:Name="labelCPUFan" Classes="label-dim"
-                                           Text="CPU: -- °C  Fan: -- RPM" />
-                            </StackPanel>
-                            <TextBlock Grid.Column="2" x:Name="labelPerfMode" Classes="value"
-                                       Text="" VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
+                    <!-- Title row: icon + label left, sensor info right -->
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,8">
+                        <TextBlock Grid.Column="0" Text="⚡" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" x:Name="labelPerf" Classes="header"
+                                   Text="Mode: Balanced" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" x:Name="labelCPUFan" Classes="label-dim"
+                                   Text="CPU: -- °C  Fan: -- RPM" VerticalAlignment="Center" />
+                    </Grid>
 
-                    <!-- Performance mode buttons -->
-                    <UniformGrid Rows="1" Margin="0,4">
-                        <Button x:Name="buttonSilent" Classes="ghelper"
-                                Margin="0,0,4,0" Click="ButtonSilent_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="🍃" HorizontalAlignment="Center" FontSize="16" />
+                    <!-- Performance mode buttons — tall, icon above text -->
+                    <UniformGrid Rows="1" Margin="0,0">
+                        <Button x:Name="buttonSilent" Classes="ghelper-tall"
+                                Margin="0,0,3,0" Click="ButtonSilent_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🍃" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Silent" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="buttonBalanced" Classes="ghelper"
-                                Margin="2,0" Click="ButtonBalanced_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="⚖️" HorizontalAlignment="Center" FontSize="16" />
+                        <Button x:Name="buttonBalanced" Classes="ghelper-tall"
+                                Margin="3,0" Click="ButtonBalanced_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="⚖️" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Balanced" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="buttonTurbo" Classes="ghelper"
-                                Margin="2,0" Click="ButtonTurbo_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="🚀" HorizontalAlignment="Center" FontSize="16" />
+                        <Button x:Name="buttonTurbo" Classes="ghelper-tall"
+                                Margin="3,0" Click="ButtonTurbo_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🚀" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Turbo" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="buttonFans" Classes="ghelper"
-                                Margin="4,0,0,0" Click="ButtonFans_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="🌀" HorizontalAlignment="Center" FontSize="16" />
-                                <TextBlock Text="Fans" HorizontalAlignment="Center" FontSize="11" />
+                        <Button x:Name="buttonFans" Classes="ghelper-tall"
+                                Margin="3,0,0,0" Click="ButtonFans_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🌀" HorizontalAlignment="Center" FontSize="22" />
+                                <TextBlock Text="Fans + Power" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
                     </UniformGrid>
@@ -87,86 +76,77 @@
             <!-- ═══════════════════ GPU SECTION ═══════════════════ -->
             <Border Classes="panel">
                 <StackPanel>
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="32,*,Auto">
-                            <TextBlock Grid.Column="0" Text="🎮" FontSize="18"
-                                       VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                <TextBlock x:Name="labelGPU" Classes="header"
-                                           Text="GPU Mode" />
-                                <TextBlock x:Name="labelGPUFan" Classes="label-dim"
-                                           Text="GPU: -- °C  Fan: -- RPM" />
-                            </StackPanel>
-                            <TextBlock Grid.Column="2" x:Name="labelGPUMode" Classes="value"
-                                       Text="" VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,8">
+                        <TextBlock Grid.Column="0" Text="🎮" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" x:Name="labelGPU" Classes="header"
+                                   Text="GPU Mode: Standard" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" x:Name="labelGPUFan" Classes="label-dim"
+                                   Text="GPU Fan: -- RPM" VerticalAlignment="Center" />
+                    </Grid>
 
-                    <!-- GPU mode buttons -->
-                    <UniformGrid Rows="1" Margin="0,4">
-                        <Button x:Name="buttonEco" Classes="ghelper"
-                                Margin="0,0,4,0" Click="ButtonEco_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="🌿" HorizontalAlignment="Center" FontSize="16" />
+                    <!-- GPU mode buttons — tall, icon above text -->
+                    <UniformGrid Rows="1" Margin="0,0">
+                        <Button x:Name="buttonEco" Classes="ghelper-tall"
+                                Margin="0,0,3,0" Click="ButtonEco_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🌿" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Eco" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="buttonStandard" Classes="ghelper"
-                                Margin="2,0" Click="ButtonStandard_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="🖥️" HorizontalAlignment="Center" FontSize="16" />
+                        <Button x:Name="buttonStandard" Classes="ghelper-tall"
+                                Margin="3,0" Click="ButtonStandard_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🖥️" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Standard" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
-                        <Button x:Name="buttonOptimized" Classes="ghelper"
-                                Margin="4,0,0,0" Click="ButtonOptimized_Click">
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="✨" HorizontalAlignment="Center" FontSize="16" />
+                        <Button x:Name="buttonOptimized" Classes="ghelper-tall"
+                                Margin="3,0,0,0" Click="ButtonOptimized_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="✨" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Optimized" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
                     </UniformGrid>
 
                     <TextBlock x:Name="labelTipGPU" Classes="label-dim"
-                               Text="" Margin="0,4,0,0" TextWrapping="Wrap" />
+                               Text="" Margin="2,6,2,0" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
             <!-- ═══════════════════ SCREEN SECTION ═══════════════════ -->
             <Border Classes="panel">
                 <StackPanel>
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="32,*,Auto">
-                            <TextBlock Grid.Column="0" Text="🖥" FontSize="18"
-                                       VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                <TextBlock x:Name="labelScreen" Classes="header"
-                                           Text="Screen" />
-                                <TextBlock x:Name="labelMidFan" Classes="label-dim"
-                                           Text="" />
-                            </StackPanel>
-                            <TextBlock Grid.Column="2" x:Name="labelScreenHz" Classes="value"
-                                       Text="" VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,8">
+                        <TextBlock Grid.Column="0" Text="🖥" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" x:Name="labelScreen" Classes="header"
+                                   Text="Laptop Screen: 60Hz" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" x:Name="labelMidFan" Classes="label-dim"
+                                   Text="" VerticalAlignment="Center" />
+                    </Grid>
 
-                    <UniformGrid Rows="1" Margin="0,4">
+                    <UniformGrid Rows="1" Margin="0,0">
                         <Button x:Name="buttonScreenAuto" Classes="ghelper"
-                                Margin="0,0,4,0" Click="ButtonScreenAuto_Click">
+                                Margin="0,0,3,0" Click="ButtonScreenAuto_Click"
+                                Height="36">
                             <TextBlock Text="Auto" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                         <Button x:Name="button60Hz" Classes="ghelper"
-                                Margin="2,0" Click="Button60Hz_Click">
+                                Margin="3,0" Click="Button60Hz_Click"
+                                Height="36">
                             <TextBlock Text="60Hz" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                         <Button x:Name="button120Hz" Classes="ghelper"
-                                Margin="2,0" Click="Button120Hz_Click">
+                                Margin="3,0,0,0" Click="Button120Hz_Click"
+                                Height="36">
                             <TextBlock x:Name="labelHighRefresh" Text="120Hz"
                                        HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                         <Button x:Name="buttonMiniled" Classes="ghelper"
-                                Margin="4,0,0,0" Click="ButtonMiniled_Click"
-                                IsVisible="False">
+                                Margin="3,0,0,0" Click="ButtonMiniled_Click"
+                                Height="36" IsVisible="False">
                             <TextBlock Text="MiniLED" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                     </UniformGrid>
@@ -176,78 +156,71 @@
             <!-- ═══════════════════ KEYBOARD SECTION ═══════════════════ -->
             <Border Classes="panel">
                 <StackPanel>
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="32,*,Auto">
-                            <TextBlock Grid.Column="0" Text="⌨️" FontSize="18"
-                                       VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                <TextBlock x:Name="labelKeyboard" Classes="header"
-                                           Text="Keyboard" />
-                                <TextBlock x:Name="labelBacklight" Classes="label-dim"
-                                           Text="" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,8">
+                        <TextBlock Grid.Column="0" Text="⌨️" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" x:Name="labelKeyboard" Classes="header"
+                                   Text="Laptop Keyboard" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" x:Name="labelBacklight" Classes="label-dim"
+                                   Text="" VerticalAlignment="Center" />
+                    </Grid>
 
-                    <!-- Backlight + Extra row -->
-                    <UniformGrid Rows="1" Margin="0,4">
-                        <Button x:Name="buttonKeyboard" Classes="ghelper"
-                                Margin="0,0,4,0" Click="ButtonKeyboard_Click">
-                            <TextBlock Text="Backlight" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                        <Button x:Name="buttonExtra" Classes="ghelper"
-                                Margin="4,0,0,0" Click="ButtonExtra_Click">
-                            <TextBlock Text="Extra" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                    </UniformGrid>
-
-                    <!-- AURA Mode + Speed + Color row -->
-                    <Grid ColumnDefinitions="*,90,44,44" Margin="0,4" x:Name="panelAura">
+                    <!-- Keyboard controls: [Mode combo] [Color ■] [⚙ Extra] -->
+                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0" x:Name="panelAura">
                         <ComboBox x:Name="comboAuraMode" Grid.Column="0"
-                                  Height="32" Margin="0,0,4,0"
+                                  Height="36" Margin="0,0,4,0"
                                   HorizontalAlignment="Stretch"
                                   MaxDropDownHeight="300"
                                   SelectionChanged="ComboAuraMode_Changed" />
-                        <ComboBox x:Name="comboAuraSpeed" Grid.Column="1"
-                                  Height="32" Margin="2,0"
-                                  HorizontalAlignment="Stretch"
-                                  MaxDropDownHeight="200"
-                                  SelectionChanged="ComboAuraSpeed_Changed" />
-                        <Button x:Name="buttonColor1" Grid.Column="2"
-                                Height="32" Width="36" Margin="2,0"
+                        <Button x:Name="buttonColor1" Grid.Column="1"
+                                Classes="ghelper" Height="36" MinWidth="80" Margin="0,0,4,0"
                                 Click="ButtonColor1_Click"
-                                ToolTip.Tip="Primary color"
-                                Background="#FFFFFF" />
-                        <Button x:Name="buttonColor2" Grid.Column="3"
-                                Height="32" Width="36" Margin="2,0,0,0"
-                                Click="ButtonColor2_Click"
-                                ToolTip.Tip="Secondary color"
-                                Background="#000000"
-                                IsVisible="False" />
+                                ToolTip.Tip="Primary color">
+                            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                <TextBlock Text="Color" FontSize="11" VerticalAlignment="Center" />
+                                <Border x:Name="colorSwatch1" Width="16" Height="16"
+                                        CornerRadius="2" Background="#FF0000" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="buttonExtra" Grid.Column="2"
+                                Classes="ghelper" Height="36" MinWidth="80"
+                                Click="ButtonExtra_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                <TextBlock Text="⚙" FontSize="13" VerticalAlignment="Center" />
+                                <TextBlock Text="Extra" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </Grid>
+
+                    <!-- Hidden elements needed by code-behind -->
+                    <ComboBox x:Name="comboAuraSpeed" IsVisible="False"
+                              Height="0" Margin="0"
+                              SelectionChanged="ComboAuraSpeed_Changed" />
+                    <Button x:Name="buttonColor2" IsVisible="False"
+                            Height="0" Width="0"
+                            Click="ButtonColor2_Click"
+                            Background="#000000" />
+                    <Button x:Name="buttonKeyboard" IsVisible="False"
+                            Height="0" Width="0"
+                            Click="ButtonKeyboard_Click" />
                 </StackPanel>
             </Border>
 
             <!-- ═══════════════════ BATTERY SECTION ═══════════════════ -->
             <Border Classes="panel">
                 <StackPanel>
-                    <Border Classes="panel-header" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="32,*,Auto">
-                            <TextBlock Grid.Column="0" Text="🔋" FontSize="18"
-                                       VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                <TextBlock x:Name="labelBatteryTitle" Classes="header"
-                                           Text="Battery" />
-                                <TextBlock x:Name="labelBattery" Classes="label-dim"
-                                           Text="Charge limit: --%" />
-                            </StackPanel>
-                            <TextBlock Grid.Column="2" x:Name="labelCharge" Classes="value"
-                                       Text="" VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,4">
+                        <TextBlock Grid.Column="0" Text="🔋" FontSize="16"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" x:Name="labelBattery" Classes="header"
+                                   Text="Battery Charge Limit: 100%"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" x:Name="labelCharge" Classes="label-dim"
+                                   Text="" VerticalAlignment="Center" />
+                    </Grid>
 
                     <!-- Battery charge limit slider -->
-                    <Grid ColumnDefinitions="*,60" Margin="4,4">
+                    <Grid ColumnDefinitions="*,50" Margin="2,0,2,0">
                         <Slider x:Name="sliderBattery" Grid.Column="0"
                                 Minimum="40" Maximum="100"
                                 Value="100"
@@ -256,47 +229,52 @@
                                 ValueChanged="SliderBattery_ValueChanged" />
                         <TextBlock x:Name="labelBatteryLimit" Grid.Column="1"
                                    Classes="value" Text="100%"
-                                   HorizontalAlignment="Center"
+                                   HorizontalAlignment="Right"
                                    VerticalAlignment="Center" />
                     </Grid>
-
-                    <!-- Quick presets -->
-                    <UniformGrid Rows="1" Margin="0,4">
-                        <Button x:Name="buttonBattery60" Classes="ghelper"
-                                Margin="0,0,4,0" Click="ButtonBattery60_Click">
-                            <TextBlock Text="60%" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                        <Button x:Name="buttonBattery80" Classes="ghelper"
-                                Margin="2,0" Click="ButtonBattery80_Click">
-                            <TextBlock Text="80%" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                        <Button x:Name="buttonBattery100" Classes="ghelper"
-                                Margin="4,0,0,0" Click="ButtonBattery100_Click">
-                            <TextBlock Text="100%" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                    </UniformGrid>
                 </StackPanel>
             </Border>
 
             <!-- ═══════════════════ FOOTER ═══════════════════ -->
-            <Border Classes="panel" Margin="3,8,3,3">
-                <Grid ColumnDefinitions="*,Auto,Auto">
-                    <StackPanel Grid.Column="0">
-                        <TextBlock x:Name="labelVersion" Classes="label-dim"
-                                   Text="G-Helper Linux v1.0.0" />
-                        <CheckBox x:Name="checkStartup" Content="Run on startup"
-                                  Margin="0,4,0,0"
+            <Border Classes="panel" Margin="3,4,3,3">
+                <StackPanel Spacing="6">
+                    <!-- Run on Startup + Charge info -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <CheckBox Grid.Column="0" x:Name="checkStartup" Content="Run on Startup"
                                   Checked="CheckStartup_Changed"
                                   Unchecked="CheckStartup_Changed" />
-                    </StackPanel>
-                    <Button Grid.Column="1" x:Name="buttonUpdates" Classes="ghelper"
-                            Content="Updates" Margin="4,0"
-                            Click="ButtonUpdates_Click" />
-                    <Button Grid.Column="2" x:Name="buttonQuit" Classes="ghelper"
-                            Content="Quit"
-                            Click="ButtonQuit_Click" />
-                </Grid>
+                        <TextBlock Grid.Column="1" x:Name="labelChargeFooter" Classes="label-dim"
+                                   Text="" VerticalAlignment="Center" />
+                    </Grid>
+                    <!-- Version + Updates + Quit -->
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" x:Name="labelVersion" Classes="label-dim"
+                                   Text="G-Helper Linux v1.0.0" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" x:Name="buttonUpdates" Classes="ghelper"
+                                Margin="0,0,4,0" Height="32"
+                                Click="ButtonUpdates_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="📦" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Text="Updates" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="2" x:Name="buttonQuit" Classes="ghelper"
+                                Height="32"
+                                Click="ButtonQuit_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="⏻" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Text="Quit" FontSize="11" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
             </Border>
+
+            <!-- Hidden labels kept for code-behind compatibility -->
+            <TextBlock x:Name="labelPerfMode" IsVisible="False" Text="" />
+            <TextBlock x:Name="labelGPUMode" IsVisible="False" Text="" />
+            <TextBlock x:Name="labelScreenHz" IsVisible="False" Text="" />
+            <TextBlock x:Name="labelBatteryTitle" IsVisible="False" Text="" />
 
         </StackPanel>
     </ScrollViewer>
