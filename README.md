@@ -19,8 +19,26 @@
          ╚═══════════════════════════════[ 0x1F4 ]════╝
            ╔══════════════════════════════════════╗
            ║  ASUS LAPTOP CONTROL FOR LINUX       ║
-           ╚══════════════════════════════════════╝
+            ╚══════════════════════════════════════╝
 ```
+
+## `░▒▓█ ╔══[ MOTIVATION ]══╗ █▓▒░`
+
+Since `asusctl` doesn't really care about Ubuntu, I decided to port most functionality from the original [G-Helper](https://github.com/seerge/g-helper) for Windows.
+
+The application is tested on KDE but other desktop environments should also work.
+
+Pull requests and feature requests are welcome!
+
+---
+
+## `░▒▓█ ╔══[ SCREENSHOT ]══╗ █▓▒░`
+
+<a href="screenshot.png">
+<img src="screenshot.png" alt="G-Helper for Linux" width="100%"/>
+</a>
+
+---
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
 
