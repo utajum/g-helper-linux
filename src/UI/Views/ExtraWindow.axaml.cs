@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using GHelper.Linux.Platform.Linux;
 using GHelper.Linux.USB;
 
 namespace GHelper.Linux.UI.Views;
@@ -234,6 +235,33 @@ public partial class ExtraWindow : Window
 
         // Clamshell mode
         checkClamshell.IsChecked = Helpers.AppConfig.Is("toggle_clamshell_mode");
+
+        // Camera
+        checkCamera.IsChecked = LinuxSystemIntegration.IsCameraEnabled();
+
+        // Touchpad (hide if not found)
+        var touchpadState = LinuxSystemIntegration.IsTouchpadEnabled();
+        if (touchpadState == null)
+        {
+            checkTouchpad.IsVisible = false;
+        }
+        else
+        {
+            checkTouchpad.IsVisible = true;
+            checkTouchpad.IsChecked = touchpadState.Value;
+        }
+
+        // Touchscreen (hide if not found)
+        var touchscreenState = LinuxSystemIntegration.IsTouchscreenEnabled();
+        if (touchscreenState == null)
+        {
+            checkTouchscreen.IsVisible = false;
+        }
+        else
+        {
+            checkTouchscreen.IsVisible = true;
+            checkTouchscreen.IsChecked = touchscreenState.Value;
+        }
     }
 
     private void CheckBootSound_Changed(object? sender, RoutedEventArgs e)
@@ -360,6 +388,33 @@ public partial class ExtraWindow : Window
         }
     }
 
+    private void CheckCamera_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        bool enabled = checkCamera.IsChecked ?? true;
+        LinuxSystemIntegration.SetCameraEnabled(enabled);
+        App.System?.ShowNotification("G-Helper",
+            enabled ? "Camera enabled" : "Camera disabled");
+    }
+
+    private void CheckTouchpad_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        bool enabled = checkTouchpad.IsChecked ?? true;
+        LinuxSystemIntegration.SetTouchpadEnabled(enabled);
+        App.System?.ShowNotification("G-Helper",
+            enabled ? "Touchpad enabled" : "Touchpad disabled");
+    }
+
+    private void CheckTouchscreen_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        bool enabled = checkTouchscreen.IsChecked ?? true;
+        LinuxSystemIntegration.SetTouchscreenEnabled(enabled);
+        App.System?.ShowNotification("G-Helper",
+            enabled ? "Touchscreen enabled" : "Touchscreen disabled");
+    }
+
     // ═══════════════════ POWER MANAGEMENT ═══════════════════
 
     private void RefreshPower()
@@ -468,6 +523,24 @@ public partial class ExtraWindow : Window
     private void RefreshAdvanced()
     {
         checkAutoApplyPower.IsChecked = Helpers.AppConfig.IsMode("auto_apply_power");
+        checkScreenAuto.IsChecked = Helpers.AppConfig.Is("screen_auto");
+
+        // CPU cores
+        int total = LinuxSystemIntegration.GetCpuCount();
+        int online = LinuxSystemIntegration.GetOnlineCpuCount();
+
+        if (total > 1)
+        {
+            panelCpuCores.IsVisible = true;
+            sliderCpuCores.Maximum = total;
+            sliderCpuCores.Value = online;
+            labelCpuCores.Text = $"{online}/{total}";
+            labelCpuCoresInfo.Text = $"{online} of {total} threads active";
+        }
+        else
+        {
+            panelCpuCores.IsVisible = false;
+        }
     }
 
     private void CheckAutoApplyPower_Changed(object? sender, RoutedEventArgs e)
@@ -475,5 +548,56 @@ public partial class ExtraWindow : Window
         if (_suppressEvents) return;
         bool enabled = checkAutoApplyPower.IsChecked ?? false;
         Helpers.AppConfig.SetMode("auto_apply_power", enabled ? 1 : 0);
+    }
+
+    private void CheckScreenAuto_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        bool enabled = checkScreenAuto.IsChecked ?? false;
+        Helpers.AppConfig.Set("screen_auto", enabled ? 1 : 0);
+        Helpers.Logger.WriteLine($"Screen auto refresh → {enabled}");
+    }
+
+    private void SliderCpuCores_ValueChanged(object? sender,
+        Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        int target = (int)e.NewValue;
+        int total = LinuxSystemIntegration.GetCpuCount();
+        labelCpuCores.Text = $"{target}/{total}";
+        labelCpuCoresInfo.Text = $"{target} of {total} threads active";
+
+        // Apply in background to avoid UI stall
+        Task.Run(() => LinuxSystemIntegration.SetOnlineCpuCount(target));
+    }
+
+    private void ButtonOpenLog_Click(object? sender, RoutedEventArgs e)
+    {
+        // Logger is stdout-only; open a terminal showing the app's output
+        try
+        {
+            // Try to find the config dir for any saved logs
+            var configDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".config", "ghelper");
+            if (Directory.Exists(configDir))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "xdg-open",
+                    Arguments = configDir,
+                    UseShellExecute = false,
+                });
+            }
+            else
+            {
+                Helpers.Logger.WriteLine("Logs are written to stdout — run the app from a terminal to see output");
+                App.System?.ShowNotification("G-Helper", "Logs are written to stdout — run from terminal to see output");
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine("Failed to open config dir", ex);
+        }
     }
 }

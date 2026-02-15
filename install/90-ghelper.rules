@@ -108,3 +108,7 @@ SUBSYSTEM=="backlight", ACTION=="add", \
 # ── PCIe ASPM policy ──
 ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="pcie_aspm", \
   RUN+="/bin/sh -c '[ -f /sys/module/pcie_aspm/parameters/policy ] && chmod 0666 /sys/module/pcie_aspm/parameters/policy'"
+
+# ── CPU online/offline (core toggling) ──
+SUBSYSTEM=="cpu", ACTION=="add", \
+  RUN+="/bin/sh -c 'for f in /sys/devices/system/cpu/cpu*/online; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"

@@ -168,6 +168,24 @@
                               Margin="0,4"
                               Checked="CheckClamshell_Changed"
                               Unchecked="CheckClamshell_Changed" />
+
+                    <Separator Margin="0,8,0,4" />
+
+                    <!-- Device toggles -->
+                    <CheckBox x:Name="checkCamera" Content="Camera"
+                              Margin="0,4"
+                              Checked="CheckCamera_Changed"
+                              Unchecked="CheckCamera_Changed" />
+
+                    <CheckBox x:Name="checkTouchpad" Content="Touchpad"
+                              Margin="0,4"
+                              Checked="CheckTouchpad_Changed"
+                              Unchecked="CheckTouchpad_Changed" />
+
+                    <CheckBox x:Name="checkTouchscreen" Content="Touchscreen"
+                              Margin="0,4" IsVisible="False"
+                              Checked="CheckTouchscreen_Changed"
+                              Unchecked="CheckTouchscreen_Changed" />
                 </StackPanel>
             </Border>
 
@@ -242,6 +260,30 @@
                               Margin="0,4"
                               Checked="CheckAutoApplyPower_Changed"
                               Unchecked="CheckAutoApplyPower_Changed" />
+
+                    <CheckBox x:Name="checkScreenAuto" Content="Auto-switch refresh rate (AC/Battery)"
+                              Margin="0,4"
+                              Checked="CheckScreenAuto_Changed"
+                              Unchecked="CheckScreenAuto_Changed" />
+
+                    <!-- CPU Cores -->
+                    <Grid ColumnDefinitions="120,*,50" Margin="0,8,0,4" x:Name="panelCpuCores">
+                        <TextBlock Grid.Column="0" Text="CPU Cores"
+                                   Classes="label-dim" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderCpuCores"
+                                Minimum="1" Maximum="32" Value="32"
+                                TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="SliderCpuCores_ValueChanged" />
+                        <TextBlock Grid.Column="2" x:Name="labelCpuCores" Classes="value"
+                                   Text="32" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock x:Name="labelCpuCoresInfo" Classes="label-dim"
+                               Text="" FontSize="10" Margin="0,0,0,4" />
+
+                    <Button x:Name="buttonOpenLog" Classes="ghelper"
+                            Content="Open Log File" Margin="0,8,0,0"
+                            Click="ButtonOpenLog_Click" />
                 </StackPanel>
             </Border>
 

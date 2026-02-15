@@ -71,6 +71,11 @@ done
 for f in /sys/class/backlight/*/brightness; do
     [ -f "$f" ] && chmod 0666 "$f" 2>/dev/null && echo "         ✓ $f" || true
 done
+# CPU online/offline
+for f in /sys/devices/system/cpu/cpu*/online; do
+    [ -f "$f" ] && chmod 0666 "$f" 2>/dev/null || true
+done
+echo "         ✓ CPU core online/offline controls"
 # Fan curves (hwmon)
 for hwmon in /sys/class/hwmon/hwmon*; do
     name=$(cat "$hwmon/name" 2>/dev/null)
