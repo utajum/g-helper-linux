@@ -84,7 +84,6 @@ public class LinuxAsusWmi : IAsusWmi
             0x00120094 => GetCpuTemp(),                       // Temp_CPU
             0x00120097 => GetGpuTemp(),                       // Temp_GPU
             0x00050021 => GetKeyboardBrightness(),            // TUF_KB_BRIGHTNESS
-            0x00100023 => GetFnLock(),                        // FnLock
             _ => -1  // Unsupported device ID
         };
     }
@@ -101,7 +100,6 @@ public class LinuxAsusWmi : IAsusWmi
             0x0005001E => SetAndReturn(() => SetMiniLedMode(value)),
             0x0005002E => SetAndReturn(() => SetMiniLedMode(value)),
             0x00050021 => SetAndReturn(() => SetKeyboardBrightness(value)),
-            0x00100023 => SetAndReturn(() => SetFnLock(value != 0)),
             _ => -1
         };
     }
@@ -327,35 +325,6 @@ public class LinuxAsusWmi : IAsusWmi
     {
         var intensityPath = Path.Combine(SysfsHelper.Leds, "asus::kbd_backlight", "multi_intensity");
         SysfsHelper.WriteAttribute(intensityPath, $"{r} {g} {b}");
-    }
-
-    // ── FN Lock ──
-
-    public int GetFnLock()
-    {
-        // Try sysfs first (asus-nb-wmi driver)
-        var fnLockPath = Path.Combine(SysfsHelper.AsusWmiPlatform, "fn_lock");
-        if (SysfsHelper.Exists(fnLockPath))
-        {
-            return SysfsHelper.ReadInt(fnLockPath, -1);
-        }
-
-        // Feature not supported on this device
-        return -1;
-    }
-
-    public void SetFnLock(bool enabled)
-    {
-        // Write to sysfs (asus-nb-wmi driver)
-        // Note: Some models have inverted FN lock logic
-        var fnLockPath = Path.Combine(SysfsHelper.AsusWmiPlatform, "fn_lock");
-        if (SysfsHelper.Exists(fnLockPath))
-        {
-            bool inverted = Helpers.AppConfig.IsInvertedFNLock();
-            int value = (enabled ^ inverted) ? 1 : 0;
-            SysfsHelper.WriteInt(fnLockPath, value);
-            Helpers.Logger.WriteLine($"FnLock sysfs → {value} (enabled={enabled}, inverted={inverted})");
-        }
     }
 
     // ── Temperature ──

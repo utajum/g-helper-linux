@@ -44,7 +44,6 @@ A native Linux port of [G-Helper](https://github.com/seerge/g-helper) — the li
 - **System tray** — Runs in background with tray icon and context menu
 - **Hotkey support** — Listens for ASUS Fn key events via evdev
 - **Auto-start** — XDG autostart .desktop file integration
-- **FN Lock** — Toggle F1-F12 as function keys or media keys (requires `keyd` on models without hardware support)
 
 ## `░▒▓█ 0x01 :: SYSTEM REQUIREMENTS █▓▒░`
 
@@ -145,31 +144,6 @@ After installation, **reboot** or reload udev:
 ```bash
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
-
-### `> FN LOCK SUPPORT`
-
-Some ASUS laptops (like ROG Strix G614) don't have hardware FN Lock support. For these models, G-Helper uses `keyd` — a system-wide keyboard remapping daemon that works on X11, Wayland, and console.
-
-**Install keyd (recommended for best FN Lock support):**
-
-```bash
-sudo apt install keyd
-sudo systemctl enable keyd --now
-```
-
-On Fedora:
-```bash
-sudo dnf install keyd
-sudo systemctl enable keyd --now
-```
-
-On Arch:
-```bash
-sudo pacman -S keyd
-sudo systemctl enable keyd --now
-```
-
-G-Helper will automatically detect keyd and use it for FN Lock. If keyd is not installed, G-Helper will attempt to use an evdev-based fallback (which may not work on X11 due to device grab conflicts).
 
 <details>
 <summary>Manual setup (without install scripts)</summary>

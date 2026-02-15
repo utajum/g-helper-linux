@@ -26,7 +26,6 @@ public partial class ExtraWindow : Window
         { "screen", "Toggle Screen" },
         { "lock", "Lock Screen" },
         { "miniled", "Toggle MiniLED" },
-        { "fnlock", "Toggle FnLock" },
         { "brightness_down", "Brightness Down" },
         { "brightness_up", "Brightness Up" },
         { "micmute", "Mute Mic" },

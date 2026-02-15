@@ -63,37 +63,12 @@ udevadm control --reload-rules
 udevadm trigger
 echo "       udev rules reloaded and triggered"
 
-# Install keyd for FN Lock support (optional but recommended)
-echo "[5/6] Checking for keyd (FN Lock support)..."
-if ! command -v keyd &> /dev/null; then
-    echo "       keyd not found. Installing for FN Lock support..."
-    if command -v apt-get &> /dev/null; then
-        apt-get update -qq && apt-get install -y -qq keyd 2>/dev/null || echo "       WARNING: Failed to install keyd. FN Lock may not work on some laptops."
-    elif command -v dnf &> /dev/null; then
-        dnf install -y keyd 2>/dev/null || echo "       WARNING: Failed to install keyd. FN Lock may not work on some laptops."
-    elif command -v pacman &> /dev/null; then
-        pacman -Sy --noconfirm keyd 2>/dev/null || echo "       WARNING: Failed to install keyd. FN Lock may not work on some laptops."
-    else
-        echo "       WARNING: Could not detect package manager. Please install keyd manually for FN Lock support."
-    fi
-    
-    # Enable and start keyd service if it was installed
-    if command -v keyd &> /dev/null; then
-        systemctl enable keyd --now 2>/dev/null || echo "       WARNING: Failed to enable keyd service."
-        echo "       keyd installed and enabled."
-    fi
-else
-    echo "       keyd already installed."
-    # Ensure keyd is running
-    systemctl start keyd 2>/dev/null || true
-fi
-
 # Install desktop entry
-echo "[6/7] Installing desktop entry..."
+echo "[5/6] Installing desktop entry..."
 install -m 644 "$WORK_DIR/ghelper-linux.desktop" /usr/share/applications/ghelper-linux.desktop
 
 # Install autostart for current user
-echo "[7/7] Installing autostart entry..."
+echo "[6/6] Installing autostart entry..."
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"

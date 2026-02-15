@@ -3,6 +3,8 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using GHelper.Linux.USB;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GHelper.Linux.UI.Views;
 
@@ -17,6 +19,7 @@ public partial class MainWindow : Window
     private int _currentGpuMode = -1;  // 0=Eco, 1=Standard, 2=Optimized
     private DateTime _lastGpuModeChange = DateTime.MinValue;  // Track when GPU mode last changed
     private readonly TimeSpan _gpuModeChangeGracePeriod = TimeSpan.FromSeconds(3);  // Grace period after mode change
+    private bool _gpuModeSwitchInProgress = false;  // Prevent concurrent GPU mode switches
 
     // Accent colors matching G-Helper's RForm.cs
     private static readonly IBrush AccentBrush = new SolidColorBrush(Color.Parse("#4CC2FF"));
@@ -226,35 +229,123 @@ public partial class MainWindow : Window
         SetButtonActive(buttonOptimized, _currentGpuMode == 2);
     }
 
-    private void ButtonEco_Click(object? sender, RoutedEventArgs e)
+    private async void ButtonEco_Click(object? sender, RoutedEventArgs e)
     {
-        _lastGpuModeChange = DateTime.Now;
-        App.Wmi?.SetGpuEco(true);
-        _currentGpuMode = 0;
-        RefreshGpuMode();
-    }
-
-    private void ButtonStandard_Click(object? sender, RoutedEventArgs e)
-    {
-        _lastGpuModeChange = DateTime.Now;
-        App.Wmi?.SetGpuEco(false);
-        // Don't change MUX — leave it in hybrid mode
-        _currentGpuMode = 1;
-        RefreshGpuMode();
-    }
-
-    private void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
-    {
-        _lastGpuModeChange = DateTime.Now;
-        App.Wmi?.SetGpuEco(false);
-        // MUX switch requires reboot notification
-        if (App.Wmi?.GetGpuMuxMode() != 0)
+        if (_gpuModeSwitchInProgress) return;
+        await SwitchGpuModeAsync(0, () =>
         {
-            App.Wmi?.SetGpuMuxMode(0);
-            labelTipGPU.Text = "MUX switch to dGPU direct — reboot required!";
+            App.Wmi?.SetGpuEco(true);
+        });
+    }
+
+    private async void ButtonStandard_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_gpuModeSwitchInProgress) return;
+        await SwitchGpuModeAsync(1, () =>
+        {
+            App.Wmi?.SetGpuEco(false);
+            // Don't change MUX — leave it in hybrid mode
+        });
+    }
+
+    private async void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_gpuModeSwitchInProgress) return;
+        await SwitchGpuModeAsync(2, () =>
+        {
+            App.Wmi?.SetGpuEco(false);
+            // MUX switch requires reboot notification
+            if (App.Wmi?.GetGpuMuxMode() != 0)
+            {
+                App.Wmi?.SetGpuMuxMode(0);
+            }
+        });
+    }
+
+    private async Task SwitchGpuModeAsync(int targetMode, Action switchAction)
+    {
+        _gpuModeSwitchInProgress = true;
+        _lastGpuModeChange = DateTime.Now;
+
+        try
+        {
+            // Disable all GPU buttons and show "Switching..."
+            SetGpuButtonsEnabled(false);
+            SetGpuButtonText("Switching...");
+
+            // Show tip for Optimized mode
+            if (targetMode == 2 && App.Wmi?.GetGpuMuxMode() != 0)
+            {
+                labelTipGPU.Text = "MUX switch to dGPU direct — reboot required!";
+            }
+
+            // Run the actual switch on background thread
+            await Task.Run(() =>
+            {
+                switchAction();
+                // Give kernel time to complete the operation
+                Thread.Sleep(500);
+            });
+
+            _currentGpuMode = targetMode;
+
+            // Allow time for GPU to stabilize before querying
+            await Task.Delay(1000);
         }
-        _currentGpuMode = 2;
-        RefreshGpuMode();
+        finally
+        {
+            // Re-enable buttons and restore state
+            SetGpuButtonsEnabled(true);
+            RestoreGpuButtonText();
+            RefreshGpuMode();
+            _gpuModeSwitchInProgress = false;
+        }
+    }
+
+    private void SetGpuButtonsEnabled(bool enabled)
+    {
+        buttonEco.IsEnabled = enabled;
+        buttonStandard.IsEnabled = enabled;
+        buttonOptimized.IsEnabled = enabled;
+    }
+
+    private void SetGpuButtonText(string text)
+    {
+        // Find the TextBlock inside each button and change it
+        if (buttonEco.Content is StackPanel ecoPanel)
+        {
+            var textBlock = ecoPanel.Children.OfType<TextBlock>().LastOrDefault();
+            if (textBlock != null) textBlock.Text = text;
+        }
+        if (buttonStandard.Content is StackPanel stdPanel)
+        {
+            var textBlock = stdPanel.Children.OfType<TextBlock>().LastOrDefault();
+            if (textBlock != null) textBlock.Text = text;
+        }
+        if (buttonOptimized.Content is StackPanel optPanel)
+        {
+            var textBlock = optPanel.Children.OfType<TextBlock>().LastOrDefault();
+            if (textBlock != null) textBlock.Text = text;
+        }
+    }
+
+    private void RestoreGpuButtonText()
+    {
+        if (buttonEco.Content is StackPanel ecoPanel)
+        {
+            var textBlock = ecoPanel.Children.OfType<TextBlock>().LastOrDefault();
+            if (textBlock != null) textBlock.Text = "Eco";
+        }
+        if (buttonStandard.Content is StackPanel stdPanel)
+        {
+            var textBlock = stdPanel.Children.OfType<TextBlock>().LastOrDefault();
+            if (textBlock != null) textBlock.Text = "Standard";
+        }
+        if (buttonOptimized.Content is StackPanel optPanel)
+        {
+            var textBlock = optPanel.Children.OfType<TextBlock>().LastOrDefault();
+            if (textBlock != null) textBlock.Text = "Optimized";
+        }
     }
 
     // ── Screen ──
@@ -344,9 +435,6 @@ public partial class MainWindow : Window
             };
             labelBacklight.Text = $"Backlight: {level}";
         }
-
-        // Init FnLock button state
-        UpdateFnLockButton(Helpers.AppConfig.Is("fn_lock"));
 
         InitAura();
     }
@@ -647,63 +735,6 @@ public partial class MainWindow : Window
         int next = (current + 1) % 4; // Cycle 0→1→2→3→0
         wmi.SetKeyboardBrightness(next);
         RefreshKeyboard();
-    }
-
-    private void ButtonFnLock_Click(object? sender, RoutedEventArgs e)
-    {
-        bool current = Helpers.AppConfig.Is("fn_lock");
-        bool newState = !current;
-
-        Helpers.AppConfig.Set("fn_lock", newState ? 1 : 0);
-
-        // Try hardware FnLock via sysfs
-        var fnLockPath = "/sys/devices/platform/asus-nb-wmi/fn_lock";
-        bool hasSysfs = Platform.Linux.SysfsHelper.Exists(fnLockPath);
-
-        if (hasSysfs)
-        {
-            bool inverted = Helpers.AppConfig.IsInvertedFNLock();
-            int writeVal = (newState ^ inverted) ? 1 : 0;
-            Platform.Linux.SysfsHelper.WriteInt(fnLockPath, writeVal);
-            Helpers.Logger.WriteLine($"FnLock sysfs → {writeVal}");
-        }
-
-        // Also try HID path for devices that need it
-        // [0x5A, 0xD0, 0x4E, 0x00=locked, 0x01=unlocked]
-        try
-        {
-            AsusHid.WriteInput(new byte[]
-            {
-                AsusHid.INPUT_ID, 0xD0, 0x4E, newState ? (byte)0x00 : (byte)0x01
-            }, "FnLock");
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"FnLock HID write failed: {ex.Message}");
-        }
-
-        // Update software FnLock if applicable (for laptops without hardware support)
-        App.Input?.SetFnLock(newState);
-
-        // Update button visual
-        UpdateFnLockButton(newState);
-
-        App.System?.ShowNotification("G-Helper", newState ? "Fn Lock ON" : "Fn Lock OFF");
-        Helpers.Logger.WriteLine($"FnLock toggled → {(newState ? "ON" : "OFF")}");
-    }
-
-    private void UpdateFnLockButton(bool locked)
-    {
-        if (locked)
-        {
-            buttonFnLock.BorderBrush = AccentBrush;
-            buttonFnLock.BorderThickness = new Avalonia.Thickness(2);
-        }
-        else
-        {
-            buttonFnLock.BorderBrush = TransparentBrush;
-            buttonFnLock.BorderThickness = new Avalonia.Thickness(2);
-        }
     }
 
     // ── Battery ──

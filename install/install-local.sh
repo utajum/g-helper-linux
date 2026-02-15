@@ -41,37 +41,12 @@ udevadm control --reload-rules
 udevadm trigger
 echo "       udev rules reloaded and triggered"
 
-# 3. Install keyd for FN Lock support (optional but recommended)
-echo "[3/6] Checking for keyd (FN Lock support)..."
-if ! command -v keyd &> /dev/null; then
-    echo "       keyd not found. Installing for FN Lock support..."
-    if command -v apt-get &> /dev/null; then
-        apt-get update -qq && apt-get install -y -qq keyd 2>/dev/null || echo "       WARNING: Failed to install keyd. FN Lock may not work on some laptops."
-    elif command -v dnf &> /dev/null; then
-        dnf install -y keyd 2>/dev/null || echo "       WARNING: Failed to install keyd. FN Lock may not work on some laptops."
-    elif command -v pacman &> /dev/null; then
-        pacman -Sy --noconfirm keyd 2>/dev/null || echo "       WARNING: Failed to install keyd. FN Lock may not work on some laptops."
-    else
-        echo "       WARNING: Could not detect package manager. Please install keyd manually for FN Lock support."
-    fi
-    
-    # Enable and start keyd service if it was installed
-    if command -v keyd &> /dev/null; then
-        systemctl enable keyd --now 2>/dev/null || echo "       WARNING: Failed to enable keyd service."
-        echo "       keyd installed and enabled."
-    fi
-else
-    echo "       keyd already installed."
-    # Ensure keyd is running
-    systemctl start keyd 2>/dev/null || true
-fi
-
-# 4. Install desktop entry
-echo "[4/7] Installing desktop entry..."
+# 3. Install desktop entry
+echo "[3/6] Installing desktop entry..."
 install -m 644 "$SCRIPT_DIR/ghelper-linux.desktop" /usr/share/applications/ghelper-linux.desktop
 
-# 5. Install icon
-echo "[5/7] Installing icon..."
+# 4. Install icon
+echo "[4/6] Installing icon..."
 ICON_SRC="$PROJECT_DIR/src/UI/Assets/favicon.ico"
 if [[ -f "$ICON_SRC" ]]; then
     mkdir -p /usr/share/icons/hicolor/64x64/apps
@@ -85,8 +60,8 @@ if [[ -f "$ICON_SRC" ]]; then
     gtk-update-icon-cache /usr/share/icons/hicolor 2>/dev/null || true
 fi
 
-# 6. Install autostart for current user
-echo "[6/7] Installing autostart entry..."
+# 5. Install autostart for current user
+echo "[5/6] Installing autostart entry..."
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 if [[ -n "$REAL_USER" ]]; then
     AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"

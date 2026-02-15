@@ -10,7 +10,8 @@
         CanResize="True"
         ExtendClientAreaToDecorationsHint="False"
         SystemDecorations="Full"
-        Background="#1C1C1C">
+        Background="#1C1C1C"
+        Icon="avares://ghelper-linux/UI/Assets/standard.ico">
 
     <Window.Styles>
         <!-- Active performance button gets accent border -->
@@ -188,15 +189,11 @@
                         </Grid>
                     </Border>
 
-                    <!-- Backlight + FnLock + Extra row -->
+                    <!-- Backlight + Extra row -->
                     <UniformGrid Rows="1" Margin="0,4">
                         <Button x:Name="buttonKeyboard" Classes="ghelper"
                                 Margin="0,0,4,0" Click="ButtonKeyboard_Click">
                             <TextBlock Text="Backlight" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
-                        <Button x:Name="buttonFnLock" Classes="ghelper"
-                                Margin="2,0" Click="ButtonFnLock_Click">
-                            <TextBlock Text="Fn Lock" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
                         <Button x:Name="buttonExtra" Classes="ghelper"
                                 Margin="4,0,0,0" Click="ButtonExtra_Click">
