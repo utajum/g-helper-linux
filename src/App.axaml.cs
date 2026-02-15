@@ -20,6 +20,7 @@ public class App : Application
     public static IInputHandler? Input { get; private set; }
     public static IAudioControl? Audio { get; private set; }
     public static IDisplayControl? Display { get; private set; }
+    public static IGpuControl? GpuControl { get; private set; }
 
     // Business logic orchestrator
     public static ModeControl? Mode { get; private set; }
@@ -81,6 +82,9 @@ public class App : Application
         // Create mode controller (uses App.Wmi, App.Power, etc.)
         Mode = new ModeControl();
 
+        // Initialize GPU control
+        InitializeGpuControl();
+
         Logger.WriteLine($"G-Helper Linux initialized");
         Logger.WriteLine($"Model: {System.GetModelName()}");
         Logger.WriteLine($"BIOS: {System.GetBiosVersion()}");
@@ -108,6 +112,36 @@ public class App : Application
         {
             bool supported = Wmi?.IsFeatureSupported(attr) ?? false;
             Logger.WriteLine($"  {name}: {(supported ? "YES" : "no")}");
+        }
+    }
+
+    private void InitializeGpuControl()
+    {
+        try
+        {
+            // Try NVIDIA first
+            var nvidia = new LinuxNvidiaGpuControl();
+            if (nvidia.IsAvailable())
+            {
+                GpuControl = nvidia;
+                Logger.WriteLine($"GPU Control: NVIDIA - {nvidia.GetGpuName() ?? "Unknown"}");
+                return;
+            }
+
+            // Try AMD
+            var amd = new LinuxAmdGpuControl();
+            if (amd.IsAvailable())
+            {
+                GpuControl = amd;
+                Logger.WriteLine($"GPU Control: AMD - {amd.GetGpuName() ?? "Unknown"}");
+                return;
+            }
+
+            Logger.WriteLine("GPU Control: No dGPU detected");
+        }
+        catch (Exception ex)
+        {
+            Logger.WriteLine("GPU Control initialization failed", ex);
         }
     }
 

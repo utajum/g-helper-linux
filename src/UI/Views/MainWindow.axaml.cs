@@ -91,8 +91,18 @@ public partial class MainWindow : Window
             else
                 gpuFanStr = "--";
 
+            // GPU load: only show when dGPU is active (not in Eco mode)
+            string gpuLoadStr = "";
+            bool isEcoMode = wmi.GetGpuEco();
+            if (!isEcoMode && App.GpuControl?.IsAvailable() == true)
+            {
+                int? gpuLoad = App.GpuControl.GetGpuUse();
+                if (gpuLoad.HasValue && gpuLoad.Value >= 0)
+                    gpuLoadStr = $" Load: {gpuLoad.Value}%";
+            }
+
             labelCPUFan.Text = $"CPU: {cpuTempStr}  Fan: {cpuFanStr}";
-            labelGPUFan.Text = $"GPU: {gpuTempStr}  Fan: {gpuFanStr}";
+            labelGPUFan.Text = $"GPU: {gpuTempStr}{gpuLoadStr}  Fan: {gpuFanStr}";
 
             // Mid fan if available
             int midFan = wmi.GetFanRpm(2);

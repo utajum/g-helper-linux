@@ -215,8 +215,18 @@ public partial class FansWindow : Window
             int gpuFan = wmi.GetFanRpm(1);
             int midFan = wmi.GetFanRpm(2);
 
+            // GPU load: only show when dGPU is active (not in Eco mode)
+            string gpuLoadStr = "";
+            bool isEcoMode = wmi.GetGpuEco();
+            if (!isEcoMode && App.GpuControl?.IsAvailable() == true)
+            {
+                int? gpuLoad = App.GpuControl.GetGpuUse();
+                if (gpuLoad.HasValue && gpuLoad.Value >= 0)
+                    gpuLoadStr = $" Load: {gpuLoad.Value}%";
+            }
+
             string info = $"CPU: {(cpuTemp > 0 ? $"{cpuTemp}°C" : "--")} / {(cpuFan > 0 ? $"{cpuFan} RPM" : "--")}   " +
-                          $"GPU: {(gpuTemp > 0 ? $"{gpuTemp}°C" : "--")} / {(gpuFan > 0 ? $"{gpuFan} RPM" : "--")}";
+                          $"GPU: {(gpuTemp > 0 ? $"{gpuTemp}°C" : "--")}{gpuLoadStr} / {(gpuFan > 0 ? $"{gpuFan} RPM" : "--")}";
 
             if (midFan > 0)
                 info += $"   Mid: {midFan} RPM";
