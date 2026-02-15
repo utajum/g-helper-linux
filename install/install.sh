@@ -38,11 +38,11 @@ CHMOD_APPLIED=0
 CHMOD_SKIPPED=0
 
 # ── Status display functions ───────────────────────────────────────────────────
-_inject()  { echo "  ${GREEN}[INJECT]${RESET}  $1"; ((INJECTED++)); }
-_update()  { echo "  ${CYAN}[UPDATE]${RESET}  $1"; ((UPDATED++)); }
-_skip()    { echo "  ${DIM}[SKIP]${RESET}    ${DIM}$1${RESET}"; ((SKIPPED++)); }
-_chmod()   { echo "  ${MAGENTA}[CHMOD]${RESET}  $1"; ((CHMOD_APPLIED++)); }
-_chok()    { echo "  ${DIM}[OK]${RESET}      ${DIM}$1${RESET}"; ((CHMOD_SKIPPED++)); }
+_inject()  { echo "  ${GREEN}[INJECT]${RESET}  $1"; ((INJECTED++)) || true; }
+_update()  { echo "  ${CYAN}[UPDATE]${RESET}  $1"; ((UPDATED++)) || true; }
+_skip()    { echo "  ${DIM}[SKIP]${RESET}    ${DIM}$1${RESET}"; ((SKIPPED++)) || true; }
+_chmod()   { echo "  ${MAGENTA}[CHMOD]${RESET}  $1"; ((CHMOD_APPLIED++)) || true; }
+_chok()    { echo "  ${DIM}[OK]${RESET}      ${DIM}$1${RESET}"; ((CHMOD_SKIPPED++)) || true; }
 _fail()    { echo "  ${RED}[FAIL]${RESET}    $1"; }
 _info()    { echo "  ${BLUE}[INFO]${RESET}    $1"; }
 _warn()    { echo "  ${YELLOW}[WARN]${RESET}    $1"; }
@@ -169,7 +169,7 @@ dl_count=0
 dl_total=$(( ${#BINARIES[@]} + ${#ASSETS[@]} ))
 
 for file in "${BINARIES[@]}"; do
-    ((dl_count++))
+    ((dl_count++)) || true
     _progress_bar "$dl_count" "$dl_total" "Fetching $file..."
     if ! curl -fsSL "https://github.com/$REPO/releases/latest/download/$file" -o "$WORK_DIR/$file" 2>/dev/null; then
         echo ""
@@ -180,7 +180,7 @@ for file in "${BINARIES[@]}"; do
 done
 
 for file in "${ASSETS[@]}"; do
-    ((dl_count++))
+    ((dl_count++)) || true
     _progress_bar "$dl_count" "$dl_total" "Fetching $file..."
     if ! curl -fsSL "https://raw.githubusercontent.com/$REPO/master/install/$file" -o "$WORK_DIR/$file" 2>/dev/null; then
         echo ""
@@ -266,21 +266,21 @@ done
 # ── Battery charge limit ──
 _bat_count=0
 for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do
-    [[ -f "$f" ]] && _ensure_chmod "$f" && ((_bat_count++)) || ((_bat_count++))
+    [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_bat_count++)) || true; }
 done
 [[ $_bat_count -eq 0 ]] && _info "${DIM}no battery charge_control_end_threshold found${RESET}"
 
 # ── Backlight ──
 _bl_count=0
 for f in /sys/class/backlight/*/brightness; do
-    [[ -f "$f" ]] && _ensure_chmod "$f" && ((_bl_count++)) || ((_bl_count++))
+    [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_bl_count++)) || true; }
 done
 [[ $_bl_count -eq 0 ]] && _info "${DIM}no backlight brightness nodes found${RESET}"
 
 # ── CPU online/offline ──
 _cpu_count=0
 for f in /sys/devices/system/cpu/cpu*/online; do
-    [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_cpu_count++)); }
+    [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_cpu_count++)) || true; }
 done
 if [[ $_cpu_count -gt 0 ]]; then
     _info "CPU core online/offline: ${GREEN}${_cpu_count} nodes${RESET} processed"
@@ -295,10 +295,10 @@ for hwmon in /sys/class/hwmon/hwmon*; do
     if [[ "$name" == "asus_nb_wmi" || "$name" == "asus_custom_fan_curve" ]]; then
         _fan_count=0
         for f in "$hwmon"/pwm*_auto_point* "$hwmon"/pwm*_enable; do
-            [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_fan_count++)); }
+            [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_fan_count++)) || true; }
         done
         _info "${CYAN}$(basename "$hwmon")${RESET} (${BOLD}$name${RESET}) — ${GREEN}${_fan_count} fan curve nodes${RESET}"
-        ((_hwmon_found++))
+        ((_hwmon_found++)) || true
     fi
 done
 [[ $_hwmon_found -eq 0 ]] && _info "${DIM}no asus fan curve hwmon devices found${RESET}"
