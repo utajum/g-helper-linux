@@ -134,6 +134,13 @@ jobs:
             ./ghelper
             ```
 
+            > **Note:** udev rules are required for the app to work without root. The quick install script handles this automatically. For manual installs:
+            >
+            > ```bash
+            > sudo curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/90-ghelper.rules -o /etc/udev/rules.d/90-ghelper.rules
+            > sudo udevadm control --reload-rules && sudo udevadm trigger
+            > ```
+
             ---
             *Auto-generated release from commit ${{ github.sha }}*
           files: |
