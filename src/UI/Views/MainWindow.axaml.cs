@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using GHelper.Linux.USB;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -807,6 +808,31 @@ public partial class MainWindow : Window
 
         // Check autostart status
         checkStartup.IsChecked = sys.IsAutostartEnabled();
+
+        // System info (same as ExtraWindow)
+        labelSysModel.Text = $"Model: {model}";
+        labelSysBios.Text = $"BIOS: {sys.GetBiosVersion()}";
+        labelSysKernel.Text = $"Kernel: {sys.GetKernelVersion()}";
+
+        bool wmiLoaded = sys.IsAsusWmiLoaded();
+        labelSysWmi.Text = $"asus-wmi: {(wmiLoaded ? "\u2713 Loaded" : "\u2717 Not loaded")}";
+
+        var features = new List<string>();
+        var wmi = App.Wmi;
+        if (wmi != null)
+        {
+            if (wmi.IsFeatureSupported("throttle_thermal_policy")) features.Add("Performance Modes");
+            if (wmi.IsFeatureSupported("dgpu_disable")) features.Add("GPU Eco");
+            if (wmi.IsFeatureSupported("gpu_mux_mode")) features.Add("MUX Switch");
+            if (wmi.IsFeatureSupported("panel_od")) features.Add("Panel Overdrive");
+            if (wmi.IsFeatureSupported("mini_led_mode")) features.Add("MiniLED");
+            if (wmi.IsFeatureSupported("ppt_pl1_spl")) features.Add("PPT Limits");
+            if (wmi.IsFeatureSupported("nv_dynamic_boost")) features.Add("NVIDIA Dynamic Boost");
+        }
+
+        labelSysFeatures.Text = features.Count > 0
+            ? $"Features: {string.Join(", ", features)}"
+            : "No ASUS-specific features detected";
     }
 
     private void CheckStartup_Changed(object? sender, RoutedEventArgs e)

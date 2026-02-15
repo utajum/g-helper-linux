@@ -272,6 +272,17 @@
                         <TextBlock Grid.Column="1" x:Name="labelChargeFooter" Classes="label-dim"
                                    Text="" VerticalAlignment="Center" />
                     </Grid>
+
+                    <!-- System Info -->
+                    <StackPanel Spacing="2" Margin="0,2,0,4">
+                        <TextBlock x:Name="labelSysModel" Classes="label-dim" Text="" />
+                        <TextBlock x:Name="labelSysBios" Classes="label-dim" Text="" />
+                        <TextBlock x:Name="labelSysKernel" Classes="label-dim" Text="" />
+                        <TextBlock x:Name="labelSysWmi" Classes="label-dim" Text="" />
+                        <TextBlock x:Name="labelSysFeatures" Classes="label-dim" Text=""
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
                     <!-- Version + Updates + Quit -->
                     <Grid ColumnDefinitions="*,Auto,Auto">
                         <TextBlock Grid.Column="0" x:Name="labelVersion" Classes="label-dim"
