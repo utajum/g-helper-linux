@@ -471,13 +471,13 @@ public partial class MainWindow : Window
 
     private void UpdateColorButtons()
     {
-        // Update color swatch in the "Color ■" button
-        colorSwatch1.Background = new SolidColorBrush(
+        buttonColor1.Background = new SolidColorBrush(
             Color.FromRgb(Aura.ColorR, Aura.ColorG, Aura.ColorB));
         buttonColor2.Background = new SolidColorBrush(
             Color.FromRgb(Aura.Color2R, Aura.Color2G, Aura.Color2B));
+        buttonColor2.IsVisible = Aura.HasSecondColor();
 
-        // Hide color button for modes that don't use color
+        // Hide color buttons for modes that don't use color
         buttonColor1.IsVisible = Aura.UsesColor();
     }
 
@@ -769,6 +769,27 @@ public partial class MainWindow : Window
         App.Wmi?.SetBatteryChargeLimit(limit);
     }
 
+    private void ButtonBattery60_Click(object? sender, RoutedEventArgs e)
+    {
+        sliderBattery.Value = 60;
+        App.Wmi?.SetBatteryChargeLimit(60);
+        RefreshBattery();
+    }
+
+    private void ButtonBattery80_Click(object? sender, RoutedEventArgs e)
+    {
+        sliderBattery.Value = 80;
+        App.Wmi?.SetBatteryChargeLimit(80);
+        RefreshBattery();
+    }
+
+    private void ButtonBattery100_Click(object? sender, RoutedEventArgs e)
+    {
+        sliderBattery.Value = 100;
+        App.Wmi?.SetBatteryChargeLimit(100);
+        RefreshBattery();
+    }
+
     // ── Footer ──
 
     private void RefreshFooter()
@@ -781,8 +802,8 @@ public partial class MainWindow : Window
         // Show model in window title (like Windows G-Helper)
         Title = $"G-Helper — {model}";
 
-        // Version in footer
-        labelVersion.Text = $"Version: {Helpers.AppConfig.AppVersion}";
+        // Version + model in footer
+        labelVersion.Text = $"v{Helpers.AppConfig.AppVersion} — {model}";
 
         // Check autostart status
         checkStartup.IsChecked = sys.IsAutostartEnabled();

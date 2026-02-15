@@ -36,11 +36,11 @@
                         <TextBlock Grid.Column="1" x:Name="labelPerf" Classes="header"
                                    Text="Mode: Balanced" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" x:Name="labelCPUFan" Classes="label-dim"
-                                   Text="CPU: -- °C  Fan: -- RPM" VerticalAlignment="Center" />
+                                   Text="CPU: -- °C  Fan: 0RPM" VerticalAlignment="Center" />
                     </Grid>
 
-                    <!-- Performance mode buttons — tall, icon above text -->
-                    <UniformGrid Rows="1" Margin="0,0">
+                    <!-- Performance mode buttons — equal width, tall, icon above text -->
+                    <UniformGrid Rows="1" Columns="4" Margin="0,0">
                         <Button x:Name="buttonSilent" Classes="ghelper-tall"
                                 Margin="0,0,3,0" Click="ButtonSilent_Click">
                             <StackPanel HorizontalAlignment="Center" Spacing="4">
@@ -82,11 +82,11 @@
                         <TextBlock Grid.Column="1" x:Name="labelGPU" Classes="header"
                                    Text="GPU Mode: Standard" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" x:Name="labelGPUFan" Classes="label-dim"
-                                   Text="GPU Fan: -- RPM" VerticalAlignment="Center" />
+                                   Text="GPU Fan: 0RPM" VerticalAlignment="Center" />
                     </Grid>
 
-                    <!-- GPU mode buttons — tall, icon above text -->
-                    <UniformGrid Rows="1" Margin="0,0">
+                    <!-- GPU mode buttons — equal width, tall, icon above text -->
+                    <UniformGrid Rows="1" Columns="3" Margin="0,0">
                         <Button x:Name="buttonEco" Classes="ghelper-tall"
                                 Margin="0,0,3,0" Click="ButtonEco_Click">
                             <StackPanel HorizontalAlignment="Center" Spacing="4">
@@ -127,7 +127,8 @@
                                    Text="" VerticalAlignment="Center" />
                     </Grid>
 
-                    <UniformGrid Rows="1" Margin="0,0">
+                    <!-- Screen buttons — equal width -->
+                    <UniformGrid Rows="1" Columns="3" Margin="0,0">
                         <Button x:Name="buttonScreenAuto" Classes="ghelper"
                                 Margin="0,0,3,0" Click="ButtonScreenAuto_Click"
                                 Height="36">
@@ -144,12 +145,13 @@
                             <TextBlock x:Name="labelHighRefresh" Text="120Hz"
                                        HorizontalAlignment="Center" FontSize="11" />
                         </Button>
-                        <Button x:Name="buttonMiniled" Classes="ghelper"
-                                Margin="3,0,0,0" Click="ButtonMiniled_Click"
-                                Height="36" IsVisible="False">
-                            <TextBlock Text="MiniLED" HorizontalAlignment="Center" FontSize="11" />
-                        </Button>
                     </UniformGrid>
+                    <!-- MiniLED button — only visible on supported models -->
+                    <Button x:Name="buttonMiniled" Classes="ghelper"
+                            Margin="0,4,0,0" Click="ButtonMiniled_Click"
+                            Height="36" IsVisible="False">
+                        <TextBlock Text="MiniLED" HorizontalAlignment="Center" FontSize="11" />
+                    </Button>
                 </StackPanel>
             </Border>
 
@@ -165,44 +167,49 @@
                                    Text="" VerticalAlignment="Center" />
                     </Grid>
 
-                    <!-- Keyboard controls: [Mode combo] [Color ■] [⚙ Extra] -->
-                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0" x:Name="panelAura">
-                        <ComboBox x:Name="comboAuraMode" Grid.Column="0"
-                                  Height="36" Margin="0,0,4,0"
-                                  HorizontalAlignment="Stretch"
-                                  MaxDropDownHeight="300"
-                                  SelectionChanged="ComboAuraMode_Changed" />
-                        <Button x:Name="buttonColor1" Grid.Column="1"
-                                Classes="ghelper" Height="36" MinWidth="80" Margin="0,0,4,0"
-                                Click="ButtonColor1_Click"
-                                ToolTip.Tip="Primary color">
-                            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                <TextBlock Text="Color" FontSize="11" VerticalAlignment="Center" />
-                                <Border x:Name="colorSwatch1" Width="16" Height="16"
-                                        CornerRadius="2" Background="#FF0000" />
-                            </StackPanel>
+                    <!-- Row 1: Backlight cycle + Extra settings -->
+                    <UniformGrid Rows="1" Columns="2" Margin="0,0,0,4">
+                        <Button x:Name="buttonKeyboard" Classes="ghelper"
+                                Margin="0,0,3,0" Click="ButtonKeyboard_Click"
+                                Height="36">
+                            <TextBlock Text="Backlight" HorizontalAlignment="Center" FontSize="11" />
                         </Button>
-                        <Button x:Name="buttonExtra" Grid.Column="2"
-                                Classes="ghelper" Height="36" MinWidth="80"
-                                Click="ButtonExtra_Click">
+                        <Button x:Name="buttonExtra" Classes="ghelper"
+                                Margin="3,0,0,0" Click="ButtonExtra_Click"
+                                Height="36">
                             <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
                                 <TextBlock Text="⚙" FontSize="13" VerticalAlignment="Center" />
                                 <TextBlock Text="Extra" FontSize="11" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                    </Grid>
+                    </UniformGrid>
 
-                    <!-- Hidden elements needed by code-behind -->
-                    <ComboBox x:Name="comboAuraSpeed" IsVisible="False"
-                              Height="0" Margin="0"
-                              SelectionChanged="ComboAuraSpeed_Changed" />
-                    <Button x:Name="buttonColor2" IsVisible="False"
-                            Height="0" Width="0"
-                            Click="ButtonColor2_Click"
-                            Background="#000000" />
-                    <Button x:Name="buttonKeyboard" IsVisible="False"
-                            Height="0" Width="0"
-                            Click="ButtonKeyboard_Click" />
+                    <!-- Row 2: AURA Mode + Speed + Color1 + Color2 -->
+                    <Grid ColumnDefinitions="*,90,44,44" Margin="0,0" x:Name="panelAura">
+                        <ComboBox x:Name="comboAuraMode" Grid.Column="0"
+                                  Height="36" Margin="0,0,4,0"
+                                  HorizontalAlignment="Stretch"
+                                  MaxDropDownHeight="300"
+                                  SelectionChanged="ComboAuraMode_Changed" />
+                        <ComboBox x:Name="comboAuraSpeed" Grid.Column="1"
+                                  Height="36" Margin="2,0"
+                                  HorizontalAlignment="Stretch"
+                                  MaxDropDownHeight="200"
+                                  SelectionChanged="ComboAuraSpeed_Changed" />
+                        <Button x:Name="buttonColor1" Grid.Column="2"
+                                Height="36" Width="36" Margin="2,0"
+                                Click="ButtonColor1_Click"
+                                ToolTip.Tip="Primary color"
+                                Background="#FFFFFF"
+                                CornerRadius="5" />
+                        <Button x:Name="buttonColor2" Grid.Column="3"
+                                Height="36" Width="36" Margin="2,0,0,0"
+                                Click="ButtonColor2_Click"
+                                ToolTip.Tip="Secondary color"
+                                Background="#000000"
+                                IsVisible="False"
+                                CornerRadius="5" />
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -220,7 +227,7 @@
                     </Grid>
 
                     <!-- Battery charge limit slider -->
-                    <Grid ColumnDefinitions="*,50" Margin="2,0,2,0">
+                    <Grid ColumnDefinitions="*,50" Margin="2,0,2,4">
                         <Slider x:Name="sliderBattery" Grid.Column="0"
                                 Minimum="40" Maximum="100"
                                 Value="100"
@@ -232,6 +239,25 @@
                                    HorizontalAlignment="Right"
                                    VerticalAlignment="Center" />
                     </Grid>
+
+                    <!-- Quick presets -->
+                    <UniformGrid Rows="1" Columns="3" Margin="0,0">
+                        <Button x:Name="buttonBattery60" Classes="ghelper"
+                                Margin="0,0,3,0" Click="ButtonBattery60_Click"
+                                Height="32">
+                            <TextBlock Text="60%" HorizontalAlignment="Center" FontSize="11" />
+                        </Button>
+                        <Button x:Name="buttonBattery80" Classes="ghelper"
+                                Margin="3,0" Click="ButtonBattery80_Click"
+                                Height="32">
+                            <TextBlock Text="80%" HorizontalAlignment="Center" FontSize="11" />
+                        </Button>
+                        <Button x:Name="buttonBattery100" Classes="ghelper"
+                                Margin="3,0,0,0" Click="ButtonBattery100_Click"
+                                Height="32">
+                            <TextBlock Text="100%" HorizontalAlignment="Center" FontSize="11" />
+                        </Button>
+                    </UniformGrid>
                 </StackPanel>
             </Border>
 

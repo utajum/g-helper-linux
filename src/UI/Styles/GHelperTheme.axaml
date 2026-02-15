@@ -32,6 +32,7 @@
         <Setter Property="Padding" Value="8,6" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
@@ -50,6 +51,7 @@
         <Setter Property="MinHeight" Value="68" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
