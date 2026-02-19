@@ -84,9 +84,69 @@ jobs:
             src/bin/Release/net8.0/linux-x64/publish/libSkiaSharp.so
             src/bin/Release/net8.0/linux-x64/publish/libHarfBuzzSharp.so
 
+  # Build AppImage from compiled artifacts
+  appimage:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ghelper
+          path: artifacts/ghelper
+
+      - name: Download native libs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-libs
+          path: artifacts/native-libs
+
+      - name: Install libfuse2
+        run: sudo apt-get update && sudo apt-get install -y libfuse2
+
+      - name: Download appimagetool
+        run: |
+          curl -fsSL "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
+            -o appimagetool
+          chmod +x appimagetool
+
+      - name: Assemble AppDir
+        run: |
+          mkdir -p GHelper.AppDir/usr/bin
+
+          # Binary + native libs next to binary (NativeLibExtractor finds them here)
+          cp artifacts/ghelper/ghelper             GHelper.AppDir/usr/bin/
+          cp artifacts/native-libs/libSkiaSharp.so     GHelper.AppDir/usr/bin/
+          cp artifacts/native-libs/libHarfBuzzSharp.so GHelper.AppDir/usr/bin/
+          chmod +x GHelper.AppDir/usr/bin/ghelper
+
+          # Desktop entry at AppDir root (required by appimagetool)
+          cp install/ghelper.desktop GHelper.AppDir/ghelper.desktop
+
+          # Icon at AppDir root (must match Icon= in .desktop file)
+          cp install/ghelper.png GHelper.AppDir/ghelper.png
+
+          # AppRun entry point
+          printf '#!/bin/bash\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/usr/bin/ghelper" "$@"\n' > GHelper.AppDir/AppRun
+          chmod +x GHelper.AppDir/AppRun
+
+      - name: Build AppImage
+        run: |
+          export ARCH=x86_64
+          ./appimagetool GHelper.AppDir GHelper-x86_64.AppImage
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: GHelper-x86_64.AppImage
+
   # Create release with all artifacts
   release:
-    needs: [version, build]
+    needs: [version, build, appimage]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -100,7 +160,9 @@ jobs:
           cp artifacts/ghelper/ghelper release/
           cp artifacts/native-libs/libSkiaSharp.so release/
           cp artifacts/native-libs/libHarfBuzzSharp.so release/
+          cp artifacts/appimage/GHelper-x86_64.AppImage release/
           chmod +x release/ghelper
+          chmod +x release/GHelper-x86_64.AppImage
           ls -la release/
 
       - name: Create Release
@@ -119,6 +181,15 @@ jobs:
             curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/install.sh | sudo bash
             ```
 
+            ### AppImage
+
+            Download `GHelper-x86_64.AppImage`, make it executable, and run:
+
+            ```bash
+            chmod +x GHelper-x86_64.AppImage
+            ./GHelper-x86_64.AppImage
+            ```
+
             ### Manual Install
 
             Download all 3 files, place them in the same directory, and run:
@@ -134,7 +205,7 @@ jobs:
             ./ghelper
             ```
 
-            > **Note:** udev rules are required for the app to work without root. The quick install script handles this automatically. For manual installs:
+            > **Note:** udev rules are required for hardware access without root. The quick install script handles this automatically. For AppImage or manual installs:
             >
             > ```bash
             > sudo curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/90-ghelper.rules -o /etc/udev/rules.d/90-ghelper.rules
@@ -147,4 +218,5 @@ jobs:
             release/ghelper
             release/libSkiaSharp.so
             release/libHarfBuzzSharp.so
+            release/GHelper-x86_64.AppImage
           generate_release_notes: true

@@ -3,6 +3,11 @@ src/bin/
 src/obj/
 dist/
 
+# AppImage
+*.AppImage
+GHelper.AppDir/
+appimagetool
+
 # IDE / Editor
 .vs/
 .vscode/
