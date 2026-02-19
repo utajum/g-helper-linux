@@ -72,7 +72,6 @@ Pull requests and feature requests are welcome!
 │  Display                   Brightness, gamma adjustment         │
 │  CPU boost                 Enable/disable turbo boost            │
 │  System tray               Background tray icon + context menu  │
-│  Hotkey support            ASUS Fn key events via evdev         │
 │  Auto-start                XDG autostart .desktop integration   │
 └──────────────────────────────────────────────────────────────────┘
 ```
