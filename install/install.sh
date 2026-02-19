@@ -30,6 +30,13 @@ INSTALL_DIR="/opt/ghelper"
 UDEV_DEST="/etc/udev/rules.d/90-ghelper.rules"
 DESKTOP_DEST="/usr/share/applications/ghelper.desktop"
 
+if [[ -w "/usr/share/applications" ]] 2>/dev/null; then
+    DESKTOP_DEST="/usr/share/applications/ghelper.desktop"
+else
+    DESKTOP_DEST="$HOME/.local/share/applications/ghelper.desktop"
+    mkdir -p "$HOME/.local/share/applications" 2>/dev/null || true
+fi
+
 # ── Counters ───────────────────────────────────────────────────────────────────
 INJECTED=0
 SKIPPED=0
@@ -324,9 +331,11 @@ _info "sysfs summary: ${GREEN}${CHMOD_APPLIED} armed${RESET} / ${DIM}${CHMOD_SKI
 
 _step 5 "DESKTOP INTEGRATION LAYER"
 
-# Always overwrite — .desktop entry may have new categories, keywords, or exec path
-install -m 644 "$WORK_DIR/ghelper.desktop" "$DESKTOP_DEST"
-_inject "desktop entry → $DESKTOP_DEST"
+if install -m 644 "$WORK_DIR/ghelper.desktop" "$DESKTOP_DEST" 2>/dev/null; then
+    _inject "desktop entry → $DESKTOP_DEST"
+else
+    _warn "desktop entry → $DESKTOP_DEST (read-only, using autostart instead)"
+fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  [0x06] AUTOSTART IMPLANT
