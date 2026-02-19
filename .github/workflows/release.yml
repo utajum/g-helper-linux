@@ -173,6 +173,9 @@ jobs:
           body: |
             ## G-Helper Linux ${{ needs.version.outputs.new_version }}
 
+            ![Release Downloads](https://img.shields.io/github/downloads/utajum/g-helper-linux/${{ needs.version.outputs.new_version }}/total?style=flat-square&label=downloads)
+            ![AppImage Downloads](https://img.shields.io/github/downloads/utajum/g-helper-linux/${{ needs.version.outputs.new_version }}/GHelper-x86_64.AppImage?style=flat-square&label=appimage%20downloads)
+
             ASUS laptop control utility for Linux — native AOT binary, no runtime needed.
 
             ### Quick Install
