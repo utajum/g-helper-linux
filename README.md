@@ -116,6 +116,16 @@ chmod +x ghelper
 ./ghelper
 ```
 
+### `╠══[ APPIMAGE ]══╣`
+
+```bash
+curl -sL https://github.com/utajum/g-helper-linux/releases/latest/download/GHelper-x86_64.AppImage -o GHelper-x86_64.AppImage
+chmod +x GHelper-x86_64.AppImage
+./GHelper-x86_64.AppImage
+```
+
+> **Note:** The built-in auto-update mechanism does not work with AppImage. You will need to manually download and replace the AppImage file to update.
+
 ### `╠══[ BUILD FROM SOURCE ]══╣`
 
 ```bash
