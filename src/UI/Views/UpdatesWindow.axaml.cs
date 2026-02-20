@@ -116,6 +116,12 @@ public partial class UpdatesWindow : Window
         });
     }
 
+    /// <summary>Check if running inside an AppImage (APPIMAGE env var is set by AppImage runtime).</summary>
+    private static bool IsAppImage => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("APPIMAGE"));
+
+    /// <summary>Get the path to the .AppImage file on disk (only valid when IsAppImage is true).</summary>
+    private static string? AppImagePath => Environment.GetEnvironmentVariable("APPIMAGE");
+
     private async Task CheckSelfUpdateAsync()
     {
         try
@@ -133,14 +139,15 @@ public partial class UpdatesWindow : Window
             var latestVersion = tagName.TrimStart('v');
             var releaseUrl = root.GetProperty("html_url").GetString() ?? $"https://github.com/{GitHubRepo}/releases/latest";
 
-            // Find the binary download URL
-            var downloadUrl = $"https://github.com/{GitHubRepo}/releases/latest/download/ghelper";
+            // Pick the right asset: AppImage when running as AppImage, bare binary otherwise
+            string targetAsset = IsAppImage ? "GHelper-x86_64.AppImage" : "ghelper";
+            var downloadUrl = $"https://github.com/{GitHubRepo}/releases/latest/download/{targetAsset}";
             if (root.TryGetProperty("assets", out var assets))
             {
                 for (int i = 0; i < assets.GetArrayLength(); i++)
                 {
                     var name = assets[i].GetProperty("name").GetString() ?? "";
-                    if (name == "ghelper")
+                    if (name == targetAsset)
                     {
                         downloadUrl = assets[i].GetProperty("browser_download_url").GetString() ?? downloadUrl;
                         break;
@@ -218,7 +225,7 @@ public partial class UpdatesWindow : Window
                 }
             });
 
-            Helpers.Logger.WriteLine($"Self-update: current=v{Helpers.AppConfig.AppVersion} latest=v{latestVersion} newer={isNewer}");
+            Helpers.Logger.WriteLine($"Self-update: current=v{Helpers.AppConfig.AppVersion} latest=v{latestVersion} newer={isNewer} mode={( IsAppImage ? "AppImage" : "binary" )}");
         }
         catch (Exception ex)
         {
@@ -244,11 +251,53 @@ public partial class UpdatesWindow : Window
             http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + Helpers.AppConfig.AppVersion);
             http.Timeout = TimeSpan.FromMinutes(5);
 
-            var tmpPath = Path.Combine(Path.GetTempPath(), "ghelper-update");
-            using (var stream = await http.GetStreamAsync(downloadUrl))
-            using (var fs = File.Create(tmpPath))
+            // Determine the target path to replace
+            string? targetPath;
+            string tmpFileName;
+
+            if (IsAppImage && AppImagePath != null && File.Exists(AppImagePath))
             {
-                await stream.CopyToAsync(fs);
+                // AppImage mode: replace the .AppImage file on disk
+                targetPath = AppImagePath;
+                tmpFileName = "ghelper-update.AppImage";
+                Helpers.Logger.WriteLine($"Self-update: AppImage mode, target={targetPath}");
+            }
+            else
+            {
+                // Bare binary mode: replace the running binary
+                targetPath = Environment.ProcessPath;
+                tmpFileName = "ghelper-update";
+            }
+
+            var tmpPath = Path.Combine(Path.GetTempPath(), tmpFileName);
+
+            // Download with progress reporting
+            using (var response = await http.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead))
+            {
+                response.EnsureSuccessStatusCode();
+                var totalBytes = response.Content.Headers.ContentLength;
+
+                using var stream = await response.Content.ReadAsStreamAsync();
+                using var fs = File.Create(tmpPath);
+
+                var buffer = new byte[81920];
+                long downloaded = 0;
+                int bytesRead;
+
+                while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await fs.WriteAsync(buffer, 0, bytesRead);
+                    downloaded += bytesRead;
+
+                    if (totalBytes > 0)
+                    {
+                        var pct = (int)(downloaded * 100 / totalBytes.Value);
+                        var mb = downloaded / (1024.0 * 1024.0);
+                        var totalMb = totalBytes.Value / (1024.0 * 1024.0);
+                        Dispatcher.UIThread.Post(() =>
+                            btn.Content = $"Downloading... {mb:F1}/{totalMb:F1} MB ({pct}%)");
+                    }
+                }
             }
 
             // Make executable
@@ -259,13 +308,14 @@ public partial class UpdatesWindow : Window
                 UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
 #pragma warning restore CA1416
 
-            // Replace the current binary
-            var currentBinary = Environment.ProcessPath;
-            if (currentBinary != null && File.Exists(currentBinary))
+            if (targetPath != null && File.Exists(targetPath))
             {
-                var backupPath = currentBinary + ".bak";
-                File.Copy(currentBinary, backupPath, overwrite: true);
-                File.Move(tmpPath, currentBinary, overwrite: true);
+                var backupPath = targetPath + ".bak";
+                File.Copy(targetPath, backupPath, overwrite: true);
+                File.Move(tmpPath, targetPath, overwrite: true);
+
+                // Determine what to exec on restart
+                var restartPath = IsAppImage ? targetPath : targetPath;
 
                 Dispatcher.UIThread.Post(() =>
                 {
@@ -274,25 +324,27 @@ public partial class UpdatesWindow : Window
                     btn.Click -= null!; // clear old handlers
                     btn.Click += (_, _) =>
                     {
-                        // Restart the app
-                        Process.Start(new ProcessStartInfo(currentBinary) { UseShellExecute = false });
+                        Helpers.Logger.WriteLine($"Self-update: restarting via {restartPath}");
+                        Process.Start(new ProcessStartInfo(restartPath) { UseShellExecute = false });
                         Environment.Exit(0);
                     };
                 });
 
-                Helpers.Logger.WriteLine($"Self-update: downloaded and replaced binary. Restart required.");
+                var mode = IsAppImage ? "AppImage" : "binary";
+                Helpers.Logger.WriteLine($"Self-update: downloaded and replaced {mode} at {targetPath}. Restart required.");
             }
             else
             {
-                // Can't determine current binary path — save to downloads
+                // Can't determine target path — save to downloads
+                var fileName = IsAppImage ? "GHelper-x86_64.AppImage" : "ghelper";
                 var savePath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Downloads", "ghelper");
+                    "Downloads", fileName);
                 File.Move(tmpPath, savePath, overwrite: true);
 
                 Dispatcher.UIThread.Post(() =>
                 {
-                    btn.Content = "Saved to ~/Downloads";
+                    btn.Content = $"Saved to ~/Downloads/{fileName}";
                     btn.IsEnabled = false;
                 });
 
