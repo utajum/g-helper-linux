@@ -134,8 +134,6 @@ chmod +x GHelper-x86_64.AppImage
 ./GHelper-x86_64.AppImage
 ```
 
-> **Note:** The built-in auto-update mechanism does not work with AppImage. You will need to manually download and replace the AppImage file to update.
-
 ### `╠══[ BUILD FROM SOURCE ]══╣`
 
 ```bash
