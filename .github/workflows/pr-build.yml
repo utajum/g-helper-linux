@@ -1,0 +1,173 @@
+name: PR Build
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Patch version in .csproj
+        run: |
+          VERSION="0.0.0"
+          sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" src/GHelper.Linux.csproj
+          echo "Set version to: ${VERSION} (PR #${{ github.event.pull_request.number }})"
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      - name: Install Native AOT dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Restore packages
+        run: dotnet restore src/ --runtime linux-x64
+
+      - name: Publish Native AOT binary
+        run: dotnet publish src/ -c Release --no-restore
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghelper
+          path: src/bin/Release/net8.0/linux-x64/publish/ghelper
+          retention-days: 7
+
+      - name: Upload native libs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-libs
+          path: |
+            src/bin/Release/net8.0/linux-x64/publish/libSkiaSharp.so
+            src/bin/Release/net8.0/linux-x64/publish/libHarfBuzzSharp.so
+          retention-days: 7
+
+  appimage:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ghelper
+          path: artifacts/ghelper
+
+      - name: Download native libs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-libs
+          path: artifacts/native-libs
+
+      - name: Install libfuse2
+        run: sudo apt-get update && sudo apt-get install -y libfuse2
+
+      - name: Download appimagetool
+        run: |
+          curl -fsSL "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
+            -o appimagetool
+          chmod +x appimagetool
+
+      - name: Assemble AppDir
+        run: |
+          mkdir -p GHelper.AppDir/usr/bin
+
+          cp artifacts/ghelper/ghelper             GHelper.AppDir/usr/bin/
+          cp artifacts/native-libs/libSkiaSharp.so     GHelper.AppDir/usr/bin/
+          cp artifacts/native-libs/libHarfBuzzSharp.so GHelper.AppDir/usr/bin/
+          chmod +x GHelper.AppDir/usr/bin/ghelper
+
+          cp install/ghelper.desktop GHelper.AppDir/ghelper.desktop
+          cp install/ghelper.png GHelper.AppDir/ghelper.png
+
+          printf '#!/bin/bash\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/usr/bin/ghelper" "$@"\n' > GHelper.AppDir/AppRun
+          chmod +x GHelper.AppDir/AppRun
+
+      - name: Build AppImage
+        run: |
+          export ARCH=x86_64
+          ./appimagetool GHelper.AppDir GHelper-x86_64.AppImage
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: GHelper-x86_64.AppImage
+          retention-days: 7
+
+  comment:
+    needs: [build, appimage]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post or update PR comment with artifact links
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- pr-build-artifacts -->';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const sha = context.payload.pull_request.head.sha.substring(0, 7);
+
+            const body = [
+              marker,
+              '### Build Artifacts',
+              '',
+              `Built from commit \`${sha}\` — [Download from Actions run](${runUrl})`,
+              '',
+              '| Artifact | Description |',
+              '|----------|-------------|',
+              '| **ghelper** | Native AOT binary |',
+              '| **native-libs** | libSkiaSharp.so + libHarfBuzzSharp.so |',
+              '| **appimage** | GHelper-x86_64.AppImage (all-in-one) |',
+              '',
+              '**Quick test:**',
+              '```bash',
+              '# Option 1: AppImage (easiest)',
+              'chmod +x GHelper-x86_64.AppImage',
+              './GHelper-x86_64.AppImage',
+              '',
+              '# Option 2: Native binary',
+              'chmod +x ghelper',
+              './ghelper',
+              '```',
+              '',
+              `> Artifacts expire in 7 days.`,
+            ].join('\n');
+
+            // Find existing comment to update
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+              console.log(`Updated comment ${existing.id}`);
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+              console.log('Created new comment');
+            }
