@@ -14,6 +14,40 @@ namespace GHelper.Linux.Mode;
 /// </summary>
 public class ModeControl
 {
+    // Track whether custom power limits were applied (for IsResetRequired workaround)
+    private int _customPower;
+
+    // ── Power limit bounds (matches Windows G-Helper AsusACPI constructor) ──
+
+    private const int MinTotal = 5;
+    private const int MinGpuBoost = 5;
+
+    private static int GetMaxTotal()
+    {
+        if (Helpers.AppConfig.IsAdvantageEdition()) return 250;
+        if (Helpers.AppConfig.IsX13()) return 75;
+        if (Helpers.AppConfig.IsAlly()) return 50;
+        if (Helpers.AppConfig.IsIntelHX()) return 175;
+        if (Helpers.AppConfig.IsAMDLight()) return 90;
+        if (Helpers.AppConfig.IsZ1325()) return 93;
+        if (Helpers.AppConfig.IsFA401EA()) return 115;
+        return 150; // default
+    }
+
+    private static int GetMaxCpu()
+    {
+        if (Helpers.AppConfig.IsFA401EA()) return 115;
+        return 100; // default
+    }
+
+    private static int GetMaxGpuBoost()
+    {
+        if (Helpers.AppConfig.DynamicBoost5()) return 5;
+        if (Helpers.AppConfig.DynamicBoost15()) return 15;
+        if (Helpers.AppConfig.DynamicBoost20()) return 20;
+        return 25; // default
+    }
+
     public ModeControl()
     {
     }
@@ -23,15 +57,34 @@ public class ModeControl
     /// </summary>
     public void SetPerformanceMode(int mode = -1, bool notify = false)
     {
-        if (mode < 0) mode = Modes.GetCurrent();
+        int oldMode = Modes.GetCurrent();
+        if (mode < 0) mode = oldMode;
         if (!Modes.Exists(mode)) mode = 0;
 
         Modes.SetCurrent(mode);
         int baseMode = Modes.GetBase(mode);
+        int oldBaseMode = Modes.GetBase(oldMode);
 
         Helpers.Logger.WriteLine($"SetPerformanceMode: {Modes.GetName(mode)} (base={baseMode})");
 
         // 1. Set thermal policy
+        // Workaround for GA403/FA507XV: firmware doesn't properly reset power limits
+        // when switching between custom modes with the same base. Briefly bounce to a
+        // different base mode first, then switch to the target.
+        bool needsReset = Helpers.AppConfig.IsResetRequired()
+            && oldBaseMode == baseMode
+            && _customPower > 0
+            && !Helpers.AppConfig.IsMode("auto_apply_power");
+
+        if (needsReset)
+        {
+            int resetBase = (oldBaseMode != 1) ? 1 : 0; // bounce to Turbo or Balanced
+            Helpers.Logger.WriteLine($"IsResetRequired: bouncing {oldBaseMode} → {resetBase} → {baseMode}");
+            App.Wmi?.SetThrottleThermalPolicy(resetBase);
+        }
+
+        _customPower = 0;
+
         App.Wmi?.SetThrottleThermalPolicy(baseMode);
 
         // 2. Set platform profile to match
@@ -44,10 +97,14 @@ public class ModeControl
         };
         App.Power?.SetPlatformProfile(profile);
 
-        // 3. Apply fan curves if auto-apply is enabled
+        // 3. Apply fan curves and power limits
         Task.Run(async () =>
         {
-            await Task.Delay(100); // Let thermal policy settle
+            // If reset was needed, wait for firmware to process the bounce
+            if (needsReset)
+                await Task.Delay(1500);
+            else
+                await Task.Delay(100); // Let thermal policy settle
 
             AutoFans(mode);
 
@@ -121,26 +178,37 @@ public class ModeControl
         var wmi = App.Wmi;
         if (wmi == null) return;
 
+        int maxTotal = GetMaxTotal();
+        int maxGpuBoost = GetMaxGpuBoost();
+
         int pl1 = Helpers.AppConfig.GetMode("limit_slow");
         int pl2 = Helpers.AppConfig.GetMode("limit_fast");
+
+        // Validate against model-specific bounds (matches Windows G-Helper)
+        if (pl1 > maxTotal || pl1 < MinTotal) pl1 = -1;
+        if (pl2 > maxTotal || pl2 < MinTotal) pl2 = -1;
 
         if (pl1 > 0)
         {
             wmi.SetPptLimit("ppt_pl1_spl", pl1);
-            Helpers.Logger.WriteLine($"AutoPower: PL1 = {pl1}W");
+            _customPower = pl1;
+            Helpers.Logger.WriteLine($"AutoPower: PL1 = {pl1}W (max={maxTotal}W)");
         }
 
         if (pl2 > 0)
         {
             wmi.SetPptLimit("ppt_pl2_sppt", pl2);
-            Helpers.Logger.WriteLine($"AutoPower: PL2 = {pl2}W");
+            if (pl2 > _customPower) _customPower = pl2;
+            Helpers.Logger.WriteLine($"AutoPower: PL2 = {pl2}W (max={maxTotal}W)");
         }
 
         // NVIDIA dynamic boost
         int nvBoost = Helpers.AppConfig.GetMode("gpu_boost");
+        if (nvBoost > maxGpuBoost) nvBoost = maxGpuBoost;
         if (nvBoost > 0 && wmi.IsFeatureSupported("nv_dynamic_boost"))
         {
             wmi.SetPptLimit("nv_dynamic_boost", nvBoost);
+            Helpers.Logger.WriteLine($"AutoPower: GPU boost = {nvBoost}W (max={maxGpuBoost}W)");
         }
 
         // NVIDIA temp target
