@@ -60,6 +60,42 @@ public partial class UpdatesWindow : Window
         LoadUpdates();
     }
 
+    private async void ButtonDiagnostics_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            buttonDiagnostics.IsEnabled = false;
+            buttonDiagnostics.Content = "Collecting...";
+
+            var report = await Task.Run(() => Helpers.Diagnostics.GenerateReport());
+
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(report);
+                buttonDiagnostics.Content = "Copied!";
+                Helpers.Logger.WriteLine($"Diagnostics: copied {report.Length} chars to clipboard");
+            }
+            else
+            {
+                buttonDiagnostics.Content = "Clipboard unavailable";
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"Diagnostics failed: {ex.Message}");
+            buttonDiagnostics.Content = "Failed";
+        }
+
+        // Reset button after 2 seconds
+        _ = Task.Delay(2000).ContinueWith(_ =>
+            Dispatcher.UIThread.Post(() =>
+            {
+                buttonDiagnostics.Content = "Copy Diagnostics";
+                buttonDiagnostics.IsEnabled = true;
+            }));
+    }
+
     private void LoadUpdates()
     {
         // Get model and BIOS from DMI sysfs
@@ -310,12 +346,15 @@ public partial class UpdatesWindow : Window
 
             if (targetPath != null && File.Exists(targetPath))
             {
+                // Rename-then-place: Linux allows renaming a running executable
+                // (the process keeps using the old inode), but does NOT allow
+                // overwriting it directly ("Text file busy" / ETXTBSY).
                 var backupPath = targetPath + ".bak";
-                File.Copy(targetPath, backupPath, overwrite: true);
-                File.Move(tmpPath, targetPath, overwrite: true);
+                if (File.Exists(backupPath)) File.Delete(backupPath);
+                File.Move(targetPath, backupPath);  // rename running file → .bak (allowed)
+                File.Move(tmpPath, targetPath);      // place new file at original path
 
-                // Determine what to exec on restart
-                var restartPath = IsAppImage ? targetPath : targetPath;
+                var restartPath = targetPath;
 
                 Dispatcher.UIThread.Post(() =>
                 {

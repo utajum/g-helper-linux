@@ -17,7 +17,7 @@
         <StackPanel Margin="12,8,12,8" Spacing="8">
 
             <!-- Header -->
-            <Grid ColumnDefinitions="*,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <TextBlock x:Name="labelTitle" Grid.Column="0"
                            Text="BIOS &amp; Driver Updates"
                            Foreground="#F0F0F0" FontSize="16" FontWeight="Bold"
@@ -26,7 +26,10 @@
                            Text="Checking..."
                            Foreground="#06B48A" FontSize="13"
                            VerticalAlignment="Center" Margin="0,0,12,0" />
-                <Button x:Name="buttonRefresh" Grid.Column="2"
+                <Button x:Name="buttonDiagnostics" Grid.Column="2"
+                        Content="Copy Diagnostics" Click="ButtonDiagnostics_Click"
+                        MinWidth="120" Margin="0,0,6,0" />
+                <Button x:Name="buttonRefresh" Grid.Column="3"
                         Content="Refresh" Click="ButtonRefresh_Click"
                         MinWidth="80" />
             </Grid>
