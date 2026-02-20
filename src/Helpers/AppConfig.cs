@@ -385,7 +385,7 @@ public static class AppConfig
     public static bool IsAdvantageEdition() => ContainsModel("13QY");
 
     // GPU / power management
-    public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("UM560") || ContainsModel("GZ302") || IsFA401EA();
+    public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("M560") || ContainsModel("GZ302") || IsFA401EA();
     public static bool IsAMDiGPU() => ContainsModel("GV301RA") || ContainsModel("GV302XA") || ContainsModel("GZ302") || IsFA401EA() || IsAlly();
     public static bool IsGPUFix() => Is("gpu_fix") || (ContainsModel("GA402X") && IsNotFalse("gpu_fix"));
     public static bool IsForceSetGPUMode() => Is("gpu_mode_force_set") || (ContainsModel("503") && IsNotFalse("gpu_mode_force_set"));
@@ -420,7 +420,7 @@ public static class AppConfig
         ContainsModel("G513R") || ContainsModel("G713QM") || ContainsModel("G713PV") || ContainsModel("G513IE") ||
         ContainsModel("G713RC") || ContainsModel("G713IC") || ContainsModel("G713PU") || ContainsModel("G513QM") ||
         ContainsModel("G513QC") || ContainsModel("G531G") || ContainsModel("G615JMR") || ContainsModel("G615LM") ||
-        ContainsModel("G815LR");
+        ContainsModel("G615LR") || ContainsModel("G815LR");
     public static bool IsPossible4ZoneRGB() =>
         ContainsModel("G614JI_") || ContainsModel("G614JV_") || ContainsModel("G614JZ") ||
         ContainsModel("G614JU") || IsStrixLimitedRGB();
