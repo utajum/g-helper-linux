@@ -101,6 +101,14 @@ public class App : Application
             // Apply saved performance mode on startup
             Mode?.SetPerformanceMode();
 
+            // Re-apply saved battery charge limit on startup
+            int savedChargeLimit = AppConfig.Get("charge_limit");
+            if (savedChargeLimit > 0 && savedChargeLimit < 100)
+            {
+                Logger.WriteLine($"Startup: re-applying charge limit {savedChargeLimit}%");
+                Wmi?.SetBatteryChargeLimit(savedChargeLimit);
+            }
+
             // Update tray icon to match current mode
             UpdateTrayIcon();
 
