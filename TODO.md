@@ -84,3 +84,5 @@ Hardware-specific features for other ASUS devices.
 
 ### Localization
 Multi-language support.
+
+# Dummy commit to test AppImage update mechanism
