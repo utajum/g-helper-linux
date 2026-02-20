@@ -719,6 +719,13 @@ public partial class MainWindow : Window
         var wmi = App.Wmi;
         if (wmi == null) return;
 
+        // For models that only accept 60/80/100, snap slider to valid values
+        if (Helpers.AppConfig.IsChargeLimit6080())
+        {
+            sliderBattery.TickFrequency = 20;
+            sliderBattery.IsSnapToTickEnabled = true;
+        }
+
         int limit = wmi.GetBatteryChargeLimit();
         if (limit > 0)
         {
@@ -762,18 +769,24 @@ public partial class MainWindow : Window
     private void SliderBattery_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
         int limit = (int)e.NewValue;
-        labelBatteryLimit.Text = $"{limit}%";
-        labelBattery.Text = $"Battery Charge Limit: {limit}%";
-
-        // Debounce: only set after user stops dragging
-        // For now, set immediately (G-Helper does too)
         App.Wmi?.SetBatteryChargeLimit(limit);
+
+        // Re-read actual value (may have been clamped by 6080 firmware constraint)
+        int actual = App.Wmi?.GetBatteryChargeLimit() ?? limit;
+        labelBatteryLimit.Text = $"{actual}%";
+        labelBattery.Text = $"Battery Charge Limit: {actual}%";
+        Helpers.AppConfig.Set("charge_limit", actual);
+
+        // Snap slider to actual value if clamped
+        if (actual != limit && actual > 0)
+            sliderBattery.Value = actual;
     }
 
     private void ButtonBattery60_Click(object? sender, RoutedEventArgs e)
     {
         sliderBattery.Value = 60;
         App.Wmi?.SetBatteryChargeLimit(60);
+        Helpers.AppConfig.Set("charge_limit", 60);
         RefreshBattery();
     }
 
@@ -781,6 +794,7 @@ public partial class MainWindow : Window
     {
         sliderBattery.Value = 80;
         App.Wmi?.SetBatteryChargeLimit(80);
+        Helpers.AppConfig.Set("charge_limit", 80);
         RefreshBattery();
     }
 
@@ -788,6 +802,7 @@ public partial class MainWindow : Window
     {
         sliderBattery.Value = 100;
         App.Wmi?.SetBatteryChargeLimit(100);
+        Helpers.AppConfig.Set("charge_limit", 100);
         RefreshBattery();
     }
 

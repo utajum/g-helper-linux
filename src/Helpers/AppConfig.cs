@@ -392,6 +392,7 @@ public static class AppConfig
     public static bool IsNVPlatform() => Is("nv_platform");
     public static bool IsShutdownReset() => Is("shutdown_reset") || ContainsModel("FX507Z");
     public static bool IsStopAC() => IsAlly() || Is("stop_ac");
+    public static bool IsChargeLimit6080() => ContainsModel("H760") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("GA503R") || (IsTUF() && !(ContainsModel("FX507Z") || ContainsModel("FA617") || ContainsModel("FA607")));
 
     // Dynamic boost
     public static bool DynamicBoost5() => ContainsModel("GZ301ZE");
