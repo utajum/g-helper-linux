@@ -336,6 +336,18 @@ public static class Aura
             ShutdownRear = AppConfig.IsNotFalse("keyboard_shutdown_lid"),
         };
 
+        // TUF: use sysfs kbd_rgb_state instead of HID power message
+        if (_isACPI)
+        {
+            var wmi = App.Wmi as GHelper.Linux.Platform.Linux.LinuxAsusWmi;
+            if (wmi != null && wmi.HasKeyboardRgbMode())
+            {
+                wmi.SetKeyboardRgbState(flags.BootKeyb, flags.AwakeKeyb, flags.SleepKeyb);
+                Logger.WriteLine($"TUF kbd_rgb_state: boot={flags.BootKeyb} awake={flags.AwakeKeyb} sleep={flags.SleepKeyb}");
+                return;
+            }
+        }
+
         AsusHid.Write(AuraPowerMessage(flags));
     }
 
@@ -461,10 +473,38 @@ public static class Aura
 
         AsusHid.Write(new List<byte[]> { msg, MESSAGE_SET, MESSAGE_APPLY });
 
-        // TUF uses ACPI path (handled via sysfs multi_intensity on Linux)
+        // TUF/VivoZenPro: use sysfs kbd_rgb_mode (primary) + multi_intensity (fallback)
         if (_isACPI)
         {
-            App.Wmi?.SetKeyboardRgb(ColorR, ColorG, ColorB);
+            var wmi = App.Wmi as GHelper.Linux.Platform.Linux.LinuxAsusWmi;
+            if (wmi != null && wmi.HasKeyboardRgbMode())
+            {
+                // Map AuraMode to TUF kbd_rgb_mode byte value
+                int tufMode = Mode switch
+                {
+                    AuraMode.AuraStatic => 0,
+                    AuraMode.AuraBreathe => 1,
+                    AuraMode.AuraColorCycle => 2,
+                    AuraMode.AuraRainbow => 3,
+                    AuraMode.AuraStrobe => 10,
+                    _ => 0  // Default to static for unsupported modes
+                };
+                // Map speed enum to TUF speed byte (0=slow, 1=normal, 2=fast)
+                int tufSpeed = Speed switch
+                {
+                    AuraSpeed.Slow => 0,
+                    AuraSpeed.Normal => 1,
+                    AuraSpeed.Fast => 2,
+                    _ => 1
+                };
+                wmi.SetKeyboardRgbMode(tufMode, ColorR, ColorG, ColorB, tufSpeed);
+                Logger.WriteLine($"TUF kbd_rgb_mode: mode={tufMode} color=#{ColorR:X2}{ColorG:X2}{ColorB:X2} speed={tufSpeed}");
+            }
+            else
+            {
+                // Fallback to multi_intensity (older kernels or non-TUF ACPI models)
+                App.Wmi?.SetKeyboardRgb(ColorR, ColorG, ColorB);
+            }
         }
     }
 
@@ -478,7 +518,16 @@ public static class Aura
 
         if (_isACPI)
         {
-            App.Wmi?.SetKeyboardRgb(r, g, b);
+            var wmi = App.Wmi as GHelper.Linux.Platform.Linux.LinuxAsusWmi;
+            if (wmi != null && wmi.HasKeyboardRgbMode())
+            {
+                // Use kbd_rgb_mode with Static mode (0) for direct color
+                wmi.SetKeyboardRgbMode(0, r, g, b, 0);
+            }
+            else
+            {
+                App.Wmi?.SetKeyboardRgb(r, g, b);
+            }
             return;
         }
 

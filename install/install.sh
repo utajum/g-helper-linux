@@ -179,7 +179,7 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 _step 1 "DOWNLOADING PAYLOADS FROM REMOTE"
 
 BINARIES=(ghelper libSkiaSharp.so libHarfBuzzSharp.so)
-ASSETS=(90-ghelper.rules ghelper.desktop)
+ASSETS=(90-ghelper.rules 90-ghelper.conf ghelper.desktop)
 
 dl_count=0
 dl_total=$(( ${#BINARIES[@]} + ${#ASSETS[@]} ))
@@ -253,6 +253,22 @@ _info "udev daemon reloaded"
 udevadm trigger
 _info "udev trigger fired — re-applying all RUN commands"
 
+# ── systemd-tmpfiles (for built-in kernel modules that udev can't handle) ──
+TMPFILES_DEST="/etc/tmpfiles.d/90-ghelper.conf"
+if [[ -f "$WORK_DIR/90-ghelper.conf" ]]; then
+    _install_file "$WORK_DIR/90-ghelper.conf" "$TMPFILES_DEST" 644 "tmpfiles config" || true
+    # Apply immediately so permissions take effect without reboot
+    if command -v systemd-tmpfiles &>/dev/null; then
+        systemd-tmpfiles --create "$TMPFILES_DEST" 2>/dev/null && \
+            _info "systemd-tmpfiles applied — built-in module permissions set" || \
+            _warn "systemd-tmpfiles --create had warnings (some paths may not exist yet)"
+    else
+        _warn "systemd-tmpfiles not found — permissions for built-in modules will require manual setup"
+    fi
+else
+    _warn "90-ghelper.conf not found in download — skipping tmpfiles deployment"
+fi
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  [0x04] ESTABLISH SYSFS ACCESS LAYER
 # ══════════════════════════════════════════════════════════════════════════════
@@ -278,7 +294,9 @@ for f in \
     /sys/devices/system/cpu/intel_pstate/no_turbo \
     /sys/devices/system/cpu/cpufreq/boost \
     /sys/class/leds/asus::kbd_backlight/brightness \
-    /sys/class/leds/asus::kbd_backlight/multi_intensity; do
+    /sys/class/leds/asus::kbd_backlight/multi_intensity \
+    /sys/class/leds/asus::kbd_backlight/kbd_rgb_mode \
+    /sys/class/leds/asus::kbd_backlight/kbd_rgb_state; do
     _ensure_chmod "$f"
 done
 
@@ -370,8 +388,9 @@ echo "${GREEN}${BOLD}  ║                                                      
 echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  Binary    → $INSTALL_DIR/ghelper"
 echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  Symlink   → /usr/local/bin/ghelper"
 echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  udev      → $UDEV_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  Desktop   → $DESKTOP_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
+echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
+echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Desktop   → $DESKTOP_DEST"
+echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF5${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
 echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
 echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
 echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
