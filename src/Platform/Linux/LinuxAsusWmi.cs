@@ -354,6 +354,53 @@ public class LinuxAsusWmi : IAsusWmi
         SysfsHelper.WriteAttribute(intensityPath, $"{r} {g} {b}");
     }
 
+    /// <summary>
+    /// Set TUF keyboard RGB mode via sysfs kbd_rgb_mode attribute.
+    /// This is the primary RGB control for TUF Gaming keyboards.
+    /// Format: space-separated byte array "cmd mode R G B speed"
+    /// Learned from asusctl: rog-platform/src/keyboard_led.rs + asusd/src/aura_laptop/mod.rs
+    /// </summary>
+    public void SetKeyboardRgbMode(int mode, byte r, byte g, byte b, int speed)
+    {
+        var modePath = Path.Combine(SysfsHelper.Leds, "asus::kbd_backlight", "kbd_rgb_mode");
+        if (!SysfsHelper.Exists(modePath))
+        {
+            Helpers.Logger.WriteLine($"kbd_rgb_mode not available at {modePath}");
+            return;
+        }
+        // Protocol: [1, mode, R, G, B, speed] — matches asusctl's TUF write
+        string value = $"1 {mode} {r} {g} {b} {speed}";
+        SysfsHelper.WriteAttribute(modePath, value);
+    }
+
+    /// <summary>
+    /// Set TUF keyboard RGB power state via sysfs kbd_rgb_state attribute.
+    /// Controls which lighting states are active (boot/awake/sleep).
+    /// Format: space-separated byte array "cmd boot awake sleep keyboard"
+    /// Learned from asusctl: rog-aura/src/keyboard/power.rs TUF format
+    /// </summary>
+    public void SetKeyboardRgbState(bool boot, bool awake, bool sleep)
+    {
+        var statePath = Path.Combine(SysfsHelper.Leds, "asus::kbd_backlight", "kbd_rgb_state");
+        if (!SysfsHelper.Exists(statePath))
+        {
+            Helpers.Logger.WriteLine($"kbd_rgb_state not available at {statePath}");
+            return;
+        }
+        // Protocol: [1, boot, awake, sleep, 1] — matches asusctl's TUF power state
+        string value = $"1 {(boot ? 1 : 0)} {(awake ? 1 : 0)} {(sleep ? 1 : 0)} 1";
+        SysfsHelper.WriteAttribute(statePath, value);
+    }
+
+    /// <summary>
+    /// Check if TUF-specific kbd_rgb_mode sysfs attribute is available.
+    /// </summary>
+    public bool HasKeyboardRgbMode()
+    {
+        return SysfsHelper.Exists(
+            Path.Combine(SysfsHelper.Leds, "asus::kbd_backlight", "kbd_rgb_mode"));
+    }
+
     // ── Temperature ──
 
     private int GetCpuTemp()

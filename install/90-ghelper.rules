@@ -62,6 +62,14 @@ SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
   ATTR{multi_intensity}!="", \
   RUN+="/bin/chmod 0666 /sys/class/leds/asus::kbd_backlight/multi_intensity"
 
+# TUF Gaming keyboards: RGB mode control (mode + color + speed as byte array)
+SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
+  RUN+="/bin/sh -c '[ -f /sys/class/leds/asus::kbd_backlight/kbd_rgb_mode ] && chmod 0666 /sys/class/leds/asus::kbd_backlight/kbd_rgb_mode'"
+
+# TUF Gaming keyboards: RGB power state control (boot/awake/sleep states)
+SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
+  RUN+="/bin/sh -c '[ -f /sys/class/leds/asus::kbd_backlight/kbd_rgb_state ] && chmod 0666 /sys/class/leds/asus::kbd_backlight/kbd_rgb_state'"
+
 # ── Fan curves (hwmon) ──
 # The asus_nb_wmi hwmon exposes pwm auto_point files for fan curve control.
 # We make them writable for non-root users.

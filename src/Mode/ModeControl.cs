@@ -97,7 +97,24 @@ public class ModeControl
         };
         App.Power?.SetPlatformProfile(profile);
 
-        // 3. Apply fan curves and power limits
+        // 3. Verify: on some kernels, throttle_thermal_policy and platform_profile
+        // are coupled — writing platform_profile may reset throttle_thermal_policy.
+        // Read back and re-apply if needed.
+        int verifyPolicy = App.Wmi?.GetThrottleThermalPolicy() ?? -1;
+        string verifyProfile = App.Power?.GetPlatformProfile() ?? "unknown";
+        Helpers.Logger.WriteLine($"SetPerformanceMode verify: thermal_policy={verifyPolicy} (expected {baseMode}), platform_profile={verifyProfile} (expected {profile})");
+
+        if (verifyPolicy >= 0 && verifyPolicy != baseMode)
+        {
+            Helpers.Logger.WriteLine($"WARNING: throttle_thermal_policy was overridden ({verifyPolicy} != {baseMode}), re-applying");
+            App.Wmi?.SetThrottleThermalPolicy(baseMode);
+            // Brief delay then verify again
+            Thread.Sleep(100);
+            int recheck = App.Wmi?.GetThrottleThermalPolicy() ?? -1;
+            Helpers.Logger.WriteLine($"SetPerformanceMode re-verify: thermal_policy={recheck}");
+        }
+
+        // 4. Apply fan curves and power limits
         Task.Run(async () =>
         {
             // If reset was needed, wait for firmware to process the bounce
