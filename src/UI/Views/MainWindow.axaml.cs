@@ -17,7 +17,7 @@ public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _refreshTimer;
     private int _currentPerfMode = -1;
-    private int _currentGpuMode = -1;  // 0=Eco, 1=Standard, 2=Optimized
+    private int _currentGpuMode = -1;  // 0=Eco, 1=Standard, 2=Optimized (auto), 3=Ultimate (MUX=0)
 
     // Accent colors matching G-Helper's RForm.cs
     private static readonly IBrush AccentBrush = new SolidColorBrush(Color.Parse("#4CC2FF"));
@@ -30,19 +30,22 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Hide from taskbar when closing (tray behavior)
-        Closing += (_, e) =>
-        {
-            e.Cancel = true;
-            Hide();
-        };
-
         // Refresh timer for live sensor data
         _refreshTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(2)
         };
         _refreshTimer.Tick += (_, _) => RefreshSensorData();
+
+        // On close: let the window actually close (dispose).
+        // Don't cancel — this allows KDE logout/reboot to proceed.
+        // The app stays alive via ShutdownMode.OnExplicitShutdown + tray icon.
+        // A new MainWindow is created on tray click (see App.ToggleMainWindow).
+        Closing += (_, _) =>
+        {
+            _refreshTimer.Stop();
+            App.MainWindowInstance = null;
+        };
 
         // Initial load
         Loaded += (_, _) =>
@@ -191,30 +194,37 @@ public partial class MainWindow : Window
 
     // ── GPU Mode ──
 
+    /// <summary>Public wrapper for RefreshGpuMode — called from App.cs on power state changes.</summary>
+    public void RefreshGpuModePublic() => RefreshGpuMode();
+
     private void RefreshGpuMode()
     {
         var wmi = App.Wmi;
         if (wmi == null) return;
 
+        bool gpuAuto = Helpers.AppConfig.Is("gpu_auto");
         bool ecoEnabled = wmi.GetGpuEco();
         int muxMode = wmi.GetGpuMuxMode();
 
-        if (ecoEnabled)
+        if (muxMode == 0) // dGPU direct
+            _currentGpuMode = 3; // Ultimate
+        else if (gpuAuto)
+            _currentGpuMode = 2; // Optimized (auto Eco/Standard based on power)
+        else if (ecoEnabled)
             _currentGpuMode = 0; // Eco
-        else if (muxMode == 0) // dGPU direct
-            _currentGpuMode = 2; // Optimized/Ultimate
         else
             _currentGpuMode = 1; // Standard (hybrid)
 
         string modeName = _currentGpuMode switch
         {
-            0 => "iGPU only",
+            0 => "Eco",
             1 => "Standard",
             2 => "Optimized",
+            3 => "Ultimate",
             _ => "Unknown"
         };
 
-        // Combined header: "GPU Mode: iGPU only" (matches Windows layout)
+        // Combined header: "GPU Mode: Eco" (matches Windows layout)
         labelGPU.Text = $"GPU Mode: {modeName}";
         labelGPUMode.Text = modeName;
         UpdateGpuButtons();
@@ -224,9 +234,13 @@ public partial class MainWindow : Window
         {
             0 => "dGPU is off — maximum battery life",
             1 => "Hybrid mode — dGPU powers on when needed",
-            2 => "dGPU direct — bypass iGPU for best performance (requires reboot)",
+            2 => "Auto Eco on battery, Standard on AC power",
+            3 => "dGPU direct — bypass iGPU for best performance (requires reboot)",
             _ => ""
         };
+
+        // Hide Ultimate button if MUX switch not supported
+        buttonUltimate.IsVisible = wmi.IsFeatureSupported("gpu_mux_mode");
     }
 
     private void UpdateGpuButtons()
@@ -234,13 +248,13 @@ public partial class MainWindow : Window
         SetButtonActive(buttonEco, _currentGpuMode == 0);
         SetButtonActive(buttonStandard, _currentGpuMode == 1);
         SetButtonActive(buttonOptimized, _currentGpuMode == 2);
+        SetButtonActive(buttonUltimate, _currentGpuMode == 3);
     }
 
     private void ButtonEco_Click(object? sender, RoutedEventArgs e)
     {
-        // Update UI immediately
-        _currentGpuMode = 0;
-        RefreshGpuMode();
+        // Clear auto mode — user explicitly chose Eco
+        Helpers.AppConfig.Set("gpu_auto", 0);
 
         // Fire-and-forget sysfs write
         Task.Run(() =>
@@ -255,17 +269,17 @@ public partial class MainWindow : Window
             }
         });
 
-        // Show reboot notification immediately
+        _currentGpuMode = 0;
+        RefreshGpuMode();
+
         App.System?.ShowNotification("GPU Mode",
-            "Eco mode set — reboot required", "system-reboot");
-        labelTipGPU.Text = "You must reboot for changes to take effect";
+            "Eco mode — dGPU disabled", "video-display");
     }
 
     private void ButtonStandard_Click(object? sender, RoutedEventArgs e)
     {
-        // Update UI immediately
-        _currentGpuMode = 1;
-        RefreshGpuMode();
+        // Clear auto mode — user explicitly chose Standard
+        Helpers.AppConfig.Set("gpu_auto", 0);
 
         // Fire-and-forget sysfs write
         Task.Run(() =>
@@ -273,10 +287,17 @@ public partial class MainWindow : Window
             try
             {
                 App.Wmi?.SetGpuEco(false);
-                // MUX=1 for hybrid mode
-                if (App.Wmi?.GetGpuMuxMode() != 1)
+                // Only set MUX=1 if we're currently in Ultimate (MUX=0)
+                int mux = App.Wmi?.GetGpuMuxMode() ?? 1;
+                if (mux == 0)
                 {
                     App.Wmi?.SetGpuMuxMode(1);
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        labelTipGPU.Text = "MUX switch changed — reboot required";
+                        App.System?.ShowNotification("GPU Mode",
+                            "Standard mode set — reboot required for MUX change", "system-reboot");
+                    });
                 }
             }
             catch (Exception ex)
@@ -285,17 +306,52 @@ public partial class MainWindow : Window
             }
         });
 
-        // Show reboot notification immediately
+        _currentGpuMode = 1;
+        RefreshGpuMode();
+
         App.System?.ShowNotification("GPU Mode",
-            "Standard mode set — reboot required", "system-reboot");
-        labelTipGPU.Text = "You must reboot for changes to take effect";
+            "Standard mode — hybrid dGPU", "video-display");
     }
 
     private void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
     {
-        // Update UI immediately
+        // Toggle auto GPU mode: Eco on battery, Standard on AC
+        // This matches Windows G-Helper's "Optimized" mode (gpu_auto flag)
+        Helpers.AppConfig.Set("gpu_auto", 1);
+
+        // If currently in Ultimate (MUX=0), switch to Standard first
+        int mux = App.Wmi?.GetGpuMuxMode() ?? 1;
+        if (mux == 0)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    App.Wmi?.SetGpuMuxMode(1);
+                }
+                catch (Exception ex)
+                {
+                    Helpers.Logger.WriteLine($"Optimized: MUX switch failed: {ex.Message}");
+                }
+            });
+            labelTipGPU.Text = "MUX switch changed — reboot required, then auto-switching will begin";
+            App.System?.ShowNotification("GPU Mode",
+                "Optimized mode — reboot required for MUX change", "system-reboot");
+        }
+        else
+        {
+            // Apply immediately based on current power state
+            App.AutoGpuMode();
+        }
+
         _currentGpuMode = 2;
         RefreshGpuMode();
+    }
+
+    private void ButtonUltimate_Click(object? sender, RoutedEventArgs e)
+    {
+        // Clear auto mode — user explicitly chose Ultimate
+        Helpers.AppConfig.Set("gpu_auto", 0);
 
         // Fire-and-forget sysfs write
         Task.Run(() =>
@@ -311,13 +367,16 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                Helpers.Logger.WriteLine($"Optimized mode switch failed: {ex.Message}");
+                Helpers.Logger.WriteLine($"Ultimate mode switch failed: {ex.Message}");
             }
         });
 
+        _currentGpuMode = 3;
+        RefreshGpuMode();
+
         // Show reboot notification immediately
         App.System?.ShowNotification("GPU Mode",
-            "Optimized mode set — reboot required", "system-reboot");
+            "Ultimate mode set — reboot required", "system-reboot");
         labelTipGPU.Text = "You must reboot for changes to take effect";
     }
 

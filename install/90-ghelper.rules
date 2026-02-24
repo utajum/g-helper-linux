@@ -117,6 +117,12 @@ SUBSYSTEM=="backlight", ACTION=="add", \
 ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="pcie_aspm", \
   RUN+="/bin/sh -c '[ -f /sys/module/pcie_aspm/parameters/policy ] && chmod 0666 /sys/module/pcie_aspm/parameters/policy'"
 
+# ── ASUS firmware-attributes (asus-armoury, kernel 6.8+) ──
+# On newer kernels, ASUS WMI attributes move to firmware-attributes.
+# chmod all current_value files under the asus-armoury attributes dir.
+ACTION=="add|change", SUBSYSTEM=="firmware-attributes", \
+  RUN+="/bin/sh -c 'for f in /sys/class/firmware-attributes/asus-armoury/attributes/*/current_value; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
+
 # ── CPU online/offline (core toggling) ──
 SUBSYSTEM=="cpu", ACTION=="add", \
   RUN+="/bin/sh -c 'for f in /sys/devices/system/cpu/cpu*/online; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"

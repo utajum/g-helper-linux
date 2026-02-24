@@ -300,6 +300,17 @@ for f in \
     _ensure_chmod "$f"
 done
 
+# ── ASUS firmware-attributes (asus-armoury, kernel 6.8+) ──
+_fa_count=0
+for f in /sys/class/firmware-attributes/asus-armoury/attributes/*/current_value; do
+    [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_fa_count++)) || true; }
+done
+if [[ $_fa_count -gt 0 ]]; then
+    _info "firmware-attributes (asus-armoury): ${GREEN}${_fa_count} attrs${RESET} processed"
+else
+    _info "${DIM}no asus-armoury firmware-attributes found (using legacy sysfs)${RESET}"
+fi
+
 # ── Battery charge limit ──
 _bat_count=0
 for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do

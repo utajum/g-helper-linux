@@ -100,18 +100,32 @@ public class ModeControl
         // 3. Verify: on some kernels, throttle_thermal_policy and platform_profile
         // are coupled — writing platform_profile may reset throttle_thermal_policy.
         // Read back and re-apply if needed.
+        //
+        // On newer kernels with asus-armoury firmware-attributes, throttle_thermal_policy
+        // may not exist as a separate sysfs file. In that case GetThrottleThermalPolicy()
+        // derives its value from platform_profile — so if platform_profile is correct,
+        // there's nothing to re-apply.
         int verifyPolicy = App.Wmi?.GetThrottleThermalPolicy() ?? -1;
         string verifyProfile = App.Power?.GetPlatformProfile() ?? "unknown";
         Helpers.Logger.WriteLine($"SetPerformanceMode verify: thermal_policy={verifyPolicy} (expected {baseMode}), platform_profile={verifyProfile} (expected {profile})");
 
+        // Only re-apply if we got a definite wrong answer (not -1 = "unavailable")
         if (verifyPolicy >= 0 && verifyPolicy != baseMode)
         {
-            Helpers.Logger.WriteLine($"WARNING: throttle_thermal_policy was overridden ({verifyPolicy} != {baseMode}), re-applying");
-            App.Wmi?.SetThrottleThermalPolicy(baseMode);
-            // Brief delay then verify again
-            Thread.Sleep(100);
-            int recheck = App.Wmi?.GetThrottleThermalPolicy() ?? -1;
-            Helpers.Logger.WriteLine($"SetPerformanceMode re-verify: thermal_policy={recheck}");
+            // Check if platform_profile is already correct — if so, the "mismatch" is just
+            // because thermal_policy is derived from platform_profile on this kernel.
+            bool profileCorrect = verifyProfile == profile ||
+                (profile == "low-power" && verifyProfile == "quiet");
+
+            if (!profileCorrect)
+            {
+                Helpers.Logger.WriteLine($"WARNING: throttle_thermal_policy was overridden ({verifyPolicy} != {baseMode}), re-applying");
+                App.Wmi?.SetThrottleThermalPolicy(baseMode);
+                // Brief delay then verify again
+                Thread.Sleep(100);
+                int recheck = App.Wmi?.GetThrottleThermalPolicy() ?? -1;
+                Helpers.Logger.WriteLine($"SetPerformanceMode re-verify: thermal_policy={recheck}");
+            }
         }
 
         // 4. Apply fan curves and power limits

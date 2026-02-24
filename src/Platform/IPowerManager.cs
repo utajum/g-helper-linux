@@ -36,4 +36,16 @@ public interface IPowerManager
 
     /// <summary>Get battery health (full charge capacity / design capacity * 100).</summary>
     int GetBatteryHealth();
+
+    /// <summary>
+    /// Fired when AC power state changes (plugged in / unplugged).
+    /// Argument: true = on AC, false = on battery.
+    /// </summary>
+    event Action<bool>? PowerStateChanged;
+
+    /// <summary>Start monitoring power state changes (polls AC adapter status).</summary>
+    void StartPowerMonitoring();
+
+    /// <summary>Stop monitoring power state changes.</summary>
+    void StopPowerMonitoring();
 }

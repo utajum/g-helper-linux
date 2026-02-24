@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -26,7 +27,7 @@ public class App : Application
     // Business logic orchestrator
     public static ModeControl? Mode { get; private set; }
 
-    public static MainWindow? MainWindowInstance { get; private set; }
+    public static MainWindow? MainWindowInstance { get; set; }
     public static TrayIcon? TrayIconInstance { get; set; }
 
     // Legacy event codes for non-configurable keys
@@ -112,9 +113,23 @@ public class App : Application
             // Update tray icon to match current mode
             UpdateTrayIcon();
 
+            // Start power state monitoring for auto GPU mode and auto performance
+            Power?.StartPowerMonitoring();
+            if (Power != null)
+            {
+                Power.PowerStateChanged += OnPowerStateChanged;
+            }
+
+            // Apply auto GPU mode on startup if enabled
+            AutoGpuMode();
+
             // Restore clamshell mode if it was enabled
             if (AppConfig.Is("toggle_clamshell_mode"))
                 UI.Views.ExtraWindow.StartClamshellInhibit();
+
+            // Register Unix signal handlers for clean shutdown on SIGTERM/SIGINT
+            // This prevents KDE/GNOME from hanging on logout/reboot
+            RegisterSignalHandlers(desktop);
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -138,6 +153,9 @@ public class App : Application
         Logger.WriteLine($"G-Helper Linux initialized");
         Logger.WriteLine($"Model: {System.GetModelName()}");
         Logger.WriteLine($"BIOS: {System.GetBiosVersion()}");
+
+        // Log which sysfs backend each attribute resolved to (legacy vs firmware-attributes)
+        SysfsHelper.LogResolvedAttributes();
 
         // Log detected features
         LogFeatureDetection();
@@ -511,13 +529,34 @@ public class App : Application
         menu.Add(new NativeMenuItemSeparator());
 
         // GPU modes
-        var eco = new NativeMenuItem("Eco (iGPU only)");
-        eco.Click += (_, _) => SetGpuMode(ecoEnabled: true);
+        var eco = new NativeMenuItem("GPU: Eco (iGPU only)");
+        eco.Click += (_, _) =>
+        {
+            AppConfig.Set("gpu_auto", 0);
+            SetGpuMode(ecoEnabled: true);
+            MainWindowInstance?.RefreshGpuModePublic();
+        };
         menu.Add(eco);
 
-        var standard = new NativeMenuItem("Standard (dGPU)");
-        standard.Click += (_, _) => SetGpuMode(ecoEnabled: false);
+        var standard = new NativeMenuItem("GPU: Standard (dGPU)");
+        standard.Click += (_, _) =>
+        {
+            AppConfig.Set("gpu_auto", 0);
+            SetGpuMode(ecoEnabled: false);
+            MainWindowInstance?.RefreshGpuModePublic();
+        };
         menu.Add(standard);
+
+        var optimized = new NativeMenuItem("GPU: Optimized (auto)");
+        optimized.Click += (_, _) =>
+        {
+            AppConfig.Set("gpu_auto", 1);
+            AutoGpuMode();
+            MainWindowInstance?.RefreshGpuModePublic();
+            System?.ShowNotification("GPU Mode",
+                "Optimized — auto Eco/Standard based on power", "video-display");
+        };
+        menu.Add(optimized);
 
         menu.Add(new NativeMenuItemSeparator());
 
@@ -541,7 +580,16 @@ public class App : Application
 
     private void ToggleMainWindow()
     {
-        if (MainWindowInstance == null) return;
+        // Window may have been disposed by closing (KDE logout, user clicking X).
+        // Recreate it if needed — app stays alive via ShutdownMode.OnExplicitShutdown.
+        if (MainWindowInstance == null || MainWindowInstance.PlatformImpl == null)
+        {
+            MainWindowInstance = new MainWindow();
+            if (AppConfig.Is("topmost")) MainWindowInstance.Topmost = true;
+            MainWindowInstance.Show();
+            MainWindowInstance.Activate();
+            return;
+        }
 
         if (MainWindowInstance.IsVisible)
         {
@@ -562,11 +610,144 @@ public class App : Application
         System?.ShowNotification("GPU Mode", status, "video-display");
     }
 
+    /// <summary>
+    /// Handle power state change (AC plugged/unplugged).
+    /// Triggers auto GPU mode switch and auto performance mode.
+    /// </summary>
+    private void OnPowerStateChanged(bool onAc)
+    {
+        Logger.WriteLine($"Power state changed: AC={onAc}");
+
+        // Auto GPU mode (Optimized = auto Eco/Standard based on AC power)
+        AutoGpuMode();
+
+        // Auto performance mode (if configured)
+        Mode?.AutoPerformance(powerChanged: true);
+
+        // Refresh UI
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            MainWindowInstance?.RefreshGpuModePublic();
+        });
+    }
+
+    /// <summary>
+    /// Auto-switch GPU between Eco and Standard based on AC power state.
+    /// This implements Windows G-Helper's "Optimized" GPU mode (gpu_auto flag).
+    /// Called on startup and on every power state change.
+    /// </summary>
+    public static void AutoGpuMode()
+    {
+        if (!AppConfig.Is("gpu_auto")) return;
+
+        var wmi = Wmi;
+        var power = Power;
+        if (wmi == null || power == null) return;
+
+        // Don't auto-switch if in Ultimate (MUX=0) — user must manually switch out
+        int mux = wmi.GetGpuMuxMode();
+        if (mux == 0)
+        {
+            Logger.WriteLine("AutoGpuMode: MUX=0 (Ultimate), skipping auto-switch");
+            return;
+        }
+
+        bool onAc = power.IsOnAcPower();
+        bool ecoEnabled = wmi.GetGpuEco();
+
+        if (onAc && ecoEnabled)
+        {
+            // Plugged in → switch to Standard (enable dGPU)
+            Logger.WriteLine("AutoGpuMode: AC power detected, switching Eco → Standard");
+            Task.Run(() =>
+            {
+                try
+                {
+                    wmi.SetGpuEco(false);
+                    System?.ShowNotification("GPU Mode",
+                        "Optimized: AC power — dGPU enabled", "video-display");
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLine($"AutoGpuMode Eco→Standard failed: {ex.Message}");
+                }
+            });
+        }
+        else if (!onAc && !ecoEnabled)
+        {
+            // On battery → switch to Eco (disable dGPU for battery life)
+            Logger.WriteLine("AutoGpuMode: Battery detected, switching Standard → Eco");
+            Task.Run(() =>
+            {
+                try
+                {
+                    wmi.SetGpuEco(true);
+                    System?.ShowNotification("GPU Mode",
+                        "Optimized: Battery — dGPU disabled", "video-display");
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLine($"AutoGpuMode Standard→Eco failed: {ex.Message}");
+                }
+            });
+        }
+    }
+
+    // Unix signal handlers for clean shutdown on SIGTERM/SIGINT (logout/reboot)
+    private static List<PosixSignalRegistration>? _signalRegistrations;
+
+    private void RegisterSignalHandlers(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return;
+
+        try
+        {
+            _signalRegistrations = new();
+
+            // SIGTERM: sent by KDE/GNOME during logout/reboot
+            _signalRegistrations.Add(PosixSignalRegistration.Create(PosixSignal.SIGTERM, _ =>
+            {
+                Logger.WriteLine("Received SIGTERM - initiating shutdown");
+                ShutdownFromSignal(desktop);
+            }));
+
+            // SIGINT: Ctrl+C in terminal
+            _signalRegistrations.Add(PosixSignalRegistration.Create(PosixSignal.SIGINT, _ =>
+            {
+                Logger.WriteLine("Received SIGINT - initiating shutdown");
+                ShutdownFromSignal(desktop);
+            }));
+
+            Logger.WriteLine("Unix signal handlers registered (SIGTERM, SIGINT)");
+        }
+        catch (Exception ex)
+        {
+            Logger.WriteLine($"Failed to register signal handlers: {ex.Message}");
+        }
+    }
+
+    private void ShutdownFromSignal(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        // Signal handler runs on a threadpool thread.
+        // Don't rely on UI thread — it may already be blocked during session shutdown.
+        Logger.WriteLine("Signal shutdown: cleaning up...");
+
+        try { Power?.StopPowerMonitoring(); } catch { }
+        try { UI.Views.ExtraWindow.StopClamshellInhibit(); } catch { }
+        try { Input?.Dispose(); } catch { }
+        try { Wmi?.Dispose(); } catch { }
+
+        Logger.WriteLine("Signal shutdown: exiting process");
+        Environment.Exit(0);
+    }
+
     private void Shutdown(IClassicDesktopStyleApplicationLifetime desktop)
     {
         Logger.WriteLine("Shutting down...");
 
         // Cleanup
+        Power?.StopPowerMonitoring();
         UI.Views.ExtraWindow.StopClamshellInhibit();
         Input?.Dispose();
         Wmi?.Dispose();

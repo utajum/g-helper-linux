@@ -145,8 +145,8 @@ public static class Diagnostics
     {
         sb.AppendLine("--- Sysfs State ---");
 
-        // Fixed paths we use
-        var paths = new[]
+        // Fixed paths (non-WMI attributes — always at known locations)
+        var fixedPaths = new[]
         {
             // Battery
             "/sys/class/power_supply/BAT0/charge_control_end_threshold",
@@ -156,21 +156,9 @@ public static class Diagnostics
             // Keyboard
             "/sys/class/leds/asus::kbd_backlight/brightness",
             "/sys/class/leds/asus::kbd_backlight/multi_intensity",
-            // Performance
-            "/sys/devices/platform/asus-nb-wmi/throttle_thermal_policy",
-            "/sys/devices/platform/asus-nb-wmi/ppt_pl1_spl",
-            "/sys/devices/platform/asus-nb-wmi/ppt_pl2_sppt",
-            "/sys/devices/platform/asus-nb-wmi/ppt_fppt",
-            "/sys/devices/platform/asus-nb-wmi/nv_dynamic_boost",
-            "/sys/devices/platform/asus-nb-wmi/nv_temp_target",
-            "/sys/devices/platform/asus-nb-wmi/panel_od",
             // Platform profile
             "/sys/firmware/acpi/platform_profile",
             "/sys/firmware/acpi/platform_profile_choices",
-            // GPU
-            "/sys/bus/platform/devices/asus-nb-wmi/dgpu_disable",
-            "/sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode",
-            "/sys/bus/platform/devices/asus-nb-wmi/mini_led_mode",
             // CPU boost
             "/sys/devices/system/cpu/intel_pstate/no_turbo",
             "/sys/devices/system/cpu/cpufreq/boost",
@@ -178,18 +166,15 @@ public static class Diagnostics
             "/sys/module/pcie_aspm/parameters/policy",
         };
 
-        foreach (var path in paths)
+        foreach (var path in fixedPaths)
         {
             if (!File.Exists(path))
-                continue; // skip missing — don't clutter output
+                continue;
 
             var perms = GetFilePermissions(path);
             var value = Platform.Linux.SysfsHelper.ReadAttribute(path) ?? "(read failed)";
 
-            // Shorten path for readability
             var shortPath = path
-                .Replace("/sys/devices/platform/asus-nb-wmi/", "asus-nb-wmi/")
-                .Replace("/sys/bus/platform/devices/asus-nb-wmi/", "asus-nb-wmi/")
                 .Replace("/sys/class/power_supply/", "power_supply/")
                 .Replace("/sys/class/leds/", "leds/")
                 .Replace("/sys/devices/system/cpu/", "cpu/")
@@ -197,6 +182,34 @@ public static class Diagnostics
                 .Replace("/sys/module/pcie_aspm/parameters/", "pcie_aspm/");
 
             sb.AppendLine($"  {shortPath}: {perms} = {value}");
+        }
+
+        // Resolved WMI attributes (may be legacy sysfs or firmware-attributes)
+        sb.AppendLine();
+        sb.AppendLine("  WMI attributes (resolved via ResolveAttrPath):");
+
+        var wmiAttrs = new[]
+        {
+            "throttle_thermal_policy", "ppt_pl1_spl", "ppt_pl2_sppt", "ppt_fppt",
+            "nv_dynamic_boost", "nv_temp_target", "panel_od",
+            "dgpu_disable", "gpu_mux_mode", "mini_led_mode"
+        };
+
+        foreach (var attr in wmiAttrs)
+        {
+            var resolved = Platform.Linux.SysfsHelper.ResolveAttrPath(attr,
+                Platform.Linux.SysfsHelper.AsusWmiPlatform,
+                Platform.Linux.SysfsHelper.AsusBusPlatform);
+
+            if (resolved == null)
+                continue;
+
+            var perms = GetFilePermissions(resolved);
+            var value = Platform.Linux.SysfsHelper.ReadAttribute(resolved) ?? "(read failed)";
+            string backend = Platform.Linux.SysfsHelper.IsFirmwareAttributesPath(resolved)
+                ? "fw-attr" : "legacy";
+
+            sb.AppendLine($"    {attr} [{backend}]: {perms} = {value}");
         }
 
         sb.AppendLine();
