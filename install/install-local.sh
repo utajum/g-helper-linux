@@ -6,12 +6,29 @@ set -euo pipefail
 # ║  Installs from local build (dist/) produced by build.sh                      ║
 # ║  100% idempotent — safe to re-run infinitely                                 ║
 # ║                                                                              ║
-# ║  ./build.sh && sudo ./install/install-local.sh                               ║
+# ║  Install:    ./build.sh && sudo ./install/install-local.sh                   ║
+# ║  AppImage:   sudo ./install/install-local.sh --appimage                      ║
+# ║  Uninstall:  sudo ./install/install-local.sh --uninstall                     ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DIST_DIR="$PROJECT_DIR/dist"
+
+# ── Mode selection ─────────────────────────────────────────────────────────────
+MODE="install"
+case "${1:-}" in
+    --uninstall) MODE="uninstall" ;;
+    --appimage)  MODE="appimage" ;;
+    --help|-h)
+        echo "Usage: $0 [--appimage|--uninstall|--help]"
+        echo ""
+        echo "  (default)     Full install: deploy binary + udev + permissions + desktop"
+        echo "  --appimage    AppImage support: udev rules + sysfs permissions only (no binary)"
+        echo "  --uninstall   Remove all installed files"
+        exit 0
+        ;;
+esac
 
 # ── ANSI color matrix ──────────────────────────────────────────────────────────
 if [[ -t 1 ]] || [[ "${FORCE_COLOR:-}" == "1" ]]; then
@@ -46,6 +63,7 @@ SKIPPED=0
 UPDATED=0
 CHMOD_APPLIED=0
 CHMOD_SKIPPED=0
+REMOVED=0
 
 # ── Status display functions ───────────────────────────────────────────────────
 _inject()  { echo "  ${GREEN}[INJECT]${RESET}  $1"; ((INJECTED++)) || true; }
@@ -56,6 +74,8 @@ _chok()    { echo "  ${DIM}[OK]${RESET}      ${DIM}$1${RESET}"; ((CHMOD_SKIPPED+
 _fail()    { echo "  ${RED}[FAIL]${RESET}    $1"; }
 _info()    { echo "  ${BLUE}[INFO]${RESET}    $1"; }
 _warn()    { echo "  ${YELLOW}[WARN]${RESET}    $1"; }
+_remove()  { echo "  ${RED}[REMOVE]${RESET}  $1"; ((REMOVED++)) || true; }
+_gone()    { echo "  ${DIM}[GONE]${RESET}    ${DIM}$1 (not present)${RESET}"; }
 
 # ── Typing effect ──────────────────────────────────────────────────────────────
 _typeout() {
@@ -109,8 +129,19 @@ _ensure_chmod() {
     fi
 }
 
+# ── Safe remove helper ─────────────────────────────────────────────────────────
+_safe_remove() {
+    local path="$1" label="$2"
+    if [[ -e "$path" || -L "$path" ]]; then
+        rm -rf "$path"
+        _remove "$label → $path"
+    else
+        _gone "$label"
+    fi
+}
+
 # ══════════════════════════════════════════════════════════════════════════════
-#  BOOT SEQUENCE
+#  BANNER
 # ══════════════════════════════════════════════════════════════════════════════
 
 clear 2>/dev/null || true
@@ -127,10 +158,23 @@ BANNER
 echo "${RESET}"
 echo "${DIM}    ░▒▓█████████████████████████████████████████████████████▓▒░${RESET}"
 echo ""
-echo "${MAGENTA}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
-echo "${MAGENTA}${BOLD}    ║${RESET}  ${BOLD}LOCAL DEPLOYMENT SEQUENCE${RESET}              ${DIM}rev 1.0${RESET}       ${MAGENTA}${BOLD}║${RESET}"
-echo "${MAGENTA}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: VERIFY → INJECT → ARM → ACTIVATE${RESET}          ${MAGENTA}${BOLD}║${RESET}"
-echo "${MAGENTA}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+
+if [[ "$MODE" == "uninstall" ]]; then
+    echo "${RED}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
+    echo "${RED}${BOLD}    ║${RESET}  ${BOLD}UNINSTALL SEQUENCE${RESET}                    ${DIM}rev 1.0${RESET}       ${RED}${BOLD}║${RESET}"
+    echo "${RED}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: TERMINATE → PURGE → CLEAN${RESET}                 ${RED}${BOLD}║${RESET}"
+    echo "${RED}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+elif [[ "$MODE" == "appimage" ]]; then
+    echo "${YELLOW}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
+    echo "${YELLOW}${BOLD}    ║${RESET}  ${BOLD}APPIMAGE SUPPORT MODE${RESET}                 ${DIM}rev 1.0${RESET}       ${YELLOW}${BOLD}║${RESET}"
+    echo "${YELLOW}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: INJECT RULES → ARM PERMISSIONS${RESET}            ${YELLOW}${BOLD}║${RESET}"
+    echo "${YELLOW}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+else
+    echo "${MAGENTA}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
+    echo "${MAGENTA}${BOLD}    ║${RESET}  ${BOLD}LOCAL DEPLOYMENT SEQUENCE${RESET}              ${DIM}rev 1.0${RESET}       ${MAGENTA}${BOLD}║${RESET}"
+    echo "${MAGENTA}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: VERIFY → INJECT → ARM → ACTIVATE${RESET}          ${MAGENTA}${BOLD}║${RESET}"
+    echo "${MAGENTA}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+fi
 echo ""
 sleep 0.3
 
@@ -147,40 +191,127 @@ fi
 
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 
-echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
-echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
-echo "${GREEN}  ▸ SOURCE${RESET} ${DIM}............................${RESET} ${CYAN}$DIST_DIR/${RESET}"
-
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x01] VERIFY LOCAL BUILD
+#  UNINSTALL MODE
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 1 "SCANNING LOCAL BUILD ARTIFACTS"
-
-if [[ ! -f "$DIST_DIR/ghelper" ]]; then
+if [[ "$MODE" == "uninstall" ]]; then
+    echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
+    echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
     echo ""
-    echo "${RED}${BOLD}  ╔══[ BUILD NOT FOUND ]═════════════════════════════════╗${RESET}"
-    echo "${RED}${BOLD}  ║${RESET}  ${RED}No binary at:${RESET} $DIST_DIR/ghelper"
-    echo "${RED}${BOLD}  ║${RESET}  ${YELLOW}Run ./build.sh first${RESET}"
-    echo "${RED}${BOLD}  ║${RESET}  ${DIM}...or use install.sh to download latest release${RESET}"
-    echo "${RED}${BOLD}  ╚═════════════════════════════════════════════════════╝${RESET}"
-    exit 1
+
+    echo "${RED}${BOLD}  ╔══[ CONFIRMATION REQUIRED ]════════════════════════════╗${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  This will remove G-Helper Linux and all system files."
+    echo "${RED}${BOLD}  ║${RESET}  ${DIM}User config (~/.config/ghelper) will NOT be removed.${RESET}"
+    echo "${RED}${BOLD}  ╚═════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    printf "  ${BOLD}Type ${RED}YES${RESET}${BOLD} to confirm uninstall: ${RESET}"
+    read -r confirm
+    if [[ "$confirm" != "YES" ]]; then
+        echo ""
+        echo "  ${YELLOW}Aborted.${RESET}"
+        exit 0
+    fi
+    echo ""
+
+    # ── Stop running process ──
+    _step 1 "TERMINATING RUNNING INSTANCES"
+    if pgrep -x ghelper &>/dev/null; then
+        pkill -x ghelper 2>/dev/null && _info "ghelper process terminated" || _warn "could not kill ghelper"
+        sleep 0.5
+    else
+        _info "${DIM}no running ghelper process found${RESET}"
+    fi
+
+    # ── Remove files ──
+    _step 2 "PURGING INSTALLED FILES"
+
+    _safe_remove "$BINARY_DEST"                          "binary"
+    _safe_remove "$UDEV_DEST"                            "udev rules"
+    _safe_remove "/etc/tmpfiles.d/90-ghelper.conf"       "tmpfiles config"
+    _safe_remove "$DESKTOP_DEST"                         "desktop entry (system)"
+
+    # User-local desktop entry
+    if [[ -n "$REAL_USER" ]]; then
+        _safe_remove "/home/$REAL_USER/.local/share/applications/ghelper.desktop" "desktop entry (user)"
+        _safe_remove "/home/$REAL_USER/.config/autostart/ghelper.desktop"          "autostart entry"
+    fi
+
+    # Icons
+    _safe_remove "/usr/share/icons/hicolor/64x64/apps/ghelper.png" "icon (system, png)"
+    _safe_remove "/usr/share/icons/hicolor/64x64/apps/ghelper.ico" "icon (system, ico)"
+    if [[ -n "$REAL_USER" ]]; then
+        _safe_remove "/home/$REAL_USER/.local/share/icons/hicolor/64x64/apps/ghelper.png" "icon (user, png)"
+        _safe_remove "/home/$REAL_USER/.local/share/icons/hicolor/64x64/apps/ghelper.ico" "icon (user, ico)"
+    fi
+
+    # ── Reload udev ──
+    _step 3 "RELOADING UDEV DAEMON"
+    udevadm control --reload-rules 2>/dev/null && _info "udev daemon reloaded" || true
+
+    # ── Summary ──
+    echo ""
+    echo ""
+    echo "${RED}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
+    echo "${RED}${BOLD}  ║                                                                ║${RESET}"
+    echo "${RED}${BOLD}  ║  ▓▓▓ UNINSTALL COMPLETE ▓▓▓                                    ║${RESET}"
+    echo "${RED}${BOLD}  ║                                                                ║${RESET}"
+    echo "${RED}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  ${RED}REMOVED: $REMOVED files/directories${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  ${DIM}User config preserved at ~/.config/ghelper/${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  ${DIM}sysfs permissions will reset on next reboot${RESET}"
+    echo "${RED}${BOLD}  ║                                                                ║${RESET}"
+    echo "${RED}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    exit 0
 fi
 
-BINARY_SIZE=$(du -sh "$DIST_DIR/ghelper" | cut -f1)
-_info "Binary located: ${BOLD}$DIST_DIR/ghelper${RESET} ${DIM}(${BINARY_SIZE})${RESET}"
-
-# Count dist files
-DIST_FILES=("$DIST_DIR"/*)
-_info "Artifacts found: ${GREEN}${#DIST_FILES[@]} files${RESET}"
-
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x02] INJECT BINARY
+#  INSTALL / APPIMAGE MODE — common setup
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 2 "INJECTING BINARY INTO PATH"
+echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
+echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
+if [[ "$MODE" == "install" ]]; then
+    echo "${GREEN}  ▸ SOURCE${RESET} ${DIM}............................${RESET} ${CYAN}$DIST_DIR/${RESET}"
+fi
 
-_install_file "$DIST_DIR/ghelper" "$BINARY_DEST" 755 "ghelper binary" || true
+# ══════════════════════════════════════════════════════════════════════════════
+#  [0x01] VERIFY LOCAL BUILD (install mode only)
+# ══════════════════════════════════════════════════════════════════════════════
+
+if [[ "$MODE" == "install" ]]; then
+    _step 1 "SCANNING LOCAL BUILD ARTIFACTS"
+
+    if [[ ! -f "$DIST_DIR/ghelper" ]]; then
+        echo ""
+        echo "${RED}${BOLD}  ╔══[ BUILD NOT FOUND ]═════════════════════════════════╗${RESET}"
+        echo "${RED}${BOLD}  ║${RESET}  ${RED}No binary at:${RESET} $DIST_DIR/ghelper"
+        echo "${RED}${BOLD}  ║${RESET}  ${YELLOW}Run ./build.sh first${RESET}"
+        echo "${RED}${BOLD}  ║${RESET}  ${DIM}...or use install.sh to download latest release${RESET}"
+        echo "${RED}${BOLD}  ╚═════════════════════════════════════════════════════╝${RESET}"
+        exit 1
+    fi
+
+    BINARY_SIZE=$(du -sh "$DIST_DIR/ghelper" | cut -f1)
+    _info "Binary located: ${BOLD}$DIST_DIR/ghelper${RESET} ${DIM}(${BINARY_SIZE})${RESET}"
+
+    # Count dist files
+    DIST_FILES=("$DIST_DIR"/*)
+    _info "Artifacts found: ${GREEN}${#DIST_FILES[@]} files${RESET}"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  [0x02] INJECT BINARY (install mode only)
+# ══════════════════════════════════════════════════════════════════════════════
+
+if [[ "$MODE" == "install" ]]; then
+    _step 2 "INJECTING BINARY INTO PATH"
+
+    _install_file "$DIST_DIR/ghelper" "$BINARY_DEST" 755 "ghelper binary" || true
+else
+    _info "${DIM}AppImage mode — skipping binary installation${RESET}"
+fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  [0x03] DEPLOY UDEV RULESET
@@ -303,77 +434,81 @@ echo ""
 _info "sysfs summary: ${GREEN}${CHMOD_APPLIED} armed${RESET} / ${DIM}${CHMOD_SKIPPED} already 0666${RESET}"
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x05] DESKTOP INTEGRATION
+#  [0x05] DESKTOP INTEGRATION (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 5 "DESKTOP INTEGRATION LAYER"
+if [[ "$MODE" == "install" ]]; then
+    _step 5 "DESKTOP INTEGRATION LAYER"
 
-if install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$DESKTOP_DEST" 2>/dev/null; then
-    _inject "desktop entry → $DESKTOP_DEST"
-else
-    _warn "desktop entry → $DESKTOP_DEST (read-only, using autostart instead)"
-fi
-
-# Icon
-ICON_SRC="$PROJECT_DIR/src/UI/Assets/favicon.ico"
-if [[ -w "/usr/share/icons/hicolor/64x64/apps" ]] 2>/dev/null; then
-    ICON_DEST="/usr/share/icons/hicolor/64x64/apps"
-else
-    ICON_DEST="$HOME/.local/share/icons/hicolor/64x64/apps"
-    mkdir -p "$ICON_DEST" 2>/dev/null || true
-fi
-if [[ -f "$ICON_SRC" ]]; then
-    mkdir -p "$ICON_DEST"
-    if command -v convert &>/dev/null; then
-        # ImageMagick available — convert ICO → PNG
-        if [[ -f "$ICON_DEST/ghelper.png" ]]; then
-            # Generate temp conversion and compare
-            ICON_TMP=$(mktemp /tmp/ghelper-icon-XXXXXX.png)
-            convert "$ICON_SRC[0]" "$ICON_TMP" 2>/dev/null
-            if cmp -s "$ICON_TMP" "$ICON_DEST/ghelper.png"; then
-                _skip "icon → already deployed at $ICON_DEST/ghelper.png"
-            else
-                mv "$ICON_TMP" "$ICON_DEST/ghelper.png"
-                _update "icon → $ICON_DEST/ghelper.png"
-            fi
-            rm -f "$ICON_TMP" 2>/dev/null || true
-        else
-            convert "$ICON_SRC[0]" "$ICON_DEST/ghelper.png" 2>/dev/null
-            _inject "icon → $ICON_DEST/ghelper.png"
-        fi
+    if install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$DESKTOP_DEST" 2>/dev/null; then
+        _inject "desktop entry → $DESKTOP_DEST"
     else
-        # No ImageMagick — copy ICO directly
-        if [[ -f "$ICON_DEST/ghelper.ico" ]] && cmp -s "$ICON_SRC" "$ICON_DEST/ghelper.ico"; then
-            _skip "icon → already deployed at $ICON_DEST/ghelper.ico"
-        else
-            cp "$ICON_SRC" "$ICON_DEST/ghelper.ico"
-            # Patch desktop entry to use absolute path
-            sed -i "s|Icon=ghelper|Icon=$ICON_DEST/ghelper.ico|" \
-                "$DESKTOP_DEST" 2>/dev/null || true
-            _inject "icon → $ICON_DEST/ghelper.ico ${DIM}(no ImageMagick — raw ICO)${RESET}"
-        fi
+        _warn "desktop entry → $DESKTOP_DEST (read-only, using autostart instead)"
     fi
-    gtk-update-icon-cache "$ICON_DEST" 2>/dev/null || true
-else
-    _warn "No icon source found at $ICON_SRC"
+
+    # Icon
+    ICON_SRC="$PROJECT_DIR/src/UI/Assets/favicon.ico"
+    if [[ -w "/usr/share/icons/hicolor/64x64/apps" ]] 2>/dev/null; then
+        ICON_DEST="/usr/share/icons/hicolor/64x64/apps"
+    else
+        ICON_DEST="$HOME/.local/share/icons/hicolor/64x64/apps"
+        mkdir -p "$ICON_DEST" 2>/dev/null || true
+    fi
+    if [[ -f "$ICON_SRC" ]]; then
+        mkdir -p "$ICON_DEST"
+        if command -v convert &>/dev/null; then
+            # ImageMagick available — convert ICO → PNG
+            if [[ -f "$ICON_DEST/ghelper.png" ]]; then
+                # Generate temp conversion and compare
+                ICON_TMP=$(mktemp /tmp/ghelper-icon-XXXXXX.png)
+                convert "$ICON_SRC[0]" "$ICON_TMP" 2>/dev/null
+                if cmp -s "$ICON_TMP" "$ICON_DEST/ghelper.png"; then
+                    _skip "icon → already deployed at $ICON_DEST/ghelper.png"
+                else
+                    mv "$ICON_TMP" "$ICON_DEST/ghelper.png"
+                    _update "icon → $ICON_DEST/ghelper.png"
+                fi
+                rm -f "$ICON_TMP" 2>/dev/null || true
+            else
+                convert "$ICON_SRC[0]" "$ICON_DEST/ghelper.png" 2>/dev/null
+                _inject "icon → $ICON_DEST/ghelper.png"
+            fi
+        else
+            # No ImageMagick — copy ICO directly
+            if [[ -f "$ICON_DEST/ghelper.ico" ]] && cmp -s "$ICON_SRC" "$ICON_DEST/ghelper.ico"; then
+                _skip "icon → already deployed at $ICON_DEST/ghelper.ico"
+            else
+                cp "$ICON_SRC" "$ICON_DEST/ghelper.ico"
+                # Patch desktop entry to use absolute path
+                sed -i "s|Icon=ghelper|Icon=$ICON_DEST/ghelper.ico|" \
+                    "$DESKTOP_DEST" 2>/dev/null || true
+                _inject "icon → $ICON_DEST/ghelper.ico ${DIM}(no ImageMagick — raw ICO)${RESET}"
+            fi
+        fi
+        gtk-update-icon-cache "$ICON_DEST" 2>/dev/null || true
+    else
+        _warn "No icon source found at $ICON_SRC"
+    fi
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x06] AUTOSTART IMPLANT
+#  [0x06] AUTOSTART IMPLANT (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 6 "AUTOSTART IMPLANT"
+if [[ "$MODE" == "install" ]]; then
+    _step 6 "AUTOSTART IMPLANT"
 
-if [[ -n "$REAL_USER" ]]; then
-    AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
-    AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
-    # Create dir as the real user so ownership is correct from the start
-    su -c "mkdir -p '$AUTOSTART_DIR'" "$REAL_USER"
-    install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"
-    chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
-    _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
-else
-    _warn "Could not determine real user — skipping autostart"
+    if [[ -n "$REAL_USER" ]]; then
+        AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
+        AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
+        # Create dir as the real user so ownership is correct from the start
+        su -c "mkdir -p '$AUTOSTART_DIR'" "$REAL_USER"
+        install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$AUTOSTART_DEST"
+        chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
+        _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
+    else
+        _warn "Could not determine real user — skipping autostart"
+    fi
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -382,26 +517,46 @@ fi
 
 echo ""
 echo ""
-echo "${GREEN}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ║  ▓▓▓ DEPLOYMENT SEQUENCE COMPLETE ▓▓▓                          ║${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  Binary    → $BINARY_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  udev      → $UDEV_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  Desktop   → $DESKTOP_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ║${RESET}  ${GREEN}INJECTED: $INJECTED${RESET}   ${CYAN}UPDATED: $UPDATED${RESET}   ${DIM}SKIPPED: $SKIPPED${RESET}"
-echo "${GREEN}${BOLD}  ║${RESET}  ${MAGENTA}CHMOD: $CHMOD_APPLIED armed${RESET}   ${DIM}$CHMOD_SKIPPED already set${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
-echo ""
 
-_typeout "${GREEN}${BOLD}  > NEURAL LINK ESTABLISHED :: LAUNCH WITH: ghelper${RESET}" 0.03
+if [[ "$MODE" == "appimage" ]]; then
+    echo "${YELLOW}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║  ▓▓▓ APPIMAGE SUPPORT DEPLOYED ▓▓▓                             ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  udev      → $UDEV_DEST"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${GREEN}INJECTED: $INJECTED${RESET}   ${CYAN}UPDATED: $UPDATED${RESET}   ${DIM}SKIPPED: $SKIPPED${RESET}"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${MAGENTA}CHMOD: $CHMOD_APPLIED armed${RESET}   ${DIM}$CHMOD_SKIPPED already set${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    _typeout "${YELLOW}${BOLD}  > HARDWARE ACCESS LAYER READY :: Launch your AppImage now${RESET}" 0.03
+else
+    echo "${GREEN}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ║  ▓▓▓ DEPLOYMENT SEQUENCE COMPLETE ▓▓▓                          ║${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  Binary    → $BINARY_DEST"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  udev      → $UDEV_DEST"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  Desktop   → $DESKTOP_DEST"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${GREEN}INJECTED: $INJECTED${RESET}   ${CYAN}UPDATED: $UPDATED${RESET}   ${DIM}SKIPPED: $SKIPPED${RESET}"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${MAGENTA}CHMOD: $CHMOD_APPLIED armed${RESET}   ${DIM}$CHMOD_SKIPPED already set${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    _typeout "${GREEN}${BOLD}  > NEURAL LINK ESTABLISHED :: LAUNCH WITH: ghelper${RESET}" 0.03
+fi
 
 echo ""
