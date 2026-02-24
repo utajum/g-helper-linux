@@ -15,6 +15,7 @@ public static class SysfsHelper
 
     public const string AsusWmiPlatform = "/sys/devices/platform/asus-nb-wmi";
     public const string AsusBusPlatform = "/sys/bus/platform/devices/asus-nb-wmi";
+    public const string FirmwareAttributes = "/sys/class/firmware-attributes/asus-armoury/attributes";
     public const string PowerSupply = "/sys/class/power_supply";
     public const string Backlight = "/sys/class/backlight";
     public const string Leds = "/sys/class/leds";
@@ -26,6 +27,99 @@ public static class SysfsHelper
     public const string PlatformProfile = "/sys/firmware/acpi/platform_profile";
     public const string PlatformProfileChoices = "/sys/firmware/acpi/platform_profile_choices";
     public const string PcieAspm = "/sys/module/pcie_aspm/parameters/policy";
+
+    // ── Firmware-attributes path resolution cache ──
+    // On newer kernels (6.8+ with asus_armoury module), legacy sysfs paths under
+    // asus-nb-wmi may not exist. Instead, attributes live under:
+    //   /sys/class/firmware-attributes/asus-armoury/attributes/{name}/current_value
+    // This cache maps attribute names to resolved full paths (including /current_value
+    // suffix for firmware-attributes, or legacy path if that exists).
+    // null value = attribute doesn't exist in either location.
+    private static readonly Dictionary<string, string?> _resolvedPaths = new();
+
+    /// <summary>
+    /// Resolve the actual sysfs path for an ASUS WMI attribute.
+    /// Tries legacy paths first (AsusWmiPlatform, AsusBusPlatform), then
+    /// falls back to firmware-attributes (asus-armoury).
+    /// Results are cached for the lifetime of the process.
+    /// </summary>
+    /// <param name="attrName">Attribute name, e.g. "dgpu_disable", "throttle_thermal_policy"</param>
+    /// <param name="legacyBases">Legacy base paths to check (in order). Defaults to both platform paths.</param>
+    /// <returns>Full resolved path to read/write, or null if not found anywhere.</returns>
+    public static string? ResolveAttrPath(string attrName, params string[] legacyBases)
+    {
+        if (_resolvedPaths.TryGetValue(attrName, out var cached))
+            return cached;
+
+        // Default legacy bases if none specified
+        if (legacyBases.Length == 0)
+            legacyBases = new[] { AsusWmiPlatform, AsusBusPlatform };
+
+        // Try legacy paths first
+        foreach (var basePath in legacyBases)
+        {
+            var legacyPath = Path.Combine(basePath, attrName);
+            if (File.Exists(legacyPath))
+            {
+                _resolvedPaths[attrName] = legacyPath;
+                return legacyPath;
+            }
+        }
+
+        // Try firmware-attributes (asus-armoury)
+        var fwPath = Path.Combine(FirmwareAttributes, attrName, "current_value");
+        if (File.Exists(fwPath))
+        {
+            _resolvedPaths[attrName] = fwPath;
+            return fwPath;
+        }
+
+        // Not found anywhere
+        _resolvedPaths[attrName] = null;
+        return null;
+    }
+
+    /// <summary>
+    /// Check if a resolved path is a firmware-attributes path (vs legacy sysfs).
+    /// </summary>
+    public static bool IsFirmwareAttributesPath(string? path)
+    {
+        return path != null && path.StartsWith(FirmwareAttributes);
+    }
+
+    /// <summary>
+    /// Log which backend was resolved for each known attribute (for diagnostics).
+    /// </summary>
+    public static void LogResolvedAttributes()
+    {
+        var attrs = new[]
+        {
+            "throttle_thermal_policy", "dgpu_disable", "gpu_mux_mode",
+            "panel_od", "mini_led_mode",
+            "ppt_pl1_spl", "ppt_pl2_sppt", "ppt_fppt",
+            "nv_dynamic_boost", "nv_temp_target"
+        };
+
+        bool hasFirmwareAttrs = Directory.Exists(FirmwareAttributes);
+        Helpers.Logger.WriteLine($"Firmware-attributes (asus-armoury): {(hasFirmwareAttrs ? "PRESENT" : "not present")}");
+
+        foreach (var attr in attrs)
+        {
+            var path = ResolveAttrPath(attr);
+            if (path == null)
+            {
+                Helpers.Logger.WriteLine($"  {attr}: not found");
+            }
+            else if (IsFirmwareAttributesPath(path))
+            {
+                Helpers.Logger.WriteLine($"  {attr}: firmware-attributes");
+            }
+            else
+            {
+                Helpers.Logger.WriteLine($"  {attr}: legacy sysfs");
+            }
+        }
+    }
 
     /// <summary>Read a sysfs attribute as a trimmed string. Returns null on failure.</summary>
     public static string? ReadAttribute(string path)

@@ -6,8 +6,25 @@ set -euo pipefail
 # ║  Downloads latest release + installs system-wide                            ║
 # ║  100% idempotent — safe to re-run infinitely                                ║
 # ║                                                                              ║
-# ║  curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/install.sh | sudo bash
+# ║  Install:    curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/install.sh | sudo bash
+# ║  AppImage:   curl -sL ... | sudo bash -s -- --appimage                       ║
+# ║  Uninstall:  curl -sL ... | sudo bash -s -- --uninstall                      ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# ── Mode selection ─────────────────────────────────────────────────────────────
+MODE="install"
+case "${1:-}" in
+    --uninstall) MODE="uninstall" ;;
+    --appimage)  MODE="appimage" ;;
+    --help|-h)
+        echo "Usage: $0 [--appimage|--uninstall|--help]"
+        echo ""
+        echo "  (default)     Full install: download binary + udev + permissions + desktop"
+        echo "  --appimage    AppImage support: udev rules + sysfs permissions only (no binary)"
+        echo "  --uninstall   Remove all installed files"
+        exit 0
+        ;;
+esac
 
 # ── ANSI color matrix ──────────────────────────────────────────────────────────
 if [[ -t 1 ]] || [[ "${FORCE_COLOR:-}" == "1" ]]; then
@@ -43,6 +60,7 @@ SKIPPED=0
 UPDATED=0
 CHMOD_APPLIED=0
 CHMOD_SKIPPED=0
+REMOVED=0
 
 # ── Status display functions ───────────────────────────────────────────────────
 _inject()  { echo "  ${GREEN}[INJECT]${RESET}  $1"; ((INJECTED++)) || true; }
@@ -53,6 +71,8 @@ _chok()    { echo "  ${DIM}[OK]${RESET}      ${DIM}$1${RESET}"; ((CHMOD_SKIPPED+
 _fail()    { echo "  ${RED}[FAIL]${RESET}    $1"; }
 _info()    { echo "  ${BLUE}[INFO]${RESET}    $1"; }
 _warn()    { echo "  ${YELLOW}[WARN]${RESET}    $1"; }
+_remove()  { echo "  ${RED}[REMOVE]${RESET}  $1"; ((REMOVED++)) || true; }
+_gone()    { echo "  ${DIM}[GONE]${RESET}    ${DIM}$1 (not present)${RESET}"; }
 
 # ── Typing effect ──────────────────────────────────────────────────────────────
 _typeout() {
@@ -119,13 +139,29 @@ _ensure_chmod() {
     fi
 }
 
+# ── Safe remove helper ─────────────────────────────────────────────────────────
+_safe_remove() {
+    local path="$1" label="$2"
+    if [[ -e "$path" || -L "$path" ]]; then
+        rm -rf "$path"
+        _remove "$label → $path"
+    else
+        _gone "$label"
+    fi
+}
+
 # ══════════════════════════════════════════════════════════════════════════════
-#  BOOT SEQUENCE
+#  BANNER
 # ══════════════════════════════════════════════════════════════════════════════
 
 clear 2>/dev/null || true
 echo ""
-echo "${RED}${BOLD}"
+
+if [[ "$MODE" == "uninstall" ]]; then
+    echo "${RED}${BOLD}"
+else
+    echo "${RED}${BOLD}"
+fi
 cat << 'BANNER'
      ██████╗       ██╗  ██╗███████╗██╗     ██████╗ ███████╗██████╗
     ██╔════╝       ██║  ██║██╔════╝██║     ██╔══██╗██╔════╝██╔══██╗
@@ -133,20 +169,33 @@ cat << 'BANNER'
     ██║   ██║╚════╝██╔══██║██╔══╝  ██║     ██╔═══╝ ██╔══╝  ██╔══██╗
     ╚██████╔╝      ██║  ██║███████╗███████╗██║     ███████╗██║  ╚██╗
      ╚═════╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚══════╝╚═╝   ╚═╝
-                            ██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗ 
-                            ██║     ██║████╗  ██║██║   ██║╚██╗██╔╝ 
-                            ██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝  
-                            ██║     ██║██║╚██╗██║██║   ██║ ██╔██╗  
-                            ███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗ 
-                            ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝ 
+                             ██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗ 
+                             ██║     ██║████╗  ██║██║   ██║╚██╗██╔╝ 
+                             ██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝  
+                             ██║     ██║██║╚██╗██║██║   ██║ ██╔██╗  
+                             ███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗ 
+                             ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝ 
 BANNER
 echo "${RESET}"
 echo "${DIM}    ░▒▓█████████████████████████████████████████████████████▓▒░${RESET}"
 echo ""
-echo "${CYAN}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
-echo "${CYAN}${BOLD}    ║${RESET}  ${BOLD}REMOTE DEPLOYMENT SEQUENCE${RESET}            ${DIM}rev 1.0${RESET}       ${CYAN}${BOLD}║${RESET}"
-echo "${CYAN}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: DOWNLOAD → VERIFY → INJECT → ARM${RESET}          ${CYAN}${BOLD}║${RESET}"
-echo "${CYAN}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+
+if [[ "$MODE" == "uninstall" ]]; then
+    echo "${RED}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
+    echo "${RED}${BOLD}    ║${RESET}  ${BOLD}UNINSTALL SEQUENCE${RESET}                    ${DIM}rev 1.0${RESET}       ${RED}${BOLD}║${RESET}"
+    echo "${RED}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: TERMINATE → PURGE → CLEAN${RESET}                 ${RED}${BOLD}║${RESET}"
+    echo "${RED}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+elif [[ "$MODE" == "appimage" ]]; then
+    echo "${YELLOW}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
+    echo "${YELLOW}${BOLD}    ║${RESET}  ${BOLD}APPIMAGE SUPPORT MODE${RESET}                 ${DIM}rev 1.0${RESET}       ${YELLOW}${BOLD}║${RESET}"
+    echo "${YELLOW}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: DOWNLOAD RULES → INJECT → ARM${RESET}             ${YELLOW}${BOLD}║${RESET}"
+    echo "${YELLOW}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+else
+    echo "${CYAN}${BOLD}    ╔══════════════════════════════════════════════════════╗${RESET}"
+    echo "${CYAN}${BOLD}    ║${RESET}  ${BOLD}REMOTE DEPLOYMENT SEQUENCE${RESET}            ${DIM}rev 1.0${RESET}       ${CYAN}${BOLD}║${RESET}"
+    echo "${CYAN}${BOLD}    ║${RESET}  ${DIM}PROTOCOL: DOWNLOAD → VERIFY → INJECT → ARM${RESET}          ${CYAN}${BOLD}║${RESET}"
+    echo "${CYAN}${BOLD}    ╚══════════════════════════════════════════════════════╝${RESET}"
+fi
 echo ""
 sleep 0.3
 
@@ -163,9 +212,91 @@ fi
 
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  UNINSTALL MODE
+# ══════════════════════════════════════════════════════════════════════════════
+
+if [[ "$MODE" == "uninstall" ]]; then
+    echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
+    echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
+    echo ""
+
+    echo "${RED}${BOLD}  ╔══[ CONFIRMATION REQUIRED ]════════════════════════════╗${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  This will remove G-Helper Linux and all system files."
+    echo "${RED}${BOLD}  ║${RESET}  ${DIM}User config (~/.config/ghelper) will NOT be removed.${RESET}"
+    echo "${RED}${BOLD}  ╚═════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    printf "  ${BOLD}Type ${RED}YES${RESET}${BOLD} to confirm uninstall: ${RESET}"
+    read -r confirm
+    if [[ "$confirm" != "YES" ]]; then
+        echo ""
+        echo "  ${YELLOW}Aborted.${RESET}"
+        exit 0
+    fi
+    echo ""
+
+    # ── Stop running process ──
+    _step 1 "TERMINATING RUNNING INSTANCES"
+    if pgrep -x ghelper &>/dev/null; then
+        pkill -x ghelper 2>/dev/null && _info "ghelper process terminated" || _warn "could not kill ghelper"
+        sleep 0.5
+    else
+        _info "${DIM}no running ghelper process found${RESET}"
+    fi
+
+    # ── Remove files ──
+    _step 2 "PURGING INSTALLED FILES"
+
+    _safe_remove "$INSTALL_DIR"                         "install directory ($INSTALL_DIR)"
+    _safe_remove "/usr/local/bin/ghelper"                "symlink"
+    _safe_remove "$UDEV_DEST"                            "udev rules"
+    _safe_remove "/etc/tmpfiles.d/90-ghelper.conf"       "tmpfiles config"
+    _safe_remove "$DESKTOP_DEST"                         "desktop entry (system)"
+
+    # User-local desktop entry
+    if [[ -n "$REAL_USER" ]]; then
+        _safe_remove "/home/$REAL_USER/.local/share/applications/ghelper.desktop" "desktop entry (user)"
+        _safe_remove "/home/$REAL_USER/.config/autostart/ghelper.desktop"          "autostart entry"
+    fi
+
+    # Icons
+    _safe_remove "/usr/share/icons/hicolor/64x64/apps/ghelper.png" "icon (system, png)"
+    _safe_remove "/usr/share/icons/hicolor/64x64/apps/ghelper.ico" "icon (system, ico)"
+    if [[ -n "$REAL_USER" ]]; then
+        _safe_remove "/home/$REAL_USER/.local/share/icons/hicolor/64x64/apps/ghelper.png" "icon (user, png)"
+        _safe_remove "/home/$REAL_USER/.local/share/icons/hicolor/64x64/apps/ghelper.ico" "icon (user, ico)"
+    fi
+
+    # ── Reload udev ──
+    _step 3 "RELOADING UDEV DAEMON"
+    udevadm control --reload-rules 2>/dev/null && _info "udev daemon reloaded" || true
+
+    # ── Summary ──
+    echo ""
+    echo ""
+    echo "${RED}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
+    echo "${RED}${BOLD}  ║                                                                ║${RESET}"
+    echo "${RED}${BOLD}  ║  ▓▓▓ UNINSTALL COMPLETE ▓▓▓                                    ║${RESET}"
+    echo "${RED}${BOLD}  ║                                                                ║${RESET}"
+    echo "${RED}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  ${RED}REMOVED: $REMOVED files/directories${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  ${DIM}User config preserved at ~/.config/ghelper/${RESET}"
+    echo "${RED}${BOLD}  ║${RESET}  ${DIM}sysfs permissions will reset on next reboot${RESET}"
+    echo "${RED}${BOLD}  ║                                                                ║${RESET}"
+    echo "${RED}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    exit 0
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  INSTALL / APPIMAGE MODE — common setup
+# ══════════════════════════════════════════════════════════════════════════════
+
 echo "${GREEN}  ▸ ROOT ACCESS${RESET} ${DIM}........................${RESET} ${GREEN}CONFIRMED${RESET}"
 echo "${GREEN}  ▸ USER${RESET} ${DIM}..............................${RESET} ${CYAN}${REAL_USER:-unknown}${RESET}"
-echo "${GREEN}  ▸ TARGET${RESET} ${DIM}............................${RESET} ${CYAN}$INSTALL_DIR/${RESET}"
+if [[ "$MODE" == "install" ]]; then
+    echo "${GREEN}  ▸ TARGET${RESET} ${DIM}............................${RESET} ${CYAN}$INSTALL_DIR/${RESET}"
+fi
 echo "${GREEN}  ▸ SOURCE${RESET} ${DIM}............................${RESET} ${CYAN}github.com/$REPO${RESET}"
 
 # ── Temp workspace ─────────────────────────────────────────────────────────────
@@ -178,8 +309,15 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 
 _step 1 "DOWNLOADING PAYLOADS FROM REMOTE"
 
-BINARIES=(ghelper libSkiaSharp.so libHarfBuzzSharp.so)
-ASSETS=(90-ghelper.rules 90-ghelper.conf ghelper.desktop)
+if [[ "$MODE" == "install" ]]; then
+    BINARIES=(ghelper libSkiaSharp.so libHarfBuzzSharp.so)
+else
+    BINARIES=()
+fi
+ASSETS=(90-ghelper.rules 90-ghelper.conf)
+if [[ "$MODE" == "install" ]]; then
+    ASSETS+=(ghelper.desktop)
+fi
 
 dl_count=0
 dl_total=$(( ${#BINARIES[@]} + ${#ASSETS[@]} ))
@@ -206,33 +344,39 @@ for file in "${ASSETS[@]}"; do
 done
 
 echo ""
-chmod +x "$WORK_DIR/ghelper"
+if [[ "$MODE" == "install" ]]; then
+    chmod +x "$WORK_DIR/ghelper"
+fi
 _info "All payloads acquired ${GREEN}(${dl_total} files)${RESET}"
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x02] INJECT BINARIES
+#  [0x02] INJECT BINARIES (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 2 "INJECTING BINARIES INTO TARGET"
+if [[ "$MODE" == "install" ]]; then
+    _step 2 "INJECTING BINARIES INTO TARGET"
 
-mkdir -p "$INSTALL_DIR"
+    mkdir -p "$INSTALL_DIR"
 
-_install_file "$WORK_DIR/ghelper"             "$INSTALL_DIR/ghelper"             755 "ghelper binary" || true
-_install_file "$WORK_DIR/libSkiaSharp.so"     "$INSTALL_DIR/libSkiaSharp.so"     755 "libSkiaSharp.so" || true
-_install_file "$WORK_DIR/libHarfBuzzSharp.so" "$INSTALL_DIR/libHarfBuzzSharp.so" 755 "libHarfBuzzSharp.so" || true
+    _install_file "$WORK_DIR/ghelper"             "$INSTALL_DIR/ghelper"             755 "ghelper binary" || true
+    _install_file "$WORK_DIR/libSkiaSharp.so"     "$INSTALL_DIR/libSkiaSharp.so"     755 "libSkiaSharp.so" || true
+    _install_file "$WORK_DIR/libHarfBuzzSharp.so" "$INSTALL_DIR/libHarfBuzzSharp.so" 755 "libHarfBuzzSharp.so" || true
 
-# Symlink (ln -sf is already idempotent but we report status)
-if [[ "$(readlink -f /usr/local/bin/ghelper 2>/dev/null)" == "$INSTALL_DIR/ghelper" ]]; then
-    _skip "symlink → /usr/local/bin/ghelper already targets $INSTALL_DIR/ghelper"
+    # Symlink (ln -sf is already idempotent but we report status)
+    if [[ "$(readlink -f /usr/local/bin/ghelper 2>/dev/null)" == "$INSTALL_DIR/ghelper" ]]; then
+        _skip "symlink → /usr/local/bin/ghelper already targets $INSTALL_DIR/ghelper"
+    else
+        ln -sf "$INSTALL_DIR/ghelper" /usr/local/bin/ghelper
+        _inject "symlink → /usr/local/bin/ghelper"
+    fi
+
+    # Fix ownership so the real user can run ghelper without root
+    if [[ -n "$REAL_USER" ]]; then
+        chown -R "$REAL_USER:$REAL_USER" "$INSTALL_DIR"
+        _info "ownership → ${BOLD}$REAL_USER:$REAL_USER${RESET} on $INSTALL_DIR/"
+    fi
 else
-    ln -sf "$INSTALL_DIR/ghelper" /usr/local/bin/ghelper
-    _inject "symlink → /usr/local/bin/ghelper"
-fi
-
-# Fix ownership so the real user can run ghelper without root
-if [[ -n "$REAL_USER" ]]; then
-    chown -R "$REAL_USER:$REAL_USER" "$INSTALL_DIR"
-    _info "ownership → ${BOLD}$REAL_USER:$REAL_USER${RESET} on $INSTALL_DIR/"
+    _info "${DIM}AppImage mode — skipping binary installation${RESET}"
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -300,6 +444,17 @@ for f in \
     _ensure_chmod "$f"
 done
 
+# ── ASUS firmware-attributes (asus-armoury, kernel 6.8+) ──
+_fa_count=0
+for f in /sys/class/firmware-attributes/asus-armoury/attributes/*/current_value; do
+    [[ -f "$f" ]] && { _ensure_chmod "$f"; ((_fa_count++)) || true; }
+done
+if [[ $_fa_count -gt 0 ]]; then
+    _info "firmware-attributes (asus-armoury): ${GREEN}${_fa_count} attrs${RESET} processed"
+else
+    _info "${DIM}no asus-armoury firmware-attributes found (using legacy sysfs)${RESET}"
+fi
+
 # ── Battery charge limit ──
 _bat_count=0
 for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do
@@ -344,33 +499,37 @@ echo ""
 _info "sysfs summary: ${GREEN}${CHMOD_APPLIED} armed${RESET} / ${DIM}${CHMOD_SKIPPED} already 0666${RESET}"
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x05] DESKTOP INTEGRATION
+#  [0x05] DESKTOP INTEGRATION (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 5 "DESKTOP INTEGRATION LAYER"
+if [[ "$MODE" == "install" ]]; then
+    _step 5 "DESKTOP INTEGRATION LAYER"
 
-if install -m 644 "$WORK_DIR/ghelper.desktop" "$DESKTOP_DEST" 2>/dev/null; then
-    _inject "desktop entry → $DESKTOP_DEST"
-else
-    _warn "desktop entry → $DESKTOP_DEST (read-only, using autostart instead)"
+    if install -m 644 "$WORK_DIR/ghelper.desktop" "$DESKTOP_DEST" 2>/dev/null; then
+        _inject "desktop entry → $DESKTOP_DEST"
+    else
+        _warn "desktop entry → $DESKTOP_DEST (read-only, using autostart instead)"
+    fi
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x06] AUTOSTART IMPLANT
+#  [0x06] AUTOSTART IMPLANT (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 6 "AUTOSTART IMPLANT"
+if [[ "$MODE" == "install" ]]; then
+    _step 6 "AUTOSTART IMPLANT"
 
-if [[ -n "$REAL_USER" ]]; then
-    AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
-    AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
-    # Create dir as the real user so ownership is correct from the start
-    su -c "mkdir -p '$AUTOSTART_DIR'" "$REAL_USER"
-    install -m 644 "$WORK_DIR/ghelper.desktop" "$AUTOSTART_DEST"
-    chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
-    _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
-else
-    _warn "Could not determine real user — skipping autostart"
+    if [[ -n "$REAL_USER" ]]; then
+        AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
+        AUTOSTART_DEST="$AUTOSTART_DIR/ghelper.desktop"
+        # Create dir as the real user so ownership is correct from the start
+        su -c "mkdir -p '$AUTOSTART_DIR'" "$REAL_USER"
+        install -m 644 "$WORK_DIR/ghelper.desktop" "$AUTOSTART_DEST"
+        chown "$REAL_USER:$REAL_USER" "$AUTOSTART_DEST"
+        _inject "autostart for user ${BOLD}$REAL_USER${RESET} → $AUTOSTART_DEST"
+    else
+        _warn "Could not determine real user — skipping autostart"
+    fi
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -379,27 +538,47 @@ fi
 
 echo ""
 echo ""
-echo "${GREEN}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ║  ▓▓▓ DEPLOYMENT SEQUENCE COMPLETE ▓▓▓                          ║${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  Binary    → $INSTALL_DIR/ghelper"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  Symlink   → /usr/local/bin/ghelper"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  udev      → $UDEV_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Desktop   → $DESKTOP_DEST"
-echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF5${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ║${RESET}  ${GREEN}INJECTED: $INJECTED${RESET}   ${CYAN}UPDATED: $UPDATED${RESET}   ${DIM}SKIPPED: $SKIPPED${RESET}"
-echo "${GREEN}${BOLD}  ║${RESET}  ${MAGENTA}CHMOD: $CHMOD_APPLIED armed${RESET}   ${DIM}$CHMOD_SKIPPED already set${RESET}"
-echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
-echo "${GREEN}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
-echo ""
 
-_typeout "${GREEN}${BOLD}  > NEURAL LINK ESTABLISHED :: LAUNCH WITH: ghelper${RESET}" 0.03
+if [[ "$MODE" == "appimage" ]]; then
+    echo "${YELLOW}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║  ▓▓▓ APPIMAGE SUPPORT DEPLOYED ▓▓▓                             ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  udev      → $UDEV_DEST"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${GREEN}INJECTED: $INJECTED${RESET}   ${CYAN}UPDATED: $UPDATED${RESET}   ${DIM}SKIPPED: $SKIPPED${RESET}"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${MAGENTA}CHMOD: $CHMOD_APPLIED armed${RESET}   ${DIM}$CHMOD_SKIPPED already set${RESET}"
+    echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
+    echo "${YELLOW}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    _typeout "${YELLOW}${BOLD}  > HARDWARE ACCESS LAYER READY :: Launch your AppImage now${RESET}" 0.03
+else
+    echo "${GREEN}${BOLD}  ╔════════════════════════════════════════════════════════════════╗${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ║  ▓▓▓ DEPLOYMENT SEQUENCE COMPLETE ▓▓▓                          ║${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  Binary    → $INSTALL_DIR/ghelper"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  Symlink   → /usr/local/bin/ghelper"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  udev      → $UDEV_DEST"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Desktop   → $DESKTOP_DEST"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF5${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${GREEN}INJECTED: $INJECTED${RESET}   ${CYAN}UPDATED: $UPDATED${RESET}   ${DIM}SKIPPED: $SKIPPED${RESET}"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${MAGENTA}CHMOD: $CHMOD_APPLIED armed${RESET}   ${DIM}$CHMOD_SKIPPED already set${RESET}"
+    echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
+    echo "${GREEN}${BOLD}  ╚════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    _typeout "${GREEN}${BOLD}  > NEURAL LINK ESTABLISHED :: LAUNCH WITH: ghelper${RESET}" 0.03
+fi
 
 echo ""

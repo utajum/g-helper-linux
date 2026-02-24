@@ -85,8 +85,8 @@
                                    Text="GPU Fan: 0RPM" VerticalAlignment="Center" />
                     </Grid>
 
-                    <!-- GPU mode buttons — equal width, tall, icon above text -->
-                    <UniformGrid Rows="1" Columns="3" Margin="0,0">
+                    <!-- GPU mode buttons — 4 modes matching Windows G-Helper -->
+                    <UniformGrid Rows="1" Columns="4" Margin="0,0">
                         <Button x:Name="buttonEco" Classes="ghelper-tall"
                                 Margin="0,0,3,0" Click="ButtonEco_Click">
                             <StackPanel HorizontalAlignment="Center" Spacing="4">
@@ -101,10 +101,17 @@
                                 <TextBlock Text="Standard" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>
+                        <Button x:Name="buttonUltimate" Classes="ghelper-tall"
+                                Margin="3,0" Click="ButtonUltimate_Click">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🎮" HorizontalAlignment="Center" FontSize="22" />
+                                <TextBlock Text="Ultimate" HorizontalAlignment="Center" FontSize="11" />
+                            </StackPanel>
+                        </Button>
                         <Button x:Name="buttonOptimized" Classes="ghelper-tall"
                                 Margin="3,0,0,0" Click="ButtonOptimized_Click">
                             <StackPanel HorizontalAlignment="Center" Spacing="4">
-                                <TextBlock Text="✨" HorizontalAlignment="Center" FontSize="22" />
+                                <TextBlock Text="💡" HorizontalAlignment="Center" FontSize="22" />
                                 <TextBlock Text="Optimized" HorizontalAlignment="Center" FontSize="11" />
                             </StackPanel>
                         </Button>

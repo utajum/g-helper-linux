@@ -8,11 +8,62 @@ public class LinuxPowerManager : IPowerManager
 {
     private readonly string? _batteryDir;
     private readonly string? _acDir;
+    private Thread? _powerMonitorThread;
+    private volatile bool _powerMonitoring;
+    private bool? _lastAcState;
+
+    public event Action<bool>? PowerStateChanged;
 
     public LinuxPowerManager()
     {
         _batteryDir = SysfsHelper.FindBattery();
         _acDir = SysfsHelper.FindAcAdapter();
+    }
+
+    public void StartPowerMonitoring()
+    {
+        if (_powerMonitoring) return;
+        _powerMonitoring = true;
+        _lastAcState = IsOnAcPower();
+
+        _powerMonitorThread = new Thread(PowerMonitorLoop)
+        {
+            Name = "PowerMonitor",
+            IsBackground = true
+        };
+        _powerMonitorThread.Start();
+        Helpers.Logger.WriteLine($"Power state monitoring started (AC={_lastAcState})");
+    }
+
+    public void StopPowerMonitoring()
+    {
+        _powerMonitoring = false;
+        _powerMonitorThread?.Join(500);
+    }
+
+    private void PowerMonitorLoop()
+    {
+        while (_powerMonitoring)
+        {
+            try
+            {
+                Thread.Sleep(3000); // Poll every 3 seconds
+                if (!_powerMonitoring) break;
+
+                bool currentAc = IsOnAcPower();
+                if (_lastAcState.HasValue && currentAc != _lastAcState.Value)
+                {
+                    Helpers.Logger.WriteLine($"Power state changed: AC={currentAc}");
+                    _lastAcState = currentAc;
+                    PowerStateChanged?.Invoke(currentAc);
+                }
+                _lastAcState = currentAc;
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine($"PowerMonitorLoop error: {ex.Message}");
+            }
+        }
     }
 
     public void SetCpuBoost(bool enabled)

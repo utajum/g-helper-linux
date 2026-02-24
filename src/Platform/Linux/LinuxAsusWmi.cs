@@ -4,19 +4,26 @@ namespace GHelper.Linux.Platform.Linux;
 /// Linux implementation of IAsusWmi using the asus-wmi kernel module (sysfs).
 /// Maps G-Helper's ATKACPI device IDs to Linux sysfs attributes.
 /// 
-/// Sysfs paths (require kernel 6.2+ for full feature set):
-///   /sys/devices/platform/asus-nb-wmi/throttle_thermal_policy
-///   /sys/devices/platform/asus-nb-wmi/panel_od
-///   /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable
-///   /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode
-///   /sys/bus/platform/devices/asus-nb-wmi/mini_led_mode
-///   /sys/devices/platform/asus-nb-wmi/ppt_*
-///   /sys/devices/platform/asus-nb-wmi/nv_*
-///   /sys/class/hwmon/hwmon*/fan{1,2,3}_input
-///   /sys/class/hwmon/hwmon*/pwm{1,2,3}_auto_point{1-8}_{temp,pwm}
-///   /sys/class/power_supply/BAT0/charge_control_end_threshold
-///   /sys/class/leds/asus::kbd_backlight/brightness
-///   /sys/class/leds/asus::kbd_backlight/multi_intensity
+/// Sysfs paths — resolved at runtime via SysfsHelper.ResolveAttrPath():
+///
+///   Legacy (kernel 6.2+ with CONFIG_ASUS_WMI_DEPRECATED_ATTRS=y):
+///     /sys/devices/platform/asus-nb-wmi/throttle_thermal_policy
+///     /sys/devices/platform/asus-nb-wmi/panel_od
+///     /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable
+///     /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode
+///     /sys/bus/platform/devices/asus-nb-wmi/mini_led_mode
+///     /sys/devices/platform/asus-nb-wmi/ppt_*
+///     /sys/devices/platform/asus-nb-wmi/nv_*
+///
+///   Firmware-attributes (kernel 6.8+ with asus_armoury module):
+///     /sys/class/firmware-attributes/asus-armoury/attributes/{name}/current_value
+///
+///   Always at fixed paths:
+///     /sys/class/hwmon/hwmon*/fan{1,2,3}_input
+///     /sys/class/hwmon/hwmon*/pwm{1,2,3}_auto_point{1-8}_{temp,pwm}
+///     /sys/class/power_supply/BAT0/charge_control_end_threshold
+///     /sys/class/leds/asus::kbd_backlight/brightness
+///     /sys/class/leds/asus::kbd_backlight/multi_intensity
 /// </summary>
 public class LinuxAsusWmi : IAsusWmi
 {
@@ -27,6 +34,7 @@ public class LinuxAsusWmi : IAsusWmi
     private string? _batteryDir;
     private Thread? _eventThread;
     private volatile bool _eventListening;
+    private readonly List<FileStream> _eventStreams = new();  // Track open evdev streams for Dispose()
 
     public event Action<int>? WmiEvent;
 
@@ -138,14 +146,34 @@ public class LinuxAsusWmi : IAsusWmi
 
     public int GetThrottleThermalPolicy()
     {
-        return SysfsHelper.ReadInt(
-            Path.Combine(SysfsHelper.AsusWmiPlatform, "throttle_thermal_policy"), -1);
+        var path = SysfsHelper.ResolveAttrPath("throttle_thermal_policy", SysfsHelper.AsusWmiPlatform);
+        if (path != null)
+            return SysfsHelper.ReadInt(path, -1);
+
+        // Fallback: derive from platform_profile if throttle_thermal_policy doesn't exist
+        var profile = SysfsHelper.ReadAttribute(SysfsHelper.PlatformProfile);
+        if (profile != null)
+        {
+            return profile switch
+            {
+                "balanced" => 0,
+                "performance" => 1,
+                "low-power" or "quiet" => 2,
+                _ => -1
+            };
+        }
+
+        return -1;
     }
 
     public void SetThrottleThermalPolicy(int mode)
     {
-        SysfsHelper.WriteInt(
-            Path.Combine(SysfsHelper.AsusWmiPlatform, "throttle_thermal_policy"), mode);
+        var path = SysfsHelper.ResolveAttrPath("throttle_thermal_policy", SysfsHelper.AsusWmiPlatform);
+        if (path != null)
+        {
+            SysfsHelper.WriteInt(path, mode);
+        }
+        // If throttle_thermal_policy doesn't exist, ModeControl still sets platform_profile directly
     }
 
     // ── Fan control ──
@@ -271,52 +299,63 @@ public class LinuxAsusWmi : IAsusWmi
 
     public bool GetGpuEco()
     {
-        return SysfsHelper.ReadInt(
-            Path.Combine(SysfsHelper.AsusBusPlatform, "dgpu_disable"), 0) == 1;
+        var path = SysfsHelper.ResolveAttrPath("dgpu_disable", SysfsHelper.AsusBusPlatform);
+        if (path == null) return false;
+        return SysfsHelper.ReadInt(path, 0) == 1;
     }
 
     public void SetGpuEco(bool enabled)
     {
-        SysfsHelper.WriteInt(
-            Path.Combine(SysfsHelper.AsusBusPlatform, "dgpu_disable"), enabled ? 1 : 0);
+        var path = SysfsHelper.ResolveAttrPath("dgpu_disable", SysfsHelper.AsusBusPlatform);
+        if (path != null)
+            SysfsHelper.WriteInt(path, enabled ? 1 : 0);
     }
 
     public int GetGpuMuxMode()
     {
-        return SysfsHelper.ReadInt(
-            Path.Combine(SysfsHelper.AsusBusPlatform, "gpu_mux_mode"), -1);
+        var path = SysfsHelper.ResolveAttrPath("gpu_mux_mode", SysfsHelper.AsusBusPlatform);
+        if (path == null) return -1;
+        return SysfsHelper.ReadInt(path, -1);
     }
 
     public void SetGpuMuxMode(int mode)
     {
-        SysfsHelper.WriteInt(
-            Path.Combine(SysfsHelper.AsusBusPlatform, "gpu_mux_mode"), mode);
+        var path = SysfsHelper.ResolveAttrPath("gpu_mux_mode", SysfsHelper.AsusBusPlatform);
+        if (path != null)
+            SysfsHelper.WriteInt(path, mode);
     }
 
     // ── Display ──
 
     public bool GetPanelOverdrive()
     {
-        return SysfsHelper.ReadInt(
-            Path.Combine(SysfsHelper.AsusWmiPlatform, "panel_od"), 0) == 1;
+        // panel_od on legacy, panel_overdrive on some firmware-attributes
+        var path = SysfsHelper.ResolveAttrPath("panel_od", SysfsHelper.AsusWmiPlatform);
+        path ??= SysfsHelper.ResolveAttrPath("panel_overdrive", SysfsHelper.AsusWmiPlatform);
+        if (path == null) return false;
+        return SysfsHelper.ReadInt(path, 0) == 1;
     }
 
     public void SetPanelOverdrive(bool enabled)
     {
-        SysfsHelper.WriteInt(
-            Path.Combine(SysfsHelper.AsusWmiPlatform, "panel_od"), enabled ? 1 : 0);
+        var path = SysfsHelper.ResolveAttrPath("panel_od", SysfsHelper.AsusWmiPlatform);
+        path ??= SysfsHelper.ResolveAttrPath("panel_overdrive", SysfsHelper.AsusWmiPlatform);
+        if (path != null)
+            SysfsHelper.WriteInt(path, enabled ? 1 : 0);
     }
 
     public int GetMiniLedMode()
     {
-        return SysfsHelper.ReadInt(
-            Path.Combine(SysfsHelper.AsusBusPlatform, "mini_led_mode"), -1);
+        var path = SysfsHelper.ResolveAttrPath("mini_led_mode", SysfsHelper.AsusBusPlatform);
+        if (path == null) return -1;
+        return SysfsHelper.ReadInt(path, -1);
     }
 
     public void SetMiniLedMode(int mode)
     {
-        SysfsHelper.WriteInt(
-            Path.Combine(SysfsHelper.AsusBusPlatform, "mini_led_mode"), mode);
+        var path = SysfsHelper.ResolveAttrPath("mini_led_mode", SysfsHelper.AsusBusPlatform);
+        if (path != null)
+            SysfsHelper.WriteInt(path, mode);
     }
 
     // ── PPT / Power limits ──
@@ -324,14 +363,16 @@ public class LinuxAsusWmi : IAsusWmi
     public void SetPptLimit(string attribute, int watts)
     {
         // PPT attributes: ppt_pl1_spl, ppt_pl2_sppt, ppt_fppt, nv_dynamic_boost, nv_temp_target
-        SysfsHelper.WriteInt(
-            Path.Combine(SysfsHelper.AsusWmiPlatform, attribute), watts);
+        var path = SysfsHelper.ResolveAttrPath(attribute, SysfsHelper.AsusWmiPlatform);
+        if (path != null)
+            SysfsHelper.WriteInt(path, watts);
     }
 
     public int GetPptLimit(string attribute)
     {
-        return SysfsHelper.ReadInt(
-            Path.Combine(SysfsHelper.AsusWmiPlatform, attribute), -1);
+        var path = SysfsHelper.ResolveAttrPath(attribute, SysfsHelper.AsusWmiPlatform);
+        if (path == null) return -1;
+        return SysfsHelper.ReadInt(path, -1);
     }
 
     // ── Keyboard ──
@@ -519,6 +560,12 @@ public class LinuxAsusWmi : IAsusWmi
             {
                 Helpers.Logger.WriteLine("WARNING: Could not open any ASUS input devices");
                 return;
+            }
+
+            // Store references so Dispose() can close them to unblock reads
+            lock (_eventStreams)
+            {
+                _eventStreams.AddRange(streams);
             }
 
             // If only one device, use simple blocking read
@@ -726,9 +773,8 @@ public class LinuxAsusWmi : IAsusWmi
 
     public bool IsFeatureSupported(string feature)
     {
-        // Check various possible locations for the attribute
-        return SysfsHelper.Exists(Path.Combine(SysfsHelper.AsusWmiPlatform, feature))
-            || SysfsHelper.Exists(Path.Combine(SysfsHelper.AsusBusPlatform, feature));
+        // Check legacy sysfs, bus sysfs, AND firmware-attributes
+        return SysfsHelper.ResolveAttrPath(feature, SysfsHelper.AsusWmiPlatform, SysfsHelper.AsusBusPlatform) != null;
     }
 
     // ── Helpers ──
@@ -749,6 +795,17 @@ public class LinuxAsusWmi : IAsusWmi
     public void Dispose()
     {
         _eventListening = false;
-        _eventThread?.Join(2000);
+
+        // Close evdev streams to unblock any blocking fs.Read() calls
+        lock (_eventStreams)
+        {
+            foreach (var fs in _eventStreams)
+            {
+                try { fs.Close(); } catch { }
+            }
+            _eventStreams.Clear();
+        }
+
+        _eventThread?.Join(500);
     }
 }
