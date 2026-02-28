@@ -95,7 +95,7 @@ public static class SysfsHelper
         var attrs = new[]
         {
             "throttle_thermal_policy", "dgpu_disable", "gpu_mux_mode",
-            "panel_od", "mini_led_mode",
+            "panel_od", "mini_led_mode", "boot_sound",
             "ppt_pl1_spl", "ppt_pl2_sppt", "ppt_fppt",
             "nv_dynamic_boost", "nv_temp_target"
         };
@@ -151,8 +151,12 @@ public static class SysfsHelper
         try
         {
             if (!File.Exists(path)) return false;
-            File.WriteAllText(path, value);
             Helpers.Logger.WriteLine($"SysfsHelper.WriteAttribute({path}) = {value}");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            File.WriteAllText(path, value);
+            sw.Stop();
+            if (sw.ElapsedMilliseconds > 1000)
+                Helpers.Logger.WriteLine($"SysfsHelper.WriteAttribute({path}) completed in {sw.ElapsedMilliseconds}ms (slow!)");
             return true;
         }
         catch (Exception ex)

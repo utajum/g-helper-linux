@@ -317,11 +317,11 @@ public partial class ExtraWindow : Window
         int val = (checkBootSound.IsChecked ?? false) ? 1 : 0;
         Helpers.AppConfig.Set("boot_sound", val);
 
-        // Try to set via asus-wmi sysfs (boot_sound attribute)
+        // Try to set via sysfs (asus-nb-wmi or asus-armoury firmware-attributes)
         try
         {
-            var path = Path.Combine("/sys/devices/platform/asus-nb-wmi", "boot_sound");
-            if (File.Exists(path))
+            var path = Platform.Linux.SysfsHelper.ResolveAttrPath("boot_sound");
+            if (path != null)
                 Platform.Linux.SysfsHelper.WriteAttribute(path, val.ToString());
         }
         catch (Exception ex)

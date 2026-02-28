@@ -50,13 +50,25 @@ public interface IAsusWmi : IDisposable
     /// <summary>Get GPU Eco mode state. true = dGPU disabled.</summary>
     bool GetGpuEco();
 
-    /// <summary>Set GPU Eco mode.</summary>
+    /// <summary>Set GPU Eco mode (dgpu_disable sysfs).
+    /// Prefer GpuModeController.RequestModeSwitch() for full orchestration.
+    /// SAFETY: When enabled=true, throws InvalidOperationException if:
+    /// - NVIDIA driver is active (refcnt > 0) — would cause kernel panic
+    /// - gpu_mux_mode=0 (Ultimate) — would create impossible boot state (no display)
+    /// When enabled=false: always safe, triggers PCI bus rescan after write.</summary>
+    /// <exception cref="InvalidOperationException">Thrown when the write would violate a hardware safety invariant.</exception>
     void SetGpuEco(bool enabled);
 
     /// <summary>Get MUX switch mode. 0=dGPU direct, 1=hybrid.</summary>
     int GetGpuMuxMode();
 
-    /// <summary>Set MUX switch mode (requires reboot).</summary>
+    /// <summary>Set MUX switch mode (gpu_mux_mode sysfs, requires reboot).
+    /// Prefer GpuModeController.RequestModeSwitch() for full orchestration.
+    /// SAFETY: Throws InvalidOperationException if dgpu_disable=1
+    /// (firmware rejects MUX changes when dGPU is powered off).
+    /// Throws IOException if the sysfs write fails (firmware rejection, permission error).</summary>
+    /// <exception cref="InvalidOperationException">Thrown when dgpu_disable=1.</exception>
+    /// <exception cref="IOException">Thrown when sysfs write fails.</exception>
     void SetGpuMuxMode(int mode);
 
     // ── Display ──

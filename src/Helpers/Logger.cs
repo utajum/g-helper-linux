@@ -10,7 +10,8 @@ public static class Logger
     {
         try
         {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
+            string line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+            Console.Error.WriteLine(line);
         }
         catch
         {

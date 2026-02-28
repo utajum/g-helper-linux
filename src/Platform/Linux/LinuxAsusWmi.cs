@@ -121,8 +121,9 @@ public class LinuxAsusWmi : IAsusWmi
             0x00120075 => SetAndReturn(() => SetThrottleThermalPolicy(value)),
             0x00120057 => SetAndReturn(() => SetBatteryChargeLimit(value)),
             0x00050019 => SetAndReturn(() => SetPanelOverdrive(value != 0)),
-            0x00090020 => SetAndReturn(() => SetGpuEco(value != 0)),
-            0x00090016 => SetAndReturn(() => SetGpuMuxMode(value)),
+            // GPU mode changes MUST go through GpuModeController — direct writes to
+            // dgpu_disable cause kernel panics if the NVIDIA/AMD driver is active.
+            // 0x00090020 (GPUEco) and 0x00090016 (GPUMux) intentionally removed.
             0x0005001E => SetAndReturn(() => SetMiniLedMode(value)),
             0x0005002E => SetAndReturn(() => SetMiniLedMode(value)),
             0x00050021 => SetAndReturn(() => SetKeyboardBrightness(value)),
@@ -304,11 +305,176 @@ public class LinuxAsusWmi : IAsusWmi
         return SysfsHelper.ReadInt(path, 0) == 1;
     }
 
+    /// <summary>
+    /// Check if the NVIDIA DRM driver is currently active (holding GPU resources).
+    /// Returns true if nvidia_drm is loaded AND refcnt > 0.
+    /// Used by SetGpuEco guard — prevents kernel panics from ACPI hot-removal.
+    /// </summary>
+    private static bool IsNvidiaDrmActive()
+    {
+        // Module not loaded → safe to disable dGPU
+        if (!Directory.Exists("/sys/module/nvidia_drm"))
+            return false;
+
+        int refcnt = SysfsHelper.ReadInt("/sys/module/nvidia_drm/refcnt", -1);
+
+        // Can't read refcnt → assume active for safety
+        if (refcnt < 0)
+        {
+            Helpers.Logger.WriteLine("SetGpuEco guard: nvidia_drm loaded but refcnt unreadable — assuming active");
+            return true;
+        }
+
+        return refcnt > 0;
+    }
+
+    /// <summary>
+    /// Check if ANY dGPU driver is currently active (NVIDIA or AMD).
+    /// Combined guard for SetGpuEco — prevents ACPI hot-removal crash for both vendors.
+    /// </summary>
+    private bool IsDgpuDriverActive()
+    {
+        if (IsNvidiaDrmActive())
+            return true;
+
+        if (IsAmdDgpuDriverActive())
+            return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Check if the AMD dGPU driver (amdgpu) is currently active.
+    /// AMD has no module refcnt like NVIDIA — instead check PCI runtime_status.
+    /// Returns true if amdgpu module is loaded AND bound to the dGPU AND runtime_status != "suspended".
+    /// </summary>
+    private static bool IsAmdDgpuDriverActive()
+    {
+        // amdgpu module not loaded → safe
+        if (!Directory.Exists("/sys/module/amdgpu"))
+            return false;
+
+        // Module is loaded — find the AMD dGPU PCI device
+        string? pciAddr = FindAmdDgpuPciAddress();
+        if (pciAddr == null)
+            return false; // No AMD dGPU found
+
+        // Check if amdgpu driver is bound to this device
+        string driverLink = $"/sys/bus/pci/devices/{pciAddr}/driver";
+        try
+        {
+            if (Directory.Exists(driverLink))
+            {
+                string target = Path.GetFileName(
+                    Directory.ResolveLinkTarget(driverLink, false)?.FullName ?? "");
+                if (target != "amdgpu")
+                    return false; // Different driver bound (vfio-pci, etc.)
+            }
+            else
+            {
+                return false; // No driver bound
+            }
+        }
+        catch
+        {
+            // Can't read driver symlink — fall through to runtime_status check
+        }
+
+        // Check runtime power state
+        string statusPath = $"/sys/bus/pci/devices/{pciAddr}/power/runtime_status";
+        string? status = SysfsHelper.ReadAttribute(statusPath);
+
+        if (status == "suspended")
+        {
+            Helpers.Logger.WriteLine($"SetGpuEco guard: AMD dGPU {pciAddr} runtime_status=suspended — safe");
+            return false;
+        }
+
+        // "active" or any other value (including null/unreadable) → assume active for safety
+        Helpers.Logger.WriteLine($"SetGpuEco guard: AMD dGPU {pciAddr} runtime_status={status ?? "unreadable"} — active");
+        return true;
+    }
+
+    /// <summary>
+    /// Scan PCI bus for AMD discrete GPU.
+    /// Criteria: vendor=0x1002, class=0x0300xx or 0x0302xx, boot_vga=0 (not iGPU).
+    /// </summary>
+    private static string? FindAmdDgpuPciAddress()
+    {
+        try
+        {
+            string pciDir = "/sys/bus/pci/devices";
+            if (!Directory.Exists(pciDir)) return null;
+
+            foreach (var deviceDir in Directory.GetDirectories(pciDir))
+            {
+                string? vendor = SysfsHelper.ReadAttribute(Path.Combine(deviceDir, "vendor"));
+                if (vendor != "0x1002") continue;
+
+                string? cls = SysfsHelper.ReadAttribute(Path.Combine(deviceDir, "class"));
+                if (cls == null) continue;
+                if (!cls.StartsWith("0x0300") && !cls.StartsWith("0x0302")) continue;
+
+                string? bootVga = SysfsHelper.ReadAttribute(Path.Combine(deviceDir, "boot_vga"));
+                if (bootVga == "1") continue; // iGPU, not dGPU
+
+                return Path.GetFileName(deviceDir);
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
     public void SetGpuEco(bool enabled)
     {
         var path = SysfsHelper.ResolveAttrPath("dgpu_disable", SysfsHelper.AsusBusPlatform);
-        if (path != null)
-            SysfsHelper.WriteInt(path, enabled ? 1 : 0);
+        if (path == null) return;
+
+        // Skip write if already in desired state — writing dgpu_disable can block
+        // in the kernel for 30-60 seconds while the GPU powers down via ACPI/WMI
+        int current = SysfsHelper.ReadInt(path, -1);
+        int desired = enabled ? 1 : 0;
+        if (current == desired)
+        {
+            Helpers.Logger.WriteLine($"SetGpuEco: dgpu_disable already {desired}, skipping write");
+            return;
+        }
+
+        if (enabled)
+        {
+            // ── SAFETY GUARD 1: Never disable dGPU when dGPU driver is active ──
+            // Writing dgpu_disable=1 triggers ACPI hot-removal (acpiphp_disable_and_eject_slot).
+            // If nvidia_drm or amdgpu is bound, hot-removal causes kernel panic / GPU fault.
+            if (IsDgpuDriverActive())
+                throw new InvalidOperationException(
+                    "SAFETY: Cannot write dgpu_disable=1 — dGPU driver is active. " +
+                    "This would cause a kernel panic via ACPI hot-removal.");
+
+            // ── SAFETY GUARD 2: Never disable dGPU when MUX=0 (Ultimate/dGPU-direct) ──
+            // MUX=0 means the dGPU is the sole display output. Disabling it = no display = black screen.
+            // This creates an impossible boot state that requires CMOS reset to recover.
+            int mux = GetGpuMuxMode();
+            if (mux == 0)
+                throw new InvalidOperationException(
+                    "SAFETY: Cannot write dgpu_disable=1 — gpu_mux_mode=0 (Ultimate). " +
+                    "This creates an impossible state: dGPU is sole display output but powered off.");
+        }
+
+        SysfsHelper.WriteInt(path, desired);
+
+        if (!enabled)
+        {
+            // ── PCI bus rescan after enabling dGPU ──
+            // After dgpu_disable=0, the dGPU needs to reappear in the PCI device tree.
+            // The kernel ACPI _ON method usually triggers re-enumeration, but an explicit
+            // rescan ensures reliability (supergfxctl pattern: special_asus.rs:145-149).
+            // Best-effort: /sys/bus/pci/rescan requires root, may fail for non-root users.
+            Helpers.Logger.WriteLine("SetGpuEco: dGPU enabled, triggering PCI bus rescan");
+            Thread.Sleep(50); // Brief settle time for hardware (supergfxctl uses 50ms)
+            if (!SysfsHelper.WriteAttribute("/sys/bus/pci/rescan", "1"))
+                Helpers.Logger.WriteLine("SetGpuEco: PCI rescan failed (may need root) — dGPU should re-enumerate via ACPI");
+        }
     }
 
     public int GetGpuMuxMode()
@@ -321,8 +487,27 @@ public class LinuxAsusWmi : IAsusWmi
     public void SetGpuMuxMode(int mode)
     {
         var path = SysfsHelper.ResolveAttrPath("gpu_mux_mode", SysfsHelper.AsusBusPlatform);
-        if (path != null)
-            SysfsHelper.WriteInt(path, mode);
+        if (path == null) return;
+
+        int current = SysfsHelper.ReadInt(path, -1);
+        if (current == mode)
+        {
+            Helpers.Logger.WriteLine($"SetGpuMuxMode: gpu_mux_mode already {mode}, skipping write");
+            return;
+        }
+
+        // ── SAFETY GUARD 3: Never write gpu_mux_mode when dGPU is disabled ──
+        // Firmware rejects MUX changes when dgpu_disable=1 (returns ENODEV).
+        // The kernel write can hang for several seconds before returning the error.
+        // Refusing immediately is safer and faster.
+        if (GetGpuEco())
+            throw new InvalidOperationException(
+                "SAFETY: Cannot write gpu_mux_mode — dgpu_disable=1. " +
+                "Firmware rejects MUX changes when dGPU is powered off.");
+
+        if (!SysfsHelper.WriteInt(path, mode))
+            throw new IOException(
+                $"gpu_mux_mode write rejected by firmware (wrote {mode} to {path})");
     }
 
     // ── Display ──

@@ -78,6 +78,55 @@ Pull requests and feature requests are welcome!
 
 ---
 
+## `░▒▓█ ╔══[ GPU MODE SWITCHING ]══╗ █▓▒░`
+
+G-Helper manages the ASUS dGPU (discrete GPU) power state and MUX switch through four modes:
+
+```
+╔══[ MODES ]═════════════════════════════════════════════════════╗
+║                                                                 ║
+║  Eco         dGPU powered off (dgpu_disable=1)                 ║
+║              Maximum battery life, iGPU only                    ║
+║                                                                 ║
+║  Standard    Hybrid mode (dgpu_disable=0, MUX=iGPU)            ║
+║              dGPU available for offloading, iGPU drives display ║
+║                                                                 ║
+║  Optimized   Auto-switch based on power source                  ║
+║              Eco on battery, Standard on AC power               ║
+║                                                                 ║
+║  Ultimate    dGPU direct (dgpu_disable=0, MUX=dGPU)            ║
+║              Best performance — dGPU drives display directly    ║
+║                                                                 ║
+╚═════════════════════════════════════════════════════════════════╝
+```
+
+### `╠══[ REBOOT REQUIREMENTS ]══╣`
+
+| Transition | Reboot? | Why |
+|------------|---------|-----|
+| Eco ↔ Standard | Usually no | May need reboot if GPU driver is active |
+| Any → Ultimate | **Yes** | MUX switch is latched, takes effect on reboot |
+| Ultimate → Any | **Yes** | MUX switch back to iGPU requires reboot |
+
+When a reboot is required, G-Helper shows a notification and the pending mode appears in the UI. You can change your mind before rebooting — clicking a different mode cancels the pending change.
+
+### `╠══[ DRIVER BLOCKING DIALOG ]══╣`
+
+Switching to Eco while the dGPU driver is active shows a dialog with three options:
+
+- **Switch Now** — attempts to unload the dGPU driver (requires admin password)
+- **After Reboot** — saves the mode for next boot (dGPU driver is blocked from loading via modprobe rules)
+- **Cancel** — keeps the current mode
+
+### `╠══[ KNOWN LIMITATIONS ]══╣`
+
+- **Ultimate → Eco** may require 2 reboots (MUX must change first, then Eco can apply)
+- **MUX switch support** varies by model — requires `gpu_mux_mode` sysfs attribute
+- **Eco mode** may require a reboot if the dGPU driver holds a DRM file descriptor
+- On boot, a systemd oneshot service applies pending GPU mode changes before the display manager starts
+
+---
+
 ## `░▒▓█ ╔══[ SYSTEM REQUIREMENTS ]══╗ █▓▒░`
 
 ```

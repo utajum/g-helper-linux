@@ -226,9 +226,23 @@ if [[ "$MODE" == "uninstall" ]]; then
     # ── Remove files ──
     _step 2 "PURGING INSTALLED FILES"
 
+    # Disable systemd boot service BEFORE removing its unit file
+    # (systemctl disable fails if unit file is already gone — orphaned symlink)
+    if systemctl is-enabled ghelper-gpu-boot.service 2>/dev/null; then
+        systemctl disable ghelper-gpu-boot.service 2>/dev/null
+        _info "ghelper-gpu-boot.service disabled"
+    fi
+
     _safe_remove "$BINARY_DEST"                          "binary"
     _safe_remove "$UDEV_DEST"                            "udev rules"
     _safe_remove "/etc/tmpfiles.d/90-ghelper.conf"       "tmpfiles config"
+    _safe_remove "/etc/systemd/system/ghelper-gpu-boot.service" "GPU boot systemd unit"
+    _safe_remove "/usr/local/lib/ghelper"                "ghelper lib directory"
+    _safe_remove "/opt/ghelper"                           "install directory (cross-installer)"
+    _safe_remove "/etc/sudoers.d/ghelper-gpu"            "sudoers rule"
+    _safe_remove "/etc/modprobe.d/ghelper-gpu-block.conf"    "dGPU block (modprobe)"
+    _safe_remove "/etc/udev/rules.d/50-ghelper-remove-dgpu.rules" "dGPU block (udev)"
+    _safe_remove "/etc/ghelper"                          "ghelper config dir"
     _safe_remove "$DESKTOP_DEST"                         "desktop entry (system)"
 
     # User-local desktop entry
@@ -245,8 +259,9 @@ if [[ "$MODE" == "uninstall" ]]; then
         _safe_remove "/home/$REAL_USER/.local/share/icons/hicolor/64x64/apps/ghelper.ico" "icon (user, ico)"
     fi
 
-    # ── Reload udev ──
-    _step 3 "RELOADING UDEV DAEMON"
+    # ── Reload daemons ──
+    _step 3 "RELOADING SYSTEM DAEMONS"
+    systemctl daemon-reload 2>/dev/null && _info "systemd daemon-reload" || true
     udevadm control --reload-rules 2>/dev/null && _info "udev daemon reloaded" || true
 
     # ── Summary ──
@@ -314,10 +329,64 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x03] DEPLOY UDEV RULESET
+#  [0x03] GPU BLOCK HELPER (passwordless sudo for Eco mode transitions)
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 3 "DEPLOYING UDEV RULESET"
+_step 3 "GPU BLOCK HELPER + BOOT SERVICE + SUDOERS RULE"
+
+HELPER_DIR="/usr/local/lib/ghelper"
+HELPER_DEST="$HELPER_DIR/gpu-block-helper.sh"
+SUDOERS_DEST="/etc/sudoers.d/ghelper-gpu"
+
+mkdir -p "$HELPER_DIR"
+_install_file "$SCRIPT_DIR/gpu-block-helper.sh" "$HELPER_DEST" 755 "GPU block helper" || true
+
+# sudoers rule — allow ALL users to run the helper without password.
+# The helper only does 2 things: write specific config files, or remove them.
+SUDOERS_CONTENT="# G-Helper: allow passwordless GPU block file management
+ALL ALL=(root) NOPASSWD: $HELPER_DEST"
+
+if [[ -f "$SUDOERS_DEST" ]] && echo "$SUDOERS_CONTENT" | cmp -s - "$SUDOERS_DEST"; then
+    _skip "sudoers rule → already deployed at $SUDOERS_DEST"
+else
+    echo "$SUDOERS_CONTENT" > "$SUDOERS_DEST"
+    chmod 0440 "$SUDOERS_DEST"
+    # Validate — if visudo rejects it, remove immediately
+    if visudo -c -f "$SUDOERS_DEST" &>/dev/null; then
+        _inject "sudoers rule → $SUDOERS_DEST"
+    else
+        rm -f "$SUDOERS_DEST"
+        _fail "sudoers rule — syntax error, removed (GPU block will use pkexec fallback)"
+    fi
+fi
+
+# ── GPU Boot Service (apply pending GPU mode at boot before display manager) ──
+if [[ "$MODE" != "appimage" ]]; then
+    BOOT_SCRIPT_SRC="$SCRIPT_DIR/ghelper-gpu-boot.sh"
+    BOOT_SCRIPT_DEST="$HELPER_DIR/ghelper-gpu-boot.sh"
+    BOOT_UNIT_SRC="$SCRIPT_DIR/ghelper-gpu-boot.service"
+    BOOT_UNIT_DEST="/etc/systemd/system/ghelper-gpu-boot.service"
+
+    _install_file "$BOOT_SCRIPT_SRC" "$BOOT_SCRIPT_DEST" 755 "GPU boot script" || true
+    _install_file "$BOOT_UNIT_SRC" "$BOOT_UNIT_DEST" 644 "GPU boot systemd unit" || true
+
+    # Reload systemd so it picks up the new/changed unit file
+    systemctl daemon-reload 2>/dev/null || true
+    _info "systemd daemon-reload"
+
+    # Enable the service (idempotent — safe to re-run)
+    if systemctl enable ghelper-gpu-boot.service 2>/dev/null; then
+        _info "ghelper-gpu-boot.service enabled"
+    else
+        _warn "failed to enable ghelper-gpu-boot.service (systemd may not be running)"
+    fi
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  [0x04] DEPLOY UDEV RULESET
+# ══════════════════════════════════════════════════════════════════════════════
+
+_step 4 "DEPLOYING UDEV RULESET"
 
 # Always write + reload + trigger udev rules unconditionally.
 # The rules list may grow between releases, and the daemon may not have
@@ -331,28 +400,22 @@ _info "udev daemon reloaded"
 udevadm trigger
 _info "udev trigger fired — re-applying all RUN commands"
 
-# ── systemd-tmpfiles (for built-in kernel modules that udev can't handle) ──
-TMPFILES_SRC="$SCRIPT_DIR/90-ghelper.conf"
-TMPFILES_DEST="/etc/tmpfiles.d/90-ghelper.conf"
-if [[ -f "$TMPFILES_SRC" ]]; then
-    _install_file "$TMPFILES_SRC" "$TMPFILES_DEST" 644 "tmpfiles config" || true
-    # Apply immediately so permissions take effect without reboot
-    if command -v systemd-tmpfiles &>/dev/null; then
-        systemd-tmpfiles --create "$TMPFILES_DEST" 2>/dev/null && \
-            _info "systemd-tmpfiles applied — built-in module permissions set" || \
-            _warn "systemd-tmpfiles --create had warnings (some paths may not exist yet)"
-    else
-        _warn "systemd-tmpfiles not found — permissions for built-in modules will require manual setup"
-    fi
+# ── Remove stale tmpfiles.d config from previous versions ──
+# The 90-ghelper.conf tmpfiles config was redundant with udev rules and
+# risked kernel deadlocks if 'w' directives were ever added. Removed in v2.
+TMPFILES_STALE="/etc/tmpfiles.d/90-ghelper.conf"
+if [[ -f "$TMPFILES_STALE" ]]; then
+    rm -f "$TMPFILES_STALE"
+    _info "removed stale tmpfiles config → $TMPFILES_STALE"
 else
-    _warn "90-ghelper.conf not found in install/ — skipping tmpfiles deployment"
+    _info "${DIM}no stale tmpfiles config found (good)${RESET}"
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x04] ESTABLISH SYSFS ACCESS LAYER
+#  [0x05] ESTABLISH SYSFS ACCESS LAYER
 # ══════════════════════════════════════════════════════════════════════════════
 
-_step 4 "ESTABLISHING SYSFS ACCESS LAYER"
+_step 5 "ESTABLISHING SYSFS ACCESS LAYER"
 
 echo "  ${DIM}(permissions reset on reboot — always re-applied)${RESET}"
 
@@ -434,11 +497,11 @@ echo ""
 _info "sysfs summary: ${GREEN}${CHMOD_APPLIED} armed${RESET} / ${DIM}${CHMOD_SKIPPED} already 0666${RESET}"
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x05] DESKTOP INTEGRATION (install mode only)
+#  [0x06] DESKTOP INTEGRATION (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
 if [[ "$MODE" == "install" ]]; then
-    _step 5 "DESKTOP INTEGRATION LAYER"
+    _step 6 "DESKTOP INTEGRATION LAYER"
 
     if install -m 644 "$SCRIPT_DIR/ghelper.desktop" "$DESKTOP_DEST" 2>/dev/null; then
         _inject "desktop entry → $DESKTOP_DEST"
@@ -492,11 +555,11 @@ if [[ "$MODE" == "install" ]]; then
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  [0x06] AUTOSTART IMPLANT (install mode only)
+#  [0x07] AUTOSTART IMPLANT (install mode only)
 # ══════════════════════════════════════════════════════════════════════════════
 
 if [[ "$MODE" == "install" ]]; then
-    _step 6 "AUTOSTART IMPLANT"
+    _step 7 "AUTOSTART IMPLANT"
 
     if [[ -n "$REAL_USER" ]]; then
         AUTOSTART_DIR="/home/$REAL_USER/.config/autostart"
@@ -526,7 +589,7 @@ if [[ "$MODE" == "appimage" ]]; then
     echo "${YELLOW}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
     echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
     echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  udev      → $UDEV_DEST"
-    echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
+    echo "${YELLOW}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  cleanup   → removed stale tmpfiles (if any)"
     echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
     echo "${YELLOW}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
     echo "${YELLOW}${BOLD}  ║                                                                ║${RESET}"
@@ -545,9 +608,8 @@ else
     echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
     echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF0${RESET}  Binary    → $BINARY_DEST"
     echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF1${RESET}  udev      → $UDEV_DEST"
-    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  tmpfiles  → /etc/tmpfiles.d/90-ghelper.conf"
-    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  Desktop   → $DESKTOP_DEST"
-    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF4${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF2${RESET}  Desktop   → $DESKTOP_DEST"
+    echo "${GREEN}${BOLD}  ║${RESET}  ${CYAN}0xF3${RESET}  Autostart → ~/.config/autostart/ghelper.desktop"
     echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"
     echo "${GREEN}${BOLD}  ╠════════════════════════════════════════════════════════════════╣${RESET}"
     echo "${GREEN}${BOLD}  ║                                                                ║${RESET}"

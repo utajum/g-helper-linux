@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
+using GHelper.Linux.Gpu;
 using GHelper.Linux.Helpers;
 using GHelper.Linux.Mode;
 using GHelper.Linux.Platform;
@@ -23,6 +24,9 @@ public class App : Application
     public static IAudioControl? Audio { get; private set; }
     public static IDisplayControl? Display { get; private set; }
     public static IGpuControl? GpuControl { get; private set; }
+
+    // GPU mode switching controller (safety checks, driver detection, reboot scheduling)
+    public static GpuModeController? GpuModeCtrl { get; private set; }
 
     // Business logic orchestrator
     public static ModeControl? Mode { get; private set; }
@@ -120,8 +124,67 @@ public class App : Application
                 Power.PowerStateChanged += OnPowerStateChanged;
             }
 
-            // Apply auto GPU mode on startup if enabled
-            AutoGpuMode();
+            // Apply pending GPU mode from config (e.g., Eco scheduled for reboot)
+            // Then apply auto GPU mode if Optimized is enabled
+            // Run on background thread — SetGpuEco can block for 30-60 seconds
+            Task.Run(() =>
+            {
+                // Check for boot recovery marker (impossible state was fixed during boot)
+                const string RecoveryMarkerPath = "/etc/ghelper/last-recovery";
+                try
+                {
+                    if (File.Exists(RecoveryMarkerPath))
+                    {
+                        string reason = File.ReadAllText(RecoveryMarkerPath).Trim();
+                        Logger.WriteLine($"Boot recovery detected: {reason}");
+                        System?.ShowNotification("GPU Mode",
+                            "GPU mode was reset to Standard to prevent black screen. See logs for details.",
+                            "dialog-warning");
+                        try { File.Delete(RecoveryMarkerPath); }
+                        catch (Exception delEx)
+                        {
+                            Logger.WriteLine($"Could not delete recovery marker: {delEx.Message}");
+                            // Non-fatal — marker will be shown again next launch but that's acceptable
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLine($"Recovery marker check failed: {ex.Message}");
+                }
+
+                // First: try to apply any pending mode from config
+                if (GpuModeCtrl != null)
+                {
+                    var pendingResult = GpuModeCtrl.ApplyPendingOnStartup();
+                    if (pendingResult == GpuSwitchResult.Applied)
+                    {
+                        System?.ShowNotification("GPU Mode",
+                            "Eco mode applied from previous session", "video-display");
+                    }
+                    else if (pendingResult == GpuSwitchResult.DriverBlocking)
+                    {
+                        System?.ShowNotification("GPU Mode",
+                            "Eco mode pending — GPU driver active. Reboot may be needed.", "dialog-warning");
+                    }
+                }
+
+                // Then: auto GPU mode (Optimized) based on current power state
+                if (GpuModeCtrl != null && AppConfig.Is("gpu_auto"))
+                {
+                    var autoResult = GpuModeCtrl.AutoGpuSwitch();
+                    if (autoResult == GpuSwitchResult.Applied)
+                    {
+                        bool onAc = Power?.IsOnAcPower() ?? true;
+                        System?.ShowNotification("GPU Mode",
+                            onAc ? "Optimized: AC power — dGPU enabled" : "Optimized: Battery — dGPU disabled",
+                            "video-display");
+                    }
+                }
+
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    MainWindowInstance?.RefreshGpuModePublic());
+            });
 
             // Restore clamshell mode if it was enabled
             if (AppConfig.Is("toggle_clamshell_mode"))
@@ -147,7 +210,11 @@ public class App : Application
         // Create mode controller (uses App.Wmi, App.Power, etc.)
         Mode = new ModeControl();
 
-        // Initialize GPU control
+        // Create GPU mode switching controller
+        if (Wmi != null && Power != null)
+            GpuModeCtrl = new GpuModeController(Wmi, Power);
+
+        // Initialize GPU control (nvidia-smi / amdgpu sysfs for temp/load)
         InitializeGpuControl();
 
         Logger.WriteLine($"G-Helper Linux initialized");
@@ -322,11 +389,10 @@ public class App : Application
                 break;
 
             case "gpu_eco":
-                bool currentEco = Wmi?.GetGpuEco() ?? false;
-                Wmi?.SetGpuEco(!currentEco);
-                string gpuStatus = !currentEco ? "Eco (iGPU only)" : "Standard (dGPU)";
-                System?.ShowNotification("GPU Mode", gpuStatus, "video-display");
-                Logger.WriteLine($"GPU Eco toggled → {gpuStatus}");
+                // Toggle between Eco and Standard via GpuModeController
+                var currentMode = GpuModeCtrl?.GetCurrentMode() ?? GpuMode.Standard;
+                var toggleTarget = (currentMode == GpuMode.Eco) ? GpuMode.Standard : GpuMode.Eco;
+                TrayGpuModeSwitch(toggleTarget);
                 break;
 
             case "screen_refresh":
@@ -528,37 +594,33 @@ public class App : Application
 
         menu.Add(new NativeMenuItemSeparator());
 
-        // GPU modes
-        var eco = new NativeMenuItem("GPU: Eco (iGPU only)");
-        eco.Click += (_, _) =>
+        // GPU modes — only show if dGPU is present (dgpu_disable sysfs attribute exists).
+        // All sysfs writes run in Task.Run via GpuModeController
+        // (dgpu_disable writes can block in the kernel for 30-60 seconds)
+        if (Wmi?.IsFeatureSupported("dgpu_disable") == true)
         {
-            AppConfig.Set("gpu_auto", 0);
-            SetGpuMode(ecoEnabled: true);
-            MainWindowInstance?.RefreshGpuModePublic();
-        };
-        menu.Add(eco);
+            var eco = new NativeMenuItem("GPU: Eco (iGPU only)");
+            eco.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Eco);
+            menu.Add(eco);
 
-        var standard = new NativeMenuItem("GPU: Standard (dGPU)");
-        standard.Click += (_, _) =>
-        {
-            AppConfig.Set("gpu_auto", 0);
-            SetGpuMode(ecoEnabled: false);
-            MainWindowInstance?.RefreshGpuModePublic();
-        };
-        menu.Add(standard);
+            var standard = new NativeMenuItem("GPU: Standard (dGPU)");
+            standard.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Standard);
+            menu.Add(standard);
 
-        var optimized = new NativeMenuItem("GPU: Optimized (auto)");
-        optimized.Click += (_, _) =>
-        {
-            AppConfig.Set("gpu_auto", 1);
-            AutoGpuMode();
-            MainWindowInstance?.RefreshGpuModePublic();
-            System?.ShowNotification("GPU Mode",
-                "Optimized — auto Eco/Standard based on power", "video-display");
-        };
-        menu.Add(optimized);
+            var optimized = new NativeMenuItem("GPU: Optimized (auto)");
+            optimized.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Optimized);
+            menu.Add(optimized);
 
-        menu.Add(new NativeMenuItemSeparator());
+            // Ultimate (MUX switch) — only on models with gpu_mux_mode support
+            if (Wmi?.IsFeatureSupported("gpu_mux_mode") == true)
+            {
+                var ultimate = new NativeMenuItem("GPU: Ultimate (MUX)");
+                ultimate.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Ultimate);
+                menu.Add(ultimate);
+            }
+
+            menu.Add(new NativeMenuItemSeparator());
+        }
 
         // Settings
         var settings = new NativeMenuItem("Settings");
@@ -602,12 +664,71 @@ public class App : Application
         }
     }
 
-    private void SetGpuMode(bool ecoEnabled)
+    /// <summary>
+    /// Tray menu GPU mode switch — runs GpuModeController on background thread.
+    /// Tray menu cannot show dialogs, so DriverBlocking → auto-schedule for reboot.
+    /// </summary>
+    private static void TrayGpuModeSwitch(GpuMode target)
     {
-        Wmi?.SetGpuEco(ecoEnabled);
-        string status = ecoEnabled ? "Eco (iGPU only)" : "Standard (dGPU)";
-        Logger.WriteLine($"GPU mode: {status}");
-        System?.ShowNotification("GPU Mode", status, "video-display");
+        Task.Run(() =>
+        {
+            if (GpuModeCtrl == null) return;
+
+            var result = GpuModeCtrl.RequestModeSwitch(target);
+
+            switch (result)
+            {
+                case GpuSwitchResult.Applied:
+                    string text = target switch
+                    {
+                        GpuMode.Eco => "Eco mode — dGPU disabled",
+                        GpuMode.Standard => "Standard mode — hybrid dGPU",
+                        GpuMode.Optimized => "Optimized — auto Eco/Standard based on power",
+                        GpuMode.Ultimate => "Ultimate mode — dGPU direct",
+                        _ => "GPU mode changed"
+                    };
+                    System?.ShowNotification("GPU Mode", text, "video-display");
+                    break;
+
+                case GpuSwitchResult.RebootRequired:
+                    string rebootText = target switch
+                    {
+                        GpuMode.Ultimate => "Ultimate mode set — reboot required",
+                        GpuMode.Standard => "Standard mode set — reboot required for MUX change",
+                        GpuMode.Optimized => "Optimized mode — reboot required for MUX change",
+                        GpuMode.Eco => "Eco mode requires reboot — MUX and GPU changes will apply",
+                        _ => $"{target} mode set — reboot required"
+                    };
+                    System?.ShowNotification("GPU Mode", rebootText, "system-reboot");
+                    break;
+
+                case GpuSwitchResult.EcoBlocked:
+                    System?.ShowNotification("GPU Mode",
+                        "Eco mode blocked: MUX was changed to Ultimate this session. Reboot first, then switch to Eco.",
+                        "dialog-warning");
+                    break;
+
+                case GpuSwitchResult.DriverBlocking:
+                    // Tray menu can't show a dialog — auto-schedule for reboot
+                    GpuModeCtrl.ScheduleModeForReboot(target);
+                    System?.ShowNotification("GPU Mode",
+                        "GPU in use — Eco mode scheduled for reboot", "system-reboot");
+                    break;
+
+                case GpuSwitchResult.Deferred:
+                    System?.ShowNotification("GPU Mode",
+                        "Eco mode will activate after reboot", "system-reboot");
+                    break;
+
+                case GpuSwitchResult.Failed:
+                    System?.ShowNotification("GPU Mode",
+                        "GPU mode switch failed — check logs", "dialog-error");
+                    break;
+            }
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                MainWindowInstance?.RefreshGpuModePublic());
+        });
     }
 
     /// <summary>
@@ -619,78 +740,32 @@ public class App : Application
         Logger.WriteLine($"Power state changed: AC={onAc}");
 
         // Auto GPU mode (Optimized = auto Eco/Standard based on AC power)
-        AutoGpuMode();
+        // Run on background thread — SetGpuEco can block for 30-60 seconds
+        Task.Run(() =>
+        {
+            if (GpuModeCtrl != null)
+            {
+                var result = GpuModeCtrl.AutoGpuSwitch();
+                if (result == GpuSwitchResult.Applied)
+                {
+                    string msg = onAc
+                        ? "Optimized: AC power — dGPU enabled"
+                        : "Optimized: Battery — dGPU disabled";
+                    System?.ShowNotification("GPU Mode", msg, "video-display");
+                }
+                else if (result == GpuSwitchResult.DriverBlocking)
+                {
+                    System?.ShowNotification("GPU Mode",
+                        "GPU in use — staying in Standard mode on battery", "dialog-warning");
+                }
+            }
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                MainWindowInstance?.RefreshGpuModePublic());
+        });
 
         // Auto performance mode (if configured)
         Mode?.AutoPerformance(powerChanged: true);
-
-        // Refresh UI
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            MainWindowInstance?.RefreshGpuModePublic();
-        });
-    }
-
-    /// <summary>
-    /// Auto-switch GPU between Eco and Standard based on AC power state.
-    /// This implements Windows G-Helper's "Optimized" GPU mode (gpu_auto flag).
-    /// Called on startup and on every power state change.
-    /// </summary>
-    public static void AutoGpuMode()
-    {
-        if (!AppConfig.Is("gpu_auto")) return;
-
-        var wmi = Wmi;
-        var power = Power;
-        if (wmi == null || power == null) return;
-
-        // Don't auto-switch if in Ultimate (MUX=0) — user must manually switch out
-        int mux = wmi.GetGpuMuxMode();
-        if (mux == 0)
-        {
-            Logger.WriteLine("AutoGpuMode: MUX=0 (Ultimate), skipping auto-switch");
-            return;
-        }
-
-        bool onAc = power.IsOnAcPower();
-        bool ecoEnabled = wmi.GetGpuEco();
-
-        if (onAc && ecoEnabled)
-        {
-            // Plugged in → switch to Standard (enable dGPU)
-            Logger.WriteLine("AutoGpuMode: AC power detected, switching Eco → Standard");
-            Task.Run(() =>
-            {
-                try
-                {
-                    wmi.SetGpuEco(false);
-                    System?.ShowNotification("GPU Mode",
-                        "Optimized: AC power — dGPU enabled", "video-display");
-                }
-                catch (Exception ex)
-                {
-                    Logger.WriteLine($"AutoGpuMode Eco→Standard failed: {ex.Message}");
-                }
-            });
-        }
-        else if (!onAc && !ecoEnabled)
-        {
-            // On battery → switch to Eco (disable dGPU for battery life)
-            Logger.WriteLine("AutoGpuMode: Battery detected, switching Standard → Eco");
-            Task.Run(() =>
-            {
-                try
-                {
-                    wmi.SetGpuEco(true);
-                    System?.ShowNotification("GPU Mode",
-                        "Optimized: Battery — dGPU disabled", "video-display");
-                }
-                catch (Exception ex)
-                {
-                    Logger.WriteLine($"AutoGpuMode Standard→Eco failed: {ex.Message}");
-                }
-            });
-        }
     }
 
     // Unix signal handlers for clean shutdown on SIGTERM/SIGINT (logout/reboot)
@@ -732,6 +807,10 @@ public class App : Application
         // Signal handler runs on a threadpool thread.
         // Don't rely on UI thread — it may already be blocked during session shutdown.
         Logger.WriteLine("Signal shutdown: cleaning up...");
+
+        // Best-effort: apply pending Eco mode before shutdown
+        // (system is going down — display stack is closing, driver may be releasing)
+        try { GpuModeCtrl?.ApplyPendingOnShutdown(); } catch { }
 
         try { Power?.StopPowerMonitoring(); } catch { }
         try { UI.Views.ExtraWindow.StopClamshellInhibit(); } catch { }
