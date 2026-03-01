@@ -25,6 +25,9 @@ public static class Diagnostics
         // ── Kernel Modules ──
         AppendKernelModules(sb);
 
+        // ── Module Backend (asus-nb-wmi vs asus-armoury) ──
+        AppendModuleBackend(sb);
+
         // ── Sysfs Permissions & Values ──
         AppendSysfsState(sb);
 
@@ -138,6 +141,47 @@ public static class Diagnostics
         var lsmod = Platform.Linux.SysfsHelper.RunCommand("bash",
             "-c \"lsmod 2>/dev/null | grep -iE 'asus|hid_asus' || echo '(none found)'\"");
         sb.AppendLine(lsmod ?? "(lsmod failed)");
+        sb.AppendLine();
+    }
+
+    private static void AppendModuleBackend(StringBuilder sb)
+    {
+        sb.AppendLine("--- Module Backend ---");
+
+        // Detect which kernel module is providing ASUS WMI attributes
+        bool hasLegacy = Directory.Exists(Platform.Linux.SysfsHelper.AsusWmiPlatform)
+                      || Directory.Exists(Platform.Linux.SysfsHelper.AsusBusPlatform);
+        bool hasFirmwareAttrs = Directory.Exists(Platform.Linux.SysfsHelper.FirmwareAttributes);
+
+        if (hasLegacy && hasFirmwareAttrs)
+            sb.AppendLine("  Active: both asus-nb-wmi AND asus-armoury (dual backend)");
+        else if (hasLegacy)
+            sb.AppendLine("  Active: asus-nb-wmi (legacy sysfs)");
+        else if (hasFirmwareAttrs)
+            sb.AppendLine("  Active: asus-armoury (firmware-attributes)");
+        else
+            sb.AppendLine("  Active: NONE — no ASUS WMI module detected");
+
+        // Show which backend resolved for the two safety-critical GPU attributes
+        var criticalAttrs = new[] { "dgpu_disable", "gpu_mux_mode" };
+        foreach (var attr in criticalAttrs)
+        {
+            var resolved = Platform.Linux.SysfsHelper.ResolveAttrPath(attr,
+                Platform.Linux.SysfsHelper.AsusWmiPlatform,
+                Platform.Linux.SysfsHelper.AsusBusPlatform);
+
+            if (resolved == null)
+            {
+                sb.AppendLine($"  {attr}: not found (feature unavailable)");
+            }
+            else
+            {
+                string backend = Platform.Linux.SysfsHelper.IsFirmwareAttributesPath(resolved)
+                    ? "asus-armoury" : "asus-nb-wmi";
+                sb.AppendLine($"  {attr}: {backend} → {resolved}");
+            }
+        }
+
         sb.AppendLine();
     }
 

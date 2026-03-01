@@ -1,0 +1,29 @@
+[Unit]
+Description=G-Helper GPU Mode Boot Application
+# Must run after sysfs is populated (asus-nb-wmi or asus-armoury module loaded)
+After=local-fs.target systemd-modules-load.service systemd-udevd.service
+# Must run BEFORE display manager starts — critical ordering
+# Without this, dGPU driver loads before dgpu_disable=1 is written
+Before=display-manager.service
+# Must run before GPU services try to initialize
+Before=nvidia-powerd.service nvidia-persistenced.service
+# Run on ASUS hardware with either legacy (asus-nb-wmi) or modern (asus-armoury) module.
+# ConditionPathExists uses pipe (|) prefix — ANY match triggers the unit.
+# Without pipe prefix, systemd requires ALL conditions to pass.
+ConditionPathExists=|/sys/bus/platform/devices/asus-nb-wmi
+ConditionPathExists=|/sys/class/firmware-attributes/asus-armoury
+# NOTE: No ConditionPathExists for trigger file — the boot script's MUX=0
+# safety check must run on EVERY boot, even without a pending mode change.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/ghelper/ghelper-gpu-boot.sh
+RemainAfterExit=no
+# dgpu_disable write typically takes <5s when dGPU driver is blocked
+# but can theoretically block longer. 30s safety valve.
+TimeoutStartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

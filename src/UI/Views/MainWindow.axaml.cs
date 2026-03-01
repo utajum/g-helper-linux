@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
+using GHelper.Linux.Gpu;
 using GHelper.Linux.USB;
 using System.Collections.Generic;
 using System.Linq;
@@ -202,18 +203,41 @@ public partial class MainWindow : Window
         var wmi = App.Wmi;
         if (wmi == null) return;
 
-        bool gpuAuto = Helpers.AppConfig.Is("gpu_auto");
-        bool ecoEnabled = wmi.GetGpuEco();
-        int muxMode = wmi.GetGpuMuxMode();
+        // No discrete GPU → disable all GPU mode buttons, show message
+        if (!wmi.IsFeatureSupported("dgpu_disable"))
+        {
+            buttonEco.IsEnabled = false;
+            buttonStandard.IsEnabled = false;
+            buttonOptimized.IsEnabled = false;
+            buttonUltimate.IsEnabled = false;
+            labelGPU.Text = "GPU Mode: N/A";
+            labelTipGPU.Text = "No discrete GPU detected";
+            return;
+        }
 
-        if (muxMode == 0) // dGPU direct
-            _currentGpuMode = 3; // Ultimate
-        else if (gpuAuto)
-            _currentGpuMode = 2; // Optimized (auto Eco/Standard based on power)
-        else if (ecoEnabled)
-            _currentGpuMode = 0; // Eco
+        var gpu = App.GpuModeCtrl;
+
+        if (gpu != null)
+        {
+            var mode = gpu.GetCurrentMode();
+            _currentGpuMode = (int)mode;
+        }
         else
-            _currentGpuMode = 1; // Standard (hybrid)
+        {
+            // Fallback if controller not initialized
+            bool gpuAuto = Helpers.AppConfig.Is("gpu_auto");
+            bool ecoEnabled = wmi.GetGpuEco();
+            int muxMode = wmi.GetGpuMuxMode();
+
+            if (muxMode == 0)
+                _currentGpuMode = 3;
+            else if (gpuAuto)
+                _currentGpuMode = 2;
+            else if (ecoEnabled)
+                _currentGpuMode = 0;
+            else
+                _currentGpuMode = 1;
+        }
 
         string modeName = _currentGpuMode switch
         {
@@ -224,22 +248,28 @@ public partial class MainWindow : Window
             _ => "Unknown"
         };
 
-        // Combined header: "GPU Mode: Eco" (matches Windows layout)
         labelGPU.Text = $"GPU Mode: {modeName}";
         labelGPUMode.Text = modeName;
         UpdateGpuButtons();
 
-        // GPU tip
-        labelTipGPU.Text = _currentGpuMode switch
+        // GPU tip — check for pending reboot first
+        if (gpu?.IsPendingReboot() == true)
         {
-            0 => "dGPU is off — maximum battery life",
-            1 => "Hybrid mode — dGPU powers on when needed",
-            2 => "Auto Eco on battery, Standard on AC power",
-            3 => "dGPU direct — bypass iGPU for best performance (requires reboot)",
-            _ => ""
-        };
+            string? pending = Helpers.AppConfig.GetString("gpu_mode");
+            labelTipGPU.Text = $"{pending?.ToUpperInvariant() ?? "Mode"} pending — reboot to apply";
+        }
+        else
+        {
+            labelTipGPU.Text = _currentGpuMode switch
+            {
+                0 => "dGPU is off — maximum battery life",
+                1 => "Hybrid mode — dGPU powers on when needed",
+                2 => "Auto Eco on battery, Standard on AC power",
+                3 => "dGPU direct — bypass iGPU for best performance (requires reboot)",
+                _ => ""
+            };
+        }
 
-        // Hide Ultimate button if MUX switch not supported
         buttonUltimate.IsVisible = wmi.IsFeatureSupported("gpu_mux_mode");
     }
 
@@ -251,134 +281,315 @@ public partial class MainWindow : Window
         SetButtonActive(buttonUltimate, _currentGpuMode == 3);
     }
 
-    private void ButtonEco_Click(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// Lock GPU mode buttons during a switch operation (like Windows G-Helper's LockGPUModes).
+    /// Writing dgpu_disable can block in the kernel for 30-60 seconds while the GPU powers down.
+    /// </summary>
+    private void LockGpuButtons(string statusText)
     {
-        // Clear auto mode — user explicitly chose Eco
-        Helpers.AppConfig.Set("gpu_auto", 0);
-
-        // Fire-and-forget sysfs write
-        Task.Run(() =>
-        {
-            try
-            {
-                App.Wmi?.SetGpuEco(true);
-            }
-            catch (Exception ex)
-            {
-                Helpers.Logger.WriteLine($"Eco mode switch failed: {ex.Message}");
-            }
-        });
-
-        _currentGpuMode = 0;
-        RefreshGpuMode();
-
-        App.System?.ShowNotification("GPU Mode",
-            "Eco mode — dGPU disabled", "video-display");
+        buttonEco.IsEnabled = false;
+        buttonStandard.IsEnabled = false;
+        buttonOptimized.IsEnabled = false;
+        buttonUltimate.IsEnabled = false;
+        labelTipGPU.Text = statusText;
     }
 
-    private void ButtonStandard_Click(object? sender, RoutedEventArgs e)
+    private void UnlockGpuButtons()
     {
-        // Clear auto mode — user explicitly chose Standard
-        Helpers.AppConfig.Set("gpu_auto", 0);
+        buttonEco.IsEnabled = true;
+        buttonStandard.IsEnabled = true;
+        buttonOptimized.IsEnabled = true;
+        buttonUltimate.IsEnabled = true;
+    }
 
-        // Fire-and-forget sysfs write
+    /// <summary>
+    /// Common handler for all 4 GPU mode buttons.
+    /// Locks buttons, calls GpuModeController on background thread,
+    /// handles the result on UI thread.
+    /// </summary>
+    private void RequestGpuModeSwitch(GpuMode target, string switchingText)
+    {
+        var gpu = App.GpuModeCtrl;
+        if (gpu == null) return;
+
+        if (gpu.IsSwitchInProgress)
+        {
+            // A hardware switch is blocking (buttons should be locked, but be defensive).
+            // Save the user's latest choice so it wins after reboot.
+            gpu.ScheduleModeForReboot(target);
+            _currentGpuMode = (int)target;
+            UpdateGpuButtons();
+            return;
+        }
+
+        // Optimistic UI: highlight the target button immediately
+        _currentGpuMode = (int)target;
+        UpdateGpuButtons();
+        LockGpuButtons(switchingText);
+
         Task.Run(() =>
         {
-            try
+            var result = gpu.RequestModeSwitch(target);
+
+            Dispatcher.UIThread.Post(() =>
             {
-                App.Wmi?.SetGpuEco(false);
-                // Only set MUX=1 if we're currently in Ultimate (MUX=0)
-                int mux = App.Wmi?.GetGpuMuxMode() ?? 1;
-                if (mux == 0)
+                UnlockGpuButtons();
+                HandleGpuSwitchResult(result, target);
+            });
+        });
+    }
+
+    /// <summary>
+    /// Handle GpuSwitchResult on the UI thread — show notifications, update tips, show dialogs.
+    /// </summary>
+    private void HandleGpuSwitchResult(GpuSwitchResult result, GpuMode target)
+    {
+        RefreshGpuMode();
+
+        switch (result)
+        {
+            case GpuSwitchResult.Applied:
+                string appliedText = target switch
                 {
-                    App.Wmi?.SetGpuMuxMode(1);
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        labelTipGPU.Text = "MUX switch changed — reboot required";
-                        App.System?.ShowNotification("GPU Mode",
-                            "Standard mode set — reboot required for MUX change", "system-reboot");
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Helpers.Logger.WriteLine($"Standard mode switch failed: {ex.Message}");
-            }
-        });
+                    GpuMode.Eco => "Eco mode — dGPU disabled",
+                    GpuMode.Standard => "Standard mode — hybrid dGPU",
+                    GpuMode.Optimized => "Optimized — auto Eco/Standard based on power",
+                    GpuMode.Ultimate => "Ultimate mode — dGPU direct",
+                    _ => "GPU mode changed"
+                };
+                App.System?.ShowNotification("GPU Mode", appliedText, "video-display");
+                break;
 
-        _currentGpuMode = 1;
-        RefreshGpuMode();
+            case GpuSwitchResult.AlreadySet:
+                // No notification needed
+                break;
 
-        App.System?.ShowNotification("GPU Mode",
-            "Standard mode — hybrid dGPU", "video-display");
+            case GpuSwitchResult.RebootRequired:
+                string rebootText = target switch
+                {
+                    GpuMode.Ultimate => "Ultimate mode set — reboot required",
+                    GpuMode.Standard => "Standard mode set — reboot required for MUX change",
+                    GpuMode.Optimized => "Optimized mode — reboot required for MUX change",
+                    GpuMode.Eco => "Eco mode requires reboot — MUX and GPU changes will apply",
+                    _ => "Reboot required for GPU mode change"
+                };
+                labelTipGPU.Text = target == GpuMode.Optimized
+                    ? "MUX switch changed — reboot required, then auto-switching will begin"
+                    : "You must reboot for changes to take effect";
+                App.System?.ShowNotification("GPU Mode", rebootText, "system-reboot");
+                break;
+
+            case GpuSwitchResult.EcoBlocked:
+                labelTipGPU.Text = "Eco mode blocked — MUX was changed to Ultimate this session. Reboot first.";
+                App.System?.ShowNotification("GPU Mode",
+                    "Eco mode blocked: MUX was changed to Ultimate this session. Reboot first, then switch to Eco.",
+                    "dialog-warning");
+                break;
+
+            case GpuSwitchResult.DriverBlocking:
+                ShowDriverBlockingDialog(target);
+                break;
+
+            case GpuSwitchResult.Deferred:
+                labelTipGPU.Text = "Eco mode pending — reboot to apply";
+                App.System?.ShowNotification("GPU Mode",
+                    "Eco mode will activate after reboot", "system-reboot");
+                break;
+
+            case GpuSwitchResult.Failed:
+                App.System?.ShowNotification("GPU Mode",
+                    "GPU mode switch failed — check logs", "dialog-error");
+                break;
+        }
     }
 
-    private void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// Show the "GPU Driver Active" confirmation dialog with three choices.
+    /// All button properties set directly — no CSS classes — for full control
+    /// over styling. The ghelper class is designed for grid-stretched main window
+    /// buttons and fights with dialog layout (HorizontalAlignment=Stretch, hover
+    /// state overrides accent color).
+    /// </summary>
+    private void ShowDriverBlockingDialog(GpuMode target)
     {
-        // Toggle auto GPU mode: Eco on battery, Standard on AC
-        // This matches Windows G-Helper's "Optimized" mode (gpu_auto flag)
-        Helpers.AppConfig.Set("gpu_auto", 1);
-
-        // If currently in Ultimate (MUX=0), switch to Standard first
-        int mux = App.Wmi?.GetGpuMuxMode() ?? 1;
-        if (mux == 0)
+        var dialog = new Window
         {
+            Title = "GPU Driver Active",
+            Width = 490,
+            Height = 310,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            SystemDecorations = SystemDecorations.Full,
+        };
+
+        // ── Content card — matches main window panel style (#262626) ──
+        var card = new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#262626")),
+            CornerRadius = new Avalonia.CornerRadius(8),
+            Padding = new Avalonia.Thickness(20, 16),
+            Margin = new Avalonia.Thickness(0, 0, 0, 18),
+        };
+
+        var titleIcon = new TextBlock
+        {
+            Text = "\u26a0",  // ⚠
+            FontSize = 20,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            Margin = new Avalonia.Thickness(0, 0, 10, 0),
+        };
+
+        var titleText = new TextBlock
+        {
+            Text = "GPU Driver Active",
+            FontSize = 15,
+            FontWeight = Avalonia.Media.FontWeight.Bold,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+
+        var titleRow = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Margin = new Avalonia.Thickness(0, 0, 0, 12),
+        };
+        titleRow.Children.Add(titleIcon);
+        titleRow.Children.Add(titleText);
+
+        var body = new TextBlock
+        {
+            Text = "The GPU is currently in use by the display system.\n" +
+                   "Switching to Eco mode requires releasing the driver first.",
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            FontSize = 13,
+            LineHeight = 20,
+            Foreground = new SolidColorBrush(Color.Parse("#CCCCCC")),
+        };
+
+        var cardContent = new StackPanel();
+        cardContent.Children.Add(titleRow);
+        cardContent.Children.Add(body);
+        card.Child = cardContent;
+
+        // ── Buttons — all properties set directly, no CSS class ──
+        // Shared properties applied via helper
+        Button MakeDialogButton(string text, string bg, string fg, bool bold = false)
+        {
+            return new Button
+            {
+                Content = text,
+                Background = new SolidColorBrush(Color.Parse(bg)),
+                Foreground = new SolidColorBrush(Color.Parse(fg)),
+                FontWeight = bold ? Avalonia.Media.FontWeight.Bold : Avalonia.Media.FontWeight.Normal,
+                FontSize = 13,
+                MinWidth = 130,
+                MinHeight = 38,
+                Padding = new Avalonia.Thickness(14, 8),
+                CornerRadius = new Avalonia.CornerRadius(5),
+                HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                BorderThickness = new Avalonia.Thickness(0),
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+            };
+        }
+
+        var btnSwitchNow   = MakeDialogButton("Switch Now",    "#4CC2FF", "#000000", bold: true);
+        var btnAfterReboot = MakeDialogButton("After Reboot",  "#373737", "#F0F0F0");
+        var btnCancel      = MakeDialogButton("Cancel",        "#2A2A2A", "#888888");
+
+        btnSwitchNow.Margin = new Avalonia.Thickness(0, 0, 8, 0);
+        btnAfterReboot.Margin = new Avalonia.Thickness(0, 0, 8, 0);
+
+        // ── Button click handlers ──
+        btnSwitchNow.Click += (_, _) =>
+        {
+            dialog.Close();
+            LockGpuButtons("Releasing GPU driver, please wait...");
+
             Task.Run(() =>
             {
-                try
-                {
-                    App.Wmi?.SetGpuMuxMode(1);
-                }
-                catch (Exception ex)
-                {
-                    Helpers.Logger.WriteLine($"Optimized: MUX switch failed: {ex.Message}");
-                }
-            });
-            labelTipGPU.Text = "MUX switch changed — reboot required, then auto-switching will begin";
-            App.System?.ShowNotification("GPU Mode",
-                "Optimized mode — reboot required for MUX change", "system-reboot");
-        }
-        else
-        {
-            // Apply immediately based on current power state
-            App.AutoGpuMode();
-        }
+                var gpu = App.GpuModeCtrl;
+                var result = gpu?.TryReleaseAndSwitch() ?? GpuSwitchResult.Failed;
 
-        _currentGpuMode = 2;
-        RefreshGpuMode();
+                Dispatcher.UIThread.Post(() =>
+                {
+                    UnlockGpuButtons();
+
+                    if (result == GpuSwitchResult.Deferred)
+                    {
+                        // Driver release failed (rmmod failed, pkexec cancelled, etc.)
+                        labelTipGPU.Text = "Eco mode pending — reboot to apply";
+                        RefreshGpuMode();
+                        App.System?.ShowNotification("GPU Mode",
+                            "GPU held by display system — Eco mode scheduled for reboot",
+                            "dialog-warning");
+                        return;
+                    }
+
+                    HandleGpuSwitchResult(result, target);
+                });
+            });
+        };
+
+        btnAfterReboot.Click += (_, _) =>
+        {
+            dialog.Close();
+            App.GpuModeCtrl?.ScheduleModeForReboot(target);
+            labelTipGPU.Text = "Eco mode pending — reboot to apply";
+            RefreshGpuMode();
+            App.System?.ShowNotification("GPU Mode",
+                "Eco mode will activate after reboot", "system-reboot");
+        };
+
+        btnCancel.Click += (_, _) =>
+        {
+            dialog.Close();
+            RefreshGpuMode();
+        };
+
+        // ── Button row ──
+        var buttonPanel = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+        };
+        buttonPanel.Children.Add(btnSwitchNow);
+        buttonPanel.Children.Add(btnAfterReboot);
+        buttonPanel.Children.Add(btnCancel);
+
+        // ── Footer help text ──
+        var footer = new TextBlock
+        {
+            Text = "Switch Now attempts to unload the GPU driver (admin password\n" +
+                   "may be required). After Reboot saves for next startup.",
+            Foreground = new SolidColorBrush(Color.Parse("#666666")),
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            FontSize = 11,
+            LineHeight = 16,
+            Margin = new Avalonia.Thickness(2, 14, 0, 0),
+        };
+
+        // ── Layout ──
+        var outerStack = new StackPanel { Margin = new Avalonia.Thickness(24, 20, 24, 16) };
+        outerStack.Children.Add(card);
+        outerStack.Children.Add(buttonPanel);
+        outerStack.Children.Add(footer);
+
+        dialog.Content = outerStack;
+        dialog.ShowDialog(this);
     }
+
+    private void ButtonEco_Click(object? sender, RoutedEventArgs e)
+        => RequestGpuModeSwitch(GpuMode.Eco, "Switching to Eco mode, please wait...");
+
+    private void ButtonStandard_Click(object? sender, RoutedEventArgs e)
+        => RequestGpuModeSwitch(GpuMode.Standard, "Switching to Standard mode...");
+
+    private void ButtonOptimized_Click(object? sender, RoutedEventArgs e)
+        => RequestGpuModeSwitch(GpuMode.Optimized, "Switching GPU mode...");
 
     private void ButtonUltimate_Click(object? sender, RoutedEventArgs e)
-    {
-        // Clear auto mode — user explicitly chose Ultimate
-        Helpers.AppConfig.Set("gpu_auto", 0);
-
-        // Fire-and-forget sysfs write
-        Task.Run(() =>
-        {
-            try
-            {
-                App.Wmi?.SetGpuEco(false);
-                // MUX=0 for dGPU direct
-                if (App.Wmi?.GetGpuMuxMode() != 0)
-                {
-                    App.Wmi?.SetGpuMuxMode(0);
-                }
-            }
-            catch (Exception ex)
-            {
-                Helpers.Logger.WriteLine($"Ultimate mode switch failed: {ex.Message}");
-            }
-        });
-
-        _currentGpuMode = 3;
-        RefreshGpuMode();
-
-        // Show reboot notification immediately
-        App.System?.ShowNotification("GPU Mode",
-            "Ultimate mode set — reboot required", "system-reboot");
-        labelTipGPU.Text = "You must reboot for changes to take effect";
-    }
+        => RequestGpuModeSwitch(GpuMode.Ultimate, "Switching to Ultimate mode...");
 
     // ── Screen ──
 
