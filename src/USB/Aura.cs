@@ -677,7 +677,22 @@ public static class Aura
     }
 
     /// <summary>
-    /// Check if AURA HID devices are available on this system.
+    /// Check if any AURA control path is available on this system.
+    /// Checks USB-HID, I2C-HID hidraw, and TUF kbd_rgb_mode sysfs.
+    /// The sysfs path is needed for TUF models where hid_asus isn't loaded
+    /// (e.g., kernel 6.19+ with asus_armoury, or I2C keyboards that don't
+    /// respond to HID AURA protocol like the FA608PP).
     /// </summary>
-    public static bool IsAvailable() => AsusHid.IsAvailable();
+    public static bool IsAvailable()
+    {
+        if (AsusHid.IsAvailable()) return true;
+
+        // TUF/VivoZenPro: kbd_rgb_mode sysfs works independently of HID
+        if (_isACPI)
+        {
+            var wmi = App.Wmi as Platform.Linux.LinuxAsusWmi;
+            if (wmi != null && wmi.HasKeyboardRgbMode()) return true;
+        }
+        return false;
+    }
 }

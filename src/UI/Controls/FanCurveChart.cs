@@ -31,6 +31,9 @@ public class FanCurveChart : Control
     public static readonly StyledProperty<string> FanLabelProperty =
         AvaloniaProperty.Register<FanCurveChart, string>(nameof(FanLabel), "CPU");
 
+    public static readonly StyledProperty<bool> DisabledProperty =
+        AvaloniaProperty.Register<FanCurveChart, bool>(nameof(Disabled), false);
+
     /// <summary>
     /// 16-byte fan curve: bytes 0-7 = temperatures (°C), bytes 8-15 = fan speeds (%)
     /// </summary>
@@ -50,6 +53,15 @@ public class FanCurveChart : Control
     {
         get => GetValue(FanLabelProperty);
         set => SetValue(FanLabelProperty, value);
+    }
+
+    /// <summary>
+    /// When true, draws a dark overlay with "Firmware control" text and suppresses drag interaction.
+    /// </summary>
+    public bool Disabled
+    {
+        get => GetValue(DisabledProperty);
+        set => SetValue(DisabledProperty, value);
     }
 
     // ── Constants ──
@@ -84,7 +96,7 @@ public class FanCurveChart : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == CurveDataProperty)
+        if (change.Property == CurveDataProperty || change.Property == DisabledProperty)
             InvalidateVisual();
     }
 
@@ -118,6 +130,22 @@ public class FanCurveChart : Control
             new Typeface("Segoe UI, Ubuntu, sans-serif", FontStyle.Normal, FontWeight.SemiBold),
             13, LabelBrush);
         context.DrawText(labelText, new Point(chartArea.Left + 5, 12));
+
+        // Disabled overlay — drawn when firmware is controlling fans (pwm_enable != 1)
+        if (Disabled)
+        {
+            var overlayBrush = new SolidColorBrush(Color.Parse("#CC1C1C1C")); // 80% opaque dark
+            context.FillRectangle(overlayBrush, bounds);
+
+            var overlayText = new FormattedText("Firmware control",
+                System.Globalization.CultureInfo.InvariantCulture,
+                FlowDirection.LeftToRight,
+                new Typeface("Segoe UI, Ubuntu, sans-serif", FontStyle.Normal, FontWeight.SemiBold),
+                16, new SolidColorBrush(Color.Parse("#888888")));
+            context.DrawText(overlayText,
+                new Point((bounds.Width - overlayText.Width) / 2,
+                          (bounds.Height - overlayText.Height) / 2));
+        }
     }
 
     private void DrawGrid(DrawingContext context, Rect area)
@@ -213,7 +241,7 @@ public class FanCurveChart : Control
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
-        if (CurveData is not { Length: 16 }) return;
+        if (CurveData is not { Length: 16 } || Disabled) return;
 
         var pos = e.GetPosition(this);
         var area = GetChartArea();

@@ -37,6 +37,18 @@ public interface IAsusWmi : IDisposable
     /// <summary>Set fan curve (8 temp + 8 duty bytes).</summary>
     void SetFanCurve(int fanIndex, byte[] curve);
 
+    /// <summary>Disable custom fan curve for this fan (pwm_enable=2).
+    /// Returns to firmware thermal policy defaults for the current profile.</summary>
+    void DisableFanCurve(int fanIndex);
+
+    /// <summary>Reset fan curve to BIOS factory defaults (pwm_enable=3) and read back.
+    /// Returns the firmware default curve, or null if unsupported.</summary>
+    byte[]? ResetFanCurveToDefaults(int fanIndex);
+
+    /// <summary>Check if custom fan curve is active (pwm_enable==1). Returns false if
+    /// firmware is in control (pwm_enable==2 or 3) or if unsupported.</summary>
+    bool IsFanCurveEnabled(int fanIndex);
+
     // ── Battery ──
 
     /// <summary>Get charge limit (40-100).</summary>

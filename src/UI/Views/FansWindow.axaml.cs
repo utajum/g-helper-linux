@@ -23,6 +23,7 @@ public partial class FansWindow : Window
         // Wire up curve change events
         chartCPU.CurveChanged += (_, curve) => OnCurveChanged(0, curve);
         chartGPU.CurveChanged += (_, curve) => OnCurveChanged(1, curve);
+        chartMid.CurveChanged += (_, curve) => OnCurveChanged(2, curve);
 
         _sensorTimer = new DispatcherTimer
         {
@@ -53,23 +54,50 @@ public partial class FansWindow : Window
         byte[]? cpuCurve = wmi.GetFanCurve(0);
         byte[]? gpuCurve = wmi.GetFanCurve(1);
 
-        // Fall back to config or defaults
-        if (cpuCurve == null || cpuCurve.Length != 16)
+        // Fall back to config or defaults if hardware returned no usable data
+        if (!IsValidCurve(cpuCurve))
         {
             cpuCurve = Helpers.AppConfig.GetFanConfig(0);
-            if (cpuCurve.Length != 16)
+            if (!IsValidCurve(cpuCurve))
                 cpuCurve = Helpers.AppConfig.GetDefaultCurve(0);
         }
 
-        if (gpuCurve == null || gpuCurve.Length != 16)
+        if (!IsValidCurve(gpuCurve))
         {
             gpuCurve = Helpers.AppConfig.GetFanConfig(1);
-            if (gpuCurve.Length != 16)
+            if (!IsValidCurve(gpuCurve))
                 gpuCurve = Helpers.AppConfig.GetDefaultCurve(1);
         }
 
         chartCPU.CurveData = cpuCurve;
         chartGPU.CurveData = gpuCurve;
+
+        // Mid fan detection — show chart if curve is valid or RPM is readable
+        // (matches Windows G-Helper's InitFans logic)
+        byte[]? midCurve = wmi.GetFanCurve(2);
+        bool hasMidFan = IsValidCurve(midCurve) || wmi.GetFanRpm(2) > 0;
+
+        if (hasMidFan)
+        {
+            if (!IsValidCurve(midCurve))
+            {
+                midCurve = Helpers.AppConfig.GetFanConfig(2);
+                if (!IsValidCurve(midCurve))
+                    midCurve = Helpers.AppConfig.GetDefaultCurve(2);
+            }
+
+            chartMid.CurveData = midCurve;
+            chartMid.IsVisible = true;
+            // Change third row from Auto to Star so all 3 charts share space equally
+            chartGrid.RowDefinitions[2].Height = new Avalonia.Controls.GridLength(1, Avalonia.Controls.GridUnitType.Star);
+            this.Height = 820;
+
+            Helpers.AppConfig.Set("mid_fan", 1);
+        }
+        else
+        {
+            Helpers.AppConfig.Set("mid_fan", 0);
+        }
 
         // Update mode label
         int mode = App.Wmi?.GetThrottleThermalPolicy() ?? -1;
@@ -83,6 +111,8 @@ public partial class FansWindow : Window
         labelMode.Text = $"Mode: {modeName}";
 
         checkApplyFans.IsChecked = Helpers.AppConfig.IsMode("auto_apply_fans");
+
+        UpdateDisabledState();
     }
 
     private void OnCurveChanged(int fanIndex, byte[] curve)
@@ -114,14 +144,85 @@ public partial class FansWindow : Window
             Helpers.AppConfig.SetFanConfig(1, chartGPU.CurveData);
         }
 
+        if (chartMid.IsVisible && chartMid.CurveData is { Length: 16 })
+        {
+            wmi.SetFanCurve(2, chartMid.CurveData);
+            Helpers.AppConfig.SetFanConfig(2, chartMid.CurveData);
+        }
+
+        UpdateDisabledState();
         Helpers.Logger.WriteLine("Fan curves applied");
     }
 
     private void ButtonReset_Click(object? sender, RoutedEventArgs e)
     {
-        chartCPU.CurveData = Helpers.AppConfig.GetDefaultCurve(0);
-        chartGPU.CurveData = Helpers.AppConfig.GetDefaultCurve(1);
-        Helpers.Logger.WriteLine("Fan curves reset to defaults");
+        var wmi = App.Wmi;
+
+        // Phase 1: Reset ALL fans to factory defaults (pwm_enable=3).
+        // Must do all resets before any re-apply because the kernel quirk
+        // causes pwm_enable=3 on one fan to reset ALL fans.
+        byte[]? cpuCurve = wmi?.ResetFanCurveToDefaults(0);
+        byte[]? gpuCurve = wmi?.ResetFanCurveToDefaults(1);
+        byte[]? midCurve = chartMid.IsVisible ? wmi?.ResetFanCurveToDefaults(2) : null;
+
+        // Fall back to hardcoded defaults if kernel reset unsupported
+        if (!IsValidCurve(cpuCurve))
+            cpuCurve = Helpers.AppConfig.GetDefaultCurve(0);
+        if (!IsValidCurve(gpuCurve))
+            gpuCurve = Helpers.AppConfig.GetDefaultCurve(1);
+        if (chartMid.IsVisible && !IsValidCurve(midCurve))
+            midCurve = Helpers.AppConfig.GetDefaultCurve(2);
+
+        // Phase 2: Update UI and save config
+        chartCPU.CurveData = cpuCurve;
+        chartGPU.CurveData = gpuCurve;
+        Helpers.AppConfig.SetFanConfig(0, cpuCurve!);
+        Helpers.AppConfig.SetFanConfig(1, gpuCurve!);
+
+        if (chartMid.IsVisible)
+        {
+            chartMid.CurveData = midCurve;
+            Helpers.AppConfig.SetFanConfig(2, midCurve!);
+        }
+
+        // Phase 3: Re-apply ALL curves as active custom curves (pwm_enable=1).
+        // Done after all resets so no subsequent pwm_enable=3 undoes them.
+        if (cpuCurve is { Length: 16 }) wmi?.SetFanCurve(0, cpuCurve);
+        if (gpuCurve is { Length: 16 }) wmi?.SetFanCurve(1, gpuCurve);
+        if (chartMid.IsVisible && midCurve is { Length: 16 }) wmi?.SetFanCurve(2, midCurve);
+
+        UpdateDisabledState();
+        Helpers.Logger.WriteLine("Fan curves reset to firmware defaults and re-applied");
+    }
+
+    private void ButtonDisable_Click(object? sender, RoutedEventArgs e)
+    {
+        var wmi = App.Wmi;
+        if (wmi == null) return;
+
+        wmi.DisableFanCurve(0);
+        wmi.DisableFanCurve(1);
+        if (chartMid.IsVisible) wmi.DisableFanCurve(2);
+        UpdateDisabledState();
+
+        Helpers.Logger.WriteLine("Custom fan curves disabled, using firmware defaults");
+    }
+
+    private void UpdateDisabledState()
+    {
+        var wmi = App.Wmi;
+        bool cpuEnabled = wmi?.IsFanCurveEnabled(0) ?? false;
+        bool gpuEnabled = wmi?.IsFanCurveEnabled(1) ?? false;
+        bool midEnabled = !chartMid.IsVisible || (wmi?.IsFanCurveEnabled(2) ?? false);
+        bool anyDisabled = !cpuEnabled || !gpuEnabled || !midEnabled;
+
+        chartCPU.Disabled = !cpuEnabled;
+        chartGPU.Disabled = !gpuEnabled;
+        if (chartMid.IsVisible) chartMid.Disabled = !midEnabled;
+
+        // Toggle button visual — accent border when disabled (active state)
+        buttonDisable.BorderBrush = anyDisabled ? AccentBrush : TransparentBrush;
+        buttonDisable.BorderThickness = new Avalonia.Thickness(2);
     }
 
     private void CheckApplyFans_Changed(object? sender, RoutedEventArgs e)
@@ -282,5 +383,24 @@ public partial class FansWindow : Window
         {
             Helpers.Logger.WriteLine("FansWindow sensor refresh error", ex);
         }
+    }
+
+    /// <summary>
+    /// Validate a fan curve read from hardware or config.
+    /// Rejects null, wrong length, and completely-zero curves.
+    /// Matches Windows G-Helper's IsEmptyCurve: a curve is invalid only if ALL 16 bytes are 0.
+    /// Note: CPU/GPU fan curves from the Linux kernel often have all-zero temperatures but
+    /// valid PWM duty cycles — these are valid curves (GetFanCurve synthesizes a temp ramp).
+    /// </summary>
+    private static bool IsValidCurve(byte[]? curve)
+    {
+        if (curve == null || curve.Length != 16) return false;
+
+        // Reject only if every byte is zero (no useful data at all)
+        for (int i = 0; i < 16; i++)
+        {
+            if (curve[i] > 0) return true;
+        }
+        return false;
     }
 }

@@ -218,7 +218,13 @@ public static class Diagnostics
                 continue;
 
             var perms = GetFilePermissions(path);
-            var value = Platform.Linux.SysfsHelper.ReadAttribute(path) ?? "(read failed)";
+            var value = Platform.Linux.SysfsHelper.ReadAttribute(path);
+
+            // kbd_rgb_mode and kbd_rgb_state are DEVICE_ATTR_WO in the kernel — read always fails
+            if (value == null && (path.EndsWith("kbd_rgb_mode") || path.EndsWith("kbd_rgb_state")))
+                value = "(write-only, present)";
+            else
+                value ??= "(read failed)";
 
             var shortPath = path
                 .Replace("/sys/class/power_supply/", "power_supply/")
@@ -350,6 +356,11 @@ public static class Diagnostics
             if (devices.Count == 0)
             {
                 sb.AppendLine("(none found)");
+
+                // Check if hid_asus module is loaded — needed for I2C-HID hidraw nodes
+                bool hidAsusLoaded = Directory.Exists("/sys/module/hid_asus");
+                if (!hidAsusLoaded)
+                    sb.AppendLine("  NOTE: hid_asus module not loaded (try: sudo modprobe hid_asus)");
             }
             else
             {
@@ -366,6 +377,7 @@ public static class Diagnostics
 
         sb.AppendLine($"AsusHid.IsAvailable: {USB.AsusHid.IsAvailable()}");
         sb.AppendLine($"AsusHid.UsingI2cHidraw: {USB.AsusHid.UsingI2cHidraw}");
+        sb.AppendLine($"Aura.IsAvailable: {USB.Aura.IsAvailable()}");
         sb.AppendLine();
     }
 

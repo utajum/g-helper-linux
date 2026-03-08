@@ -231,17 +231,40 @@ public class LinuxAsusWmi : IAsusWmi
 
         for (int i = 0; i < 8; i++)
         {
-            // Temperature in millidegrees → degrees
-            int tempMilli = SysfsHelper.ReadInt(
+            // Temperature: asus_custom_fan_curve sysfs uses raw degrees (NOT millidegrees).
+            // The kernel stores temps directly from the ACPI buffer: data->temps[i] = buf[i]
+            int temp = SysfsHelper.ReadInt(
                 Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"), -1);
-            if (tempMilli < 0) return null;
-            curve[i] = (byte)(tempMilli / 1000);
+            if (temp < 0) return null;
+            curve[i] = (byte)temp;
 
             // PWM 0-255 → percentage 0-100
             int pwm = SysfsHelper.ReadInt(
                 Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"), -1);
             if (pwm < 0) return null;
             curve[8 + i] = (byte)(pwm * 100 / 255);
+        }
+
+        // The kernel's default fan curves for CPU/GPU often have all-zero temperatures
+        // but valid PWM duty cycles. This happens because the asus-wmi driver only
+        // populates temps when the user explicitly writes custom curves; the EC's
+        // built-in default temps are not exposed through sysfs.
+        // Synthesize a reasonable temperature ramp so the UI has usable data.
+        bool allTempsZero = true;
+        bool anyPwmNonZero = false;
+        for (int i = 0; i < 8; i++)
+        {
+            if (curve[i] > 0) allTempsZero = false;
+            if (curve[8 + i] > 0) anyPwmNonZero = true;
+        }
+
+        if (allTempsZero && anyPwmNonZero)
+        {
+            byte[] synthTemps = { 30, 40, 50, 60, 70, 80, 90, 100 };
+            for (int i = 0; i < 8; i++)
+                curve[i] = synthTemps[i];
+
+            Helpers.Logger.WriteLine($"Fan {fanIndex}: synthesized temp ramp for zero-temp kernel defaults");
         }
 
         return curve;
@@ -253,21 +276,58 @@ public class LinuxAsusWmi : IAsusWmi
 
         int pwmIndex = fanIndex + 1;
 
-        // First set pwm_enable to 2 (automatic/curve mode)
-        SysfsHelper.WriteInt(Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_enable"), 2);
-
+        // Write all curve data points FIRST.
+        // Each sysfs write to auto_point files updates the in-kernel fan_curve_data struct
+        // and sets data->enabled = false (preventing premature writes to EC).
         for (int i = 0; i < 8; i++)
         {
-            // Degrees → millidegrees
+            // Temperature: asus_custom_fan_curve sysfs uses raw degrees (NOT millidegrees)
             SysfsHelper.WriteInt(
                 Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"),
-                curve[i] * 1000);
+                curve[i]);
 
             // Percentage 0-100 → PWM 0-255
             SysfsHelper.WriteInt(
                 Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"),
                 curve[8 + i] * 255 / 100);
         }
+
+        // Enable custom curve: pwm_enable=1 sets data->enabled=true and calls
+        // fan_curve_write() which pushes the curve to the EC via WMI DEVS method.
+        SysfsHelper.WriteInt(Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_enable"), 1);
+    }
+
+    public void DisableFanCurve(int fanIndex)
+    {
+        if (_asusFanCurveHwmonDir == null) return;
+        int pwmIndex = fanIndex + 1;
+
+        // pwm_enable=2 disables the custom curve for this fan, returning to
+        // the firmware's thermal policy defaults for the current profile.
+        SysfsHelper.WriteInt(Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_enable"), 2);
+        Helpers.Logger.WriteLine($"Fan {fanIndex}: disabled custom curve (pwm_enable=2)");
+    }
+
+    public byte[]? ResetFanCurveToDefaults(int fanIndex)
+    {
+        if (_asusFanCurveHwmonDir == null) return null;
+        int pwmIndex = fanIndex + 1;
+
+        // pwm_enable=3 resets the fan curve to BIOS factory defaults for the
+        // currently active platform profile, then disables the custom curve.
+        SysfsHelper.WriteInt(Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_enable"), 3);
+        Helpers.Logger.WriteLine($"Fan {fanIndex}: reset to factory defaults (pwm_enable=3)");
+
+        // Read back the firmware defaults so the UI can display them
+        return GetFanCurve(fanIndex);
+    }
+
+    public bool IsFanCurveEnabled(int fanIndex)
+    {
+        if (_asusFanCurveHwmonDir == null) return false;
+        int pwmIndex = fanIndex + 1;
+        return SysfsHelper.ReadInt(
+            Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_enable"), 0) == 1;
     }
 
     // ── Battery ──
