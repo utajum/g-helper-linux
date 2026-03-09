@@ -230,17 +230,17 @@ public class App : Application
 
     private void LogFeatureDetection()
     {
-        var features = new[]
+        var features = new (AttrDef attr, string name)[]
         {
-            ("throttle_thermal_policy", "Performance modes"),
-            ("dgpu_disable", "GPU Eco mode"),
-            ("gpu_mux_mode", "MUX switch"),
-            ("panel_od", "Panel overdrive"),
-            ("mini_led_mode", "Mini LED"),
-            ("ppt_pl1_spl", "PL1 power limit"),
-            ("ppt_pl2_sppt", "PL2 power limit"),
-            ("nv_dynamic_boost", "NVIDIA dynamic boost"),
-            ("nv_temp_target", "NVIDIA temp target"),
+            (AsusAttributes.ThrottleThermalPolicy, "Performance modes"),
+            (AsusAttributes.DgpuDisable, "GPU Eco mode"),
+            (AsusAttributes.GpuMuxMode, "MUX switch"),
+            (AsusAttributes.PanelOd, "Panel overdrive"),
+            (AsusAttributes.MiniLedMode, "Mini LED"),
+            (AsusAttributes.PptPl1Spl, "PL1 power limit"),
+            (AsusAttributes.PptPl2Sppt, "PL2 power limit"),
+            (AsusAttributes.NvDynamicBoost, "NVIDIA dynamic boost"),
+            (AsusAttributes.NvTempTarget, "NVIDIA temp target"),
         };
 
         foreach (var (attr, name) in features)
@@ -597,7 +597,7 @@ public class App : Application
         // GPU modes — only show if dGPU is present (dgpu_disable sysfs attribute exists).
         // All sysfs writes run in Task.Run via GpuModeController
         // (dgpu_disable writes can block in the kernel for 30-60 seconds)
-        if (Wmi?.IsFeatureSupported("dgpu_disable") == true)
+        if (Wmi?.IsFeatureSupported(AsusAttributes.DgpuDisable) == true)
         {
             var eco = new NativeMenuItem("GPU: Eco (iGPU only)");
             eco.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Eco);
@@ -612,7 +612,7 @@ public class App : Application
             menu.Add(optimized);
 
             // Ultimate (MUX switch) — only on models with gpu_mux_mode support
-            if (Wmi?.IsFeatureSupported("gpu_mux_mode") == true)
+            if (Wmi?.IsFeatureSupported(AsusAttributes.GpuMuxMode) == true)
             {
                 var ultimate = new NativeMenuItem("GPU: Ultimate (MUX)");
                 ultimate.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Ultimate);

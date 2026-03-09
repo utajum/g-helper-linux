@@ -1,5 +1,6 @@
 # G-Helper Linux — udev rules for non-root access to ASUS hardware controls
 # Install: sudo cp 90-ghelper.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
+# Version: VERSION_PLACEHOLDER
 #
 # These rules grant read/write access to ASUS sysfs attributes for members of
 # the "input" group (or any user with a login session via uaccess).
@@ -34,6 +35,33 @@ SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
 SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
   ATTR{nv_temp_target}!="", \
   RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/nv_temp_target"
+
+# Additional PPT power limits (less common, but present on some models)
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{ppt_apu_sppt}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/ppt_apu_sppt"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{ppt_platform_sppt}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/ppt_platform_sppt"
+
+# eGPU and boot sound
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{egpu_enable}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/egpu_enable"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  ATTR{boot_sound}!="", \
+  RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/boot_sound"
+
+# platform_profile + CPU boost — also triggered via asus-nb-wmi since
+# dedicated module/cpu/acpi triggers are unreliable on some distros
+# (Bazzite/Fedora Atomic: intel_pstate built-in, CPU add fires too early).
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  RUN+="/bin/sh -c '[ -f /sys/firmware/acpi/platform_profile ] && chmod 0666 /sys/firmware/acpi/platform_profile'"
+
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/intel_pstate/no_turbo ] && chmod 0666 /sys/devices/system/cpu/intel_pstate/no_turbo; [ -f /sys/devices/system/cpu/cpufreq/boost ] && chmod 0666 /sys/devices/system/cpu/cpufreq/boost'"
 
 # ── asus-nb-wmi bus device ──
 # GPU Eco mode, MUX switch, Mini LED
@@ -80,13 +108,18 @@ SUBSYSTEM=="hwmon", ATTR{name}=="asus_nb_wmi", \
   RUN+="/bin/sh -c 'for f in /sys/class/hwmon/%k/pwm*_enable; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
 
 # ── CPU boost ──
-# Intel
+# Intel (module trigger — works when intel_pstate is a loadable module)
 ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="intel_pstate", \
   RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/intel_pstate/no_turbo ] && chmod 0666 /sys/devices/system/cpu/intel_pstate/no_turbo'"
 
-# AMD / generic cpufreq
+# AMD / generic cpufreq (module trigger)
 ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="acpi_cpufreq", \
   RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/cpufreq/boost ] && chmod 0666 /sys/devices/system/cpu/cpufreq/boost'"
+
+# CPU device trigger — catches built-in drivers (intel_pstate, amd_pstate) that don't
+# fire module events. Also sets platform_profile permissions.
+SUBSYSTEM=="cpu", ACTION=="add", \
+  RUN+="/bin/sh -c '[ -f /sys/devices/system/cpu/intel_pstate/no_turbo ] && chmod 0666 /sys/devices/system/cpu/intel_pstate/no_turbo; [ -f /sys/devices/system/cpu/cpufreq/boost ] && chmod 0666 /sys/devices/system/cpu/cpufreq/boost; [ -f /sys/firmware/acpi/platform_profile ] && chmod 0666 /sys/firmware/acpi/platform_profile'"
 
 # ── ACPI platform profile ──
 # Allow non-root to set platform profile (balanced/performance/low-power)

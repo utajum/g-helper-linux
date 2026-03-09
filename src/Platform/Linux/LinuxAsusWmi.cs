@@ -147,7 +147,7 @@ public class LinuxAsusWmi : IAsusWmi
 
     public int GetThrottleThermalPolicy()
     {
-        var path = SysfsHelper.ResolveAttrPath("throttle_thermal_policy", SysfsHelper.AsusWmiPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.ThrottleThermalPolicy, SysfsHelper.AsusWmiPlatform);
         if (path != null)
             return SysfsHelper.ReadInt(path, -1);
 
@@ -169,7 +169,7 @@ public class LinuxAsusWmi : IAsusWmi
 
     public void SetThrottleThermalPolicy(int mode)
     {
-        var path = SysfsHelper.ResolveAttrPath("throttle_thermal_policy", SysfsHelper.AsusWmiPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.ThrottleThermalPolicy, SysfsHelper.AsusWmiPlatform);
         if (path != null)
         {
             SysfsHelper.WriteInt(path, mode);
@@ -360,7 +360,7 @@ public class LinuxAsusWmi : IAsusWmi
 
     public bool GetGpuEco()
     {
-        var path = SysfsHelper.ResolveAttrPath("dgpu_disable", SysfsHelper.AsusBusPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.DgpuDisable, SysfsHelper.AsusBusPlatform);
         if (path == null) return false;
         return SysfsHelper.ReadInt(path, 0) == 1;
     }
@@ -488,7 +488,7 @@ public class LinuxAsusWmi : IAsusWmi
 
     public void SetGpuEco(bool enabled)
     {
-        var path = SysfsHelper.ResolveAttrPath("dgpu_disable", SysfsHelper.AsusBusPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.DgpuDisable, SysfsHelper.AsusBusPlatform);
         if (path == null) return;
 
         // Skip write if already in desired state — writing dgpu_disable can block
@@ -539,14 +539,14 @@ public class LinuxAsusWmi : IAsusWmi
 
     public int GetGpuMuxMode()
     {
-        var path = SysfsHelper.ResolveAttrPath("gpu_mux_mode", SysfsHelper.AsusBusPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.GpuMuxMode, SysfsHelper.AsusBusPlatform);
         if (path == null) return -1;
         return SysfsHelper.ReadInt(path, -1);
     }
 
     public void SetGpuMuxMode(int mode)
     {
-        var path = SysfsHelper.ResolveAttrPath("gpu_mux_mode", SysfsHelper.AsusBusPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.GpuMuxMode, SysfsHelper.AsusBusPlatform);
         if (path == null) return;
 
         int current = SysfsHelper.ReadInt(path, -1);
@@ -574,31 +574,29 @@ public class LinuxAsusWmi : IAsusWmi
 
     public bool GetPanelOverdrive()
     {
-        // panel_od on legacy, panel_overdrive on some firmware-attributes
-        var path = SysfsHelper.ResolveAttrPath("panel_od", SysfsHelper.AsusWmiPlatform);
-        path ??= SysfsHelper.ResolveAttrPath("panel_overdrive", SysfsHelper.AsusWmiPlatform);
+        // AsusAttributes.PanelOd handles the alias: panel_od (legacy) → panel_overdrive (fw-attr)
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.PanelOd, SysfsHelper.AsusWmiPlatform);
         if (path == null) return false;
         return SysfsHelper.ReadInt(path, 0) == 1;
     }
 
     public void SetPanelOverdrive(bool enabled)
     {
-        var path = SysfsHelper.ResolveAttrPath("panel_od", SysfsHelper.AsusWmiPlatform);
-        path ??= SysfsHelper.ResolveAttrPath("panel_overdrive", SysfsHelper.AsusWmiPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.PanelOd, SysfsHelper.AsusWmiPlatform);
         if (path != null)
             SysfsHelper.WriteInt(path, enabled ? 1 : 0);
     }
 
     public int GetMiniLedMode()
     {
-        var path = SysfsHelper.ResolveAttrPath("mini_led_mode", SysfsHelper.AsusBusPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.MiniLedMode, SysfsHelper.AsusBusPlatform);
         if (path == null) return -1;
         return SysfsHelper.ReadInt(path, -1);
     }
 
     public void SetMiniLedMode(int mode)
     {
-        var path = SysfsHelper.ResolveAttrPath("mini_led_mode", SysfsHelper.AsusBusPlatform);
+        var path = SysfsHelper.ResolveAttrPath(AsusAttributes.MiniLedMode, SysfsHelper.AsusBusPlatform);
         if (path != null)
             SysfsHelper.WriteInt(path, mode);
     }

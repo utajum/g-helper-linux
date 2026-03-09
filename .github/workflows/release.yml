@@ -56,6 +56,14 @@ jobs:
           echo "Updated .csproj version to: ${VERSION}"
           grep "<Version>" src/GHelper.Linux.csproj
 
+      - name: Stamp version in udev rules
+        run: |
+          VERSION=${{ needs.version.outputs.new_version }}
+          VERSION=${VERSION#v}
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/" install/90-ghelper.rules
+          echo "Updated udev rules version to: ${VERSION}"
+          grep "# Version:" install/90-ghelper.rules
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -83,6 +91,12 @@ jobs:
           path: |
             src/bin/Release/net8.0/linux-x64/publish/libSkiaSharp.so
             src/bin/Release/net8.0/linux-x64/publish/libHarfBuzzSharp.so
+
+      - name: Upload udev rules artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: udev-rules
+          path: install/90-ghelper.rules
 
   # Build AppImage from compiled artifacts
   appimage:
@@ -161,6 +175,7 @@ jobs:
           cp artifacts/native-libs/libSkiaSharp.so release/
           cp artifacts/native-libs/libHarfBuzzSharp.so release/
           cp artifacts/appimage/GHelper-x86_64.AppImage release/
+          cp artifacts/udev-rules/90-ghelper.rules release/
           chmod +x release/ghelper
           chmod +x release/GHelper-x86_64.AppImage
           ls -la release/
@@ -211,7 +226,7 @@ jobs:
             > **Note:** udev rules are required for hardware access without root. The quick install script handles this automatically. For AppImage or manual installs:
             >
             > ```bash
-            > sudo curl -sL https://raw.githubusercontent.com/${{ github.repository }}/master/install/90-ghelper.rules -o /etc/udev/rules.d/90-ghelper.rules
+            > sudo curl -sL https://github.com/${{ github.repository }}/releases/download/${{ needs.version.outputs.new_version }}/90-ghelper.rules -o /etc/udev/rules.d/90-ghelper.rules
             > sudo udevadm control --reload-rules && sudo udevadm trigger
             > ```
 
@@ -222,4 +237,5 @@ jobs:
             release/libSkiaSharp.so
             release/libHarfBuzzSharp.so
             release/GHelper-x86_64.AppImage
+            release/90-ghelper.rules
           generate_release_notes: true

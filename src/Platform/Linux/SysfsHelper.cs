@@ -38,9 +38,72 @@ public static class SysfsHelper
     private static readonly Dictionary<string, string?> _resolvedPaths = new();
 
     /// <summary>
-    /// Resolve the actual sysfs path for an ASUS WMI attribute.
+    /// Resolve the actual sysfs path for an ASUS WMI attribute using an AttrDef.
+    /// Handles aliased attributes (where legacy and firmware-attributes names differ).
+    ///
+    /// Resolution order:
+    /// 1. Try legacy paths with LegacyName
+    /// 2. Try firmware-attributes with FwAttrName (may differ from LegacyName for aliased attrs)
+    /// 3. If BOTH exist AND the attribute has an alias, prefer firmware-attributes
+    ///    (the legacy path may be a phantom that returns ENODEV on dual-backend machines)
+    ///
+    /// Results are cached for the lifetime of the process.
+    /// </summary>
+    public static string? ResolveAttrPath(AttrDef attr, params string[] legacyBases)
+    {
+        if (_resolvedPaths.TryGetValue(attr.LegacyName, out var cached))
+            return cached;
+
+        if (legacyBases.Length == 0)
+            legacyBases = new[] { AsusWmiPlatform, AsusBusPlatform };
+
+        // Find legacy path
+        string? legacyResult = null;
+        foreach (var basePath in legacyBases)
+        {
+            var legacyPath = Path.Combine(basePath, attr.LegacyName);
+            if (File.Exists(legacyPath))
+            {
+                legacyResult = legacyPath;
+                break;
+            }
+        }
+
+        // Find firmware-attributes path (using FwAttrName, which may differ from LegacyName)
+        string? fwResult = null;
+        var fwPath = Path.Combine(FirmwareAttributes, attr.FwAttrName, "current_value");
+        if (File.Exists(fwPath))
+        {
+            fwResult = fwPath;
+        }
+        else if (attr.HasAlias)
+        {
+            // Also try the legacy name in firmware-attributes (some kernels may use it)
+            var fwPathLegacy = Path.Combine(FirmwareAttributes, attr.LegacyName, "current_value");
+            if (File.Exists(fwPathLegacy))
+                fwResult = fwPathLegacy;
+        }
+
+        // Choose: for aliased attributes, prefer firmware-attributes when available
+        // (legacy path may be a phantom ENODEV on dual-backend machines)
+        string? result;
+        if (attr.HasAlias && fwResult != null)
+            result = fwResult;
+        else
+            result = legacyResult ?? fwResult;
+
+        if (attr.HasAlias && fwResult != null && legacyResult != null)
+            Helpers.Logger.WriteLine($"ResolveAttrPath({attr.LegacyName}): preferring firmware-attributes ({attr.FwAttrName}) over legacy ({legacyResult}) — legacy may be phantom ENODEV");
+
+        _resolvedPaths[attr.LegacyName] = result;
+        return result;
+    }
+
+    /// <summary>
+    /// Resolve the actual sysfs path for an ASUS WMI attribute by name (string).
     /// Tries legacy paths first (AsusWmiPlatform, AsusBusPlatform), then
     /// falls back to firmware-attributes (asus-armoury).
+    /// For aliased attributes, use the AttrDef overload instead.
     /// Results are cached for the lifetime of the process.
     /// </summary>
     /// <param name="attrName">Attribute name, e.g. "dgpu_disable", "throttle_thermal_policy"</param>
@@ -48,6 +111,11 @@ public static class SysfsHelper
     /// <returns>Full resolved path to read/write, or null if not found anywhere.</returns>
     public static string? ResolveAttrPath(string attrName, params string[] legacyBases)
     {
+        // Check if this is a known attribute with an alias — use AttrDef resolution
+        var attrDef = AsusAttributes.FindByLegacyName(attrName);
+        if (attrDef != null)
+            return ResolveAttrPath(attrDef, legacyBases);
+
         if (_resolvedPaths.TryGetValue(attrName, out var cached))
             return cached;
 
@@ -92,31 +160,32 @@ public static class SysfsHelper
     /// </summary>
     public static void LogResolvedAttributes()
     {
-        var attrs = new[]
-        {
-            "throttle_thermal_policy", "dgpu_disable", "gpu_mux_mode",
-            "panel_od", "mini_led_mode", "boot_sound",
-            "ppt_pl1_spl", "ppt_pl2_sppt", "ppt_fppt",
-            "nv_dynamic_boost", "nv_temp_target"
-        };
-
         bool hasFirmwareAttrs = Directory.Exists(FirmwareAttributes);
         Helpers.Logger.WriteLine($"Firmware-attributes (asus-armoury): {(hasFirmwareAttrs ? "PRESENT" : "not present")}");
 
-        foreach (var attr in attrs)
+        foreach (var attr in AsusAttributes.All)
         {
             var path = ResolveAttrPath(attr);
             if (path == null)
             {
-                Helpers.Logger.WriteLine($"  {attr}: not found");
+                Helpers.Logger.WriteLine($"  {attr.LegacyName}: not found");
             }
             else if (IsFirmwareAttributesPath(path))
             {
-                Helpers.Logger.WriteLine($"  {attr}: firmware-attributes");
+                var suffix = attr.HasAlias ? $" (as {attr.FwAttrName})" : "";
+                // Check if legacy path also exists (phantom on dual-backend machines)
+                string? legacyCheck = null;
+                foreach (var basePath in new[] { AsusWmiPlatform, AsusBusPlatform })
+                {
+                    var lp = Path.Combine(basePath, attr.LegacyName);
+                    if (File.Exists(lp)) { legacyCheck = lp; break; }
+                }
+                var phantomNote = legacyCheck != null ? $" [preferred over legacy {legacyCheck}]" : "";
+                Helpers.Logger.WriteLine($"  {attr.LegacyName}: firmware-attributes{suffix}{phantomNote}");
             }
             else
             {
-                Helpers.Logger.WriteLine($"  {attr}: legacy sysfs");
+                Helpers.Logger.WriteLine($"  {attr.LegacyName}: legacy sysfs");
             }
         }
     }

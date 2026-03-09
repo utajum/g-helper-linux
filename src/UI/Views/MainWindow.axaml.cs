@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using GHelper.Linux.Gpu;
+using GHelper.Linux.Platform.Linux;
 using GHelper.Linux.USB;
 using System.Collections.Generic;
 using System.Linq;
@@ -203,17 +204,13 @@ public partial class MainWindow : Window
         var wmi = App.Wmi;
         if (wmi == null) return;
 
-        // No discrete GPU → disable all GPU mode buttons, show message
-        if (!wmi.IsFeatureSupported("dgpu_disable"))
+        // No discrete GPU → hide entire GPU panel (matches Windows G-Helper behavior)
+        if (!wmi.IsFeatureSupported(AsusAttributes.DgpuDisable))
         {
-            buttonEco.IsEnabled = false;
-            buttonStandard.IsEnabled = false;
-            buttonOptimized.IsEnabled = false;
-            buttonUltimate.IsEnabled = false;
-            labelGPU.Text = "GPU Mode: N/A";
-            labelTipGPU.Text = "No discrete GPU detected";
+            panelGPU.IsVisible = false;
             return;
         }
+        panelGPU.IsVisible = true;
 
         var gpu = App.GpuModeCtrl;
 
@@ -270,7 +267,7 @@ public partial class MainWindow : Window
             };
         }
 
-        buttonUltimate.IsVisible = wmi.IsFeatureSupported("gpu_mux_mode");
+        buttonUltimate.IsVisible = wmi.IsFeatureSupported(AsusAttributes.GpuMuxMode);
     }
 
     private void UpdateGpuButtons()
@@ -615,7 +612,7 @@ public partial class MainWindow : Window
         }
 
         // Check for MiniLED support
-        bool hasMiniLed = App.Wmi?.IsFeatureSupported("mini_led_mode") ?? false;
+        bool hasMiniLed = App.Wmi?.IsFeatureSupported(AsusAttributes.MiniLedMode) ?? false;
         buttonMiniled.IsVisible = hasMiniLed;
     }
 
@@ -1120,13 +1117,13 @@ public partial class MainWindow : Window
         var wmi = App.Wmi;
         if (wmi != null)
         {
-            if (wmi.IsFeatureSupported("throttle_thermal_policy")) features.Add("Performance Modes");
-            if (wmi.IsFeatureSupported("dgpu_disable")) features.Add("GPU Eco");
-            if (wmi.IsFeatureSupported("gpu_mux_mode")) features.Add("MUX Switch");
-            if (wmi.IsFeatureSupported("panel_od")) features.Add("Panel Overdrive");
-            if (wmi.IsFeatureSupported("mini_led_mode")) features.Add("MiniLED");
-            if (wmi.IsFeatureSupported("ppt_pl1_spl")) features.Add("PPT Limits");
-            if (wmi.IsFeatureSupported("nv_dynamic_boost")) features.Add("NVIDIA Dynamic Boost");
+            if (wmi.IsFeatureSupported(AsusAttributes.ThrottleThermalPolicy)) features.Add("Performance Modes");
+            if (wmi.IsFeatureSupported(AsusAttributes.DgpuDisable)) features.Add("GPU Eco");
+            if (wmi.IsFeatureSupported(AsusAttributes.GpuMuxMode)) features.Add("MUX Switch");
+            if (wmi.IsFeatureSupported(AsusAttributes.PanelOd)) features.Add("Panel Overdrive");
+            if (wmi.IsFeatureSupported(AsusAttributes.MiniLedMode)) features.Add("MiniLED");
+            if (wmi.IsFeatureSupported(AsusAttributes.PptPl1Spl)) features.Add("PPT Limits");
+            if (wmi.IsFeatureSupported(AsusAttributes.NvDynamicBoost)) features.Add("NVIDIA Dynamic Boost");
         }
 
         labelSysFeatures.Text = features.Count > 0

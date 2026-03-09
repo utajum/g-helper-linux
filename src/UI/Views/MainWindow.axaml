@@ -3,7 +3,7 @@
         x:Class="GHelper.Linux.UI.Views.MainWindow"
         Title="G-Helper"
         Width="462"
-        Height="860"
+        SizeToContent="Height"
         MinWidth="380"
         MinHeight="500"
         WindowStartupLocation="CenterScreen"
@@ -74,7 +74,7 @@
             </Border>
 
             <!-- ═══════════════════ GPU SECTION ═══════════════════ -->
-            <Border Classes="panel">
+            <Border x:Name="panelGPU" Classes="panel">
                 <StackPanel>
                     <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,8">
                         <TextBlock Grid.Column="0" Text="🎮" FontSize="16"

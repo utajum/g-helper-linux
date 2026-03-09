@@ -221,14 +221,14 @@ public class ModeControl
 
         if (pl1 > 0)
         {
-            wmi.SetPptLimit("ppt_pl1_spl", pl1);
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl, pl1);
             _customPower = pl1;
             Helpers.Logger.WriteLine($"AutoPower: PL1 = {pl1}W (max={maxTotal}W)");
         }
 
         if (pl2 > 0)
         {
-            wmi.SetPptLimit("ppt_pl2_sppt", pl2);
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt, pl2);
             if (pl2 > _customPower) _customPower = pl2;
             Helpers.Logger.WriteLine($"AutoPower: PL2 = {pl2}W (max={maxTotal}W)");
         }
@@ -236,9 +236,9 @@ public class ModeControl
         // fPPT (fast boost)
         int fppt = Helpers.AppConfig.GetMode("limit_fppt");
         if (fppt > maxTotal || fppt < MinTotal) fppt = -1;
-        if (fppt > 0 && wmi.IsFeatureSupported("ppt_fppt"))
+        if (fppt > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptFppt))
         {
-            wmi.SetPptLimit("ppt_fppt", fppt);
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptFppt, fppt);
             if (fppt > _customPower) _customPower = fppt;
             Helpers.Logger.WriteLine($"AutoPower: fPPT = {fppt}W (max={maxTotal}W)");
         }
@@ -246,17 +246,17 @@ public class ModeControl
         // NVIDIA dynamic boost
         int nvBoost = Helpers.AppConfig.GetMode("gpu_boost");
         if (nvBoost > maxGpuBoost) nvBoost = maxGpuBoost;
-        if (nvBoost > 0 && wmi.IsFeatureSupported("nv_dynamic_boost"))
+        if (nvBoost > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvDynamicBoost))
         {
-            wmi.SetPptLimit("nv_dynamic_boost", nvBoost);
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvDynamicBoost, nvBoost);
             Helpers.Logger.WriteLine($"AutoPower: GPU boost = {nvBoost}W (max={maxGpuBoost}W)");
         }
 
         // NVIDIA temp target
         int nvTemp = Helpers.AppConfig.GetMode("gpu_temp");
-        if (nvTemp > 0 && wmi.IsFeatureSupported("nv_temp_target"))
+        if (nvTemp > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvTempTarget))
         {
-            wmi.SetPptLimit("nv_temp_target", nvTemp);
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvTempTarget, nvTemp);
         }
     }
 }

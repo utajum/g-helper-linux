@@ -245,10 +245,10 @@ public partial class FansWindow : Window
         if (wmi == null) return;
 
         // Read from hardware, fall back to saved config
-        int pl1 = wmi.GetPptLimit("ppt_pl1_spl");
+        int pl1 = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl);
         if (pl1 <= 0) pl1 = Helpers.AppConfig.GetMode("limit_slow");
 
-        int pl2 = wmi.GetPptLimit("ppt_pl2_sppt");
+        int pl2 = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt);
         if (pl2 <= 0) pl2 = Helpers.AppConfig.GetMode("limit_fast");
 
         if (pl1 > 0)
@@ -264,11 +264,11 @@ public partial class FansWindow : Window
         }
 
         // fPPT (fast boost) — only show if supported
-        bool hasFppt = wmi.IsFeatureSupported("ppt_fppt");
+        bool hasFppt = wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptFppt);
         gridFppt.IsVisible = hasFppt;
         if (hasFppt)
         {
-            int fppt = wmi.GetPptLimit("ppt_fppt");
+            int fppt = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptFppt);
             if (fppt <= 0) fppt = Helpers.AppConfig.GetMode("limit_fppt");
             if (fppt > 0)
             {
@@ -285,7 +285,7 @@ public partial class FansWindow : Window
     {
         int watts = (int)e.NewValue;
         labelPL1.Text = $"{watts}W";
-        App.Wmi?.SetPptLimit("ppt_pl1_spl", watts);
+        App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl, watts);
         Helpers.AppConfig.SetMode("limit_slow", watts);
     }
 
@@ -294,7 +294,7 @@ public partial class FansWindow : Window
     {
         int watts = (int)e.NewValue;
         labelPL2.Text = $"{watts}W";
-        App.Wmi?.SetPptLimit("ppt_pl2_sppt", watts);
+        App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt, watts);
         Helpers.AppConfig.SetMode("limit_fast", watts);
     }
 
@@ -303,7 +303,7 @@ public partial class FansWindow : Window
     {
         int watts = (int)e.NewValue;
         labelFppt.Text = $"{watts}W";
-        App.Wmi?.SetPptLimit("ppt_fppt", watts);
+        App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptFppt, watts);
         Helpers.AppConfig.SetMode("limit_fppt", watts);
     }
 

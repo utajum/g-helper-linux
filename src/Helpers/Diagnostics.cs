@@ -46,6 +46,9 @@ public static class Diagnostics
         // ── udev / tmpfiles ──
         AppendInstallState(sb);
 
+        // ── Recent log (last, always at the end) ──
+        AppendRecentLog(sb);
+
         return sb.ToString();
     }
 
@@ -163,7 +166,7 @@ public static class Diagnostics
             sb.AppendLine("  Active: NONE — no ASUS WMI module detected");
 
         // Show which backend resolved for the two safety-critical GPU attributes
-        var criticalAttrs = new[] { "dgpu_disable", "gpu_mux_mode" };
+        var criticalAttrs = new[] { Platform.Linux.AsusAttributes.DgpuDisable, Platform.Linux.AsusAttributes.GpuMuxMode };
         foreach (var attr in criticalAttrs)
         {
             var resolved = Platform.Linux.SysfsHelper.ResolveAttrPath(attr,
@@ -172,13 +175,13 @@ public static class Diagnostics
 
             if (resolved == null)
             {
-                sb.AppendLine($"  {attr}: not found (feature unavailable)");
+                sb.AppendLine($"  {attr.LegacyName}: not found (feature unavailable)");
             }
             else
             {
                 string backend = Platform.Linux.SysfsHelper.IsFirmwareAttributesPath(resolved)
                     ? "asus-armoury" : "asus-nb-wmi";
-                sb.AppendLine($"  {attr}: {backend} → {resolved}");
+                sb.AppendLine($"  {attr.LegacyName}: {backend} → {resolved}");
             }
         }
 
@@ -258,17 +261,11 @@ public static class Diagnostics
         }
 
         // Resolved WMI attributes (may be legacy sysfs or firmware-attributes)
+        // Uses AsusAttributes.All as single source of truth — covers all 16 known attributes
         sb.AppendLine();
         sb.AppendLine("  WMI attributes (resolved via ResolveAttrPath):");
 
-        var wmiAttrs = new[]
-        {
-            "throttle_thermal_policy", "ppt_pl1_spl", "ppt_pl2_sppt", "ppt_fppt",
-            "nv_dynamic_boost", "nv_temp_target", "panel_od",
-            "dgpu_disable", "gpu_mux_mode", "mini_led_mode"
-        };
-
-        foreach (var attr in wmiAttrs)
+        foreach (var attr in Platform.Linux.AsusAttributes.All)
         {
             var resolved = Platform.Linux.SysfsHelper.ResolveAttrPath(attr,
                 Platform.Linux.SysfsHelper.AsusWmiPlatform,
@@ -281,8 +278,9 @@ public static class Diagnostics
             var value = Platform.Linux.SysfsHelper.ReadAttribute(resolved) ?? "(read failed)";
             string backend = Platform.Linux.SysfsHelper.IsFirmwareAttributesPath(resolved)
                 ? "fw-attr" : "legacy";
+            string aliasNote = attr.HasAlias ? $" (fw: {attr.FwAttrName})" : "";
 
-            sb.AppendLine($"    {attr} [{backend}]: {perms} = {value}");
+            sb.AppendLine($"    {attr.LegacyName}{aliasNote} [{backend}]: {perms} = {value}");
         }
 
         sb.AppendLine();
@@ -465,6 +463,34 @@ public static class Diagnostics
         var udevExists = File.Exists("/etc/udev/rules.d/90-ghelper.rules");
         sb.AppendLine($"  udev rules: {(udevExists ? "installed" : "NOT FOUND")}");
 
+        if (udevExists)
+        {
+            var udevVersion = "unknown";
+            try
+            {
+                // Read first 5 lines to find version comment
+                foreach (var line in File.ReadLines("/etc/udev/rules.d/90-ghelper.rules").Take(5))
+                {
+                    if (line.StartsWith("# Version:"))
+                    {
+                        var ver = line.Substring("# Version:".Length).Trim();
+                        udevVersion = string.IsNullOrEmpty(ver) || ver == "VERSION_PLACEHOLDER" ? "dev" : ver;
+                        break;
+                    }
+                }
+            }
+            catch { }
+            sb.AppendLine($"  udev rules version: {udevVersion}");
+
+            // Compare with app version if both are real versions (not "dev"/"unknown")
+            if (udevVersion != "dev" && udevVersion != "unknown")
+            {
+                var appVer = AppConfig.AppVersion;
+                if (appVer != udevVersion)
+                    sb.AppendLine($"  \u26a0 udev rules version mismatch (app: {appVer}, rules: {udevVersion})");
+            }
+        }
+
         var tmpfilesExists = File.Exists("/etc/tmpfiles.d/90-ghelper.conf");
         sb.AppendLine($"  tmpfiles.d: {(tmpfilesExists ? "installed" : "NOT FOUND")}");
 
@@ -473,6 +499,19 @@ public static class Diagnostics
 
         var optExists = File.Exists("/opt/ghelper/ghelper");
         sb.AppendLine($"  /opt/ghelper/ghelper: {(optExists ? "installed" : "NOT FOUND")}");
+
+        sb.AppendLine();
+    }
+
+    private static void AppendRecentLog(StringBuilder sb)
+    {
+        var lines = Logger.GetRecentLines();
+        var total = Logger.TotalLines;
+
+        sb.AppendLine($"--- Recent Log ({lines.Length} of {total} total) ---");
+
+        foreach (var line in lines)
+            sb.AppendLine(line);
 
         sb.AppendLine();
     }

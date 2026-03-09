@@ -320,7 +320,7 @@ public partial class ExtraWindow : Window
         // Try to set via sysfs (asus-nb-wmi or asus-armoury firmware-attributes)
         try
         {
-            var path = Platform.Linux.SysfsHelper.ResolveAttrPath("boot_sound");
+            var path = Platform.Linux.SysfsHelper.ResolveAttrPath(Platform.Linux.AsusAttributes.BootSound);
             if (path != null)
                 Platform.Linux.SysfsHelper.WriteAttribute(path, val.ToString());
         }
@@ -547,13 +547,13 @@ public partial class ExtraWindow : Window
         var wmi = App.Wmi;
         if (wmi != null)
         {
-            if (wmi.IsFeatureSupported("throttle_thermal_policy")) features.Add("Performance Modes");
-            if (wmi.IsFeatureSupported("dgpu_disable")) features.Add("GPU Eco");
-            if (wmi.IsFeatureSupported("gpu_mux_mode")) features.Add("MUX Switch");
-            if (wmi.IsFeatureSupported("panel_od")) features.Add("Panel Overdrive");
-            if (wmi.IsFeatureSupported("mini_led_mode")) features.Add("MiniLED");
-            if (wmi.IsFeatureSupported("ppt_pl1_spl")) features.Add("PPT Limits");
-            if (wmi.IsFeatureSupported("nv_dynamic_boost")) features.Add("NVIDIA Dynamic Boost");
+            if (wmi.IsFeatureSupported(AsusAttributes.ThrottleThermalPolicy)) features.Add("Performance Modes");
+            if (wmi.IsFeatureSupported(AsusAttributes.DgpuDisable)) features.Add("GPU Eco");
+            if (wmi.IsFeatureSupported(AsusAttributes.GpuMuxMode)) features.Add("MUX Switch");
+            if (wmi.IsFeatureSupported(AsusAttributes.PanelOd)) features.Add("Panel Overdrive");
+            if (wmi.IsFeatureSupported(AsusAttributes.MiniLedMode)) features.Add("MiniLED");
+            if (wmi.IsFeatureSupported(AsusAttributes.PptPl1Spl)) features.Add("PPT Limits");
+            if (wmi.IsFeatureSupported(AsusAttributes.NvDynamicBoost)) features.Add("NVIDIA Dynamic Boost");
         }
 
         labelFeatures.Text = features.Count > 0

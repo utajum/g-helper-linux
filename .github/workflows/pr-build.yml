@@ -18,9 +18,17 @@ jobs:
 
       - name: Patch version in .csproj
         run: |
-          VERSION="0.0.0"
+          SHORT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          VERSION="0.0.0-pr.${{ github.event.pull_request.number }}.${SHORT_SHA}"
           sed -i "s|<Version>.*</Version>|<Version>${VERSION}</Version>|" src/GHelper.Linux.csproj
-          echo "Set version to: ${VERSION} (PR #${{ github.event.pull_request.number }})"
+          echo "Set version to: ${VERSION}"
+
+      - name: Stamp version in udev rules
+        run: |
+          SHORT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          VERSION="0.0.0-pr.${{ github.event.pull_request.number }}.${SHORT_SHA}"
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/" install/90-ghelper.rules
+          echo "Updated udev rules version to: ${VERSION}"
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
@@ -50,6 +58,13 @@ jobs:
           path: |
             src/bin/Release/net8.0/linux-x64/publish/libSkiaSharp.so
             src/bin/Release/net8.0/linux-x64/publish/libHarfBuzzSharp.so
+          retention-days: 7
+
+      - name: Upload udev rules artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: udev-rules
+          path: install/90-ghelper.rules
           retention-days: 7
 
   appimage:
@@ -111,36 +126,90 @@ jobs:
     needs: [build, appimage]
     runs-on: ubuntu-latest
     steps:
-      - name: Post or update PR comment with artifact links
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Bundle artifacts
+        run: |
+          mkdir -p bundle
+          cp artifacts/ghelper/ghelper                       bundle/
+          cp artifacts/native-libs/libSkiaSharp.so           bundle/
+          cp artifacts/native-libs/libHarfBuzzSharp.so       bundle/
+          cp artifacts/udev-rules/90-ghelper.rules           bundle/
+          cp artifacts/appimage/GHelper-x86_64.AppImage      bundle/
+          chmod +x bundle/ghelper bundle/GHelper-x86_64.AppImage
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: g-helper-linux-pr-${{ github.event.pull_request.number }}
+          path: bundle/
+          retention-days: 7
+
+      - name: Post or update PR comment
         uses: actions/github-script@v7
         with:
           script: |
             const marker = '<!-- pr-build-artifacts -->';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const sha = context.payload.pull_request.head.sha.substring(0, 7);
+            const prNum = context.payload.pull_request.number;
+            const version = `0.0.0-pr.${prNum}.${sha}`;
+
+            const nightlyBase = `https://nightly.link/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const zipName = `g-helper-linux-pr-${prNum}`;
 
             const body = [
               marker,
-              '### Build Artifacts',
+              `### Build Artifacts`,
               '',
-              `Built from commit \`${sha}\` — [Download from Actions run](${runUrl})`,
+              `Built from commit \`${sha}\` — version \`${version}\``,
               '',
-              '| Artifact | Description |',
-              '|----------|-------------|',
-              '| **ghelper** | Native AOT binary |',
-              '| **native-libs** | libSkiaSharp.so + libHarfBuzzSharp.so |',
-              '| **appimage** | GHelper-x86_64.AppImage (all-in-one) |',
+              `**[Download ${zipName}.zip](${nightlyBase}/${zipName}.zip)**`,
+              '',
+              `> [View on GitHub Actions](${runUrl}) (requires login)`,
+              '',
+              '---',
+              '',
+              '**Contents:**',
+              '',
+              '| File | Description |',
+              '|------|-------------|',
+              '| `GHelper-x86_64.AppImage` | All-in-one AppImage (easiest to run) |',
+              '| `ghelper` | Native AOT binary |',
+              '| `libSkiaSharp.so` | SkiaSharp native library |',
+              '| `libHarfBuzzSharp.so` | HarfBuzzSharp native library |',
+              '| `90-ghelper.rules` | Udev rules for hardware access without sudo |',
+              '',
+              '---',
               '',
               '**Quick test:**',
               '```bash',
-              '# Option 1: AppImage (easiest)',
+              `unzip ${zipName}.zip -d ${zipName}`,
+              `cd ${zipName}`,
+              '```',
+              '',
+              '**Option A — AppImage (easiest):**',
+              '```bash',
               'chmod +x GHelper-x86_64.AppImage',
               './GHelper-x86_64.AppImage',
+              '```',
               '',
-              '# Option 2: Native binary',
+              '**Option B — Native binary:**',
+              '```bash',
               'chmod +x ghelper',
               './ghelper',
               '```',
+              '',
+              '**Install udev rules (required for hardware access):**',
+              '```bash',
+              'sudo cp 90-ghelper.rules /etc/udev/rules.d/',
+              'sudo udevadm control --reload-rules && sudo udevadm trigger',
+              '```',
+              '',
+              '> **Note:** Without udev rules, ghelper needs `sudo` to access fan curves, performance modes, keyboard backlight, etc.',
               '',
               `> Artifacts expire in 7 days.`,
             ].join('\n');
