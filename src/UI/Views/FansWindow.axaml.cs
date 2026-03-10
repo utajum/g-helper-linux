@@ -329,12 +329,14 @@ public partial class FansWindow : Window
     private void ButtonBoostOn_Click(object? sender, RoutedEventArgs e)
     {
         App.Power?.SetCpuBoost(true);
+        Helpers.AppConfig.SetMode("auto_boost", 1);
         SetBoostButtonState(true);
     }
 
     private void ButtonBoostOff_Click(object? sender, RoutedEventArgs e)
     {
         App.Power?.SetCpuBoost(false);
+        Helpers.AppConfig.SetMode("auto_boost", 0);
         SetBoostButtonState(false);
     }
 

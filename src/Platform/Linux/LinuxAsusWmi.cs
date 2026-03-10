@@ -913,9 +913,14 @@ public class LinuxAsusWmi : IAsusWmi
             // Priority: USB keyboard first ("Asus Keyboard"), then WMI ("Asus WMI hotkeys")
             foreach (var section in sections)
             {
-                if (!section.Contains("asus", StringComparison.OrdinalIgnoreCase)) continue;
+                // Match sections containing "asus" (name or sysfs path) or USB vendor 0b05 (ASUSTek).
+                // The vendor match catches ITE-named ASUS HID devices like "ITE Tech. Inc. ITE Device(8910)".
+                bool isAsus = section.Contains("asus", StringComparison.OrdinalIgnoreCase)
+                    || section.Contains("Vendor=0b05", StringComparison.OrdinalIgnoreCase);
+                if (!isAsus) continue;
 
-                bool isKeyboard = section.Contains("keyboard", StringComparison.OrdinalIgnoreCase);
+                bool isKeyboard = section.Contains("keyboard", StringComparison.OrdinalIgnoreCase)
+                    || section.Contains("Vendor=0b05", StringComparison.OrdinalIgnoreCase);
                 bool isWmi = section.Contains("wmi", StringComparison.OrdinalIgnoreCase);
 
                 if (isKeyboard || isWmi)

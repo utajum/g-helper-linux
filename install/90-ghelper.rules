@@ -133,9 +133,13 @@ SUBSYSTEM=="hwmon", ATTR{name}=="asus_custom_fan_curve", \
 SUBSYSTEM=="hwmon", ATTR{name}=="asus_custom_fan_curve", \
   RUN+="/bin/sh -c 'for f in /sys/class/hwmon/%k/pwm*_enable; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
 
-# ── ASUS WMI input device (hotkeys) ──
-# Grant read access to the event device so non-root can receive Fn-key events
-SUBSYSTEM=="input", ATTRS{name}=="Asus WMI hotkeys", TAG+="uaccess"
+# ── ASUS input devices (hotkeys) ──
+# Grant read access to event devices so non-root can receive Fn-key events.
+# MODE=0666 is used instead of TAG+="uaccess" because uaccess relies on
+# systemd-logind seat detection which is unreliable on Fedora Atomic/Bazzite.
+SUBSYSTEM=="input", ATTRS{name}=="Asus WMI hotkeys", MODE="0666"
+# USB ASUS HID input devices — covers "Asus Keyboard", "ITE Tech. Inc. ITE Device(8910)", etc.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{id/vendor}=="0b05", MODE="0666"
 
 # ── ASUS HID devices (AURA RGB keyboard control) ──
 # Grant read/write access to ASUS HID raw devices for non-root AURA control.
