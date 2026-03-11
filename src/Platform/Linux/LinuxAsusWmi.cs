@@ -885,7 +885,8 @@ public class LinuxAsusWmi : IAsusWmi
                             }
                             else
                             {
-                                Helpers.Logger.WriteLine($"ASUS event: key={code} (0x{code:X}) → unmapped");
+                                // Don't log unmapped keys — regular keyboard presses
+                                // also come through on ASUS vendor devices
                             }
                         }
                     }
