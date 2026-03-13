@@ -287,6 +287,10 @@ public partial class FansWindow : Window
         labelPL1.Text = $"{watts}W";
         App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl, watts);
         Helpers.AppConfig.SetMode("limit_slow", watts);
+
+        // Mirror to APU SPPT — prevents it from acting as a hidden power cap.
+        // Value = max(PL1, PL2) so neither primary limit is constrained.
+        MirrorToSecondaryPpt();
     }
 
     private void SliderPL2_ValueChanged(object? sender,
@@ -296,6 +300,33 @@ public partial class FansWindow : Window
         labelPL2.Text = $"{watts}W";
         App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt, watts);
         Helpers.AppConfig.SetMode("limit_fast", watts);
+
+        // Mirror to Platform SPPT — prevents it from acting as a hidden power cap.
+        MirrorToSecondaryPpt();
+    }
+
+    /// <summary>
+    /// Mirror PL1/PL2 values to secondary PPT attributes (APU SPPT, Platform SPPT).
+    /// These AMD power tracking limits act as hard caps — if left at stale values
+    /// (e.g. 5W from a previous Silent mode), they bottleneck performance regardless
+    /// of what PL1/PL2 are set to. We set both to max(PL1, PL2) so neither primary
+    /// limit is constrained by the secondary ones.
+    /// </summary>
+    private void MirrorToSecondaryPpt()
+    {
+        var wmi = App.Wmi;
+        if (wmi == null) return;
+
+        int pl1 = (int)sliderPL1.Value;
+        int pl2 = (int)sliderPL2.Value;
+        int ceiling = Math.Max(pl1, pl2);
+        if (ceiling <= 0) return;
+
+        if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptApuSppt))
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptApuSppt, ceiling);
+
+        if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptPlatformSppt))
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPlatformSppt, ceiling);
     }
 
     private void SliderFppt_ValueChanged(object? sender,

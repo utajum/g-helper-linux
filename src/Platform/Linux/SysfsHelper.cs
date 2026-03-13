@@ -156,6 +156,87 @@ public static class SysfsHelper
     }
 
     /// <summary>
+    /// Write a value to ALL available backends (legacy sysfs + firmware-attributes) for the
+    /// given attribute. Returns true if at least one write succeeded.
+    ///
+    /// Use this for PPT power limit writes where we cannot predict which backend is functional
+    /// on dual-backend kernels (asus-nb-wmi + asus-armoury loaded simultaneously).
+    /// On the reporter's GZ302EA, the firmware-attributes ppt_pl3_fppt path exists but
+    /// returns ENODEV/EACCES, while the legacy ppt_fppt works fine — and vice versa on
+    /// other machines.  Writing to both is the safest approach.
+    /// </summary>
+    public static bool WriteToAllBackends(AttrDef attr, string value, params string[] legacyBases)
+    {
+        if (legacyBases.Length == 0)
+            legacyBases = new[] { AsusWmiPlatform, AsusBusPlatform };
+
+        bool anySuccess = false;
+
+        // Try all legacy paths
+        foreach (var basePath in legacyBases)
+        {
+            var legacyPath = Path.Combine(basePath, attr.LegacyName);
+            if (WriteAttribute(legacyPath, value))
+                anySuccess = true;
+        }
+
+        // Try firmware-attributes path (using FwAttrName, which may differ from LegacyName)
+        var fwPath = Path.Combine(FirmwareAttributes, attr.FwAttrName, "current_value");
+        if (WriteAttribute(fwPath, value))
+            anySuccess = true;
+
+        // For aliased attrs (e.g. ppt_fppt → ppt_pl3_fppt), also try the legacy name
+        // under firmware-attributes in case the kernel uses that naming
+        if (attr.HasAlias)
+        {
+            var fwPathLegacy = Path.Combine(FirmwareAttributes, attr.LegacyName, "current_value");
+            if (fwPathLegacy != fwPath && WriteAttribute(fwPathLegacy, value))
+                anySuccess = true;
+        }
+
+        return anySuccess;
+    }
+
+    /// <summary>
+    /// Read from the first available backend (legacy sysfs or firmware-attributes) for the
+    /// given attribute. Returns the integer value or defaultValue if none could be read.
+    ///
+    /// Unlike WriteToAllBackends (which writes everywhere), reading only needs the first
+    /// successful result since they should all reflect the same hardware state.
+    /// </summary>
+    public static int ReadFromAnyBackend(AttrDef attr, int defaultValue = -1, params string[] legacyBases)
+    {
+        if (legacyBases.Length == 0)
+            legacyBases = new[] { AsusWmiPlatform, AsusBusPlatform };
+
+        // Try legacy paths first (more reliable on dual-backend systems)
+        foreach (var basePath in legacyBases)
+        {
+            var legacyPath = Path.Combine(basePath, attr.LegacyName);
+            var val = ReadInt(legacyPath, int.MinValue);
+            if (val != int.MinValue) return val;
+        }
+
+        // Try firmware-attributes
+        var fwPath = Path.Combine(FirmwareAttributes, attr.FwAttrName, "current_value");
+        var fwVal = ReadInt(fwPath, int.MinValue);
+        if (fwVal != int.MinValue) return fwVal;
+
+        // Aliased fallback
+        if (attr.HasAlias)
+        {
+            var fwPathLegacy = Path.Combine(FirmwareAttributes, attr.LegacyName, "current_value");
+            if (fwPathLegacy != fwPath)
+            {
+                var aliasVal = ReadInt(fwPathLegacy, int.MinValue);
+                if (aliasVal != int.MinValue) return aliasVal;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /// <summary>
     /// Log which backend was resolved for each known attribute (for diagnostics).
     /// </summary>
     public static void LogResolvedAttributes()

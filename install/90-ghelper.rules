@@ -45,6 +45,13 @@ SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
   ATTR{ppt_platform_sppt}!="", \
   RUN+="/bin/chmod 0666 /sys/devices/platform/asus-nb-wmi/ppt_platform_sppt"
 
+# Fallback: batch-chmod ALL PPT attributes when asus-nb-wmi appears.
+# The ATTR{...}!="" condition above can miss attributes that appear slightly after the
+# platform device (timing race on dual-backend kernels with asus-armoury loaded).
+# This shell fallback catches any that were missed by the per-attribute rules.
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  RUN+="/bin/sh -c 'for attr in ppt_pl1_spl ppt_pl2_sppt ppt_fppt ppt_apu_sppt ppt_platform_sppt nv_dynamic_boost nv_temp_target; do [ -f /sys/devices/platform/asus-nb-wmi/$attr ] && chmod 0666 /sys/devices/platform/asus-nb-wmi/$attr; done'"
+
 # eGPU and boot sound
 SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
   ATTR{egpu_enable}!="", \
@@ -165,6 +172,12 @@ ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="pcie_aspm", \
 # chmod all current_value files under the asus-armoury attributes dir.
 ACTION=="add|change", SUBSYSTEM=="firmware-attributes", \
   RUN+="/bin/sh -c 'for f in /sys/class/firmware-attributes/asus-armoury/attributes/*/current_value; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
+
+# Trigger on asus_armoury module load — the firmware-attributes subsystem event above
+# may fire before all attribute files are populated (race on fast kernels like CachyOS).
+# This module trigger provides a second chance with a brief delay.
+ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="asus_armoury", \
+  RUN+="/bin/sh -c 'sleep 1; for f in /sys/class/firmware-attributes/asus-armoury/attributes/*/current_value; do [ -f \"$f\" ] && chmod 0666 \"$f\"; done'"
 
 # ── CPU online/offline (core toggling) ──
 SUBSYSTEM=="cpu", ACTION=="add", \

@@ -28,8 +28,10 @@ public class ModeControl
         if (Helpers.AppConfig.IsX13()) return 75;
         if (Helpers.AppConfig.IsAlly()) return 50;
         if (Helpers.AppConfig.IsIntelHX()) return 175;
-        if (Helpers.AppConfig.IsAMDLight()) return 90;
+        // IsZ1325 must be checked before IsAMDLight: GZ302E matches both,
+        // but the Z13 2025 (GZ302EA) needs 93W max, not 90W.
         if (Helpers.AppConfig.IsZ1325()) return 93;
+        if (Helpers.AppConfig.IsAMDLight()) return 90;
         if (Helpers.AppConfig.IsFA401EA()) return 115;
         return 150; // default
     }
@@ -233,6 +235,35 @@ public class ModeControl
             Helpers.Logger.WriteLine($"AutoPower: PL2 = {pl2}W (max={maxTotal}W)");
         }
 
+        // APU SPPT / Platform SPPT — secondary AMD power tracking limits.
+        //
+        // On Windows, setting the ACPI thermal policy propagates internally to all PPT
+        // registers. On Linux with dual-backend kernels (asus-nb-wmi + asus-armoury),
+        // writing throttle_thermal_policy does NOT reliably update ppt_apu_sppt and
+        // ppt_platform_sppt — they can remain stuck at the previous mode's values
+        // (e.g. 5W from Silent mode) even after switching to Turbo.
+        //
+        // Since AMD firmware enforces min(all PPT limits), a 5W APU SPPT hard-caps
+        // performance regardless of PL1/PL2 being 93W. Mirror PL1/PL2 values here to
+        // ensure these secondary limits don't act as hidden bottlenecks.
+        //
+        // This matches asusctl's behavior of writing ALL PPT firmware-attributes.
+        int apuPlatCeiling = Math.Max(pl1, pl2);  // never less than either primary limit
+        if (apuPlatCeiling > 0)
+        {
+            if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptApuSppt))
+            {
+                wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptApuSppt, apuPlatCeiling);
+                Helpers.Logger.WriteLine($"AutoPower: APU SPPT = {apuPlatCeiling}W (mirrored from max(PL1,PL2))");
+            }
+
+            if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptPlatformSppt))
+            {
+                wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPlatformSppt, apuPlatCeiling);
+                Helpers.Logger.WriteLine($"AutoPower: Platform SPPT = {apuPlatCeiling}W (mirrored from max(PL1,PL2))");
+            }
+        }
+
         // fPPT (fast boost)
         int fppt = Helpers.AppConfig.GetMode("limit_fppt");
         if (fppt > maxTotal || fppt < MinTotal) fppt = -1;
@@ -257,6 +288,62 @@ public class ModeControl
         if (nvTemp > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvTempTarget))
         {
             wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvTempTarget, nvTemp);
+        }
+
+        // Verify PPT writes took effect — read back and warn on mismatches
+        VerifyPptLimits(wmi, pl1, pl2, fppt, apuPlatCeiling > 0 ? apuPlatCeiling : -1);
+    }
+
+    /// <summary>
+    /// Read back PPT values after writing to confirm they took effect.
+    /// Logs all current values and warns if any expected value doesn't match.
+    /// This helps diagnose dual-backend issues and permission problems.
+    /// </summary>
+    private static void VerifyPptLimits(Platform.IAsusWmi wmi, int expectedPl1, int expectedPl2, int expectedFppt, int expectedApuPlat)
+    {
+        try
+        {
+            // Brief delay to let writes settle through firmware
+            Thread.Sleep(200);
+
+            var checks = new List<(string name, Platform.Linux.AttrDef attr, int expected)>();
+            if (expectedPl1 > 0)
+                checks.Add(("PL1", Platform.Linux.AsusAttributes.PptPl1Spl, expectedPl1));
+            if (expectedPl2 > 0)
+                checks.Add(("PL2", Platform.Linux.AsusAttributes.PptPl2Sppt, expectedPl2));
+            if (expectedFppt > 0)
+                checks.Add(("fPPT", Platform.Linux.AsusAttributes.PptFppt, expectedFppt));
+            if (expectedApuPlat > 0)
+            {
+                checks.Add(("APU_SPPT", Platform.Linux.AsusAttributes.PptApuSppt, expectedApuPlat));
+                checks.Add(("PLAT_SPPT", Platform.Linux.AsusAttributes.PptPlatformSppt, expectedApuPlat));
+            }
+
+            var parts = new List<string>();
+            bool anyMismatch = false;
+
+            foreach (var (name, attr, expected) in checks)
+            {
+                int actual = wmi.GetPptLimit(attr);
+                string status;
+                if (actual < 0)
+                    status = "?";  // could not read back
+                else if (actual == expected)
+                    status = $"{actual}W";
+                else
+                {
+                    status = $"{actual}W (expected {expected}W!)";
+                    anyMismatch = true;
+                }
+                parts.Add($"{name}={status}");
+            }
+
+            string prefix = anyMismatch ? "WARNING AutoPower verify" : "AutoPower verify";
+            Helpers.Logger.WriteLine($"{prefix}: {string.Join(", ", parts)}");
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine("AutoPower verify failed", ex);
         }
     }
 }

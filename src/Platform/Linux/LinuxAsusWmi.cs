@@ -605,14 +605,33 @@ public class LinuxAsusWmi : IAsusWmi
 
     public void SetPptLimit(string attribute, int watts)
     {
-        // PPT attributes: ppt_pl1_spl, ppt_pl2_sppt, ppt_fppt, nv_dynamic_boost, nv_temp_target
-        var path = SysfsHelper.ResolveAttrPath(attribute, SysfsHelper.AsusWmiPlatform);
-        if (path != null)
-            SysfsHelper.WriteInt(path, watts);
+        // PPT attributes: ppt_pl1_spl, ppt_pl2_sppt, ppt_fppt, ppt_apu_sppt, etc.
+        //
+        // On dual-backend kernels (asus-nb-wmi + asus-armoury), we cannot predict which
+        // backend is functional for any given attribute. Write to ALL available paths —
+        // legacy sysfs and firmware-attributes — so at least one succeeds.
+        // See: https://github.com/utajum/g-helper-linux/issues/23
+        var attrDef = AsusAttributes.FindByLegacyName(attribute);
+        if (attrDef != null)
+        {
+            SysfsHelper.WriteToAllBackends(attrDef, watts.ToString(), SysfsHelper.AsusWmiPlatform);
+        }
+        else
+        {
+            // Fallback for unknown attributes: single resolved path
+            var path = SysfsHelper.ResolveAttrPath(attribute, SysfsHelper.AsusWmiPlatform);
+            if (path != null)
+                SysfsHelper.WriteInt(path, watts);
+        }
     }
 
     public int GetPptLimit(string attribute)
     {
+        // Read from the first available backend (legacy preferred for reliability)
+        var attrDef = AsusAttributes.FindByLegacyName(attribute);
+        if (attrDef != null)
+            return SysfsHelper.ReadFromAnyBackend(attrDef, -1, SysfsHelper.AsusWmiPlatform);
+
         var path = SysfsHelper.ResolveAttrPath(attribute, SysfsHelper.AsusWmiPlatform);
         if (path == null) return -1;
         return SysfsHelper.ReadInt(path, -1);
