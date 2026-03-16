@@ -190,9 +190,9 @@ public class LinuxAsusWmi : IAsusWmi
             if (rpm > 0) return rpm;
         }
 
-        // For GPU fan (index 1), try nvidia-smi as fallback
+        // For GPU fan (index 1), try nvidia-smi as fallback (only if NVIDIA driver is loaded)
         // nvidia-smi returns percentage, we return -2 to indicate "percentage mode"
-        if (fanIndex == 1)
+        if (fanIndex == 1 && Directory.Exists("/sys/module/nvidia"))
         {
             try
             {
@@ -212,6 +212,7 @@ public class LinuxAsusWmi : IAsusWmi
     /// </summary>
     public int? GetGpuFanPercent()
     {
+        if (!Directory.Exists("/sys/module/nvidia")) return null;
         try
         {
             var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=fan.speed --format=csv,noheader,nounits");
@@ -762,14 +763,17 @@ public class LinuxAsusWmi : IAsusWmi
             if (temp > 0) return temp / 1000;
         }
 
-        // Fallback: try nvidia-smi (proprietary driver doesn't always expose hwmon)
-        try
+        // Fallback: try nvidia-smi (only if NVIDIA driver is loaded)
+        if (Directory.Exists("/sys/module/nvidia"))
         {
-            var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=temperature.gpu --format=csv,noheader,nounits");
-            if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int smiTemp) && smiTemp > 0)
-                return smiTemp;
+            try
+            {
+                var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=temperature.gpu --format=csv,noheader,nounits");
+                if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int smiTemp) && smiTemp > 0)
+                    return smiTemp;
+            }
+            catch { /* nvidia-smi not available */ }
         }
-        catch { /* nvidia-smi not available */ }
 
         return -1;
     }

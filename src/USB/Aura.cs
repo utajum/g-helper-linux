@@ -248,6 +248,11 @@ public static class Aura
             Encoding.ASCII.GetBytes("]ASUS Tech.Inc."),
             new byte[] { AsusHid.AURA_ID, 0x05, 0x20, 0x31, 0, 0x1A },
         }, "AuraInit");
+
+        // Z13 and other Dynamic Lighting models need an additional init command
+        // to enable the rear window/logo RGB controller (Windows g-helper pattern)
+        if (AppConfig.IsDynamicLighting())
+            AsusHid.Write(new byte[] { AsusHid.AURA_ID, 0xC0, 0x03, 0x01 }, "DynamicLightingInit");
     }
 
     /// <summary>
@@ -346,6 +351,17 @@ public static class Aura
             SleepRear = AppConfig.IsNotFalse("keyboard_sleep_lid"),
             ShutdownRear = AppConfig.IsNotFalse("keyboard_shutdown_lid"),
         };
+
+        // Z13: rear window/logo is controlled by a mix of Logo + Bar + Lid flags.
+        // Copy Logo state into Bar and Lid so the rear panel light responds to
+        // the "Logo" checkboxes in the UI (Windows g-helper pattern).
+        if (AppConfig.IsZ13())
+        {
+            flags.AwakeBar = flags.AwakeLogo;   flags.BootBar = flags.BootLogo;
+            flags.SleepBar = flags.SleepLogo;   flags.ShutdownBar = flags.ShutdownLogo;
+            flags.AwakeLid = flags.AwakeLogo;   flags.BootLid = flags.BootLogo;
+            flags.SleepLid = flags.SleepLogo;   flags.ShutdownLid = flags.ShutdownLogo;
+        }
 
         // TUF: use sysfs kbd_rgb_state instead of HID power message
         if (_isACPI)
