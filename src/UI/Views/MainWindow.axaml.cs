@@ -204,8 +204,8 @@ public partial class MainWindow : Window
         var wmi = App.Wmi;
         if (wmi == null) return;
 
-        // No discrete GPU → hide entire GPU panel (matches Windows G-Helper behavior)
-        if (!wmi.IsFeatureSupported(AsusAttributes.DgpuDisable))
+        // No GPU Eco support → hide entire GPU panel
+        if (!wmi.IsGpuEcoAvailable())
         {
             panelGPU.IsVisible = false;
             return;

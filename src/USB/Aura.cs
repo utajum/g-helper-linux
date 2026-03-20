@@ -253,6 +253,37 @@ public static class Aura
         // to enable the rear window/logo RGB controller (Windows g-helper pattern)
         if (AppConfig.IsDynamicLighting())
             AsusHid.Write(new byte[] { AsusHid.AURA_ID, 0xC0, 0x03, 0x01 }, "DynamicLightingInit");
+
+        // Probe hardware capabilities via GetFeature (diagnostic — log raw response)
+        // This runs async to avoid blocking startup; results are logged for analysis.
+        Task.Run(() =>
+        {
+            try
+            {
+                var response = HidrawHelper.QueryAuraCapabilities();
+                if (response != null)
+                {
+                    Logger.WriteLine($"AURA Capabilities (hardware query):");
+                    Logger.WriteLine($"  KBBackLightType[9]=0x{response[9]:X2} ({response[9] switch {
+                        0 => "SingleColor", 1 => "MinimalZone", 2 => "MultiZone",
+                        3 => "PerKey", 4 => "FourZone", _ => "Unknown" }})");
+                    Logger.WriteLine($"  Zones[13]=0x{response[13]:X2} (Logo={((response[13] & 0x01) != 0 ? "yes" : "no")}" +
+                        $", Lightbar={((response[13] & 0x02) != 0 ? "yes" : "no")}" +
+                        $", VCut={((response[13] & 0x10) != 0 ? "yes" : "no")}" +
+                        $", Aero={((response[13] & 0x20) != 0 ? "yes" : "no")}" +
+                        $", Bump={((response[13] & 0x40) != 0 ? "yes" : "no")}" +
+                        $", Rearglow={((response[13] & 0x80) != 0 ? "yes" : "no")})");
+                    Logger.WriteLine($"  Version[10]=0x{response[10]:X2}, ModelSeries[17]=0x{response[17]:X2} ({response[17] switch {
+                        1 => "Strix", 2 => "Flow", 4 => "Zephyrus", 8 => "TUF",
+                        0x10 => "SE", 0x20 => "Desktop", _ => $"0x{response[17]:X2}" }})");
+                    Logger.WriteLine($"  LEDs: Bar={response[18]}, Logo={response[19]}, Aero={response[20]}, VCut={response[21]}, Rear={response[22]}, Bump={response[23]}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"AURA Capabilities probe failed: {ex.Message}");
+            }
+        });
     }
 
     /// <summary>

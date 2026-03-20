@@ -529,6 +529,12 @@ public static class SysfsHelper
         return RunCommandWithTimeout(command, args, 5000);
     }
 
+    /// <summary>Run a command via pkexec with 2-minute timeout (for password dialog).</summary>
+    public static string? RunPkexec(string args)
+    {
+        return RunCommandWithTimeout("pkexec", args, 120000);
+    }
+
     /// <summary>Run a shell command with specified timeout (milliseconds).</summary>
     public static string? RunCommandWithTimeout(string command, string args, int timeoutMs)
     {

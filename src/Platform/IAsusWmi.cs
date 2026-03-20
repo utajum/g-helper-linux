@@ -131,4 +131,10 @@ public interface IAsusWmi : IDisposable
 
     /// <summary>Check if a sysfs attribute exists (feature is supported).</summary>
     bool IsFeatureSupported(string feature);
+
+    /// <summary>
+    /// True if GPU Eco mode switching is available — via sysfs (dgpu_disable)
+    /// or raw WMI debugfs (when raw_wmi opt-in is enabled and firmware supports it).
+    /// </summary>
+    bool IsGpuEcoAvailable();
 }

@@ -359,11 +359,43 @@ public class LinuxAsusWmi : IAsusWmi
 
     // ── GPU ──
 
+    // ── Raw WMI GPU Eco detection (cached) ──
+    private bool? _rawWmiGpuEcoAvailable;
+
+    /// <summary>
+    /// True if GPU Eco switching is available — either via sysfs (dgpu_disable)
+    /// or via raw WMI debugfs (when raw_wmi is enabled and firmware supports it).
+    /// </summary>
+    public bool IsGpuEcoAvailable()
+    {
+        if (IsFeatureSupported(AsusAttributes.DgpuDisable))
+            return true;
+
+        if (!Helpers.AppConfig.Is("raw_wmi") || !AsusWmiDebugfs.IsAvailable())
+            return false;
+
+        if (!_rawWmiGpuEcoAvailable.HasValue)
+        {
+            _rawWmiGpuEcoAvailable = AsusWmiDebugfs.IsDevicePresent(AsusWmiDebugfs.DEVID_DGPU)
+                                  || AsusWmiDebugfs.IsDevicePresent(AsusWmiDebugfs.DEVID_DGPU_VIVO);
+            Helpers.Logger.WriteLine($"Raw WMI GPUEco probe: {(_rawWmiGpuEcoAvailable.Value ? "available" : "not found")}");
+        }
+
+        return _rawWmiGpuEcoAvailable.Value;
+    }
+
     public bool GetGpuEco()
     {
+        // Path 1: sysfs (standard — works on models with dgpu_disable)
         var path = SysfsHelper.ResolveAttrPath(AsusAttributes.DgpuDisable, SysfsHelper.AsusBusPlatform);
-        if (path == null) return false;
-        return SysfsHelper.ReadInt(path, 0) == 1;
+        if (path != null) return SysfsHelper.ReadInt(path, 0) == 1;
+
+        // Path 2: raw WMI debugfs (opt-in — for models without dgpu_disable sysfs)
+        if (!Helpers.AppConfig.Is("raw_wmi")) return false;
+        uint? r = AsusWmiDebugfs.Dsts(AsusWmiDebugfs.DEVID_DGPU)
+               ?? AsusWmiDebugfs.Dsts(AsusWmiDebugfs.DEVID_DGPU_VIVO);
+        if (r == null) return false;
+        return (r.Value & 0x01) == 1;
     }
 
     /// <summary>
@@ -490,7 +522,27 @@ public class LinuxAsusWmi : IAsusWmi
     public void SetGpuEco(bool enabled)
     {
         var path = SysfsHelper.ResolveAttrPath(AsusAttributes.DgpuDisable, SysfsHelper.AsusBusPlatform);
-        if (path == null) return;
+
+        // No sysfs → try raw WMI debugfs (opt-in)
+        if (path == null)
+        {
+            if (!Helpers.AppConfig.Is("raw_wmi")) return;
+
+            // Same safety guards as sysfs path
+            if (enabled && IsDgpuDriverActive())
+                throw new InvalidOperationException(
+                    "SAFETY: Cannot disable dGPU — driver is active (raw WMI path).");
+            if (enabled && GetGpuMuxMode() == 0)
+                throw new InvalidOperationException(
+                    "SAFETY: Cannot disable dGPU — MUX is in dGPU mode (raw WMI path).");
+
+            uint devId = AsusWmiDebugfs.IsDevicePresent(AsusWmiDebugfs.DEVID_DGPU)
+                ? AsusWmiDebugfs.DEVID_DGPU : AsusWmiDebugfs.DEVID_DGPU_VIVO;
+            uint? result = AsusWmiDebugfs.Devs(devId, enabled ? 1u : 0u);
+            Helpers.Logger.WriteLine($"SetGpuEco({enabled}) via raw WMI debugfs " +
+                $"(device 0x{devId:X8}, result={(result.HasValue ? $"0x{result.Value:X}" : "null")})");
+            return;
+        }
 
         // Skip write if already in desired state — writing dgpu_disable can block
         // in the kernel for 30-60 seconds while the GPU powers down via ACPI/WMI

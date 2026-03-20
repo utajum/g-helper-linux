@@ -171,7 +171,28 @@ fi
 case "$MODE" in
     eco)
         if [[ -z "$dgpu_path" ]]; then
-            log "eco: dgpu_disable sysfs not found — skipping, app will handle"
+            # No sysfs — try debugfs raw WMI if available
+            # The trigger file only exists because the user enabled raw_wmi and clicked Eco
+            if [[ -d /sys/kernel/debug/asus-nb-wmi ]]; then
+                log "eco: no sysfs, using debugfs raw WMI (DEVS 0x00090020, 1)"
+                # Double-write pattern (from kernel comment in dgpu_disable_store):
+                # "A user may be required to store the value twice, typical store first,
+                #  then rescan PCI bus to activate power, then store a second time to
+                #  save correctly."
+                echo 0x00090020 > /sys/kernel/debug/asus-nb-wmi/dev_id 2>/dev/null
+                echo 1 > /sys/kernel/debug/asus-nb-wmi/ctrl_param 2>/dev/null
+                result=$(cat /sys/kernel/debug/asus-nb-wmi/devs 2>&1)
+                log "eco: raw WMI first write: $result"
+                sleep 0.1
+                echo 1 > /sys/bus/pci/rescan 2>/dev/null
+                sleep 0.1
+                echo 0x00090020 > /sys/kernel/debug/asus-nb-wmi/dev_id 2>/dev/null
+                echo 1 > /sys/kernel/debug/asus-nb-wmi/ctrl_param 2>/dev/null
+                result=$(cat /sys/kernel/debug/asus-nb-wmi/devs 2>&1)
+                log "eco: raw WMI second write: $result"
+            else
+                log "eco: no sysfs or debugfs — app will handle"
+            fi
         else
             # Check MUX — cannot set Eco when MUX=0
             if [[ -n "$mux_path" ]]; then
@@ -223,6 +244,13 @@ case "$MODE" in
             else
                 log "$MODE: dgpu already enabled (dgpu_disable=0)"
             fi
+        elif [[ -d /sys/kernel/debug/asus-nb-wmi ]]; then
+            # No sysfs — try debugfs raw WMI to enable dGPU
+            log "$MODE: no sysfs, using debugfs raw WMI (DEVS 0x00090020, 0)"
+            echo 0x00090020 > /sys/kernel/debug/asus-nb-wmi/dev_id 2>/dev/null
+            echo 0 > /sys/kernel/debug/asus-nb-wmi/ctrl_param 2>/dev/null
+            result=$(cat /sys/kernel/debug/asus-nb-wmi/devs 2>&1)
+            log "$MODE: raw WMI result: $result"
         fi
         ;;
 

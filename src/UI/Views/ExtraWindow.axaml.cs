@@ -574,6 +574,7 @@ public partial class ExtraWindow : Window
     {
         checkAutoApplyPower.IsChecked = Helpers.AppConfig.IsMode("auto_apply_power");
         checkScreenAuto.IsChecked = Helpers.AppConfig.Is("screen_auto");
+        checkRawWmi.IsChecked = Helpers.AppConfig.Is("raw_wmi");
 
         // CPU cores
         int total = LinuxSystemIntegration.GetCpuCount();
@@ -606,6 +607,24 @@ public partial class ExtraWindow : Window
         bool enabled = checkScreenAuto.IsChecked ?? false;
         Helpers.AppConfig.Set("screen_auto", enabled ? 1 : 0);
         Helpers.Logger.WriteLine($"Screen auto refresh → {enabled}");
+    }
+
+    private void CheckRawWmi_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        bool enabled = checkRawWmi.IsChecked ?? false;
+
+        Helpers.AppConfig.Set("raw_wmi", enabled ? 1 : 0);
+        Helpers.AppConfig.Flush();
+        Helpers.Logger.WriteLine($"Raw WMI mode → {enabled}, restarting app");
+
+        // Restart app so the new setting takes effect immediately
+        var exePath = Environment.ProcessPath;
+        if (exePath != null)
+        {
+            System.Diagnostics.Process.Start(exePath);
+            Environment.Exit(0);
+        }
     }
 
     private void SliderCpuCores_ValueChanged(object? sender,

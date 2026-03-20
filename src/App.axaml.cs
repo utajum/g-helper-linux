@@ -248,6 +248,21 @@ public class App : Application
             bool supported = Wmi?.IsFeatureSupported(attr) ?? false;
             Logger.WriteLine($"  {name}: {(supported ? "YES" : "no")}");
         }
+
+        // Raw WMI: probe all GPU ACPI endpoints in a single pkexec call (only when enabled)
+        if (Helpers.AppConfig.Is("raw_wmi"))
+        {
+            Logger.WriteLine("  Raw WMI mode: ENABLED (user opt-in)");
+            if (AsusWmiDebugfs.IsAvailable())
+            {
+                AsusWmiDebugfs.ProbeAll();      // 1 pkexec call — probes + caches all device IDs
+                AsusWmiDebugfs.LogProbeResults(); // reads from cache, no pkexec
+            }
+            else
+            {
+                Logger.WriteLine("  Raw WMI debugfs: not available");
+            }
+        }
     }
 
     private void InitializeGpuControl()
@@ -594,10 +609,10 @@ public class App : Application
 
         menu.Add(new NativeMenuItemSeparator());
 
-        // GPU modes — only show if dGPU is present (dgpu_disable sysfs attribute exists).
-        // All sysfs writes run in Task.Run via GpuModeController
+        // GPU modes — show if GPU Eco is available (sysfs or raw WMI debugfs).
+        // All writes run in Task.Run via GpuModeController
         // (dgpu_disable writes can block in the kernel for 30-60 seconds)
-        if (Wmi?.IsFeatureSupported(AsusAttributes.DgpuDisable) == true)
+        if (Wmi?.IsGpuEcoAvailable() == true)
         {
             var eco = new NativeMenuItem("GPU: Eco (iGPU only)");
             eco.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Eco);

@@ -28,6 +28,9 @@ public static class Diagnostics
         // ── Module Backend (asus-nb-wmi vs asus-armoury) ──
         AppendModuleBackend(sb);
 
+        // ── Raw WMI (debugfs) ──
+        AppendRawWmiProbe(sb);
+
         // ── Sysfs Permissions & Values ──
         AppendSysfsState(sb);
 
@@ -186,6 +189,13 @@ public static class Diagnostics
         }
 
         sb.AppendLine();
+    }
+
+    private static void AppendRawWmiProbe(StringBuilder sb)
+    {
+        sb.AppendLine();
+        sb.AppendLine("--- Raw WMI (debugfs) ---");
+        sb.AppendLine(Platform.Linux.AsusWmiDebugfs.GetDiagnostics());
     }
 
     private static void AppendSysfsState(StringBuilder sb)
@@ -376,6 +386,27 @@ public static class Diagnostics
         sb.AppendLine($"AsusHid.IsAvailable: {USB.AsusHid.IsAvailable()}");
         sb.AppendLine($"AsusHid.UsingI2cHidraw: {USB.AsusHid.UsingI2cHidraw}");
         sb.AppendLine($"Aura.IsAvailable: {USB.Aura.IsAvailable()}");
+
+        // AURA hardware capability probe (GetFeature 0x5D response)
+        try
+        {
+            var caps = USB.HidrawHelper.QueryAuraCapabilities();
+            if (caps != null)
+            {
+                sb.AppendLine($"AURA GetFeature: {BitConverter.ToString(caps, 0, 24)}");
+                sb.AppendLine($"  KBBackLightType[9]=0x{caps[9]:X2} Zones[13]=0x{caps[13]:X2} Version[10]=0x{caps[10]:X2} Series[17]=0x{caps[17]:X2}");
+                sb.AppendLine($"  LEDs: Bar={caps[18]} Logo={caps[19]} Aero={caps[20]} VCut={caps[21]} Rear={caps[22]} Bump={caps[23]}");
+            }
+            else
+            {
+                sb.AppendLine("AURA GetFeature: failed (no response)");
+            }
+        }
+        catch (Exception ex)
+        {
+            sb.AppendLine($"AURA GetFeature: error ({ex.Message})");
+        }
+
         sb.AppendLine();
     }
 

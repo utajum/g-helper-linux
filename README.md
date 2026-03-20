@@ -125,6 +125,42 @@ Switching to Eco while the dGPU driver is active shows a dialog with three optio
 - **Eco mode** may require a reboot if the dGPU driver holds a DRM file descriptor
 - On boot, a systemd oneshot service applies pending GPU mode changes before the display manager starts
 
+### `╠══[ RAW WMI MODE (EXPERIMENTAL) ]══╣`
+
+For 2020-2021 laptops without `dgpu_disable` sysfs, G-Helper supports raw ACPI/WMI calls
+via the kernel's debugfs interface. See **[RAW_WMI.md](RAW_WMI.md)** for details.
+
+---
+
+## `░▒▓█ ╔══[ DISCLAIMER ]══╗ █▓▒░`
+
+```
+╔══[ TERMS OF USE ]══════════════════════════════════════════════╗
+║                                                                 ║
+║  G-Helper Linux interacts directly with ASUS firmware via       ║
+║  kernel sysfs attributes and ACPI/WMI methods. These are the   ║
+║  same interfaces used by ASUS Armoury Crate on Windows.         ║
+║                                                                 ║
+║  BY USING THIS SOFTWARE, YOU ACKNOWLEDGE:                       ║
+║                                                                 ║
+║  1. This software writes to hardware control registers that     ║
+║     affect GPU power state, fan speeds, power limits, and       ║
+║     MUX switch configuration.                                   ║
+║                                                                 ║
+║  2. Incorrect or interrupted writes (e.g., power loss during    ║
+║     a MUX switch) could leave hardware in an unexpected state.  ║
+║     In rare cases, a CMOS reset may be needed to recover.       ║
+║                                                                 ║
+║  3. Experimental features (marked as such) bypass normal        ║
+║     kernel safety checks and should only be enabled if you      ║
+║     understand the risks.                                       ║
+║                                                                 ║
+║  4. This software is provided AS-IS with no warranty.           ║
+║     The authors are not responsible for hardware damage.        ║
+║                                                                 ║
+╚═════════════════════════════════════════════════════════════════╝
+```
+
 ---
 
 ## `░▒▓█ ╔══[ SYSTEM REQUIREMENTS ]══╗ █▓▒░`

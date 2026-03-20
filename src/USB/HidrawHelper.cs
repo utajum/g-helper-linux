@@ -38,6 +38,12 @@ public static class HidrawHelper
         return (uint)(0xC0004806 | ((size & 0x3FFF) << 16));
     }
 
+    // HIDIOCGFEATURE = _IOWR('H', 0x07, len)  — read GetFeature report
+    private static uint HIDIOCGFEATURE(int size)
+    {
+        return (uint)(0xC0004807 | ((size & 0x3FFF) << 16));
+    }
+
     // Bus type constants from linux/input.h
     private const ushort BUS_USB = 0x03;
     private const ushort BUS_I2C = 0x18;
@@ -247,6 +253,80 @@ public static class HidrawHelper
     public static bool WriteAll(byte reportId, byte[] data, string? log = null)
     {
         return WriteAll(reportId, new List<byte[]> { data }, log);
+    }
+
+    /// <summary>
+    /// Query AURA device capabilities via SetFeature(0x05) + GetFeature(0x5D).
+    /// Returns raw 64-byte response, or null on failure.
+    /// Protocol (from Armoury Crate decompilation of AacNBDTHal):
+    ///   1. SetFeature [0x5D, 0x05, 0x20, 0x31, 0x00, 0x1A] — query command
+    ///   2. GetFeature [0x5D, ...] — read back capability response
+    /// Response bytes of interest:
+    ///   [9]  = KBBackLightType (0=single, 1=minimal, 2=multi-zone, 3=per-key, 4=four-zone)
+    ///   [10] = Keyboard version (> 0x22 enables extended fields [17]-[23])
+    ///   [13] = Zone bitfield (bit0=Logo, bit1=Lightbar, bit4=VCut, bit5=Aero, bit6=Bump, bit7=Rearglow)
+    ///   [17] = Model series (1=Strix, 2=Flow, 4=Zephyrus, 8=TUF, 0x10=SE, 0x20=Desktop)
+    ///   [18]-[23] = LED counts per zone (Lightbar, Logo, Aero, VCut, Rearglow, Bump)
+    /// </summary>
+    public static byte[]? QueryAuraCapabilities()
+    {
+        var path = GetAuraDevicePaths().FirstOrDefault();
+        if (path == null)
+        {
+            Helpers.Logger.WriteLine("AURA GetFeature: no AURA device found");
+            return null;
+        }
+
+        int fd = -1;
+        try
+        {
+            fd = open(path, O_RDWR);
+            if (fd < 0)
+            {
+                Helpers.Logger.WriteLine($"AURA GetFeature: cannot open {path}: errno={Marshal.GetLastPInvokeError()}");
+                return null;
+            }
+
+            // Send the 0x05 query via SetFeature (targeted to this specific device)
+            byte[] query = new byte[64];
+            query[0] = 0x5D;  // report ID
+            query[1] = 0x05;
+            query[2] = 0x20;
+            query[3] = 0x31;
+            query[4] = 0x00;
+            query[5] = 0x1A;
+            int ret = ioctl(fd, HIDIOCSFEATURE(64), query);
+            if (ret < 0)
+            {
+                Helpers.Logger.WriteLine($"AURA GetFeature: SetFeature(0x05) failed on {path}: errno={Marshal.GetLastPInvokeError()}");
+                return null;
+            }
+
+            // Small delay for firmware to prepare response
+            Thread.Sleep(50);
+
+            // Read back via GetFeature — report ID must be pre-set in buffer
+            byte[] response = new byte[64];
+            response[0] = 0x5D;  // report ID
+            ret = ioctl(fd, HIDIOCGFEATURE(64), response);
+            if (ret < 0)
+            {
+                Helpers.Logger.WriteLine($"AURA GetFeature: GetFeature(0x5D) failed on {path}: errno={Marshal.GetLastPInvokeError()}");
+                return null;
+            }
+
+            Helpers.Logger.WriteLine($"AURA GetFeature OK on {path}: {BitConverter.ToString(response, 0, Math.Min(ret, 32))}");
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"AURA GetFeature: exception on {path}: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            if (fd >= 0) close(fd);
+        }
     }
 
     // ── Internal ──

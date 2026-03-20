@@ -534,6 +534,9 @@ public static class AppConfig
         }
     }
 
+    /// <summary>Force immediate config write to disk (bypasses 2-second debounce timer).</summary>
+    public static void Flush() => FlushConfig();
+
     private static void ScheduleWrite()
     {
         _writeTimer?.Stop();

@@ -67,6 +67,15 @@ jobs:
           path: install/90-ghelper.rules
           retention-days: 7
 
+      - name: Upload GPU boot files artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpu-boot-files
+          path: |
+            install/ghelper-gpu-boot.sh
+            install/ghelper-gpu-boot.service
+          retention-days: 7
+
   appimage:
     needs: [build]
     runs-on: ubuntu-latest
@@ -138,8 +147,10 @@ jobs:
           cp artifacts/native-libs/libSkiaSharp.so           bundle/
           cp artifacts/native-libs/libHarfBuzzSharp.so       bundle/
           cp artifacts/udev-rules/90-ghelper.rules           bundle/
+          cp artifacts/gpu-boot-files/ghelper-gpu-boot.sh    bundle/
+          cp artifacts/gpu-boot-files/ghelper-gpu-boot.service bundle/
           cp artifacts/appimage/GHelper-x86_64.AppImage      bundle/
-          chmod +x bundle/ghelper bundle/GHelper-x86_64.AppImage
+          chmod +x bundle/ghelper bundle/GHelper-x86_64.AppImage bundle/ghelper-gpu-boot.sh
 
       - name: Upload combined artifact
         uses: actions/upload-artifact@v4
@@ -182,13 +193,14 @@ jobs:
               '| `libSkiaSharp.so` | SkiaSharp native library |',
               '| `libHarfBuzzSharp.so` | HarfBuzzSharp native library |',
               '| `90-ghelper.rules` | Udev rules for hardware access without sudo |',
+              '| `ghelper-gpu-boot.sh` | GPU mode boot script (applies Eco/Standard before display manager) |',
+              '| `ghelper-gpu-boot.service` | Systemd service for GPU boot script |',
               '',
               '---',
               '',
-              '**Quick test:**',
+              '**Quick test (download + extract):**',
               '```bash',
-              `unzip ${zipName}.zip -d ${zipName}`,
-              `cd ${zipName}`,
+              `wget ${nightlyBase}/${zipName}.zip && unzip ${zipName}.zip -d ${zipName} && cd ${zipName}`,
               '```',
               '',
               '**Option A — AppImage (easiest):**',
@@ -210,6 +222,16 @@ jobs:
               '```',
               '',
               '> **Note:** Without udev rules, ghelper needs `sudo` to access fan curves, performance modes, keyboard backlight, etc.',
+              '',
+              '**Install GPU boot service (required for GPU mode switching across reboots):**',
+              '```bash',
+              'sudo mkdir -p /usr/local/lib/ghelper',
+              'sudo cp ghelper-gpu-boot.sh /usr/local/lib/ghelper/',
+              'sudo chmod 755 /usr/local/lib/ghelper/ghelper-gpu-boot.sh',
+              'sudo cp ghelper-gpu-boot.service /etc/systemd/system/',
+              'sudo systemctl daemon-reload',
+              'sudo systemctl enable ghelper-gpu-boot.service',
+              '```',
               '',
               `> Artifacts expire in 7 days.`,
             ].join('\n');

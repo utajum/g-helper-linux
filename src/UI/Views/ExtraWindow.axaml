@@ -297,6 +297,15 @@
                               Checked="CheckAutoApplyPower_Changed"
                               Unchecked="CheckAutoApplyPower_Changed" />
 
+                    <CheckBox x:Name="checkRawWmi"
+                              Content="Raw WMI mode (experimental — GPU Eco via ACPI debugfs)"
+                              Margin="0,4"
+                              Checked="CheckRawWmi_Changed"
+                              Unchecked="CheckRawWmi_Changed" />
+                    <TextBlock x:Name="labelRawWmiHint" Classes="label-dim"
+                               Text="For laptops without GPU Eco sysfs. App will restart when toggled."
+                               FontSize="10" Margin="20,0,0,4" />
+
                     <CheckBox x:Name="checkScreenAuto" Content="Auto-switch refresh rate (AC/Battery)"
                               Margin="0,4"
                               Checked="CheckScreenAuto_Changed"

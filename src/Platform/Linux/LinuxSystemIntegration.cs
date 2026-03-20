@@ -155,7 +155,7 @@ public class LinuxSystemIntegration : ISystemIntegration
         }
 
         // Fallback: pkexec gives a graphical password prompt
-        result = SysfsHelper.RunCommand("pkexec", $"modprobe {args}");
+        result = SysfsHelper.RunPkexec($"modprobe {args}");
         Helpers.Logger.WriteLine($"Camera {(enabled ? "enabled" : "disabled")}: {(result != null ? "OK (pkexec)" : "failed (needs root)")}");
     }
 
