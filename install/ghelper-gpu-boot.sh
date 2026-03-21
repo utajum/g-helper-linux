@@ -174,21 +174,30 @@ case "$MODE" in
             # No sysfs — try debugfs raw WMI if available
             # The trigger file only exists because the user enabled raw_wmi and clicked Eco
             if [[ -d /sys/kernel/debug/asus-nb-wmi ]]; then
-                log "eco: no sysfs, using debugfs raw WMI (DEVS 0x00090020, 1)"
+                local DEBUGFS="/sys/kernel/debug/asus-nb-wmi"
+                # Try ROG endpoint (0x00090020), fall back to Vivobook (0x00090120)
+                local DEVID="0x00090020"
+                echo $DEVID > $DEBUGFS/dev_id 2>/dev/null
+                local probe=$(cat $DEBUGFS/dsts 2>&1)
+                if echo "$probe" | grep -q "No such device"; then
+                    DEVID="0x00090120"
+                    log "eco: ROG endpoint not supported, trying Vivobook ($DEVID)"
+                fi
+                log "eco: no sysfs, using debugfs raw WMI (DEVS $DEVID, 1)"
                 # Double-write pattern (from kernel comment in dgpu_disable_store):
                 # "A user may be required to store the value twice, typical store first,
                 #  then rescan PCI bus to activate power, then store a second time to
                 #  save correctly."
-                echo 0x00090020 > /sys/kernel/debug/asus-nb-wmi/dev_id 2>/dev/null
-                echo 1 > /sys/kernel/debug/asus-nb-wmi/ctrl_param 2>/dev/null
-                result=$(cat /sys/kernel/debug/asus-nb-wmi/devs 2>&1)
+                echo $DEVID > $DEBUGFS/dev_id 2>/dev/null
+                echo 1 > $DEBUGFS/ctrl_param 2>/dev/null
+                result=$(cat $DEBUGFS/devs 2>&1)
                 log "eco: raw WMI first write: $result"
                 sleep 0.1
                 echo 1 > /sys/bus/pci/rescan 2>/dev/null
                 sleep 0.1
-                echo 0x00090020 > /sys/kernel/debug/asus-nb-wmi/dev_id 2>/dev/null
-                echo 1 > /sys/kernel/debug/asus-nb-wmi/ctrl_param 2>/dev/null
-                result=$(cat /sys/kernel/debug/asus-nb-wmi/devs 2>&1)
+                echo $DEVID > $DEBUGFS/dev_id 2>/dev/null
+                echo 1 > $DEBUGFS/ctrl_param 2>/dev/null
+                result=$(cat $DEBUGFS/devs 2>&1)
                 log "eco: raw WMI second write: $result"
             else
                 log "eco: no sysfs or debugfs — app will handle"
@@ -246,10 +255,19 @@ case "$MODE" in
             fi
         elif [[ -d /sys/kernel/debug/asus-nb-wmi ]]; then
             # No sysfs — try debugfs raw WMI to enable dGPU
-            log "$MODE: no sysfs, using debugfs raw WMI (DEVS 0x00090020, 0)"
-            echo 0x00090020 > /sys/kernel/debug/asus-nb-wmi/dev_id 2>/dev/null
-            echo 0 > /sys/kernel/debug/asus-nb-wmi/ctrl_param 2>/dev/null
-            result=$(cat /sys/kernel/debug/asus-nb-wmi/devs 2>&1)
+            local DEBUGFS="/sys/kernel/debug/asus-nb-wmi"
+            # Try ROG endpoint first, fall back to Vivobook
+            local DEVID="0x00090020"
+            echo $DEVID > $DEBUGFS/dev_id 2>/dev/null
+            local probe=$(cat $DEBUGFS/dsts 2>&1)
+            if echo "$probe" | grep -q "No such device"; then
+                DEVID="0x00090120"
+                log "$MODE: ROG endpoint not supported, trying Vivobook ($DEVID)"
+            fi
+            log "$MODE: no sysfs, using debugfs raw WMI (DEVS $DEVID, 0)"
+            echo $DEVID > $DEBUGFS/dev_id 2>/dev/null
+            echo 0 > $DEBUGFS/ctrl_param 2>/dev/null
+            result=$(cat $DEBUGFS/devs 2>&1)
             log "$MODE: raw WMI result: $result"
         fi
         ;;

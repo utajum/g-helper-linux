@@ -391,9 +391,11 @@ public class LinuxAsusWmi : IAsusWmi
         if (path != null) return SysfsHelper.ReadInt(path, 0) == 1;
 
         // Path 2: raw WMI debugfs (opt-in — for models without dgpu_disable sysfs)
+        // Use cached probe to pick the right device ID (0 pkexec), then 1 DSTS call
         if (!Helpers.AppConfig.Is("raw_wmi")) return false;
-        uint? r = AsusWmiDebugfs.Dsts(AsusWmiDebugfs.DEVID_DGPU)
-               ?? AsusWmiDebugfs.Dsts(AsusWmiDebugfs.DEVID_DGPU_VIVO);
+        uint devId = AsusWmiDebugfs.IsDevicePresent(AsusWmiDebugfs.DEVID_DGPU)
+            ? AsusWmiDebugfs.DEVID_DGPU : AsusWmiDebugfs.DEVID_DGPU_VIVO;
+        uint? r = AsusWmiDebugfs.Dsts(devId);
         if (r == null) return false;
         return (r.Value & 0x01) == 1;
     }
