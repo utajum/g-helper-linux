@@ -84,6 +84,10 @@ SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
   ATTR{mini_led_mode}!="", \
   RUN+="/bin/chmod 0666 /sys/bus/platform/devices/asus-nb-wmi/mini_led_mode"
 
+# PCI bus rescan — needed after dgpu_disable=0 (Eco→Standard) to re-enumerate dGPU
+SUBSYSTEM=="platform", DRIVER=="asus-nb-wmi", \
+  RUN+="/bin/chmod 0666 /sys/bus/pci/rescan"
+
 # ── Battery charge limit ──
 SUBSYSTEM=="power_supply", ATTR{type}=="Battery", \
   ATTR{charge_control_end_threshold}!="", \

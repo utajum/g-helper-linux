@@ -49,6 +49,9 @@ public static class Diagnostics
         // ── udev / tmpfiles ──
         AppendInstallState(sb);
 
+        // ── Boot service journal ──
+        AppendBootServiceLog(sb);
+
         // ── Recent log (last, always at the end) ──
         AppendRecentLog(sb);
 
@@ -531,6 +534,18 @@ public static class Diagnostics
         var optExists = File.Exists("/opt/ghelper/ghelper");
         sb.AppendLine($"  /opt/ghelper/ghelper: {(optExists ? "installed" : "NOT FOUND")}");
 
+        sb.AppendLine();
+    }
+
+    private static void AppendBootServiceLog(StringBuilder sb)
+    {
+        sb.AppendLine("--- Boot Service Log (ghelper-gpu-boot) ---");
+        var output = Platform.Linux.SysfsHelper.RunCommand("journalctl",
+            "-t ghelper-gpu-boot --no-pager -n 50");
+        if (string.IsNullOrWhiteSpace(output))
+            sb.AppendLine("  (no entries or journalctl not available)");
+        else
+            sb.AppendLine(output);
         sb.AppendLine();
     }
 
