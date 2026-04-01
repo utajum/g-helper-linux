@@ -542,6 +542,65 @@ public static class SysfsHelper
         return RunCommandWithTimeout("pkexec", new[] { "bash", "-c", script }, 120000);
     }
 
+    public static string? RunCommandWithTimeout(string command, string[] args, int timeoutMs)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = command,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            foreach (var arg in args)
+            {
+                psi.ArgumentList.Add(arg);
+            }
+
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return null;
+
+            // Read output with timeout
+            var outputTask = proc.StandardOutput.ReadToEndAsync();
+            var errorTask = proc.StandardError.ReadToEndAsync();
+
+            if (outputTask.Wait(timeoutMs))
+            {
+                var output = outputTask.Result.Trim();
+                var errorOutput = errorTask.IsCompleted ? errorTask.Result.Trim() : "";
+
+                proc.WaitForExit(100); // Give a moment for exit code
+
+                if (proc.ExitCode != 0 && !string.IsNullOrEmpty(errorOutput))
+                {
+                    Helpers.Logger.WriteLine($"RunCommand({command} {args}) failed with exit code {proc.ExitCode}: {errorOutput}");
+                }
+
+                return proc.ExitCode == 0 ? output : null;
+            }
+            else
+            {
+                // Timeout - kill the process
+                try
+                {
+                    proc.Kill();
+                    Helpers.Logger.WriteLine($"RunCommand timeout: {command} {args}");
+                }
+                catch { /* Ignore kill errors */ }
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"SysfsHelper.RunCommand({command} {args}) failed", ex);
+            return null;
+        }
+    }
+
+
     /// <summary>Run a shell command with specified timeout (milliseconds).</summary>
     public static string? RunCommandWithTimeout(string command, string args, int timeoutMs)
     {
