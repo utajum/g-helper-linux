@@ -542,84 +542,44 @@ public static class SysfsHelper
         return RunCommandWithTimeout("pkexec", new[] { "bash", "-c", script }, 120000);
     }
 
+    /// <summary>Run a command with explicit args (no whitespace splitting).</summary>
     public static string? RunCommandWithTimeout(string command, string[] args, int timeoutMs)
     {
-        try
+        var psi = new System.Diagnostics.ProcessStartInfo
         {
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = command,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            foreach (var arg in args)
-            {
-                psi.ArgumentList.Add(arg);
-            }
-
-            using var proc = System.Diagnostics.Process.Start(psi);
-            if (proc == null) return null;
-
-            // Read output with timeout
-            var outputTask = proc.StandardOutput.ReadToEndAsync();
-            var errorTask = proc.StandardError.ReadToEndAsync();
-
-            if (outputTask.Wait(timeoutMs))
-            {
-                var output = outputTask.Result.Trim();
-                var errorOutput = errorTask.IsCompleted ? errorTask.Result.Trim() : "";
-
-                proc.WaitForExit(100); // Give a moment for exit code
-
-                if (proc.ExitCode != 0 && !string.IsNullOrEmpty(errorOutput))
-                {
-                    Helpers.Logger.WriteLine($"RunCommand({command} {args}) failed with exit code {proc.ExitCode}: {errorOutput}");
-                }
-
-                return proc.ExitCode == 0 ? output : null;
-            }
-            else
-            {
-                // Timeout - kill the process
-                try
-                {
-                    proc.Kill();
-                    Helpers.Logger.WriteLine($"RunCommand timeout: {command} {args}");
-                }
-                catch { /* Ignore kill errors */ }
-                return null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"SysfsHelper.RunCommand({command} {args}) failed", ex);
-            return null;
-        }
+            FileName = command,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (var arg in args)
+            psi.ArgumentList.Add(arg);
+        return RunProcess(psi, $"{command} {string.Join(" ", args)}", timeoutMs);
     }
-
 
     /// <summary>Run a shell command with specified timeout (milliseconds).</summary>
     public static string? RunCommandWithTimeout(string command, string args, int timeoutMs)
     {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = command,
+            Arguments = args,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        return RunProcess(psi, $"{command} {args}", timeoutMs);
+    }
+
+    private static string? RunProcess(System.Diagnostics.ProcessStartInfo psi, string fullCommand, int timeoutMs)
+    {
         try
         {
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) return null;
 
-            // Read output with timeout
             var outputTask = proc.StandardOutput.ReadToEndAsync();
             var errorTask = proc.StandardError.ReadToEndAsync();
 
@@ -632,18 +592,17 @@ public static class SysfsHelper
 
                 if (proc.ExitCode != 0 && !string.IsNullOrEmpty(errorOutput))
                 {
-                    Helpers.Logger.WriteLine($"RunCommand({command} {args}) failed with exit code {proc.ExitCode}: {errorOutput}");
+                    Helpers.Logger.WriteLine($"RunCommand({fullCommand}) failed with exit code {proc.ExitCode}: {errorOutput}");
                 }
 
                 return proc.ExitCode == 0 ? output : null;
             }
             else
             {
-                // Timeout - kill the process
                 try
                 {
                     proc.Kill();
-                    Helpers.Logger.WriteLine($"RunCommand timeout: {command} {args}");
+                    Helpers.Logger.WriteLine($"RunCommand timeout: {fullCommand}");
                 }
                 catch { /* Ignore kill errors */ }
                 return null;
@@ -651,7 +610,7 @@ public static class SysfsHelper
         }
         catch (Exception ex)
         {
-            Helpers.Logger.WriteLine($"SysfsHelper.RunCommand({command} {args}) failed", ex);
+            Helpers.Logger.WriteLine($"SysfsHelper.RunCommand({fullCommand}) failed", ex);
             return null;
         }
     }
