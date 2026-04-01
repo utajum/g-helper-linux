@@ -1446,11 +1446,11 @@ public class GpuModeController
             else
             {
                 Logger.WriteLine("GpuModeController: using pkexec fallback");
-                SysfsHelper.RunCommandWithTimeout("pkexec",
-                    $"bash -c 'mkdir -p /etc/ghelper && " +
+                string script = $"mkdir -p /etc/ghelper && " +
                     $"install -m 644 {tmpModprobe} {ModprobeBlockPath} && " +
                     $"install -m 644 {tmpUdev} {UdevRemovePath} && " +
-                    $"echo {modeStr} > {TriggerPath}'", 120000);
+                    $"echo {modeStr} > {TriggerPath}";
+                SysfsHelper.RunPkexecBash(script);
             }
 
             // Clean up temp files

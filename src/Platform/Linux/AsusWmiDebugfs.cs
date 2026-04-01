@@ -78,8 +78,8 @@ public static class AsusWmiDebugfs
         foreach (uint id in ProbeIds)
             parts.Add($"echo 0x{id:X8} > {DebugfsDir}/dev_id && cat {DebugfsDir}/dsts 2>&1");
 
-        string cmd = "bash -c \"" + string.Join("; ", parts) + "\"";
-        string? output = SysfsHelper.RunPkexec(cmd);
+        string script = string.Join("; ", parts);
+        string? output = SysfsHelper.RunPkexecBash(script);
 
         if (output == null)
         {
@@ -143,8 +143,8 @@ public static class AsusWmiDebugfs
     /// </summary>
     public static uint? Dsts(uint deviceId)
     {
-        string cmd = $"bash -c \"echo 0x{deviceId:X8} > {DebugfsDir}/dev_id && cat {DebugfsDir}/dsts\"";
-        string? output = SysfsHelper.RunPkexec(cmd);
+        string script = $"echo 0x{deviceId:X8} > {DebugfsDir}/dev_id && cat {DebugfsDir}/dsts";
+        string? output = SysfsHelper.RunPkexecBash(script);
         return ParseResult(output);
     }
 
@@ -154,10 +154,10 @@ public static class AsusWmiDebugfs
     /// </summary>
     public static uint? Devs(uint deviceId, uint ctrlParam)
     {
-        string cmd = $"bash -c \"echo 0x{deviceId:X8} > {DebugfsDir}/dev_id " +
-                     $"&& echo {ctrlParam} > {DebugfsDir}/ctrl_param " +
-                     $"&& cat {DebugfsDir}/devs\"";
-        string? output = SysfsHelper.RunPkexec(cmd);
+        string script = $"echo 0x{deviceId:X8} > {DebugfsDir}/dev_id " +
+                        $"&& echo {ctrlParam} > {DebugfsDir}/ctrl_param " +
+                        $"&& cat {DebugfsDir}/devs";
+        string? output = SysfsHelper.RunPkexecBash(script);
         return ParseResult(output);
     }
 
