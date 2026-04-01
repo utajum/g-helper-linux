@@ -535,6 +535,13 @@ public static class SysfsHelper
         return RunCommandWithTimeout("pkexec", args, 120000);
     }
 
+    /// <summary>Run a bash script via pkexec. The script is passed as a single arg to bash -c,
+    /// avoiding the whitespace splitting issue with ProcessStartInfo.Arguments</summary>
+    public static string? RunPkexecBash(string script)
+    {
+        return RunCommandWithTimeout("pkexec", new[] { "bash", "-c", script }, 120000);
+    }
+
     /// <summary>Run a shell command with specified timeout (milliseconds).</summary>
     public static string? RunCommandWithTimeout(string command, string args, int timeoutMs)
     {
@@ -556,19 +563,19 @@ public static class SysfsHelper
             // Read output with timeout
             var outputTask = proc.StandardOutput.ReadToEndAsync();
             var errorTask = proc.StandardError.ReadToEndAsync();
-            
+
             if (outputTask.Wait(timeoutMs))
             {
                 var output = outputTask.Result.Trim();
                 var errorOutput = errorTask.IsCompleted ? errorTask.Result.Trim() : "";
-                
+
                 proc.WaitForExit(100); // Give a moment for exit code
-                
+
                 if (proc.ExitCode != 0 && !string.IsNullOrEmpty(errorOutput))
                 {
                     Helpers.Logger.WriteLine($"RunCommand({command} {args}) failed with exit code {proc.ExitCode}: {errorOutput}");
                 }
-                
+
                 return proc.ExitCode == 0 ? output : null;
             }
             else
