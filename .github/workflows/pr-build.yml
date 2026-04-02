@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
   actions: read
 
 jobs:
@@ -76,6 +75,18 @@ jobs:
             install/ghelper-gpu-boot.service
           retention-days: 7
 
+      - name: Save PR metadata
+        run: |
+          echo "${{ github.event.pull_request.number }}" > pr-meta.txt
+          echo "${{ github.event.pull_request.head.sha }}" >> pr-meta.txt
+
+      - name: Upload PR metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-meta
+          path: pr-meta.txt
+          retention-days: 7
+
   appimage:
     needs: [build]
     runs-on: ubuntu-latest
@@ -130,135 +141,3 @@ jobs:
           name: appimage
           path: GHelper-x86_64.AppImage
           retention-days: 7
-
-  comment:
-    needs: [build, appimage]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Bundle artifacts
-        run: |
-          mkdir -p bundle
-          cp artifacts/ghelper/ghelper                       bundle/
-          cp artifacts/native-libs/libSkiaSharp.so           bundle/
-          cp artifacts/native-libs/libHarfBuzzSharp.so       bundle/
-          cp artifacts/udev-rules/90-ghelper.rules           bundle/
-          cp artifacts/gpu-boot-files/ghelper-gpu-boot.sh    bundle/
-          cp artifacts/gpu-boot-files/ghelper-gpu-boot.service bundle/
-          cp artifacts/appimage/GHelper-x86_64.AppImage      bundle/
-          chmod +x bundle/ghelper bundle/GHelper-x86_64.AppImage bundle/ghelper-gpu-boot.sh
-
-      - name: Upload combined artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: g-helper-linux-pr-${{ github.event.pull_request.number }}
-          path: bundle/
-          retention-days: 7
-
-      - name: Post or update PR comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const marker = '<!-- pr-build-artifacts -->';
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const sha = context.payload.pull_request.head.sha.substring(0, 7);
-            const prNum = context.payload.pull_request.number;
-            const version = `0.0.0-pr.${prNum}.${sha}`;
-
-            const nightlyBase = `https://nightly.link/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const zipName = `g-helper-linux-pr-${prNum}`;
-
-            const body = [
-              marker,
-              `### Build Artifacts`,
-              '',
-              `Built from commit \`${sha}\` — version \`${version}\``,
-              '',
-              `**[Download ${zipName}.zip](${nightlyBase}/${zipName}.zip)**`,
-              '',
-              `> [View on GitHub Actions](${runUrl}) (requires login)`,
-              '',
-              '---',
-              '',
-              '**Contents:**',
-              '',
-              '| File | Description |',
-              '|------|-------------|',
-              '| `GHelper-x86_64.AppImage` | All-in-one AppImage (easiest to run) |',
-              '| `ghelper` | Native AOT binary |',
-              '| `libSkiaSharp.so` | SkiaSharp native library |',
-              '| `libHarfBuzzSharp.so` | HarfBuzzSharp native library |',
-              '| `90-ghelper.rules` | Udev rules for hardware access without sudo |',
-              '| `ghelper-gpu-boot.sh` | GPU mode boot script (applies Eco/Standard before display manager) |',
-              '| `ghelper-gpu-boot.service` | Systemd service for GPU boot script |',
-              '',
-              '---',
-              '',
-              '**Quick test (download + extract):**',
-              '```bash',
-              `wget ${nightlyBase}/${zipName}.zip && unzip ${zipName}.zip -d ${zipName} && cd ${zipName}`,
-              '```',
-              '',
-              '**Option A — AppImage (easiest):**',
-              '```bash',
-              'chmod +x GHelper-x86_64.AppImage',
-              './GHelper-x86_64.AppImage',
-              '```',
-              '',
-              '**Option B — Native binary:**',
-              '```bash',
-              'chmod +x ghelper',
-              './ghelper',
-              '```',
-              '',
-              '**Install udev rules (required for hardware access):**',
-              '```bash',
-              'sudo cp 90-ghelper.rules /etc/udev/rules.d/',
-              'sudo udevadm control --reload-rules && sudo udevadm trigger',
-              '```',
-              '',
-              '> **Note:** Without udev rules, ghelper needs `sudo` to access fan curves, performance modes, keyboard backlight, etc.',
-              '',
-              '**Install GPU boot service (required for GPU mode switching across reboots):**',
-              '```bash',
-              'sudo mkdir -p /usr/local/lib/ghelper',
-              'sudo cp ghelper-gpu-boot.sh /usr/local/lib/ghelper/',
-              'sudo chmod 755 /usr/local/lib/ghelper/ghelper-gpu-boot.sh',
-              'sudo cp ghelper-gpu-boot.service /etc/systemd/system/',
-              'sudo systemctl daemon-reload',
-              'sudo systemctl enable ghelper-gpu-boot.service',
-              '```',
-              '',
-              `> Artifacts expire in 7 days.`,
-            ].join('\n');
-
-            // Find existing comment to update
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find(c => c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-              console.log(`Updated comment ${existing.id}`);
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-              console.log('Created new comment');
-            }
