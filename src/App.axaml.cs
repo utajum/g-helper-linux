@@ -125,6 +125,15 @@ public class App : Application
                 Wmi?.SetBatteryChargeLimit(savedChargeLimit);
             }
 
+            // Warn if udev rules are not installed (sysfs writes will fail)
+            if (!File.Exists("/etc/udev/rules.d/90-ghelper.rules"))
+            {
+                Logger.WriteLine("WARNING: udev rules not installed — sysfs writes will fail. Run install.sh for full functionality.");
+                System?.ShowNotification("Setup Required",
+                    "udev rules not installed. Run install.sh for full functionality (battery limit, fan control, etc.)",
+                    "dialog-warning");
+            }
+
             // Update tray icon to match current mode
             UpdateTrayIcon();
 

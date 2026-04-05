@@ -1010,7 +1010,9 @@ public partial class MainWindow : Window
         int limit = wmi.GetBatteryChargeLimit();
         if (limit > 0)
         {
+            _updatingBatterySlider = true;
             sliderBattery.Value = limit;
+            _updatingBatterySlider = false;
             labelBatteryLimit.Text = $"{limit}%";
             // Combined header: "Battery Charge Limit: 80%" (matches Windows)
             labelBattery.Text = $"Battery Charge Limit: {limit}%";
@@ -1047,44 +1049,82 @@ public partial class MainWindow : Window
         }
     }
 
+    private bool _updatingBatterySlider;
+    private System.Timers.Timer? _batteryDebounce;
+
     private void SliderBattery_ValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
+        if (_updatingBatterySlider) return;
+
         int limit = (int)e.NewValue;
-        App.Wmi?.SetBatteryChargeLimit(limit);
 
-        // Re-read actual value (may have been clamped by 6080 firmware constraint)
-        int actual = App.Wmi?.GetBatteryChargeLimit() ?? limit;
-        labelBatteryLimit.Text = $"{actual}%";
-        labelBattery.Text = $"Battery Charge Limit: {actual}%";
-        Helpers.AppConfig.Set("charge_limit", actual);
+        // Update labels immediately (responsive UI)
+        labelBatteryLimit.Text = $"{limit}%";
+        labelBattery.Text = $"Battery Charge Limit: {limit}%";
 
-        // Snap slider to actual value if clamped
-        if (actual != limit && actual > 0)
-            sliderBattery.Value = actual;
+        // Debounce the sysfs write — only write 300ms after the user stops dragging
+        _batteryDebounce?.Stop();
+        _batteryDebounce ??= new System.Timers.Timer(300) { AutoReset = false };
+        _batteryDebounce.Elapsed -= BatteryDebounce_Elapsed;
+        _batteryDebounce.Elapsed += BatteryDebounce_Elapsed;
+        _batteryDebounce.Start();
+    }
+
+    private void BatteryDebounce_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        // Timer fires on thread pool — read slider value and write to sysfs
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            int limit = (int)sliderBattery.Value;
+            bool ok = App.Wmi?.SetBatteryChargeLimit(limit) ?? false;
+
+            if (ok)
+            {
+                // Re-read actual (firmware may clamp on 6080 models)
+                int actual = App.Wmi?.GetBatteryChargeLimit() ?? limit;
+                labelBatteryLimit.Text = $"{actual}%";
+                labelBattery.Text = $"Battery Charge Limit: {actual}%";
+                Helpers.AppConfig.Set("charge_limit", actual);
+
+                if (actual != limit && actual > 0)
+                {
+                    _updatingBatterySlider = true;
+                    sliderBattery.Value = actual;
+                    _updatingBatterySlider = false;
+                }
+            }
+            else
+            {
+                // Write failed — save user intent to config anyway
+                Helpers.AppConfig.Set("charge_limit", limit);
+            }
+        });
+    }
+
+    private void SetBatteryLimit(int percent)
+    {
+        _batteryDebounce?.Stop(); // Cancel any pending debounce
+        _updatingBatterySlider = true;
+        sliderBattery.Value = percent;
+        _updatingBatterySlider = false;
+        App.Wmi?.SetBatteryChargeLimit(percent);
+        Helpers.AppConfig.Set("charge_limit", percent);
+        RefreshBattery();
     }
 
     private void ButtonBattery60_Click(object? sender, RoutedEventArgs e)
     {
-        sliderBattery.Value = 60;
-        App.Wmi?.SetBatteryChargeLimit(60);
-        Helpers.AppConfig.Set("charge_limit", 60);
-        RefreshBattery();
+        SetBatteryLimit(60);
     }
 
     private void ButtonBattery80_Click(object? sender, RoutedEventArgs e)
     {
-        sliderBattery.Value = 80;
-        App.Wmi?.SetBatteryChargeLimit(80);
-        Helpers.AppConfig.Set("charge_limit", 80);
-        RefreshBattery();
+        SetBatteryLimit(80);
     }
 
     private void ButtonBattery100_Click(object? sender, RoutedEventArgs e)
     {
-        sliderBattery.Value = 100;
-        App.Wmi?.SetBatteryChargeLimit(100);
-        Helpers.AppConfig.Set("charge_limit", 100);
-        RefreshBattery();
+        SetBatteryLimit(100);
     }
 
     // ── Footer ──

@@ -216,7 +216,7 @@ public class LinuxNvidiaGpuControl : IGpuControl
     private static string? RunNvidiaSmi(string query, string format = "")
     {
         var args = string.IsNullOrEmpty(format) ? query : $"{query} {format}";
-        // Use shorter timeout (2 seconds) for GPU queries to prevent UI freeze
-        return SysfsHelper.RunCommandWithTimeout("nvidia-smi", args, 2000);
+        // Use shorter timeout (3 seconds) for GPU queries to prevent UI freeze
+        return SysfsHelper.RunCommandWithTimeout("nvidia-smi", args, 3000);
     }
 }

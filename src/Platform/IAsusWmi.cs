@@ -54,8 +54,8 @@ public interface IAsusWmi : IDisposable
     /// <summary>Get charge limit (40-100).</summary>
     int GetBatteryChargeLimit();
 
-    /// <summary>Set charge limit (40-100).</summary>
-    void SetBatteryChargeLimit(int percent);
+    /// <summary>Set charge limit (40-100). Returns true if write succeeded.</summary>
+    bool SetBatteryChargeLimit(int percent);
 
     // ── GPU ──
 

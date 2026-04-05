@@ -340,9 +340,9 @@ public class LinuxAsusWmi : IAsusWmi
             Path.Combine(_batteryDir, "charge_control_end_threshold"), -1);
     }
 
-    public void SetBatteryChargeLimit(int percent)
+    public bool SetBatteryChargeLimit(int percent)
     {
-        if (_batteryDir == null) return;
+        if (_batteryDir == null) return false;
         percent = Math.Clamp(percent, 40, 100);
 
         // Some models only accept 60/80/100 as charge limits
@@ -353,7 +353,7 @@ public class LinuxAsusWmi : IAsusWmi
             else if (percent < 60) percent = 60;
         }
 
-        SysfsHelper.WriteInt(
+        return SysfsHelper.WriteInt(
             Path.Combine(_batteryDir, "charge_control_end_threshold"), percent);
     }
 
