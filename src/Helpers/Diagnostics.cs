@@ -124,7 +124,7 @@ public static class Diagnostics
             ("Is4ZoneRGB", AppConfig.Is4ZoneRGB()),
             ("IsDynamicLighting", AppConfig.IsDynamicLighting()),
             ("IsIntelHX", AppConfig.IsIntelHX()),
-            ("IsAMDLight", AppConfig.IsAMDLight()),
+            ("IsCPULight", AppConfig.IsCPULight()),
             ("IsResetRequired", AppConfig.IsResetRequired()),
             ("IsFanRequired", AppConfig.IsFanRequired()),
             ("IsSleepBacklight", AppConfig.IsSleepBacklight()),

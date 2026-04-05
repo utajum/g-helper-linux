@@ -392,7 +392,7 @@ public static class AppConfig
     public static bool IsNVPlatform() => Is("nv_platform");
     public static bool IsShutdownReset() => Is("shutdown_reset") || ContainsModel("FX507Z");
     public static bool IsStopAC() => IsAlly() || Is("stop_ac");
-    public static bool IsChargeLimit6080() => ContainsModel("H760") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("GA503R") || (IsTUF() && !(ContainsModel("FX507Z") || ContainsModel("FA617") || ContainsModel("FA607")));
+    public static bool IsChargeLimit6080() => ContainsModel("GU405") || ContainsModel("GU606") || ContainsModel("H760") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("GA503R") || (IsTUF() && !(ContainsModel("FX507Z") || ContainsModel("FA617") || ContainsModel("FA607")));
 
     // Dynamic boost
     public static bool DynamicBoost5() => ContainsModel("GZ301ZE");
@@ -400,7 +400,6 @@ public static class AppConfig
     public static bool DynamicBoost20() => ContainsModel("GU605") || ContainsModel("GA605");
 
     // Performance mode
-    public static bool NoAutoUltimate() => ContainsModel("G614") || ContainsModel("GU604") || ContainsModel("FX507") || ContainsModel("G513") || ContainsModel("FA617") || ContainsModel("G834") || ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("GU603VV");
     public static bool IsAlwaysUltimate() => ContainsModel("FA507NUR") || ContainsModel("FA506NCR") || ContainsModel("FA507NVR");
     public static bool IsManualModeRequired() => IsMode("auto_apply_power") && (Is("manual_mode") || ContainsModel("G733"));
     public static bool IsModeReapplyRequired() => Is("mode_reapply") || ContainsModel("FA401");
@@ -408,12 +407,12 @@ public static class AppConfig
     public static bool IsPowerRequired() => ContainsModel("FX507") || ContainsModel("FX517") || ContainsModel("FX707");
 
     // Fan control
-    public static bool IsFanRequired() => ContainsModel("GA402X") || ContainsModel("GU604") || ContainsModel("G513") || ContainsModel("G713R") || ContainsModel("G713P") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("G634J") || ContainsModel("G834J") || ContainsModel("G614J") || ContainsModel("G814J") || ContainsModel("FX507V") || ContainsModel("FX507ZV") || ContainsModel("FX608") || ContainsModel("G614F") || ContainsModel("G614R") || ContainsModel("G733") || ContainsModel("H7606");
-    public static bool IsClampFanDots() => Is("fan_clamp") || (IsTUF() && IsNotFalse("fan_clamp"));
+    public static bool IsFanRequired() => ContainsModel("GA402X") || ContainsModel("GU604") || ContainsModel("G513") || ContainsModel("G713R") || ContainsModel("G713P") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("G634J") || ContainsModel("G834J") || ContainsModel("G614J") || ContainsModel("G814J") || ContainsModel("FX507V") || ContainsModel("FX507ZV") || ContainsModel("FX608") || ContainsModel("FA608P") || ContainsModel("G614F") || ContainsModel("G614R") || ContainsModel("G733") || ContainsModel("H7606");
+    public static bool IsClampFanDots() => IsNotFalse("fan_clamp");
 
     // RGB / AURA
     public static bool IsSingleColor() => ContainsModel("GA401") || ContainsModel("FX517Z") || ContainsModel("FX516P") || ContainsModel("X13") || IsARCNM() || ContainsModel("FA617N") || ContainsModel("FA617X") || NoAura() || Is("no_rgb");
-    public static bool NoAura() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("GA502IU") || ContainsModel("HN7306");
+    public static bool NoAura() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("GA502IU") || ContainsModel("HN7306") || ContainsModel("M6500X");
     public static bool IsAdvancedRGB() => IsStrix() || ContainsModel("GX650");
     public static bool IsBacklightZones() => IsStrix() || IsZ13();
     public static bool IsStrixLimitedRGB() =>
@@ -429,8 +428,8 @@ public static class AppConfig
     public static bool IsNoDirectRGB() =>
         ContainsModel("GA503") || ContainsModel("G533Q") || ContainsModel("GU502") ||
         ContainsModel("GU603") || IsSlash() || IsAlly();
-    public static bool IsSlash() => ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605");
-    public static bool IsSlashAura() => ContainsModel("GA605") || ContainsModel("GU605C") || ContainsModel("GA403W") || ContainsModel("GA403UM") || ContainsModel("GA403UP") || ContainsModel("GA403UH");
+    public static bool IsSlash() => ContainsModel("GA403") || ContainsModel("GU605") || ContainsModel("GA605") || ContainsModel("GU405") || ContainsModel("GU606");
+    public static bool IsSlashAura() => ContainsModel("GA605") || ContainsModel("GU605C") || ContainsModel("GA403W") || ContainsModel("GA403UM") || ContainsModel("GA403UP") || ContainsModel("GA403UH") || ContainsModel("GU405") || ContainsModel("GU606");
     public static bool IsAnimeMatrix() => ContainsModel("GA401") || ContainsModel("GA402") || ContainsModel("GU604V") || ContainsModel("G835") || ContainsModel("G815") || ContainsModel("G635") || ContainsModel("G615");
 
     // Dynamic Lighting
@@ -451,7 +450,7 @@ public static class AppConfig
     // CPU platform
     public static bool IsIntelHX() => ContainsModel("G814") || ContainsModel("G614") || ContainsModel("G834") || ContainsModel("G634") || ContainsModel("G835") || ContainsModel("G635") || ContainsModel("G815") || ContainsModel("G615");
     public static bool Is8Ecores() => ContainsModel("FX507Z") || ContainsModel("GU603ZV");
-    public static bool IsAMDLight() => ContainsModel("GA402X") || ContainsModel("GA605") || ContainsModel("GA403") || ContainsModel("FA507N") || ContainsModel("FA507X") || ContainsModel("FA707N") || ContainsModel("FA707X") || ContainsModel("GZ302");
+    public static bool IsCPULight() => ContainsModel("GA402X") || ContainsModel("GA605") || ContainsModel("GA403") || ContainsModel("FA507N") || ContainsModel("FA507X") || ContainsModel("FA707N") || ContainsModel("FA707X") || ContainsModel("GZ302") || ContainsModel("GU405");
 
     // Display
     public static bool IsOLED() =>

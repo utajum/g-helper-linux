@@ -28,10 +28,10 @@ public class ModeControl
         if (Helpers.AppConfig.IsX13()) return 75;
         if (Helpers.AppConfig.IsAlly()) return 50;
         if (Helpers.AppConfig.IsIntelHX()) return 175;
-        // IsZ1325 must be checked before IsAMDLight: GZ302E matches both,
+        // IsZ1325 must be checked before IsCPULight: GZ302E matches both,
         // but the Z13 2025 (GZ302EA) needs 93W max, not 90W.
         if (Helpers.AppConfig.IsZ1325()) return 93;
-        if (Helpers.AppConfig.IsAMDLight()) return 90;
+        if (Helpers.AppConfig.IsCPULight()) return 90;
         if (Helpers.AppConfig.IsFA401EA()) return 115;
         return 150; // default
     }
@@ -152,8 +152,8 @@ public class ModeControl
                 App.Power?.SetCpuBoost(autoBoost == 1);
             }
 
-            // ASPM
-            if (Helpers.AppConfig.Is("aspm"))
+            // ASPM — on by default (synced with upstream IsAutoASPM/IsNotFalse behavior)
+            if (Helpers.AppConfig.IsNotFalse("aspm"))
             {
                 App.Power?.SetAspmPolicy(baseMode == 2 ? "powersave" : "default");
             }
