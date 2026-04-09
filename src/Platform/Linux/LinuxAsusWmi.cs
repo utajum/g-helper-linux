@@ -36,6 +36,8 @@ public class LinuxAsusWmi : IAsusWmi
     private volatile bool _eventListening;
     private readonly List<FileStream> _eventStreams = new();  // Track open evdev streams for Dispose()
 
+    public int FanCount { get; private set; } = 2;
+
     public event Action<int>? WmiEvent;
 
     public LinuxAsusWmi()
@@ -75,7 +77,16 @@ public class LinuxAsusWmi : IAsusWmi
             Helpers.Logger.WriteLine("WARNING: No hwmon with fan*_input found. Fan RPM unavailable.");
 
         if (_asusFanCurveHwmonDir != null)
+        {
             Helpers.Logger.WriteLine($"ASUS fan curve hwmon: {_asusFanCurveHwmonDir}");
+            // Detect fan count: pwm1/pwm2 always present, pwm3 only on 3-fan models.
+            // Some kernels create phantom pwm3 files that exist but return ENODEV on write,
+            // so we verify by reading pwm3_enable (read won't error on phantom nodes).
+            FanCount = File.Exists(Path.Combine(_asusFanCurveHwmonDir, "pwm3_enable"))
+                    && SysfsHelper.ReadInt(Path.Combine(_asusFanCurveHwmonDir, "pwm3_enable"), -1) >= 0
+                    ? 3 : 2;
+            Helpers.Logger.WriteLine($"Fan count detected: {FanCount}");
+        }
         else
             Helpers.Logger.WriteLine("WARNING: ASUS fan curve hwmon not found. Fan curve features unavailable.");
 

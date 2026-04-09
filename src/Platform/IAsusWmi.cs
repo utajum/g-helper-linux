@@ -129,6 +129,9 @@ public interface IAsusWmi : IDisposable
 
     // ── Feature detection ──
 
+    /// <summary>Number of controllable fans (2 = CPU+GPU, 3 = CPU+GPU+Mid).</summary>
+    int FanCount { get; }
+
     /// <summary>Check if a sysfs attribute exists (feature is supported).</summary>
     bool IsFeatureSupported(string feature);
 

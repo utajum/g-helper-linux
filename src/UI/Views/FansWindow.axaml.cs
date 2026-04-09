@@ -15,6 +15,8 @@ public partial class FansWindow : Window
     private static readonly IBrush TransparentBrush = Brushes.Transparent;
 
     private readonly DispatcherTimer _sensorTimer;
+    private System.Timers.Timer? _plDebounce;
+    private bool _updatingPLSliders;
 
     public FansWindow()
     {
@@ -244,6 +246,8 @@ public partial class FansWindow : Window
         var wmi = App.Wmi;
         if (wmi == null) return;
 
+        _updatingPLSliders = true;
+
         // Read from hardware, fall back to saved config
         int pl1 = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl);
         if (pl1 <= 0) pl1 = Helpers.AppConfig.GetMode("limit_slow");
@@ -277,65 +281,78 @@ public partial class FansWindow : Window
             }
         }
 
+        _updatingPLSliders = false;
         checkApplyPower.IsChecked = Helpers.AppConfig.IsMode("auto_apply_power");
     }
 
     private void SliderPL1_ValueChanged(object? sender,
         Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        int watts = (int)e.NewValue;
-        labelPL1.Text = $"{watts}W";
-        App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl, watts);
-        Helpers.AppConfig.SetMode("limit_slow", watts);
-
-        // Mirror to APU SPPT — prevents it from acting as a hidden power cap.
-        // Value = max(PL1, PL2) so neither primary limit is constrained.
-        MirrorToSecondaryPpt();
+        if (_updatingPLSliders) return;
+        labelPL1.Text = $"{(int)e.NewValue}W";
+        SchedulePLWrite();
     }
 
     private void SliderPL2_ValueChanged(object? sender,
         Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        int watts = (int)e.NewValue;
-        labelPL2.Text = $"{watts}W";
-        App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt, watts);
-        Helpers.AppConfig.SetMode("limit_fast", watts);
-
-        // Mirror to Platform SPPT — prevents it from acting as a hidden power cap.
-        MirrorToSecondaryPpt();
-    }
-
-    /// <summary>
-    /// Mirror PL1/PL2 values to secondary PPT attributes (APU SPPT, Platform SPPT).
-    /// These AMD power tracking limits act as hard caps — if left at stale values
-    /// (e.g. 5W from a previous Silent mode), they bottleneck performance regardless
-    /// of what PL1/PL2 are set to. We set both to max(PL1, PL2) so neither primary
-    /// limit is constrained by the secondary ones.
-    /// </summary>
-    private void MirrorToSecondaryPpt()
-    {
-        var wmi = App.Wmi;
-        if (wmi == null) return;
-
-        int pl1 = (int)sliderPL1.Value;
-        int pl2 = (int)sliderPL2.Value;
-        int ceiling = Math.Max(pl1, pl2);
-        if (ceiling <= 0) return;
-
-        if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptApuSppt))
-            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptApuSppt, ceiling);
-
-        if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptPlatformSppt))
-            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPlatformSppt, ceiling);
+        if (_updatingPLSliders) return;
+        labelPL2.Text = $"{(int)e.NewValue}W";
+        SchedulePLWrite();
     }
 
     private void SliderFppt_ValueChanged(object? sender,
         Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
     {
-        int watts = (int)e.NewValue;
-        labelFppt.Text = $"{watts}W";
-        App.Wmi?.SetPptLimit(Platform.Linux.AsusAttributes.PptFppt, watts);
-        Helpers.AppConfig.SetMode("limit_fppt", watts);
+        if (_updatingPLSliders) return;
+        labelFppt.Text = $"{(int)e.NewValue}W";
+        SchedulePLWrite();
+    }
+
+    /// <summary>Debounce PL slider writes — only write 300ms after the user stops dragging.</summary>
+    private void SchedulePLWrite()
+    {
+        _plDebounce?.Stop();
+        _plDebounce ??= new System.Timers.Timer(300) { AutoReset = false };
+        _plDebounce.Elapsed -= PLDebounce_Elapsed;
+        _plDebounce.Elapsed += PLDebounce_Elapsed;
+        _plDebounce.Start();
+    }
+
+    private void PLDebounce_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var wmi = App.Wmi;
+            if (wmi == null) return;
+
+            int pl1 = (int)sliderPL1.Value;
+            int pl2 = (int)sliderPL2.Value;
+            int fppt = (int)sliderFppt.Value;
+
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl, pl1);
+            Helpers.AppConfig.SetMode("limit_slow", pl1);
+
+            wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt, pl2);
+            Helpers.AppConfig.SetMode("limit_fast", pl2);
+
+            if (gridFppt.IsVisible)
+            {
+                wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptFppt, fppt);
+                Helpers.AppConfig.SetMode("limit_fppt", fppt);
+            }
+
+            // Mirror to secondary PPT — prevents stale APU/Platform SPPT
+            // from bottlenecking. Value = max(PL1, PL2).
+            int ceiling = Math.Max(pl1, pl2);
+            if (ceiling > 0)
+            {
+                if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptApuSppt))
+                    wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptApuSppt, ceiling);
+                if (wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptPlatformSppt))
+                    wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPlatformSppt, ceiling);
+            }
+        });
     }
 
     // ── CPU Boost ──

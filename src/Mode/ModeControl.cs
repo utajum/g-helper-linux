@@ -198,7 +198,8 @@ public class ModeControl
         var wmi = App.Wmi;
         if (wmi == null) return;
 
-        for (int fan = 0; fan < 3; fan++)
+        int fanCount = wmi.FanCount;
+        for (int fan = 0; fan < fanCount; fan++)
         {
             byte[] curve = Helpers.AppConfig.GetFanConfig(fan);
             if (curve.Length == 16)
