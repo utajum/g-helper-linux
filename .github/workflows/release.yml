@@ -165,23 +165,6 @@ jobs:
     needs: [version, build, appimage]
     runs-on: ubuntu-latest
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Prepare release files
-        run: |
-          mkdir -p release
-          cp artifacts/ghelper/ghelper release/
-          cp artifacts/native-libs/libSkiaSharp.so release/
-          cp artifacts/native-libs/libHarfBuzzSharp.so release/
-          cp artifacts/appimage/GHelper-x86_64.AppImage release/
-          cp artifacts/udev-rules/90-ghelper.rules release/
-          chmod +x release/ghelper
-          chmod +x release/GHelper-x86_64.AppImage
-          ls -la release/
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -199,6 +182,23 @@ jobs:
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cp artifacts/ghelper/ghelper release/
+          cp artifacts/native-libs/libSkiaSharp.so release/
+          cp artifacts/native-libs/libHarfBuzzSharp.so release/
+          cp artifacts/appimage/GHelper-x86_64.AppImage release/
+          cp artifacts/udev-rules/90-ghelper.rules release/
+          chmod +x release/ghelper
+          chmod +x release/GHelper-x86_64.AppImage
+          ls -la release/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
