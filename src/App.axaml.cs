@@ -138,7 +138,13 @@ public class App : Application
             }
 
             // Initialize AURA hardware (RGB) on background thread regardless of window visibility.
-            Task.Run(() => MainWindow.InitAuraHardware());
+            // When done, post RefreshKeyboard to UI thread so the Aura panel/colors update
+            // (fixes race where Loaded event fires before HID handshake completes).
+            Task.Run(() =>
+            {
+                MainWindow.InitAuraHardware();
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => MainWindowInstance?.RefreshKeyboard());
+            });
 
             // Ensure autostart .desktop file matches config preference and current binary path
             bool autostart = AppConfig.IsNotFalse("autostart");

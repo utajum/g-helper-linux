@@ -1418,15 +1418,6 @@ public class GpuModeController
 
             Logger.WriteLine("GpuModeController: writing driver block (modprobe + udev + trigger) for Eco boot");
 
-            // Write file contents to /tmp (no privilege needed, no shell quoting issues)
-            string tmpModprobe = Path.Combine(Path.GetTempPath(), "ghelper-gpu-block.conf");
-            string tmpUdev = Path.Combine(Path.GetTempPath(), "50-ghelper-remove-dgpu.rules");
-
-            File.WriteAllText(tmpModprobe, ModprobeBlockContent);
-            File.WriteAllText(tmpUdev, UdevRemoveContent);
-
-            // Try sudo helper first (works from autostart, no tty needed)
-            // Falls back to pkexec (needs graphical polkit agent or tty)
             // Convert target mode to string for trigger file (boot script reads this)
             string modeStr = target switch
             {
@@ -1441,21 +1432,20 @@ public class GpuModeController
             if (helper != null)
             {
                 Logger.WriteLine($"GpuModeController: using sudo helper: {helper}");
-                SysfsHelper.RunCommandWithTimeout("sudo", $"{helper} write {tmpModprobe} {tmpUdev} {modeStr}", 120000);
+                SysfsHelper.RunCommandWithTimeout("sudo", $"{helper} write {modeStr}", 120000);
             }
             else
             {
+                // Fallback: pkexec with inline content
                 Logger.WriteLine("GpuModeController: using pkexec fallback");
-                string script = $"mkdir -p /etc/ghelper && " +
-                    $"install -m 644 {tmpModprobe} {ModprobeBlockPath} && " +
-                    $"install -m 644 {tmpUdev} {UdevRemovePath} && " +
+                string script = $"mkdir -p /etc/ghelper\n" +
+                    $"cat > {ModprobeBlockPath} << 'GHELPER_BLOCK'\n{ModprobeBlockContent}GHELPER_BLOCK\n" +
+                    $"chmod 644 {ModprobeBlockPath}\n" +
+                    $"cat > {UdevRemovePath} << 'GHELPER_BLOCK'\n{UdevRemoveContent}GHELPER_BLOCK\n" +
+                    $"chmod 644 {UdevRemovePath}\n" +
                     $"echo {modeStr} > {TriggerPath}";
                 SysfsHelper.RunPkexecBash(script);
             }
-
-            // Clean up temp files
-            try { File.Delete(tmpModprobe); } catch { }
-            try { File.Delete(tmpUdev); } catch { }
 
             if (File.Exists(TriggerPath))
             {

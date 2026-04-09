@@ -734,12 +734,21 @@ public partial class MainWindow : Window
     private void InitAura()
     {
         if (_auraInitialized) return;
-        _auraInitialized = true;
 
-        // Run hardware init if not already done (normal startup path)
+        // Run hardware init if not already done (normal startup path).
+        // Don't set _auraInitialized until hardware is confirmed available —
+        // if the background InitAuraHardware() hasn't finished yet, we'll retry
+        // when it posts RefreshKeyboard() back to the UI thread.
         bool hasAura = InitAuraHardware();
         panelAura.IsVisible = hasAura;
         if (!hasAura) return;
+
+        _auraInitialized = true;
+
+        Aura.Mode = (AuraMode)Helpers.AppConfig.Get("aura_mode");
+        Aura.Speed = (AuraSpeed)Helpers.AppConfig.Get("aura_speed");
+        Aura.SetColor(Helpers.AppConfig.Get("aura_color", unchecked((int)0xFFFFFFFF)));
+        Aura.SetColor2(Helpers.AppConfig.Get("aura_color2", 0));
 
         _suppressAuraEvents = true;
 
