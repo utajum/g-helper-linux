@@ -140,8 +140,9 @@ public class App : Application
             // Initialize AURA hardware (RGB) on background thread regardless of window visibility.
             Task.Run(() => MainWindow.InitAuraHardware());
 
-            // Always ensure autostart .desktop file exists with correct binary path
-            System?.SetAutostart(true);
+            // Ensure autostart .desktop file matches config preference and current binary path
+            bool autostart = AppConfig.IsNotFalse("autostart");
+            System?.SetAutostart(autostart);
 
             // Update tray icon to match current mode
             UpdateTrayIcon();

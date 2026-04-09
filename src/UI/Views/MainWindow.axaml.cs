@@ -1155,9 +1155,9 @@ public partial class MainWindow : Window
         // Version + model in footer
         labelVersion.Text = $"v{Helpers.AppConfig.AppVersion} — {model}";
 
-        // Check autostart status (suppress to avoid re-writing .desktop file)
+        // Check autostart status from config (suppress to avoid re-writing .desktop file)
         _suppressEvents = true;
-        checkStartup.IsChecked = sys.IsAutostartEnabled();
+        checkStartup.IsChecked = Helpers.AppConfig.IsNotFalse("autostart");
         _suppressEvents = false;
 
         // System info (same as ExtraWindow)
@@ -1190,6 +1190,7 @@ public partial class MainWindow : Window
     {
         if (_suppressEvents) return;
         bool enabled = checkStartup.IsChecked ?? false;
+        Helpers.AppConfig.Set("autostart", enabled ? 1 : 0);
         App.System?.SetAutostart(enabled);
     }
 
