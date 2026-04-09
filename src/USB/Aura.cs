@@ -299,6 +299,10 @@ public static class Aura
         else
             AsusHid.Write(new byte[] { AsusHid.AURA_ID, 0xBA, 0xC5, 0xC4, (byte)brightness }, log);
 
+        // TUF/VivoZenPro: also write sysfs brightness (HID may not be available)
+        if (_isACPI)
+            App.Wmi?.SetKeyboardBrightness(brightness);
+
         if (brightness > 0)
         {
             if (!_backlight) _initDirect = true;
