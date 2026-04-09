@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.version.outputs.new_version }}
+      prev_version: ${{ steps.version.outputs.prev_version }}
     steps:
       - name: Get latest release version from GitHub API
         id: version
@@ -28,6 +29,7 @@ jobs:
             LATEST_RELEASE=$(cat /tmp/latest_tag)
           fi
           echo "Latest release: '${LATEST_RELEASE}'"
+          echo "prev_version=${LATEST_RELEASE}" >> $GITHUB_OUTPUT
 
           if [ -z "$LATEST_RELEASE" ] || ! echo "$LATEST_RELEASE" | grep -qE '^v?[0-9]+\.[0-9]+\.[0-9]+$'; then
             NEW_VERSION="v1.0.0"
@@ -180,6 +182,24 @@ jobs:
           chmod +x release/GHelper-x86_64.AppImage
           ls -la release/
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          PREV_TAG="${{ needs.version.outputs.prev_version }}"
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges | grep -iv '\[skip ci\]' || true)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges -20 | grep -iv '\[skip ci\]' || true)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -192,6 +212,9 @@ jobs:
             ![AppImage Downloads](https://img.shields.io/github/downloads/utajum/g-helper-linux/${{ needs.version.outputs.new_version }}/GHelper-x86_64.AppImage?style=flat-square&label=appimage%20downloads)
 
             ASUS laptop control utility for Linux — native AOT binary, no runtime needed.
+
+            ### Commits
+            ${{ steps.changelog.outputs.changelog }}
 
             ### Quick Install
 
