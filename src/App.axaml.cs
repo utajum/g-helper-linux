@@ -34,6 +34,9 @@ public class App : Application
     public static MainWindow? MainWindowInstance { get; set; }
     public static TrayIcon? TrayIconInstance { get; set; }
 
+    //startup via environment variable GHELPER_SILENT_START=1
+    private static bool IsSilentStartup() => Environment.GetEnvironmentVariable("GHELPER_SILENT_START") == "1";
+
     // Single-instance lock that prevents duplicate tray icons
     private static FileStream? _lockFile;
 
@@ -105,8 +108,11 @@ public class App : Application
             MainWindowInstance = new MainWindow();
             if (AppConfig.Is("topmost")) MainWindowInstance.Topmost = true;
 
-            // Show main window on startup (like Windows G-Helper)
-            desktop.MainWindow = MainWindowInstance;
+            // Show main window on startup (like Windows G-Helper) & skipped if GHELPER_SILENT_START=1
+            if (!IsSilentStartup())
+            {
+                desktop.MainWindow = MainWindowInstance;
+            }
 
             // Set up tray icon (secondary access method)
             SetupTrayIcon(desktop);
