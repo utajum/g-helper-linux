@@ -104,17 +104,28 @@
                         <TextBlock Classes="header" Text="Display" />
                     </Border>
 
-                    <!-- Brightness -->
-                    <Grid ColumnDefinitions="120,*,50" Margin="0,4">
+                    <!-- Brightness slider (visible when backlight device exists) -->
+                    <Grid x:Name="rowBrightnessSlider" ColumnDefinitions="120,*,50" Margin="0,4">
                         <TextBlock Grid.Column="0" Text="Brightness"
                                    Classes="label-dim" VerticalAlignment="Center" />
                         <Slider Grid.Column="1" x:Name="sliderBrightness"
-                                Minimum="0" Maximum="100" Value="100"
+                                Minimum="4" Maximum="100" Value="100"
                                 ValueChanged="SliderBrightness_ValueChanged" />
                         <TextBlock Grid.Column="2" x:Name="labelBrightness"
                                    Classes="value" Text="100%"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
+
+                    <!-- Backlight enable button (visible when no backlight + loadable module) -->
+                    <Button x:Name="buttonEnableBacklight"
+                            Content="Enable display backlight"
+                            IsVisible="False" Margin="0,4"
+                            Click="ButtonEnableBacklight_Click" />
+
+                    <!-- Backlight hint (visible when no backlight + no loadable module) -->
+                    <TextBlock x:Name="labelBacklightHint"
+                               IsVisible="False" Classes="label-dim"
+                               Margin="0,4" TextWrapping="Wrap" FontSize="11" />
 
                     <!-- Panel Overdrive -->
                     <CheckBox x:Name="checkOverdrive" Content="Panel Overdrive"

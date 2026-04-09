@@ -217,22 +217,83 @@ public partial class ExtraWindow : Window
 
     // ═══════════════════ DISPLAY ═══════════════════
 
+    /// <summary>Module name stored when the enable-backlight button is shown.</summary>
+    private string? _pendingBacklightModule;
+
     private void RefreshDisplay()
     {
-        var display = App.Display;
+        var display = App.Display as LinuxDisplayControl;
         if (display == null) return;
 
-        int brightness = display.GetBrightness();
-        if (brightness >= 0)
+        if (display.HasBacklight)
         {
-            sliderBrightness.Value = brightness;
-            labelBrightness.Text = $"{brightness}%";
+            // Backlight available — show slider, hide button/hint
+            rowBrightnessSlider.IsVisible = true;
+            buttonEnableBacklight.IsVisible = false;
+            labelBacklightHint.IsVisible = false;
+
+            int brightness = display.GetBrightness();
+            if (brightness >= 0)
+            {
+                sliderBrightness.Value = Math.Max(brightness, LinuxDisplayControl.MinBrightnessPercent);
+                labelBrightness.Text = $"{brightness}%";
+            }
+        }
+        else
+        {
+            // No backlight — hide slider, check if we can offer a fix
+            rowBrightnessSlider.IsVisible = false;
+
+            _pendingBacklightModule = LinuxDisplayControl.GetMissingBacklightModule();
+            if (_pendingBacklightModule != null)
+            {
+                buttonEnableBacklight.Content = $"Enable display backlight (load {_pendingBacklightModule})";
+                buttonEnableBacklight.IsVisible = true;
+                buttonEnableBacklight.IsEnabled = true;
+                labelBacklightHint.IsVisible = false;
+            }
+            else
+            {
+                buttonEnableBacklight.IsVisible = false;
+                labelBacklightHint.Text = LinuxDisplayControl.GetBacklightHint();
+                labelBacklightHint.IsVisible = true;
+            }
         }
 
         bool overdrive = App.Wmi?.GetPanelOverdrive() ?? false;
         checkOverdrive.IsChecked = overdrive;
 
         sliderGamma.Value = 100; // Default gamma
+    }
+
+    private void ButtonEnableBacklight_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_pendingBacklightModule == null) return;
+
+        string module = _pendingBacklightModule;
+        buttonEnableBacklight.Content = "Loading...";
+        buttonEnableBacklight.IsEnabled = false;
+
+        // Run modprobe on background thread (pkexec shows password dialog)
+        Task.Run(() =>
+        {
+            var display = App.Display as LinuxDisplayControl;
+            bool success = display?.TryLoadBacklightModule(module) ?? false;
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                _suppressEvents = true;
+                RefreshDisplay();
+                _suppressEvents = false;
+
+                if (!success)
+                {
+                    buttonEnableBacklight.IsVisible = false;
+                    labelBacklightHint.Text = $"Failed to enable backlight. Module loaded but no device appeared.\n{LinuxDisplayControl.GetBacklightHint()}";
+                    labelBacklightHint.IsVisible = true;
+                }
+            });
+        });
     }
 
     private void SliderBrightness_ValueChanged(object? sender,

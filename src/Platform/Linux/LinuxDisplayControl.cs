@@ -15,27 +15,80 @@ namespace GHelper.Linux.Platform.Linux;
 /// </summary>
 public class LinuxDisplayControl : IDisplayControl
 {
+    /// <summary>Minimum brightness percentage — prevents screen from going fully black.</summary>
+    public const int MinBrightnessPercent = 4;
+
     private string? _backlightDir;
     private int _maxBrightness;
     private bool _isWayland;
 
     public LinuxDisplayControl()
     {
-        _backlightDir = FindBestBacklight();
+        InitBacklight();
         _isWayland = IsWaylandSession();
-
-        if (_backlightDir != null)
-        {
-            _maxBrightness = SysfsHelper.ReadInt(
-                Path.Combine(_backlightDir, "max_brightness"), 100);
-            Helpers.Logger.WriteLine($"Backlight found: {_backlightDir} (max={_maxBrightness})");
-        }
-        else
-        {
-            Helpers.Logger.WriteLine("WARNING: No backlight device found. Brightness control unavailable.");
-        }
-
         Helpers.Logger.WriteLine($"Display session type: {(_isWayland ? "Wayland" : "X11")}");
+    }
+
+    /// <summary>True when a /sys/class/backlight/ device is available.</summary>
+    public bool HasBacklight => _backlightDir != null && _maxBrightness > 0;
+
+    // ── Backlight module detection ──
+
+    /// <summary>
+    /// When no backlight device exists, detect which kernel module could provide one.
+    /// Returns the module name (e.g. "nvidia-wmi-ec-backlight") or null if no loadable fix.
+    /// </summary>
+    public static string? GetMissingBacklightModule()
+    {
+        // Only NVIDIA has a standalone backlight module that isn't auto-loaded.
+        // Intel (i915) and AMD (amdgpu) build backlight support into the GPU driver itself.
+        if (Directory.Exists("/sys/module/nvidia"))
+        {
+            // Check if the module exists in the kernel tree
+            string? modinfo = SysfsHelper.RunCommand("modinfo", "nvidia-wmi-ec-backlight");
+            if (modinfo != null)
+                return "nvidia-wmi-ec-backlight";
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Human-readable hint when no backlight device exists and no module can be loaded.
+    /// </summary>
+    public static string GetBacklightHint()
+    {
+        if (Directory.Exists("/sys/module/nvidia"))
+            return "NVIDIA GPU detected but no backlight module available.\nTry kernel parameter: acpi_backlight=native";
+        if (Directory.Exists("/sys/module/i915"))
+            return "Intel GPU detected but no backlight registered.\nTry: acpi_backlight=native or i915.enable_dpcd_backlight=1";
+        if (Directory.Exists("/sys/module/amdgpu"))
+            return "AMD GPU detected but no backlight registered.\nTry kernel parameter: acpi_backlight=native";
+
+        return "No backlight device found.";
+    }
+
+    /// <summary>
+    /// Load the given backlight kernel module via pkexec and re-scan for backlight devices.
+    /// Returns true if a backlight device is now available.
+    /// </summary>
+    public bool TryLoadBacklightModule(string moduleName)
+    {
+        Helpers.Logger.WriteLine($"Backlight: loading module {moduleName} via pkexec...");
+        SysfsHelper.RunPkexecBash($"modprobe {moduleName}");
+
+        // Give the kernel a moment to register the sysfs node
+        Thread.Sleep(1000);
+
+        InitBacklight();
+        if (HasBacklight)
+        {
+            Helpers.Logger.WriteLine($"Backlight: module loaded, device found: {_backlightDir} (max={_maxBrightness})");
+            return true;
+        }
+
+        Helpers.Logger.WriteLine($"Backlight: module loaded but no backlight device appeared.");
+        return false;
     }
 
     // ── Brightness ──
@@ -55,11 +108,29 @@ public class LinuxDisplayControl : IDisplayControl
     {
         if (_backlightDir == null || _maxBrightness <= 0) return;
 
-        percent = Math.Clamp(percent, 0, 100);
+        percent = Math.Clamp(percent, MinBrightnessPercent, 100);
         int rawValue = (int)Math.Round(percent * _maxBrightness / 100.0);
 
         SysfsHelper.WriteInt(
             Path.Combine(_backlightDir, "brightness"), rawValue);
+    }
+
+    // ── Init helpers ──
+
+    private void InitBacklight()
+    {
+        _backlightDir = FindBestBacklight();
+        if (_backlightDir != null)
+        {
+            _maxBrightness = SysfsHelper.ReadInt(
+                Path.Combine(_backlightDir, "max_brightness"), 100);
+            Helpers.Logger.WriteLine($"Backlight found: {_backlightDir} (max={_maxBrightness})");
+        }
+        else
+        {
+            _maxBrightness = 0;
+            Helpers.Logger.WriteLine("WARNING: No backlight device found. Brightness control unavailable.");
+        }
     }
 
     // ── Refresh Rate ──
