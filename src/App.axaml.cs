@@ -806,7 +806,10 @@ public class App : Application
             }
 
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                MainWindowInstance?.RefreshGpuModePublic());
+            {
+                MainWindowInstance?.RefreshGpuModePublic();
+                MainWindowInstance?.RefreshBatteryPublic();
+            });
         });
 
         // Auto performance mode (if configured)

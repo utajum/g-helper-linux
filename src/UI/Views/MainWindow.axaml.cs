@@ -18,6 +18,7 @@ namespace GHelper.Linux.UI.Views;
 public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _refreshTimer;
+    private int _batteryRefreshCounter;
     private int _currentPerfMode = -1;
     private int _currentGpuMode = -1;  // 0=Eco, 1=Standard, 2=Optimized (auto), 3=Ultimate (MUX=0)
 
@@ -37,7 +38,16 @@ public partial class MainWindow : Window
         {
             Interval = TimeSpan.FromSeconds(2)
         };
-        _refreshTimer.Tick += (_, _) => RefreshSensorData();
+        _refreshTimer.Tick += (_, _) =>
+        {
+            RefreshSensorData();
+            // Refresh battery every ~60s (30 ticks × 2s)
+            if (++_batteryRefreshCounter >= 30)
+            {
+                _batteryRefreshCounter = 0;
+                RefreshBattery();
+            }
+        };
 
         // On close: let the window actually close (dispose).
         // Don't cancel — this allows KDE logout/reboot to proceed.
@@ -200,6 +210,7 @@ public partial class MainWindow : Window
 
     /// <summary>Public wrapper for RefreshGpuMode — called from App.cs on power state changes.</summary>
     public void RefreshGpuModePublic() => RefreshGpuMode();
+    public void RefreshBatteryPublic() => RefreshBattery();
 
     private void RefreshGpuMode()
     {

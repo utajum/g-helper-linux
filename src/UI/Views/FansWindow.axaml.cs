@@ -290,6 +290,9 @@ public partial class FansWindow : Window
     {
         if (_updatingPLSliders) return;
         labelPL1.Text = $"{(int)e.NewValue}W";
+        // Enforce PL1 ≤ PL2 ≤ fPPT (matches Windows G-Helper coupling)
+        if (sliderPL1.Value > sliderPL2.Value) sliderPL2.Value = sliderPL1.Value;
+        if (sliderPL1.Value > sliderFppt.Value) sliderFppt.Value = sliderPL1.Value;
         SchedulePLWrite();
     }
 
@@ -298,6 +301,8 @@ public partial class FansWindow : Window
     {
         if (_updatingPLSliders) return;
         labelPL2.Text = $"{(int)e.NewValue}W";
+        if (sliderPL2.Value < sliderPL1.Value) sliderPL1.Value = sliderPL2.Value;
+        if (sliderPL2.Value > sliderFppt.Value) sliderFppt.Value = sliderPL2.Value;
         SchedulePLWrite();
     }
 
@@ -306,6 +311,8 @@ public partial class FansWindow : Window
     {
         if (_updatingPLSliders) return;
         labelFppt.Text = $"{(int)e.NewValue}W";
+        if (sliderFppt.Value < sliderPL2.Value) sliderPL2.Value = sliderFppt.Value;
+        if (sliderFppt.Value < sliderPL1.Value) sliderPL1.Value = sliderFppt.Value;
         SchedulePLWrite();
     }
 
