@@ -34,9 +34,6 @@ public class App : Application
     public static MainWindow? MainWindowInstance { get; set; }
     public static TrayIcon? TrayIconInstance { get; set; }
 
-    //startup via environment variable GHELPER_SILENT_START=1
-    private static bool IsSilentStartup() => Environment.GetEnvironmentVariable("GHELPER_SILENT_START") == "1";
-
     // Single-instance lock that prevents duplicate tray icons
     private static FileStream? _lockFile;
 
@@ -108,8 +105,8 @@ public class App : Application
             MainWindowInstance = new MainWindow();
             if (AppConfig.Is("topmost")) MainWindowInstance.Topmost = true;
 
-            // Show main window on startup (like Windows G-Helper) & skipped if GHELPER_SILENT_START=1
-            if (!IsSilentStartup())
+            // Show main window on startup unless "Start minimized to tray" is enabled
+            if (!AppConfig.Is("silent_start"))
             {
                 desktop.MainWindow = MainWindowInstance;
             }
@@ -139,6 +136,12 @@ public class App : Application
                     "udev rules not installed. Run install.sh for full functionality (battery limit, fan control, etc.)",
                     "dialog-warning");
             }
+
+            // Initialize AURA hardware (RGB) on background thread regardless of window visibility.
+            Task.Run(() => MainWindow.InitAuraHardware());
+
+            // Always ensure autostart .desktop file exists with correct binary path
+            System?.SetAutostart(true);
 
             // Update tray icon to match current mode
             UpdateTrayIcon();

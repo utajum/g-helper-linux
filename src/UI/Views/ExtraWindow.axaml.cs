@@ -283,6 +283,9 @@ public partial class ExtraWindow : Window
         // Clamshell mode
         checkClamshell.IsChecked = Helpers.AppConfig.Is("toggle_clamshell_mode");
 
+        // Silent start (minimized to tray)
+        checkSilentStart.IsChecked = Helpers.AppConfig.Is("silent_start");
+
         // Camera
         checkCamera.IsChecked = LinuxSystemIntegration.IsCameraEnabled();
 
@@ -382,6 +385,12 @@ public partial class ExtraWindow : Window
         {
             Helpers.Logger.WriteLine($"Clamshell mode toggle failed: {ex.Message}");
         }
+    }
+
+    private void CheckSilentStart_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        Helpers.AppConfig.Set("silent_start", (checkSilentStart.IsChecked ?? false) ? 1 : 0);
     }
 
     /// <summary>Start a systemd-inhibit process that prevents lid-close suspend.</summary>

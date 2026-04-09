@@ -169,6 +169,11 @@
                               Checked="CheckClamshell_Changed"
                               Unchecked="CheckClamshell_Changed" />
 
+                    <CheckBox x:Name="checkSilentStart" Content="Start minimized to tray"
+                              Margin="0,4"
+                              Checked="CheckSilentStart_Changed"
+                              Unchecked="CheckSilentStart_Changed" />
+
                     <Separator Margin="0,8,0,4" />
 
                     <!-- Device toggles -->
