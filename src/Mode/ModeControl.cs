@@ -130,7 +130,13 @@ public class ModeControl
             }
         }
 
-        // 4. Apply fan curves and power limits
+        // 4. Apply power limits, ASPM, then fan curves LAST
+        // Fan curves must be written after everything else because:
+        //   - AutoPower writes nv_dynamic_boost/nv_temp_target which can cause the EC
+        //     to recalculate GPU fan strategy and override custom curves
+        //   - ASPM policy changes trigger PCIe link renegotiation which can reset curves
+        //   - The kernel resets fan curves when thermal profile changes (asusctl documents this)
+        // By writing curves last, nothing runs after them to reset them.
         Task.Run(async () =>
         {
             // If reset was needed, wait for firmware to process the bounce
@@ -138,10 +144,6 @@ public class ModeControl
                 await Task.Delay(1500);
             else
                 await Task.Delay(100); // Let thermal policy settle
-
-            AutoFans(mode);
-
-            await Task.Delay(500);
 
             AutoPower(mode);
 
@@ -157,6 +159,10 @@ public class ModeControl
             {
                 App.Power?.SetAspmPolicy(baseMode == 2 ? "powersave" : "default");
             }
+
+            await Task.Delay(100); // Let EC settle after power/ASPM changes
+
+            AutoFans(mode);
         });
 
         if (notify)
