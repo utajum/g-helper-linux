@@ -280,6 +280,12 @@
                                    Text="" VerticalAlignment="Center" />
                     </Grid>
 
+                    <!-- Start as Minimized (only available when Run on Startup is enabled) -->
+                    <CheckBox x:Name="checkStartMinimized" Content="Start as Minimized"
+                              IsEnabled="False"
+                              Checked="CheckStartMinimized_Changed"
+                              Unchecked="CheckStartMinimized_Changed" />
+
                     <!-- System Info -->
                     <StackPanel Spacing="2" Margin="0,2,0,4">
                         <TextBlock x:Name="labelSysModel" Classes="label-dim" Text="" />

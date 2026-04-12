@@ -1177,7 +1177,10 @@ public partial class MainWindow : Window
 
         // Check autostart status from config (suppress to avoid re-writing .desktop file)
         _suppressEvents = true;
-        checkStartup.IsChecked = Helpers.AppConfig.IsNotFalse("autostart");
+        bool autostartEnabled = Helpers.AppConfig.IsNotFalse("autostart");
+        checkStartup.IsChecked = autostartEnabled;
+        checkStartMinimized.IsChecked = Helpers.AppConfig.Is("silent_start");
+        checkStartMinimized.IsEnabled = autostartEnabled;
         _suppressEvents = false;
 
         // System info (same as ExtraWindow)
@@ -1212,6 +1215,19 @@ public partial class MainWindow : Window
         bool enabled = checkStartup.IsChecked ?? false;
         Helpers.AppConfig.Set("autostart", enabled ? 1 : 0);
         App.System?.SetAutostart(enabled);
+
+        checkStartMinimized.IsEnabled = enabled;
+        if (!enabled)
+        {
+            checkStartMinimized.IsChecked = false;
+            Helpers.AppConfig.Set("silent_start", 0);
+        }
+    }
+
+    private void CheckStartMinimized_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        Helpers.AppConfig.Set("silent_start", (checkStartMinimized.IsChecked ?? false) ? 1 : 0);
     }
 
     private ExtraWindow? _extraWindow;
