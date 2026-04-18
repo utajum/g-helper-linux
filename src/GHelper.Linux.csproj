@@ -33,6 +33,16 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
 
+    <!--
+      Native asset packages are pulled transitively by Avalonia, but we pin them
+      explicitly with GeneratePathProperty so the EmbeddedResource target below
+      can reference a single unambiguous path via $(PkgSkiaSharp_NativeAssets_Linux)
+      and $(PkgHarfBuzzSharp_NativeAssets_Linux). Versions must match what
+      Avalonia resolves to avoid downgrade warnings.
+    -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.9" GeneratePathProperty="true" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.3" GeneratePathProperty="true" />
+
     <!-- HID communication (cross-platform, used by G-Helper) -->
     <PackageReference Include="HidSharpCore" Version="1.3.0" />
   </ItemGroup>
@@ -55,9 +65,9 @@
   -->
   <Target Name="EmbedNativeLibraries" BeforeTargets="PrepareForBuild">
     <ItemGroup>
-      <EmbeddedResource Include="$(NuGetPackageRoot)skiasharp.nativeassets.linux/**/runtimes/linux-x64/native/libSkiaSharp.so"
+      <EmbeddedResource Include="$(PkgSkiaSharp_NativeAssets_Linux)/runtimes/linux-x64/native/libSkiaSharp.so"
                         LogicalName="libSkiaSharp.so" />
-      <EmbeddedResource Include="$(NuGetPackageRoot)harfbuzzsharp.nativeassets.linux/**/runtimes/linux-x64/native/libHarfBuzzSharp.so"
+      <EmbeddedResource Include="$(PkgHarfBuzzSharp_NativeAssets_Linux)/runtimes/linux-x64/native/libHarfBuzzSharp.so"
                         LogicalName="libHarfBuzzSharp.so" />
     </ItemGroup>
   </Target>
