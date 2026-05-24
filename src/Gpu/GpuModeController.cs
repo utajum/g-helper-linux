@@ -439,6 +439,12 @@ public class GpuModeController
         // irrelevant).
         ClearStaleMuxLatchFlag();
 
+        if (AppConfig.NoGpu() || AppConfig.IsAMDiGPU())
+        {
+            Logger.WriteLine("GpuModeController: APU-only system (NoGpu/IsAMDiGPU) - skipping startup GPU probe");
+            return GpuSwitchResult.AlreadySet;
+        }
+
         // PCI backend: the boot service is solely responsible for applying
         // any pending mode at boot. By the time ghelper starts up, the
         // transition has already happened (or failed and been recorded in
@@ -1477,6 +1483,9 @@ public class GpuModeController
     {
         try
         {
+            if (AppConfig.NoGpu() || AppConfig.IsAMDiGPU())
+                return;
+
             // PCI backend has no MUX hardware and no live dgpu_disable, so
             // the impossible-state pair this check defends against simply
             // cannot occur. Skip silently to avoid touching WMI sysfs that
