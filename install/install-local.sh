@@ -411,6 +411,12 @@ if [[ "$MODE" != "appimage" ]]; then
     _install_file "$BOOT_SCRIPT_SRC" "$BOOT_SCRIPT_DEST" 755 "GPU boot script" || true
     _install_file "$BOOT_UNIT_SRC" "$BOOT_UNIT_DEST" 644 "GPU boot systemd unit" || true
 
+    # Config dir for boot-service artifacts. The unit also creates this via
+    # ConfigurationDirectory=, but make it now so upgrades don't depend on a reboot — a
+    # missing /etc/ghelper makes the unit's ProtectSystem=strict namespace setup fail and
+    # spam the journal (issue #116).
+    mkdir -p /etc/ghelper && chmod 0755 /etc/ghelper 2>/dev/null || true
+
     # Reload systemd so it picks up the new/changed unit file
     systemctl daemon-reload 2>/dev/null || true
     _info "systemd daemon-reload"

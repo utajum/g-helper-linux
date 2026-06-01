@@ -442,6 +442,12 @@ if [[ "$MODE" == "install" ]]; then
     _install_file "$WORK_DIR/ghelper-gpu-boot.sh" "$HELPER_DIR/ghelper-gpu-boot.sh" 755 "GPU boot script" || true
     _install_file "$WORK_DIR/ghelper-gpu-boot.service" "/etc/systemd/system/ghelper-gpu-boot.service" 644 "GPU boot systemd unit" || true
 
+    # Config dir for boot-service artifacts. The unit also creates this via
+    # ConfigurationDirectory=, but make it now so upgrades don't depend on a reboot — a
+    # missing /etc/ghelper makes the unit's ProtectSystem=strict namespace setup fail and
+    # spam the journal (issue #116).
+    mkdir -p /etc/ghelper && chmod 0755 /etc/ghelper 2>/dev/null || true
+
     GPU_HELPER_DEST="$INSTALL_DIR/gpu-helper"
     if "$INSTALL_DIR/ghelper" --extract-helper gpu-helper "$GPU_HELPER_DEST" >/dev/null 2>&1; then
         chown root:root "$GPU_HELPER_DEST"

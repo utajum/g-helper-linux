@@ -45,6 +45,10 @@ ProtectHome=true
 
 # /sys, /dev, /proc remain writable under ProtectSystem=strict by default.
 # Explicit RW paths for our config + block artifacts + udev socket.
+# ConfigurationDirectory creates /etc/ghelper (0755, root) BEFORE ExecStart and adds it to
+# the writable set. Without it, a missing /etc/ghelper makes ProtectSystem=strict fail the
+# mount-namespace setup on every boot, spamming the journal (see issue #116).
+ConfigurationDirectory=ghelper
 ReadWritePaths=/etc/ghelper
 ReadWritePaths=/etc/modprobe.d
 ReadWritePaths=/etc/udev/rules.d
