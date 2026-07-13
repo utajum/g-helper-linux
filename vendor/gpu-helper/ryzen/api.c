@@ -12,6 +12,13 @@
 #define Sleep(x) usleep((x) * 1000)
 #endif
 
+static int s_probe_dry_run = 0;
+
+EXP void CALL set_probe_dry_run(int enable)
+{
+    s_probe_dry_run = enable ? 1 : 0;
+}
+
 EXP ryzen_access CALL init_ryzenadj()
 {
     const enum ryzen_family family = cpuid_get_family();
@@ -489,46 +496,48 @@ EXP int CALL refresh_table(ryzen_access ry)
     return 0;
 }
 
-#define _do_adjust(OPT)                                  \
-    do                                                   \
-    {                                                    \
-        smu_service_args_t args = {0, 0, 0, 0, 0, 0};    \
-        int resp;                                        \
-        args.arg0 = value;                               \
-        resp = smu_service_req(ry->mp1_smu, OPT, &args); \
-        if (resp == REP_MSG_OK)                          \
-        {                                                \
-            err = 0;                                     \
-        }                                                \
-        else if (resp == REP_MSG_UnknownCmd)             \
-        {                                                \
-            err = ADJ_ERR_SMU_UNSUPPORTED;               \
-        }                                                \
-        else                                             \
-        {                                                \
-            err = ADJ_ERR_SMU_REJECTED;                  \
-        }                                                \
+#define _do_adjust(OPT)                                      \
+    do                                                       \
+    {                                                        \
+        if (s_probe_dry_run)                                 \
+        {                                                    \
+            err = 0;                                         \
+        }                                                    \
+        else                                                 \
+        {                                                    \
+            smu_service_args_t args = {0, 0, 0, 0, 0, 0};    \
+            int resp;                                        \
+            args.arg0 = value;                               \
+            resp = smu_service_req(ry->mp1_smu, OPT, &args); \
+            if (resp == REP_MSG_OK)                          \
+                err = 0;                                     \
+            else if (resp == REP_MSG_UnknownCmd)             \
+                err = ADJ_ERR_SMU_UNSUPPORTED;               \
+            else                                             \
+                err = ADJ_ERR_SMU_REJECTED;                  \
+        }                                                    \
     } while (0);
 
-#define _do_adjust_psmu(OPT)                          \
-    do                                                \
-    {                                                 \
-        smu_service_args_t args = {0, 0, 0, 0, 0, 0}; \
-        int resp;                                     \
-        args.arg0 = value;                            \
-        resp = smu_service_req(ry->psmu, OPT, &args); \
-        if (resp == REP_MSG_OK)                       \
-        {                                             \
-            err = 0;                                  \
-        }                                             \
-        else if (resp == REP_MSG_UnknownCmd)          \
-        {                                             \
-            err = ADJ_ERR_SMU_UNSUPPORTED;            \
-        }                                             \
-        else                                          \
-        {                                             \
-            err = ADJ_ERR_SMU_REJECTED;               \
-        }                                             \
+#define _do_adjust_psmu(OPT)                              \
+    do                                                    \
+    {                                                     \
+        if (s_probe_dry_run)                              \
+        {                                                 \
+            err = 0;                                      \
+        }                                                 \
+        else                                              \
+        {                                                 \
+            smu_service_args_t args = {0, 0, 0, 0, 0, 0}; \
+            int resp;                                     \
+            args.arg0 = value;                            \
+            resp = smu_service_req(ry->psmu, OPT, &args); \
+            if (resp == REP_MSG_OK)                       \
+                err = 0;                                  \
+            else if (resp == REP_MSG_UnknownCmd)          \
+                err = ADJ_ERR_SMU_UNSUPPORTED;            \
+            else                                          \
+                err = ADJ_ERR_SMU_REJECTED;               \
+        }                                                 \
     } while (0);
 
 #define _read_float_value(OFFSET)              \

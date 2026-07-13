@@ -223,8 +223,8 @@ int ryzen_do_probe(void)
     if (!ry)
         return -1;
 
-    /* Read the PM table so we can get current values for the probe. */
-    int have_table = (init_table(ry) == 0 && refresh_table(ry) == 0);
+    /* Dry-run: set_* report family support without touching the SMU. */
+    set_probe_dry_run(1);
 
     printf("family=%s\n", family_str(get_cpu_family(ry)));
     printf("supported=");
@@ -232,13 +232,7 @@ int ryzen_do_probe(void)
     int first = 1;
     for (const ryzen_param *p = params; p->name; p++)
     {
-        /* Try setting to the current value (no-op write). If the function
-         * returns FAM_UNSUPPORTED, this param isn't available. */
-        uint32_t cur = 0;
-        if (have_table && p->get_limit)
-            cur = (uint32_t)p->get_limit(ry);
-        int rc = p->set(ry, cur > 0 ? cur : 1);
-        if (rc != ADJ_ERR_FAM_UNSUPPORTED)
+        if (p->set(ry, 0) != ADJ_ERR_FAM_UNSUPPORTED)
         {
             if (!first)
                 printf(",");
@@ -246,12 +240,9 @@ int ryzen_do_probe(void)
             first = 0;
         }
     }
-    /* Probe toggles by trying them — power-saving/max-performance are safe
-     * to call as they just flip an SMU flag. */
     for (const ryzen_toggle *t = toggles; t->name; t++)
     {
-        int rc = t->set(ry);
-        if (rc != ADJ_ERR_FAM_UNSUPPORTED)
+        if (t->set(ry) != ADJ_ERR_FAM_UNSUPPORTED)
         {
             if (!first)
                 printf(",");
@@ -261,6 +252,7 @@ int ryzen_do_probe(void)
     }
     printf("\n");
 
+    set_probe_dry_run(0);
     cleanup_ryzenadj(ry);
     return 0;
 }

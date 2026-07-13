@@ -75,6 +75,10 @@ struct _ryzen_access;
     EXP enum ryzen_family get_cpu_family(ryzen_access ry);
     EXP int get_bios_if_ver(ryzen_access ry);
 
+    /* Probe dry-run: when enabled, set_* calls skip the SMU write and report
+     * support without mutating hardware (issue #151). */
+    EXP void CALL set_probe_dry_run(int enable);
+
     EXP int CALL init_table(ryzen_access ry);
     EXP uint32_t CALL get_table_ver(ryzen_access ry);
     EXP size_t CALL get_table_size(ryzen_access ry);

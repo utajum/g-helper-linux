@@ -1676,6 +1676,15 @@ public partial class FansWindow : Window
 
     private RyzenSliderDef[]? _ryzenSliders;
 
+    // Params seeded from a valid in-range PM-table reading.
+    private readonly HashSet<string> _ryzenSeeded = new();
+
+    // Params the user moved since the window loaded.
+    private readonly HashSet<string> _ryzenTouched = new();
+
+    // True while seeding sliders programmatically (suppresses touch tracking).
+    private bool _loadingRyzen;
+
     private RyzenSliderDef[] BuildRyzenSliderMap() =>
     [
         new("stapm-limit", sliderRyzenStapm, labelRyzenStapm, rowRyzenStapm, "W", 1000),
@@ -1697,34 +1706,79 @@ public partial class FansWindow : Window
 
     private void LoadRyzenPower()
     {
-        if (!Platform.Linux.RyzenPower.Available)
+        // Building the map only references existing controls (UI thread).
+        _ryzenSliders = BuildRyzenSliderMap();
+
+        // Probe + PM-table read spawn sudo gpu-helper and can take seconds;
+        // do them off the UI thread, then bind results back.
+        Task.Run(() =>
+        {
+            bool available = Platform.Linux.RyzenPower.Available;
+            var supported = new Dictionary<string, bool>();
+            Dictionary<string, float>? info = null;
+            if (available)
+            {
+                info = Platform.Linux.RyzenPower.ReadInfo();
+                foreach (var s in _ryzenSliders)
+                    supported[s.Param] = Platform.Linux.RyzenPower.IsSupported(s.Param);
+            }
+            Dispatcher.UIThread.Post(() => ApplyRyzenPowerInfo(available, supported, info));
+        });
+    }
+
+    private void ApplyRyzenPowerInfo(bool available, Dictionary<string, bool> supported, Dictionary<string, float>? info)
+    {
+        if (_ryzenSliders == null)
+            return;
+
+        if (!available)
         {
             panelRyzenPower.IsVisible = false;
             return;
         }
 
-        _ryzenSliders = BuildRyzenSliderMap();
-        var info = Platform.Linux.RyzenPower.ReadInfo();
-        bool anyVisible = false;
-
-        foreach (var s in _ryzenSliders)
+        _ryzenSeeded.Clear();
+        _ryzenTouched.Clear();
+        _loadingRyzen = true;
+        try
         {
-            bool supported = Platform.Linux.RyzenPower.IsSupported(s.Param);
-            s.Row.IsVisible = supported;
-            if (!supported)
-                continue;
-            anyVisible = true;
-
-            // Seed from PM table if available, else use slider default.
-            if (info != null && info.TryGetValue(s.Param, out float raw))
+            bool anyVisible = false;
+            foreach (var s in _ryzenSliders)
             {
-                float display = raw / s.Divisor;
-                s.Slider.Value = Math.Clamp(display, s.Slider.Minimum, s.Slider.Maximum);
-            }
-            UpdateRyzenLabel(s);
-        }
+                bool sup = supported.TryGetValue(s.Param, out bool b) && b;
+                s.Row.IsVisible = sup;
+                if (!sup)
+                    continue;
+                anyVisible = true;
 
-        panelRyzenPower.IsVisible = anyVisible;
+                // Seed only from an in-range reading. A junk/zero value (wrong
+                // PM-table offsets on some chips) is ignored, not clamped to the
+                // minimum - otherwise Apply would push that minimum to the SMU.
+                if (info != null && info.TryGetValue(s.Param, out float raw))
+                {
+                    float display = raw / s.Divisor;
+                    if (display >= s.Slider.Minimum && display <= s.Slider.Maximum)
+                    {
+                        s.Slider.Value = display;
+                        _ryzenSeeded.Add(s.Param);
+                    }
+                }
+
+                // Unreadable current value: say so instead of showing the
+                // slider minimum as if it were real. Label turns numeric once the user moves
+                // the slider.
+                if (_ryzenSeeded.Contains(s.Param))
+                    UpdateRyzenLabel(s);
+                else
+                    s.Label.Text = Labels.Get("not_available_short");
+            }
+
+            panelRyzenPower.IsVisible = anyVisible;
+        }
+        finally
+        {
+            _loadingRyzen = false;
+        }
     }
 
     private void UpdateRyzenLabel(RyzenSliderDef s)
@@ -1739,20 +1793,39 @@ public partial class FansWindow : Window
             return;
         foreach (var s in _ryzenSliders)
             if (sender == s.Slider)
-            { UpdateRyzenLabel(s); break; }
+            {
+                UpdateRyzenLabel(s);
+                if (!_loadingRyzen)
+                    _ryzenTouched.Add(s.Param);
+                break;
+            }
     }
 
     private void ButtonRyzenApply_Click(object? sender, RoutedEventArgs e)
     {
         if (_ryzenSliders == null)
             return;
+
+        // Only write rows we either read a real value for or the user moved.
+        // Never push an untouched minimum default to the SMU (issue #151).
+        var writes = new List<(string Param, int Raw)>();
         foreach (var s in _ryzenSliders)
         {
             if (!s.Row.IsVisible)
                 continue;
-            int raw = (int)(s.Slider.Value * s.Divisor);
-            Platform.Linux.RyzenPower.Set(s.Param, raw);
+            if (!_ryzenSeeded.Contains(s.Param) && !_ryzenTouched.Contains(s.Param))
+                continue;
+            writes.Add((s.Param, (int)(s.Slider.Value * s.Divisor)));
         }
+
+        if (writes.Count == 0)
+            return;
+
+        Task.Run(() =>
+        {
+            foreach (var w in writes)
+                Platform.Linux.RyzenPower.Set(w.Param, w.Raw);
+        });
     }
 
     // Ryzen Curve Optimizer undervolt (mirrors Windows Fans.cs: trackUV / checkApplyUV)
