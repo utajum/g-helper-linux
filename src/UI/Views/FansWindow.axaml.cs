@@ -1754,12 +1754,11 @@ public partial class FansWindow : Window
                 // Seed only from an in-range reading. A junk/zero value (wrong
                 // PM-table offsets on some chips) is ignored, not clamped to the
                 // minimum - otherwise Apply would push that minimum to the SMU.
-                if (info != null && info.TryGetValue(s.Param, out float raw))
+                if (info != null && info.TryGetValue(s.Param, out float val))
                 {
-                    float display = raw / s.Divisor;
-                    if (display >= s.Slider.Minimum && display <= s.Slider.Maximum)
+                    if (val >= s.Slider.Minimum && val <= s.Slider.Maximum)
                     {
-                        s.Slider.Value = display;
+                        s.Slider.Value = val;
                         _ryzenSeeded.Add(s.Param);
                     }
                 }
@@ -1819,12 +1818,18 @@ public partial class FansWindow : Window
         }
 
         if (writes.Count == 0)
+        {
+            Helpers.Logger.WriteLine("RyzenPower: apply skipped - no readable or user-changed values");
             return;
+        }
 
         Task.Run(() =>
         {
             foreach (var w in writes)
-                Platform.Linux.RyzenPower.Set(w.Param, w.Raw);
+            {
+                bool ok = Platform.Linux.RyzenPower.Set(w.Param, w.Raw);
+                Helpers.Logger.WriteLine($"RyzenPower: set {w.Param}={w.Raw}{(ok ? "" : " FAILED")}");
+            }
         });
     }
 
