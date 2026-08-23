@@ -1091,14 +1091,19 @@ public class LinuxAsusWmi : IHardwareControl
 
     public void SetPptLimit(string attribute, int watts)
     {
-        if (_lastWrittenInt.TryGetValue(attribute, out int prev) && prev == watts)
-            return;
+        // Lock: the FW-attr watcher thread reads this dictionary.
+        lock (_lastWrittenInt)
+        {
+            if (_lastWrittenInt.TryGetValue(attribute, out int prev) && prev == watts)
+                return;
+        }
 
         // AMD: asus-wmi PPT sysfs is a no-op on some boards. Route through
         // the SMU directly when available, fall back to sysfs otherwise.
         if (RyzenPower.TrySetPpt(attribute, watts))
         {
-            _lastWrittenInt[attribute] = watts;
+            lock (_lastWrittenInt)
+                _lastWrittenInt[attribute] = watts;
             return;
         }
 
@@ -1106,20 +1111,29 @@ public class LinuxAsusWmi : IHardwareControl
         // backend is functional for any given attribute. Write to ALL available paths
         // legacy sysfs and firmware-attributes - so at least one succeeds.
         // See: https://github.com/utajum/g-helper-linux/issues/23
+        bool written;
         var attrDef = AsusAttributes.FindByLegacyName(attribute);
         if (attrDef != null)
         {
-            SysfsHelper.WriteToAllBackends(attrDef, watts.ToString(), SysfsHelper.AsusWmiPlatform);
+            written = SysfsHelper.WriteToAllBackends(attrDef, watts.ToString(), SysfsHelper.AsusWmiPlatform);
         }
         else
         {
             // Fallback for unknown attributes: single resolved path
             var path = SysfsHelper.ResolveAttrPath(attribute, SysfsHelper.AsusWmiPlatform);
-            if (path != null)
-                SysfsHelper.WriteInt(path, watts);
+            written = path != null && SysfsHelper.WriteInt(path, watts);
         }
 
-        _lastWrittenInt[attribute] = watts;
+        // Cache only successful writes. A rejected write must stay retryable,
+        // otherwise the dedupe check above blocks it until restart.
+        if (!written)
+        {
+            Helpers.Logger.WriteLine($"SetPptLimit: {attribute}={watts} write failed, not caching");
+            return;
+        }
+
+        lock (_lastWrittenInt)
+            _lastWrittenInt[attribute] = watts;
     }
 
     public AttrRange? GetAttributeRange(AttrDef attr) => AsusAttributeRange.Read(attr);
@@ -1267,27 +1281,30 @@ public class LinuxAsusWmi : IHardwareControl
         // sensor instead.
         bool nvSkip = Gpu.NVidia.LinuxNvidiaGpuControl.ShouldSkipDgpuTelemetry();
 
+        // Readings at or above 125 C are sensor glitches, drop them.
+        const int MaxValidTemp = 125;
+
         // Try NVIDIA hwmon (cached lookup, no repeated filesystem scan)
         var nvidiaHwmon = nvSkip ? null : SysfsHelper.FindHwmonByName("nvidia");
         if (nvidiaHwmon != null)
         {
-            int temp = SysfsHelper.ReadInt(Path.Combine(nvidiaHwmon, "temp1_input"), -1);
-            if (temp > 0)
-                return temp / 1000;
+            int temp = SysfsHelper.ReadInt(Path.Combine(nvidiaHwmon, "temp1_input"), -1) / 1000;
+            if (temp > 0 && temp < MaxValidTemp)
+                return temp;
         }
 
         // Try amdgpu hwmon
         var amdHwmon = SysfsHelper.FindHwmonByName("amdgpu");
         if (amdHwmon != null)
         {
-            int temp = SysfsHelper.ReadInt(Path.Combine(amdHwmon, "temp1_input"), -1);
-            if (temp > 0)
-                return temp / 1000;
+            int temp = SysfsHelper.ReadInt(Path.Combine(amdHwmon, "temp1_input"), -1) / 1000;
+            if (temp > 0 && temp < MaxValidTemp)
+                return temp;
         }
 
         // Fallback: NVML via gpu-helper (~5ms, no nvidia-smi fork)
         int nvmlTemp = Gpu.NVidia.LinuxNvidiaGpuControl.GetTempViaNvml();
-        if (nvmlTemp > 0)
+        if (nvmlTemp > 0 && nvmlTemp < MaxValidTemp)
             return nvmlTemp;
 
         // Last resort: nvidia-smi fork (~200ms)
@@ -1296,7 +1313,7 @@ public class LinuxAsusWmi : IHardwareControl
             try
             {
                 var output = SysfsHelper.RunCommand("nvidia-smi", "--query-gpu=temperature.gpu --format=csv,noheader,nounits");
-                if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int smiTemp) && smiTemp > 0)
+                if (!string.IsNullOrWhiteSpace(output) && int.TryParse(output.Trim(), out int smiTemp) && smiTemp > 0 && smiTemp < MaxValidTemp)
                     return smiTemp;
             }
             catch { }

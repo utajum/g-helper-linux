@@ -702,7 +702,7 @@ public static class AppConfig
     public static bool MediaKeys() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("G712L") || ContainsModel("GX502L");
     // NOT WIRED ON LINUX (upstream parity stub).
     public static bool IsHardwareHotkeys() => ContainsModel("FX506");
-    public static bool IsHardwareTouchpadToggle() => ContainsModel("FA507");
+    public static bool IsHardwareTouchpadToggle() => GetModelShort().Contains("FA507");
     public static bool IsNoFNV() => ContainsModel("FX507") || ContainsModel("FX707");
 
     // CPU platform
@@ -720,7 +720,7 @@ public static class AppConfig
         ContainsModel("S540") || ContainsModel("S550") || ContainsModel("M7400") || ContainsModel("N650") ||
         ContainsModel("HN7306") || ContainsModel("H760") || ContainsModel("UX5406") || ContainsModel("M5606") ||
         ContainsModel("X513") || ContainsModel("N7400") || ContainsModel("UX760") || ContainsModel("Q530VJ") ||
-        ContainsModel("TP3407");
+        ContainsModel("TP3407") || ContainsModel("HT7407") || ContainsModel("3607");
     public static bool IsNoOverdrive() => Is("no_overdrive");
     public static bool SwappedBrightness() => ContainsModel("FA506IEB") || ContainsModel("FA506IH") || ContainsModel("FA506IC") || ContainsModel("FA506II") || ContainsModel("FX506LU") || ContainsModel("FX506IC") || ContainsModel("FX506LH") || ContainsModel("FA506IV") || ContainsModel("FA706IC") || ContainsModel("FA706IH");
     public static bool IsForceMiniled() =>

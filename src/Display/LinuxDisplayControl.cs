@@ -75,6 +75,13 @@ public class LinuxDisplayControl : IDisplayControl
             Helpers.Logger.WriteLine("SetRefreshRate: no display backend available");
             return;
         }
+        // Skip the modeset when the panel is already at the target rate.
+        int current = _backend.GetRefreshRate();
+        if (current == hz)
+        {
+            Helpers.Logger.WriteLine($"SetRefreshRate({hz}Hz): already set, skipping");
+            return;
+        }
         Helpers.Logger.WriteLine($"SetRefreshRate({hz}Hz) via {_backend.Name} backend");
         _backend.SetRefreshRate(hz);
     }

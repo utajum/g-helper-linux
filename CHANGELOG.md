@@ -8,6 +8,23 @@
 
 ### Changed
 
+## v1.0.92 (2026-08-23)
+
+### Added
+
+- OLED panel detection for HT7407 and S3607 models.
+
+### Fixed
+
+- PPT limit writes cache only successful values, so a rejected write is retried instead of blocked until restart.
+- PPT dedupe cache locked against the firmware-attribute watcher thread.
+- GPU temperature readings at or above 125 C are dropped as sensor glitches.
+- NixOS: gpu-helper gets the driver runpath (#176, thanks @localcc).
+
+### Changed
+
+- Refresh rate switch is skipped when the panel is already at the target rate.
+
 ## v1.0.91 (2026-08-19)
 
 ### Added
