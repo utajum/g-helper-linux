@@ -11,6 +11,8 @@
   dotnetCorePackages,
   # Build deps for ghelper (Native AOT link)
   clang,
+  # Adds /run/opengl-driver/lib rpath (NVML dlopen)
+  addDriverRunpath,
   # ghelper-audio build deps
   pkg-config,
   # wlr-randr build deps
@@ -216,6 +218,14 @@ rec {
     version = "1.0.0";
 
     src = ../vendor/gpu-helper;
+
+    # dlopen("libnvidia-ml.so.1") resolves via the executable's RUNPATH on
+    # NixOS, where the driver lives in /run/opengl-driver/lib.
+    nativeBuildInputs = [ addDriverRunpath ];
+
+    postFixup = ''
+      addDriverRunpath $out/bin/gpu-helper
+    '';
 
     buildPhase = ''
       cc -O2 -Wall -Wno-unused-result -DNDEBUG \
