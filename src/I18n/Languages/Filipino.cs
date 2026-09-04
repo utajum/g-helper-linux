@@ -539,6 +539,9 @@ public static class Filipino
         // FANS WINDOW
         ["fans_title"] = "Mga Fan at Power",
         ["fan_curves"] = "Mga Fan Curve",
+        ["manual_fan_control"] = "Manu-manong kontrol ng fan (eksperimental)",
+        ["manual_fan_hint"] = "Itinatakda ang fan duty sa pamamagitan ng EC bawat segundo ayon sa iyong curve, parehong daan ng MyASUS fan test. Para sa TUF FA506/FA507/FX506/FX507 at katulad na model na walang fan curve support sa firmware. Aktibo bawat mode kasama ang Auto-apply sa Fans window. Kailangan ng root sa pamamagitan ng gpu-helper. Bumabalik ang mga fan sa BIOS control kapag naka-off o kapag isinara ang app.",
+        ["manual_fan_unsupported"] = "Walang interface para sa kontrol ng fan ang firmware ng modelong ito",
         ["fan_drag_all"] = "Pindutin nang matagal ang Shift para i-drag ang lahat ng punto nang sabay",
         ["reset"] = "I-reset",
         ["disable"] = "I-disable",

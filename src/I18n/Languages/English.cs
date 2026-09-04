@@ -542,6 +542,9 @@ public static class English
         // FANS WINDOW
         ["fans_title"] = "Fans & Power",
         ["fan_curves"] = "Fan Curves",
+        ["manual_fan_control"] = "Manual fan control (experimental)",
+        ["manual_fan_hint"] = "Sets fan duty through the EC every second along your curves, the same path MyASUS fan test uses. For TUF FA506/FA507/FX506/FX507 and similar models whose firmware has no fan curve support. Active per mode together with Auto-apply in the Fans window. Needs root via gpu-helper. Fans return to BIOS control when off or when the app exits.",
+        ["manual_fan_unsupported"] = "Firmware on this model has no fan control interface",
         ["fan_drag_all"] = "Hold Shift to drag all points together",
         ["reset"] = "Reset",
         ["disable"] = "Disable",

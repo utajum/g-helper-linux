@@ -404,6 +404,9 @@ public static class Japanese
         // FANS WINDOW
         ["fans_title"] = "ファン & 電力",
         ["fan_curves"] = "ファンカーブ",
+        ["manual_fan_control"] = "手動ファン制御（実験的）",
+        ["manual_fan_hint"] = "毎秒カーブに従って EC 経由でファンのデューティを設定します。MyASUS のファンテストと同じ経路です。ファームウェアがファンカーブに対応しない TUF FA506/FA507/FX506/FX507 などの機種向け。ファンウィンドウの自動適用と併せてモードごとに有効。gpu-helper 経由で root が必要。オフにするかアプリを終了すると BIOS 制御に戻ります。",
+        ["manual_fan_unsupported"] = "このモデルのファームウェアにはファン制御インターフェースがありません",
         ["fan_drag_all"] = "Shift を押しながらドラッグですべてのポイントを一括移動",
         ["reset"] = "リセット",
         ["disable"] = "無効化",

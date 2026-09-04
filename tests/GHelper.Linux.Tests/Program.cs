@@ -25,6 +25,7 @@ public static class Program
         try
         {
             Scenarios.RunAll();
+            ManualFanTests.RunAll();
         }
         finally
         {

@@ -1368,6 +1368,9 @@ public class App : Application
         { GHelper.Linux.Input.NumberPad.Stop(); }
         catch { }
         try
+        { GHelper.Linux.Fan.ManualFanService.Stop(); }
+        catch { }
+        try
         { Input?.Dispose(); }
         catch { }
         try
@@ -1402,6 +1405,7 @@ public class App : Application
         GHelper.Linux.Input.GamepadNav.Stop();
         AnimeMatrix?.Dispose();
         GHelper.Linux.Input.NumberPad.Stop();
+        GHelper.Linux.Fan.ManualFanService.Stop();
         Platform.Linux.StatusLed.Shutdown();
         Input?.Dispose();
         Wmi?.Dispose();

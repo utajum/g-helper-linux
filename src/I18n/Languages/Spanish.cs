@@ -401,6 +401,9 @@ public static class Spanish
         // FANS WINDOW
         ["fans_title"] = "Ventiladores y energía",
         ["fan_curves"] = "Curvas de ventiladores",
+        ["manual_fan_control"] = "Control manual de ventiladores (experimental)",
+        ["manual_fan_hint"] = "Ajusta la potencia de los ventiladores vía EC cada segundo según tus curvas, por la misma ruta que la prueba de ventiladores de MyASUS. Para TUF FA506/FA507/FX506/FX507 y modelos similares cuyo firmware no admite curvas. Activo por modo junto con Aplicación automática en la ventana de ventiladores. Requiere root vía gpu-helper. Los ventiladores vuelven al BIOS al desactivarlo o cerrar la app.",
+        ["manual_fan_unsupported"] = "El firmware de este modelo no tiene interfaz de control de ventiladores",
         ["fan_drag_all"] = "Mantenga Shift para arrastrar todos los puntos juntos",
         ["reset"] = "Restablecer",
         ["disable"] = "Desactivar",
