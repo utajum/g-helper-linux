@@ -322,6 +322,14 @@
                               Margin="0,4"
                               IsCheckedChanged="CheckBootSound_Changed" />
 
+                    <CheckBox x:Name="checkManualFan"
+                              Content="Manual fan control (experimental)"
+                              Margin="0,4" IsVisible="False"
+                              IsCheckedChanged="CheckManualFan_Changed" />
+                    <TextBlock x:Name="labelManualFanHint" Classes="label-dim"
+                               Text="Sets fan duty through the EC every second along your curves, the same path MyASUS fan test uses. For TUF FA506/FA507/FX506/FX507 and similar models whose firmware has no fan curve support. Active per mode together with Auto-apply in the Fans window. Needs root via gpu-helper. Fans return to BIOS control when off or when the app exits."
+                               FontSize="10" Margin="20,0,0,4" TextWrapping="Wrap" IsVisible="False" />
+
                     <CheckBox x:Name="checkMcuPowersave" Content="MCU Power Saving (USB autosuspend)"
                               Margin="0,4" IsVisible="False"
                               IsCheckedChanged="CheckMcuPowersave_Changed" />

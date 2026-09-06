@@ -401,6 +401,9 @@ public static class Dutch
         // FANS WINDOW
         ["fans_title"] = "Ventilatoren & Vermogen",
         ["fan_curves"] = "Ventilatorcurves",
+        ["manual_fan_control"] = "Handmatige ventilatorbesturing (experimenteel)",
+        ["manual_fan_hint"] = "Stelt elke seconde het ventilatorvermogen in via de EC volgens je curves, dezelfde route als de MyASUS-ventilatortest. Voor TUF FA506/FA507/FX506/FX507 en vergelijkbare modellen waarvan de firmware geen ventilatorcurves ondersteunt. Actief per modus samen met Automatisch toepassen in het ventilatorvenster. Vereist root via gpu-helper. Ventilatoren gaan terug naar BIOS-beheer bij uitschakelen of afsluiten van de app.",
+        ["manual_fan_unsupported"] = "De firmware van dit model heeft geen interface voor ventilatorbesturing",
         ["fan_drag_all"] = "Houd Shift ingedrukt om alle punten samen te slepen",
         ["reset"] = "Reset",
         ["disable"] = "Uitschakelen",

@@ -202,6 +202,8 @@ public partial class ExtraWindow : Window
         // Other
         headerOther.Text = Labels.Get("other_header");
         checkBootSound.Content = Labels.Get("boot_sound");
+        checkManualFan.Content = Labels.Get("manual_fan_control");
+        labelManualFanHint.Text = Labels.Get("manual_fan_hint");
         checkTopmost.Content = Labels.Get("window_topmost");
         checkBWIcon.Content = Labels.Get("bw_tray_icon");
         checkClamshell.Content = Labels.Get("clamshell_mode");
@@ -1113,6 +1115,12 @@ public partial class ExtraWindow : Window
         int bootSound = Helpers.AppConfig.Get("boot_sound", 0);
         checkBootSound.IsChecked = bootSound == 1;
 
+        // Experimental EC manual fan control (ASUS only)
+        bool manualFan = App.Wmi is Platform.Linux.LinuxAsusWmi;
+        checkManualFan.IsVisible = manualFan;
+        labelManualFanHint.IsVisible = manualFan;
+        checkManualFan.IsChecked = Fan.ManualFanService.Enabled;
+
         // MCU power saving (asus-armoury bool; ASUS only). Live firmware state.
         bool mcuSupported = App.Wmi?.IsFeatureSupported(Platform.Linux.AsusAttributes.McuPowersave) == true;
         checkMcuPowersave.IsVisible = mcuSupported;
@@ -1490,6 +1498,28 @@ public partial class ExtraWindow : Window
             bool ok = Platform.Linux.MemSleep.Set(variant);
             if (!ok)
                 Avalonia.Threading.Dispatcher.UIThread.Post(RefreshDeepSleep);
+        });
+    }
+
+    private void CheckManualFan_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents)
+            return;
+        bool enabled = checkManualFan.IsChecked ?? false;
+        if (enabled == Fan.ManualFanService.Enabled)
+            return;
+        Helpers.AppConfig.Set(Fan.ManualFanService.ConfigKey, enabled ? 1 : 0);
+        Task.Run(() =>
+        {
+            // may prompt for auth; Sync clears the flag again on failure
+            Fan.ManualFanService.Sync(interactive: true);
+            Dispatcher.UIThread.Post(() =>
+            {
+                bool prev = _suppressEvents;
+                _suppressEvents = true;
+                checkManualFan.IsChecked = Fan.ManualFanService.Enabled;
+                _suppressEvents = prev;
+            });
         });
     }
 

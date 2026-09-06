@@ -539,6 +539,9 @@ public static class Slovenian
         // FANS WINDOW
         ["fans_title"] = "Ventilatorji in napajanje",
         ["fan_curves"] = "Krivulje ventilatorjev",
+        ["manual_fan_control"] = "Ročno upravljanje ventilatorjev (poskusno)",
+        ["manual_fan_hint"] = "Vsako sekundo nastavi moč ventilatorjev preko EC po vaših krivuljah, po isti poti kot test ventilatorjev MyASUS. Za TUF FA506/FA507/FX506/FX507 in podobne modele, katerih firmware ne podpira krivulj. Aktivno po načinu skupaj s Samodejno uporabi v oknu ventilatorjev. Zahteva root preko gpu-helper. Ob izklopu ali izhodu iz aplikacije se ventilatorji vrnejo pod nadzor BIOS-a.",
+        ["manual_fan_unsupported"] = "Vdelana programska oprema tega modela nima vmesnika za upravljanje ventilatorjev",
         ["fan_drag_all"] = "Držite Shift za vlečenje vseh točk skupaj",
         ["reset"] = "Ponastavi",
         ["disable"] = "Onemogoči",

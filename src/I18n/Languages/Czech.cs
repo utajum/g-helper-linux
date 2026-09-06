@@ -401,6 +401,9 @@ public static class Czech
         // FANS WINDOW
         ["fans_title"] = "Ventilátory a napájení",
         ["fan_curves"] = "Křivky ventilátorů",
+        ["manual_fan_control"] = "Ruční řízení ventilátorů (experimentální)",
+        ["manual_fan_hint"] = "Každou sekundu nastavuje výkon ventilátorů přes EC podle vašich křivek, stejnou cestou jako test ventilátorů v MyASUS. Pro TUF FA506/FA507/FX506/FX507 a podobné modely, jejichž firmware nepodporuje křivky ventilátorů. Aktivní pro každý režim spolu s Auto-použít v okně ventilátorů. Vyžaduje root přes gpu-helper. Po vypnutí nebo ukončení aplikace se ventilátory vrátí pod kontrolu BIOSu.",
+        ["manual_fan_unsupported"] = "Firmware tohoto modelu nemá rozhraní pro řízení ventilátorů",
         ["fan_drag_all"] = "Podržte Shift pro přesunutí všech bodů najednou",
         ["reset"] = "Resetovat",
         ["disable"] = "Zakázat",

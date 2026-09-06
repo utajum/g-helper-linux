@@ -68,6 +68,8 @@ public partial class FansWindow : Window
             RefreshFansDgpuProcessCount();
             ToggleNavigation(_activeTab);
             InitHysteresis();
+            labelManualFanStatus.IsVisible = Fan.ManualFanService.Enabled;
+            Fan.ManualFanService.StatusChanged += OnManualFanStatus;
             _sensorTimer.Start();
         };
 
@@ -79,9 +81,19 @@ public partial class FansWindow : Window
         Closing += (_, _) =>
         {
             _sensorTimer.Stop();
+            Fan.ManualFanService.StatusChanged -= OnManualFanStatus;
             if (App.Mode != null)
                 App.Mode.ModeApplied -= OnModeApplied;
         };
+    }
+
+    private void OnManualFanStatus(string text)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            labelManualFanStatus.IsVisible = Fan.ManualFanService.Enabled;
+            labelManualFanStatus.Text = text;
+        });
     }
 
     /// <summary>Hide the fan-curve editor on hardware without a writable fan
@@ -1231,7 +1243,12 @@ public partial class FansWindow : Window
     private void CheckApplyFans_Changed(object? sender, RoutedEventArgs e)
     {
         bool enabled = checkApplyFans.IsChecked ?? false;
+        // LoadFanCurves sets IsChecked from config; only a real toggle goes on
+        if (enabled == Helpers.AppConfig.IsMode("auto_apply_fans"))
+            return;
         Helpers.AppConfig.SetMode("auto_apply_fans", enabled ? 1 : 0);
+        // the EC follower is gated by this same per-mode switch
+        Task.Run(() => Fan.ManualFanService.Sync(interactive: true));
     }
 
     private void CheckApplyPower_Changed(object? sender, RoutedEventArgs e)

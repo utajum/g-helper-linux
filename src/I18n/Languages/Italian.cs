@@ -401,6 +401,9 @@ public static class Italian
         // FANS WINDOW
         ["fans_title"] = "Ventole e alimentazione",
         ["fan_curves"] = "Curve delle ventole",
+        ["manual_fan_control"] = "Controllo manuale delle ventole (sperimentale)",
+        ["manual_fan_hint"] = "Imposta la potenza delle ventole tramite l'EC ogni secondo seguendo le tue curve, lo stesso percorso del test ventole di MyASUS. Per TUF FA506/FA507/FX506/FX507 e modelli simili il cui firmware non supporta le curve. Attivo per modalità insieme ad Applicazione automatica nella finestra ventole. Richiede root tramite gpu-helper. Le ventole tornano al BIOS quando disattivato o alla chiusura dell'app.",
+        ["manual_fan_unsupported"] = "Il firmware di questo modello non ha un'interfaccia di controllo delle ventole",
         ["fan_drag_all"] = "Tieni premuto Maiusc per trascinare tutti i punti insieme",
         ["reset"] = "Ripristina",
         ["disable"] = "Disattiva",

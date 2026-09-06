@@ -404,6 +404,9 @@ public static class Danish
         // FANS WINDOW
         ["fans_title"] = "Blæsere og strøm",
         ["fan_curves"] = "Blæserkurver",
+        ["manual_fan_control"] = "Manuel blæserstyring (eksperimentel)",
+        ["manual_fan_hint"] = "Sætter blæserstyrken via EC hvert sekund efter dine kurver, samme vej som MyASUS blæsertest. Til TUF FA506/FA507/FX506/FX507 og lignende modeller uden firmware-understøttelse af blæserkurver. Aktiv pr. tilstand sammen med Auto-anvend i blæservinduet. Kræver root via gpu-helper. Blæserne går tilbage til BIOS-styring, når den slås fra, eller appen afsluttes.",
+        ["manual_fan_unsupported"] = "Firmwaren på denne model har ingen grænseflade til blæserstyring",
         ["fan_drag_all"] = "Hold Shift nede for at trække alle punkter sammen",
         ["reset"] = "Nulstil",
         ["disable"] = "Deaktiver",
