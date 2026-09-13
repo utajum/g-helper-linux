@@ -52,6 +52,7 @@
     <Compile Include="../../src/Platform/IPowerManager.cs" />
     <Compile Include="../../src/Platform/Linux/Asus/AsusAttributes.cs" />
     <Compile Include="../../src/Platform/Linux/Asus/AsusAttributeRange.cs" />
+    <Compile Include="../../src/Mode/PowerLimitBounds.cs" />
     <Compile Include="../../src/Platform/Linux/SysfsHelper.cs" />
     <!-- NixOS (gpu-helper resolve) + RyzenPower (PPT); SysfsHelper-only helpers -->
     <Compile Include="../../src/Platform/Linux/NixOS.cs" />

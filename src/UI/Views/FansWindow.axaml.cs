@@ -1259,25 +1259,35 @@ public partial class FansWindow : Window
         _updatingPLSliders = true;
 
         int maxTotal = Mode.ModeControl.GetMaxTotal();
+        int minTotal = Mode.ModeControl.MinTotal;
+
+        // Per-attribute bounds from the firmware (asus-armoury min_value /
+        // max_value) when readable, the model table otherwise. Applied to
+        // the sliders before Value so the UI cannot offer a watt figure the
+        // kernel would reject with EINVAL (e.g. 20W on a 28W-minimum G614JU).
+        var pl1Bounds = Mode.PowerLimitBounds.For(wmi, Platform.Linux.AsusAttributes.PptPl1Spl, minTotal, maxTotal);
+        var pl2Bounds = Mode.PowerLimitBounds.For(wmi, Platform.Linux.AsusAttributes.PptPl2Sppt, minTotal, maxTotal);
+        ApplyBounds(sliderPL1, pl1Bounds);
+        ApplyBounds(sliderPL2, pl2Bounds);
 
         // Seed sliders from saved config first. The hardware readback is only
         // a fallback because legacy ppt_* sysfs attributes read back a bogus
         // minimum (5) on some models (e.g. FX517ZR). Seeding sliders from that
         // value ends up persisting a 5W limit that cripples the machine.
-        int pl1 = SanitizedLimit("limit_slow", maxTotal);
+        int pl1 = SanitizedLimit("limit_slow", pl1Bounds);
         if (pl1 <= 0)
         {
             pl1 = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl);
-            if (pl1 <= Mode.ModeControl.MinTotal || pl1 > maxTotal)
-                pl1 = Math.Min(maxTotal, (int)sliderPL1.Maximum);
+            if (pl1 <= minTotal || !pl1Bounds.Contains(pl1))
+                pl1 = Math.Min(pl1Bounds.Max, (int)sliderPL1.Maximum);
         }
 
-        int pl2 = SanitizedLimit("limit_fast", maxTotal);
+        int pl2 = SanitizedLimit("limit_fast", pl2Bounds);
         if (pl2 <= 0)
         {
             pl2 = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt);
-            if (pl2 <= Mode.ModeControl.MinTotal || pl2 > maxTotal)
-                pl2 = Math.Min(maxTotal, (int)sliderPL2.Maximum);
+            if (pl2 <= minTotal || !pl2Bounds.Contains(pl2))
+                pl2 = Math.Min(pl2Bounds.Max, (int)sliderPL2.Maximum);
         }
 
         sliderPL1.Value = pl1;
@@ -1291,12 +1301,15 @@ public partial class FansWindow : Window
         gridFppt.IsVisible = hasFppt;
         if (hasFppt)
         {
-            int fppt = SanitizedLimit("limit_fppt", maxTotal);
+            var fpptBounds = Mode.PowerLimitBounds.For(wmi, Platform.Linux.AsusAttributes.PptFppt, minTotal, maxTotal);
+            ApplyBounds(sliderFppt, fpptBounds);
+
+            int fppt = SanitizedLimit("limit_fppt", fpptBounds);
             if (fppt <= 0)
             {
                 fppt = wmi.GetPptLimit(Platform.Linux.AsusAttributes.PptFppt);
-                if (fppt <= Mode.ModeControl.MinTotal || fppt > maxTotal)
-                    fppt = Math.Min(maxTotal, (int)sliderFppt.Maximum);
+                if (fppt <= minTotal || !fpptBounds.Contains(fppt))
+                    fppt = Math.Min(fpptBounds.Max, (int)sliderFppt.Maximum);
             }
             sliderFppt.Value = fppt;
             labelFppt.Text = $"{fppt}W";
@@ -1314,22 +1327,40 @@ public partial class FansWindow : Window
         _updatingPLSliders = false;
     }
 
+    // Slider range follows the attribute bounds. The XAML Maximum is kept
+    // when the firmware did not publish one: the model table's ceiling is
+    // a validation limit, not a promise the slider can reach it.
+    private static void ApplyBounds(Slider slider, Mode.PowerLimitBounds bounds)
+    {
+        slider.Minimum = bounds.Min;
+        if (bounds.FromFirmware)
+            slider.Maximum = bounds.Max;
+    }
+
     // Saved per-mode watt limit, or 0 when unset / poisoned. Values at or
-    // below the slider floor come from bogus firmware readbacks, not the
+    // below the legacy floor come from bogus firmware readbacks, not the
     // user; drop them from config so auto-apply stops re-sending them
-    // (issue #151: persisted 5W capped the CPU at 2000 MHz).
-    private static int SanitizedLimit(string key, int maxTotal)
+    // (issue #151: persisted 5W capped the CPU at 2000 MHz). Values the
+    // user chose outside the firmware range are clamped and persisted so
+    // auto-apply sends something the kernel accepts.
+    private static int SanitizedLimit(string key, Mode.PowerLimitBounds bounds)
     {
         int v = Helpers.AppConfig.GetMode(key);
         if (v <= 0)
             return 0;
-        if (v <= Mode.ModeControl.MinTotal || v > maxTotal)
+        int safe = bounds.Sanitize(v, Mode.ModeControl.MinTotal);
+        if (safe <= 0)
         {
             Helpers.Logger.WriteLine($"FansWindow: dropping poisoned {key}={v}W from config");
             Helpers.AppConfig.SetMode(key, 0);
             return 0;
         }
-        return v;
+        if (safe != v)
+        {
+            Helpers.Logger.WriteLine($"FansWindow: {key}={v}W outside {bounds.Min}-{bounds.Max}W, clamped to {safe}W");
+            Helpers.AppConfig.SetMode(key, safe);
+        }
+        return safe;
     }
 
     /// <summary>
