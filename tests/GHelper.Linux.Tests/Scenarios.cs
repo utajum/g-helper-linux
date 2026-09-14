@@ -12,6 +12,7 @@
 
 using GHelper.Linux.Gpu;
 using GHelper.Linux.Helpers;
+using GHelper.Linux.Mode;
 using GHelper.Linux.Platform.Linux;
 using static GHelper.Linux.Tests.Harness;
 using Gate = GHelper.Linux.Gpu.NVidia.GpuQueryGate;
@@ -108,6 +109,16 @@ public static class Scenarios
         Topo_ForeignSlotCache_NotSecondGpu();
         Topo_StaleSlotCache_ClearedAfterThreeStarts();
         Topo_NouveauOnDisk_WithValidatedSlot_PciUsable();
+
+        Console.WriteLine("\n Power limit bounds ");
+        PowerLimitBounds_NoFirmwareRange_UsesModelTable();
+        PowerLimitBounds_FirmwareRange_WinsOverTable();
+        PowerLimitBounds_PartialFirmwareRange_FillsFromTable();
+        PowerLimitBounds_InvertedFirmwareRange_FallsBack();
+        PowerLimitBounds_Sanitize_PoisonFloor_Dropped();
+        PowerLimitBounds_Sanitize_BelowFirmwareMin_ClampedUp();
+        PowerLimitBounds_Sanitize_AboveMax_ClampedDown();
+        PowerLimitBounds_Sanitize_InRange_Unchanged();
 
         Console.WriteLine("\n GPU query gate ");
         Gate_Extend_NeverShortensWindow();
@@ -1295,5 +1306,86 @@ public static class Scenarios
 
             Gate.Resume();
             Assert(!Gate.IsPaused, "Resume clears Hold");
+        });
+
+    // ── Power limit bounds ───────────────────────────────────────────────
+    //
+    // asus-armoury publishes min_value/max_value per PPT attribute and the
+    // kernel EINVALs anything outside. The model table only knows the
+    // Windows floor (5W), so a saved 20W on a 28W-minimum board (G614JU)
+    // passed validation and was silently refused. Firmware bounds must win
+    // when present and the table must still cover legacy-only kernels.
+
+    const int TableMin = 5;
+    const int TableMax = 175;
+
+    static void PowerLimitBounds_NoFirmwareRange_UsesModelTable()
+        => Scenario(nameof(PowerLimitBounds_NoFirmwareRange_UsesModelTable), _ =>
+        {
+            var b = PowerLimitBounds.Resolve(null, TableMin, TableMax);
+            AssertEqual(TableMin, b.Min, "min from table");
+            AssertEqual(TableMax, b.Max, "max from table");
+            Assert(!b.FromFirmware, "not flagged as firmware");
+        });
+
+    static void PowerLimitBounds_FirmwareRange_WinsOverTable()
+        => Scenario(nameof(PowerLimitBounds_FirmwareRange_WinsOverTable), _ =>
+        {
+            // G614JU ppt_pl1_spl: 28-140 while the Intel HX table says 5-175.
+            var b = PowerLimitBounds.Resolve(new AttrRange(28, 140, 1, 0), TableMin, TableMax);
+            AssertEqual(28, b.Min, "min from firmware");
+            AssertEqual(140, b.Max, "max from firmware");
+            Assert(b.FromFirmware, "flagged as firmware");
+        });
+
+    static void PowerLimitBounds_PartialFirmwareRange_FillsFromTable()
+        => Scenario(nameof(PowerLimitBounds_PartialFirmwareRange_FillsFromTable), _ =>
+        {
+            // AsusAttributeRange reports -1 for a bound it could not read.
+            var b = PowerLimitBounds.Resolve(new AttrRange(28, -1, 1, 0), TableMin, TableMax);
+            AssertEqual(28, b.Min, "min from firmware");
+            AssertEqual(TableMax, b.Max, "missing max filled from table");
+            Assert(b.FromFirmware, "still flagged as firmware");
+        });
+
+    static void PowerLimitBounds_InvertedFirmwareRange_FallsBack()
+        => Scenario(nameof(PowerLimitBounds_InvertedFirmwareRange_FallsBack), _ =>
+        {
+            var b = PowerLimitBounds.Resolve(new AttrRange(140, 28, 1, 0), TableMin, TableMax);
+            AssertEqual(TableMin, b.Min, "garbage range ignored: min from table");
+            AssertEqual(TableMax, b.Max, "garbage range ignored: max from table");
+            Assert(!b.FromFirmware, "garbage range not flagged as firmware");
+        });
+
+    static void PowerLimitBounds_Sanitize_PoisonFloor_Dropped()
+        => Scenario(nameof(PowerLimitBounds_Sanitize_PoisonFloor_Dropped), _ =>
+        {
+            // issue #151: a persisted 5W is a legacy readback, never user intent.
+            var b = PowerLimitBounds.Resolve(new AttrRange(28, 140, 1, 0), TableMin, TableMax);
+            AssertEqual(-1, b.Sanitize(5, TableMin), "5W dropped as poison");
+            AssertEqual(-1, b.Sanitize(0, TableMin), "0W dropped as poison");
+        });
+
+    static void PowerLimitBounds_Sanitize_BelowFirmwareMin_ClampedUp()
+        => Scenario(nameof(PowerLimitBounds_Sanitize_BelowFirmwareMin_ClampedUp), _ =>
+        {
+            var b = PowerLimitBounds.Resolve(new AttrRange(28, 140, 1, 0), TableMin, TableMax);
+            AssertEqual(28, b.Sanitize(20, TableMin), "20W raised to the 28W firmware floor");
+        });
+
+    static void PowerLimitBounds_Sanitize_AboveMax_ClampedDown()
+        => Scenario(nameof(PowerLimitBounds_Sanitize_AboveMax_ClampedDown), _ =>
+        {
+            var b = PowerLimitBounds.Resolve(new AttrRange(28, 140, 1, 0), TableMin, TableMax);
+            AssertEqual(140, b.Sanitize(175, TableMin), "table max lowered to the 140W firmware ceiling");
+        });
+
+    static void PowerLimitBounds_Sanitize_InRange_Unchanged()
+        => Scenario(nameof(PowerLimitBounds_Sanitize_InRange_Unchanged), _ =>
+        {
+            var b = PowerLimitBounds.Resolve(new AttrRange(28, 140, 1, 0), TableMin, TableMax);
+            AssertEqual(28, b.Sanitize(28, TableMin), "firmware minimum itself is legal");
+            AssertEqual(65, b.Sanitize(65, TableMin), "mid-range untouched");
+            Assert(b.Contains(140) && !b.Contains(141), "Contains follows the bounds");
         });
 }

@@ -456,6 +456,20 @@ public class ModeControl
         }
     }
 
+    // Saved per-mode watts made safe for the driver: -1 when unset or a
+    // poisoned floor readback (issue #151), otherwise clamped into the
+    // attribute's bounds so the kernel never sees a value it would EINVAL.
+    private static int SanitizeLimit(string key, PowerLimitBounds bounds)
+    {
+        int saved = Helpers.AppConfig.GetMode(key);
+        if (saved <= 0)
+            return -1;
+        int safe = bounds.Sanitize(saved, MinTotal);
+        if (safe > 0 && safe != saved)
+            Helpers.Logger.WriteLine($"AutoPower: {key}={saved}W outside {bounds.Min}-{bounds.Max}W, clamped to {safe}W");
+        return safe;
+    }
+
     /// <summary>Apply saved CPU power limits for the given mode (gated by per-mode auto_apply_power).</summary>
     private void AutoCpuPower(int mode)
     {
@@ -476,23 +490,19 @@ public class ModeControl
 
         int maxTotal = GetMaxTotal();
 
-        int pl1 = Helpers.AppConfig.GetMode("limit_slow");
-        int pl2 = Helpers.AppConfig.GetMode("limit_fast");
+        // Per-attribute bounds: firmware min_value/max_value when the kernel
+        // exposes them (asus-armoury), the model table otherwise.
+        var pl1Bounds = PowerLimitBounds.For(wmi, Platform.Linux.AsusAttributes.PptPl1Spl, MinTotal, maxTotal);
+        var pl2Bounds = PowerLimitBounds.For(wmi, Platform.Linux.AsusAttributes.PptPl2Sppt, MinTotal, maxTotal);
 
-        // Validate against model-specific bounds (matches Windows G-Helper).
-        // <= MinTotal: a floor value is never real user intent, it is a
-        // poisoned config entry from a bogus firmware readback (issue #151);
-        // applying it hard-caps the CPU at its lowest clock.
-        if (pl1 > maxTotal || pl1 <= MinTotal)
-            pl1 = -1;
-        if (pl2 > maxTotal || pl2 <= MinTotal)
-            pl2 = -1;
+        int pl1 = SanitizeLimit("limit_slow", pl1Bounds);
+        int pl2 = SanitizeLimit("limit_fast", pl2Bounds);
 
         if (pl1 > 0)
         {
             wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPl1Spl, pl1);
             _customPower = pl1;
-            Helpers.Logger.WriteLine($"AutoPower: PL1 = {pl1}W (max={maxTotal}W)");
+            Helpers.Logger.WriteLine($"AutoPower: PL1 = {pl1}W ({pl1Bounds.Min}-{pl1Bounds.Max}W)");
         }
 
         if (pl2 > 0)
@@ -500,7 +510,7 @@ public class ModeControl
             wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptPl2Sppt, pl2);
             if (pl2 > _customPower)
                 _customPower = pl2;
-            Helpers.Logger.WriteLine($"AutoPower: PL2 = {pl2}W (max={maxTotal}W)");
+            Helpers.Logger.WriteLine($"AutoPower: PL2 = {pl2}W ({pl2Bounds.Min}-{pl2Bounds.Max}W)");
         }
 
         // APU SPPT / Platform SPPT - secondary AMD power tracking limits.
@@ -533,15 +543,14 @@ public class ModeControl
         }
 
         // fPPT (fast boost)
-        int fppt = Helpers.AppConfig.GetMode("limit_fppt");
-        if (fppt > maxTotal || fppt <= MinTotal)
-            fppt = -1;
+        var fpptBounds = PowerLimitBounds.For(wmi, Platform.Linux.AsusAttributes.PptFppt, MinTotal, maxTotal);
+        int fppt = SanitizeLimit("limit_fppt", fpptBounds);
         if (fppt > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.PptFppt))
         {
             wmi.SetPptLimit(Platform.Linux.AsusAttributes.PptFppt, fppt);
             if (fppt > _customPower)
                 _customPower = fppt;
-            Helpers.Logger.WriteLine($"AutoPower: fPPT = {fppt}W (max={maxTotal}W)");
+            Helpers.Logger.WriteLine($"AutoPower: fPPT = {fppt}W ({fpptBounds.Min}-{fpptBounds.Max}W)");
         }
 
         VerifyPptLimits(wmi, pl1, pl2, fppt, apuPlatCeiling > 0 ? apuPlatCeiling : -1);
