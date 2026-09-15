@@ -68,6 +68,8 @@ public partial class FansWindow : Window
             RefreshFansDgpuProcessCount();
             ToggleNavigation(_activeTab);
             InitHysteresis();
+            labelManualFanStatus.IsVisible = Fan.ManualFanService.Enabled;
+            Fan.ManualFanService.StatusChanged += OnManualFanStatus;
             _sensorTimer.Start();
         };
 
@@ -79,9 +81,20 @@ public partial class FansWindow : Window
         Closing += (_, _) =>
         {
             _sensorTimer.Stop();
+            Fan.ManualFanService.StatusChanged -= OnManualFanStatus;
             if (App.Mode != null)
                 App.Mode.ModeApplied -= OnModeApplied;
         };
+    }
+
+    private void OnManualFanStatus(string text)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            labelManualFanStatus.IsVisible = Fan.ManualFanService.Enabled;
+            labelManualFanStatus.Text = text;
+            UpdateDisabledState();
+        });
     }
 
     /// <summary>Hide the fan-curve editor on hardware without a writable fan
@@ -1090,7 +1103,7 @@ public partial class FansWindow : Window
                 { USB.XGM.SetFan(ClampXgmCurve(curve)); }
                 catch (Exception ex) { Helpers.Logger.WriteLine($"XGM.SetFan: {ex.Message}"); }
             }
-            else
+            else if (!Fan.ManualFanService.Running)
             {
                 App.Wmi?.SetFanCurve(fanIndex, curve);
             }
@@ -1213,9 +1226,11 @@ public partial class FansWindow : Window
     private void UpdateDisabledState()
     {
         var wmi = App.Wmi;
-        bool cpuEnabled = wmi?.IsFanCurveEnabled(0) ?? false;
-        bool gpuEnabled = wmi?.IsFanCurveEnabled(1) ?? false;
-        bool midEnabled = !chartMid.IsVisible || (wmi?.IsFanCurveEnabled(2) ?? false);
+        // EC follower reads the curves from config, hwmon pwm_enable is moot
+        bool manual = Fan.ManualFanService.Running;
+        bool cpuEnabled = manual || (wmi?.IsFanCurveEnabled(0) ?? false);
+        bool gpuEnabled = manual || (wmi?.IsFanCurveEnabled(1) ?? false);
+        bool midEnabled = manual || !chartMid.IsVisible || (wmi?.IsFanCurveEnabled(2) ?? false);
         bool anyDisabled = !cpuEnabled || !gpuEnabled || !midEnabled;
 
         chartCPU.Disabled = !cpuEnabled;
@@ -1231,7 +1246,12 @@ public partial class FansWindow : Window
     private void CheckApplyFans_Changed(object? sender, RoutedEventArgs e)
     {
         bool enabled = checkApplyFans.IsChecked ?? false;
+        // LoadFanCurves sets IsChecked from config; only a real toggle goes on
+        if (enabled == Helpers.AppConfig.IsMode("auto_apply_fans"))
+            return;
         Helpers.AppConfig.SetMode("auto_apply_fans", enabled ? 1 : 0);
+        // the EC follower is gated by this same per-mode switch
+        Task.Run(() => Fan.ManualFanService.Sync(interactive: true));
     }
 
     private void CheckApplyPower_Changed(object? sender, RoutedEventArgs e)

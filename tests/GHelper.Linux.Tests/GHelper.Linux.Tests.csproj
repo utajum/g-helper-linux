@@ -65,6 +65,7 @@
          the static helpers so we never instantiate it. -->
     <Compile Include="../../src/Platform/Linux/Asus/LinuxAsusWmi.cs" />
     <Compile Include="../../src/Platform/Linux/Asus/AsusWmiDebugfs.cs" />
+    <Compile Include="../../src/Fan/ManualFanMath.cs" />
     <Compile Include="../../src/Helpers/AppConfig.cs" />
     <Compile Include="../../src/Helpers/Logger.cs" />
     <Compile Include="../../src/Helpers/MemoryHelper.cs" />

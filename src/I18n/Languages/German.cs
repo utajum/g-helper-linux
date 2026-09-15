@@ -401,6 +401,9 @@ public static class German
         // FANS WINDOW
         ["fans_title"] = "Lüfter & Leistung",
         ["fan_curves"] = "Lüfterkurven",
+        ["manual_fan_control"] = "Manuelle Lüftersteuerung (experimentell)",
+        ["manual_fan_hint"] = "Setzt jede Sekunde die Lüfterleistung über den EC nach deinen Kurven, auf demselben Weg wie der MyASUS-Lüftertest. Für TUF FA506/FA507/FX506/FX507 und ähnliche Modelle ohne Lüfterkurven-Unterstützung in der Firmware. Pro Modus aktiv zusammen mit Automatisch anwenden im Lüfterfenster. Benötigt root über gpu-helper. Beim Abschalten oder Beenden der App übernimmt wieder das BIOS.",
+        ["manual_fan_unsupported"] = "Die Firmware dieses Modells hat keine Schnittstelle zur Lüftersteuerung",
         ["fan_drag_all"] = "Umschalttaste gedrückt halten, um alle Punkte gemeinsam zu ziehen",
         ["reset"] = "Zurücksetzen",
         ["disable"] = "Deaktivieren",

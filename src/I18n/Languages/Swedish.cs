@@ -404,6 +404,9 @@ public static class Swedish
         // FANS WINDOW
         ["fans_title"] = "Fläktar & Kraft",
         ["fan_curves"] = "Fläktkurvor",
+        ["manual_fan_control"] = "Manuell fläktstyrning (experimentell)",
+        ["manual_fan_hint"] = "Ställer in fläktstyrkan via EC varje sekund efter dina kurvor, samma väg som MyASUS fläkttest. För TUF FA506/FA507/FX506/FX507 och liknande modeller utan firmwarestöd för fläktkurvor. Aktiv per läge tillsammans med Auto-tillämpa i fläktfönstret. Kräver root via gpu-helper. Fläktarna återgår till BIOS-styrning när den stängs av eller appen avslutas.",
+        ["manual_fan_unsupported"] = "Firmware på denna modell saknar gränssnitt för fläktstyrning",
         ["fan_drag_all"] = "Håll Shift för att dra alla punkter tillsammans",
         ["reset"] = "Återställ",
         ["disable"] = "Inaktivera",

@@ -404,6 +404,9 @@ public static class Norwegian
         // FANS WINDOW
         ["fans_title"] = "Vifter og strøm",
         ["fan_curves"] = "Viftekurver",
+        ["manual_fan_control"] = "Manuell viftestyring (eksperimentell)",
+        ["manual_fan_hint"] = "Setter viftestyrken via EC hvert sekund etter kurvene dine, samme vei som MyASUS-viftetesten. For TUF FA506/FA507/FX506/FX507 og lignende modeller uten fastvarestøtte for viftekurver. Aktiv per modus sammen med Automatisk bruk i viftevinduet. Krever root via gpu-helper. Viftene går tilbake til BIOS-styring når den slås av eller appen avsluttes.",
+        ["manual_fan_unsupported"] = "Fastvaren på denne modellen har ingen grensesnitt for viftestyring",
         ["fan_drag_all"] = "Hold Shift for å dra alle punktene sammen",
         ["reset"] = "Tilbakestill",
         ["disable"] = "Deaktiver",

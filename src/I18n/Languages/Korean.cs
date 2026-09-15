@@ -404,6 +404,9 @@ public static class Korean
         // FANS WINDOW
         ["fans_title"] = "팬 & 전력",
         ["fan_curves"] = "팬 곡선",
+        ["manual_fan_control"] = "수동 팬 제어 (실험적)",
+        ["manual_fan_hint"] = "매초 커브에 따라 EC를 통해 팬 듀티를 설정하며 MyASUS 팬 테스트와 같은 경로를 사용합니다. 펌웨어가 팬 커브를 지원하지 않는 TUF FA506/FA507/FX506/FX507 및 유사 모델용. 팬 창의 자동 적용과 함께 모드별로 동작합니다. gpu-helper를 통한 root 권한이 필요합니다. 끄거나 앱을 종료하면 팬은 BIOS 제어로 돌아갑니다.",
+        ["manual_fan_unsupported"] = "이 모델의 펌웨어에는 팬 제어 인터페이스가 없습니다",
         ["fan_drag_all"] = "Shift를 누른 채 드래그하면 모든 포인트를 함께 이동",
         ["reset"] = "초기화",
         ["disable"] = "비활성화",

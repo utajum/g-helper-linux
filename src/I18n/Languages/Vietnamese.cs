@@ -401,6 +401,9 @@ public static class Vietnamese
         // FANS WINDOW
         ["fans_title"] = "Quạt & Nguồn",
         ["fan_curves"] = "Đường cong quạt",
+        ["manual_fan_control"] = "Điều khiển quạt thủ công (thử nghiệm)",
+        ["manual_fan_hint"] = "Đặt công suất quạt qua EC mỗi giây theo đường cong của bạn, cùng đường đi với bài kiểm tra quạt của MyASUS. Dành cho TUF FA506/FA507/FX506/FX507 và các mẫu tương tự có firmware không hỗ trợ đường cong quạt. Hoạt động theo từng chế độ cùng Tự động áp dụng trong cửa sổ quạt. Cần root qua gpu-helper. Quạt trở về BIOS điều khiển khi tắt hoặc thoát ứng dụng.",
+        ["manual_fan_unsupported"] = "Firmware của mẫu máy này không có giao diện điều khiển quạt",
         ["fan_drag_all"] = "Giữ Shift để kéo tất cả các điểm cùng lúc",
         ["reset"] = "Đặt lại",
         ["disable"] = "Tắt",

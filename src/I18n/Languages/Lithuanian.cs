@@ -539,6 +539,9 @@ public static class Lithuanian
         // FANS WINDOW
         ["fans_title"] = "Ventiliatoriai ir maitinimas",
         ["fan_curves"] = "Ventiliatorių kreivės",
+        ["manual_fan_control"] = "Rankinis ventiliatorių valdymas (eksperimentinis)",
+        ["manual_fan_hint"] = "Kas sekundę per EC nustato ventiliatorių galią pagal jūsų kreives, tuo pačiu keliu kaip MyASUS ventiliatorių testas. Skirta TUF FA506/FA507/FX506/FX507 ir panašiems modeliams, kurių programinė aparatinė įranga nepalaiko kreivių. Veikia kiekvienam režimui kartu su Automatiškai taikyti ventiliatorių lange. Reikia root per gpu-helper. Išjungus arba uždarius programą ventiliatoriai grįžta BIOS valdymui.",
+        ["manual_fan_unsupported"] = "Šio modelio programinė aparatinė įranga neturi ventiliatorių valdymo sąsajos",
         ["fan_drag_all"] = "Laikykite Shift, kad vilktumėte visus taškus kartu",
         ["reset"] = "Atstatyti",
         ["disable"] = "Išjungti",

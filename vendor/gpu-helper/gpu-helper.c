@@ -94,6 +94,12 @@
  *       restricted to the known GPU / eGPU ACPI device IDs; ctrl_param is the
  *       data value. wmi-probe DSTS-reads all whitelisted IDs, one line each.
  *
+ *   ec-fanctl
+ *       Manual fan loop over the ASUS EC HealthyTable ports 0x25C/0x25D
+ *       (the MyASUS fan test path, same as AsusSAIO.sys). Stdin: "probe",
+ *       "set <fan> <duty>" (0-255), "auto", "quit". One reply line per
+ *       command. Quit, EOF or a signal hands the fans back to the EC.
+ *
  *   lenovo-flip-to-start <0|1>
  *       Write the Lenovo "Flip to Start" FBSWIF UEFI variable (power on when
  *       the lid opens). Hardcoded variable path; clears the efivarfs
@@ -212,6 +218,8 @@ int main(int argc, char **argv)
             return do_wmi_devs(argc, argv);
         if (strcmp(argv[1], "wmi-probe") == 0)
             return do_wmi_probe();
+        if (strcmp(argv[1], "ec-fanctl") == 0)
+            return do_ec_fanctl();
         if (strcmp(argv[1], "msr-uv") == 0)
             return do_msr_uv(argc, argv);
         if (strcmp(argv[1], "lenovo-flip-to-start") == 0)

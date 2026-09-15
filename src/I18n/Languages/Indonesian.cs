@@ -404,6 +404,9 @@ public static class Indonesian
         // FANS WINDOW
         ["fans_title"] = "Kipas & Daya",
         ["fan_curves"] = "Kurva Kipas",
+        ["manual_fan_control"] = "Kontrol kipas manual (eksperimental)",
+        ["manual_fan_hint"] = "Mengatur duty kipas melalui EC setiap detik mengikuti kurva Anda, jalur yang sama dengan uji kipas MyASUS. Untuk TUF FA506/FA507/FX506/FX507 dan model serupa yang firmware-nya tidak mendukung kurva kipas. Aktif per mode bersama Terapkan otomatis di jendela kipas. Memerlukan root melalui gpu-helper. Kipas kembali ke kendali BIOS saat dimatikan atau aplikasi ditutup.",
+        ["manual_fan_unsupported"] = "Firmware model ini tidak memiliki antarmuka kontrol kipas",
         ["fan_drag_all"] = "Tahan Shift untuk menyeret semua titik bersamaan",
         ["reset"] = "Reset",
         ["disable"] = "Nonaktifkan",

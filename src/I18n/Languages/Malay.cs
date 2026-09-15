@@ -539,6 +539,9 @@ public static class Malay
         // FANS WINDOW
         ["fans_title"] = "Kipas & Kuasa",
         ["fan_curves"] = "Lengkung kipas",
+        ["manual_fan_control"] = "Kawalan kipas manual (eksperimen)",
+        ["manual_fan_hint"] = "Menetapkan duti kipas melalui EC setiap saat mengikut lengkung anda, laluan yang sama seperti ujian kipas MyASUS. Untuk TUF FA506/FA507/FX506/FX507 dan model serupa yang firmwarenya tidak menyokong lengkung kipas. Aktif mengikut mod bersama Auto guna dalam tetingkap kipas. Memerlukan root melalui gpu-helper. Kipas kembali kepada kawalan BIOS apabila dimatikan atau apl ditutup.",
+        ["manual_fan_unsupported"] = "Perisian tegar model ini tiada antara muka kawalan kipas",
         ["fan_drag_all"] = "Tahan Shift untuk menyeret semua titik bersama",
         ["reset"] = "Tetap semula",
         ["disable"] = "Lumpuhkan",

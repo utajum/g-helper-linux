@@ -1998,6 +1998,8 @@ public static class Diagnostics
             }
         }
 
+        sb.AppendLine($"  fan_manual: {YesNo(AppConfig.Is("fan_manual"))} (running: {YesNo(Fan.ManualFanService.Running)})");
+
         // optimal_brightness: -1 = unset, 0 = Off, 1 = On Always, 2 = On Battery
         int oab = AppConfig.Get("optimal_brightness", -1);
         string oabLabel = oab switch

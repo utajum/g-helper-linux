@@ -401,6 +401,9 @@ public static class Romanian
         // FANS WINDOW
         ["fans_title"] = "Ventilatoare și alimentare",
         ["fan_curves"] = "Curbe ventilatoare",
+        ["manual_fan_control"] = "Control manual al ventilatoarelor (experimental)",
+        ["manual_fan_hint"] = "Setează puterea ventilatoarelor prin EC în fiecare secundă după curbele tale, pe aceeași cale ca testul de ventilatoare MyASUS. Pentru TUF FA506/FA507/FX506/FX507 și modele similare al căror firmware nu suportă curbe. Activ per mod împreună cu Auto-aplică din fereastra ventilatoarelor. Necesită root prin gpu-helper. Ventilatoarele revin la BIOS când e oprit sau aplicația se închide.",
+        ["manual_fan_unsupported"] = "Firmware-ul acestui model nu are interfață de control al ventilatoarelor",
         ["fan_drag_all"] = "Țineți apăsat Shift pentru a trage toate punctele împreună",
         ["reset"] = "Resetează",
         ["disable"] = "Dezactivează",

@@ -403,6 +403,9 @@ public class ModeControl
     /// <summary>Apply saved fan curves for the given mode.</summary>
     private void AutoFans(int mode)
     {
+        // experimental EC follower tracks the same per-mode switch
+        Fan.ManualFanService.Sync();
+
         if (!Helpers.AppConfig.IsMode("auto_apply_fans"))
             return;
 

@@ -401,6 +401,9 @@ public static class Hungarian
         // FANS WINDOW
         ["fans_title"] = "Ventilátorok és teljesítmény",
         ["fan_curves"] = "Ventilátor görbék",
+        ["manual_fan_control"] = "Kézi ventilátorvezérlés (kísérleti)",
+        ["manual_fan_hint"] = "Másodpercenként az EC-n keresztül állítja a ventilátorok teljesítményét a görbéid szerint, ugyanazon az úton, mint a MyASUS ventilátorteszt. TUF FA506/FA507/FX506/FX507 és hasonló, görbetámogatás nélküli firmware-rel rendelkező modellekhez. Módonként aktív az Auto-alkalmaz opcióval a ventilátor ablakban. Root szükséges a gpu-helper által. Kikapcsoláskor vagy az app bezárásakor a ventilátorok visszakerülnek a BIOS-hoz.",
+        ["manual_fan_unsupported"] = "Ennek a modellnek a firmware-e nem kínál ventilátorvezérlő felületet",
         ["fan_drag_all"] = "Tartsa lenyomva a Shift billentyűt az összes pont együttes húzásához",
         ["reset"] = "Visszaállítás",
         ["disable"] = "Letiltás",

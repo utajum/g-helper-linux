@@ -150,7 +150,7 @@ if command -v cc &>/dev/null; then
     (
         cd "$GPU_HELPER_DIR"
         HELPER_SRCS="process_ops.c nvidia_ops.c pci_ops.c \
-                     wmi_ops.c msr_ops.c lenovo_ops.c"
+                     wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c"
         cc -O2 -Wall -Wno-unused-result -DNDEBUG \
            -o gpu-helper gpu-helper.c $HELPER_SRCS \
            -ldl

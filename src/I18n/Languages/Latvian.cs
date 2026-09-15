@@ -539,6 +539,9 @@ public static class Latvian
         // FANS WINDOW
         ["fans_title"] = "Ventilatori un jauda",
         ["fan_curves"] = "Ventilatoru līknes",
+        ["manual_fan_control"] = "Manuālā ventilatoru vadība (eksperimentāla)",
+        ["manual_fan_hint"] = "Katru sekundi iestata ventilatoru jaudu caur EC pēc jūsu līknēm, tāpat kā MyASUS ventilatoru tests. Modeļiem TUF FA506/FA507/FX506/FX507 un līdzīgiem, kuru programmaparatūra neatbalsta ventilatoru līknes. Aktīvs katram režīmam kopā ar Automātiski lietot ventilatoru logā. Nepieciešams root caur gpu-helper. Izslēdzot vai aizverot lietotni, ventilatori atgriežas BIOS kontrolē.",
+        ["manual_fan_unsupported"] = "Šī modeļa programmaparatūrai nav ventilatoru vadības saskarnes",
         ["fan_drag_all"] = "Turiet Shift, lai vilktu visus punktus kopā",
         ["reset"] = "Atiestatīt",
         ["disable"] = "Atspējot",

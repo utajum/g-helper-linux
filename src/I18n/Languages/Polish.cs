@@ -401,6 +401,9 @@ public static class Polish
         // FANS WINDOW
         ["fans_title"] = "Wentylatory i zasilanie",
         ["fan_curves"] = "Krzywe wentylatorów",
+        ["manual_fan_control"] = "Ręczne sterowanie wentylatorami (eksperymentalne)",
+        ["manual_fan_hint"] = "Co sekundę ustawia moc wentylatorów przez EC według twoich krzywych, tą samą drogą co test wentylatorów w MyASUS. Dla TUF FA506/FA507/FX506/FX507 i podobnych modeli, których firmware nie obsługuje krzywych. Aktywne per tryb razem z Auto-zastosuj w oknie wentylatorów. Wymaga root przez gpu-helper. Po wyłączeniu lub zamknięciu aplikacji wentylatory wracają pod kontrolę BIOS.",
+        ["manual_fan_unsupported"] = "Firmware tego modelu nie ma interfejsu sterowania wentylatorami",
         ["fan_drag_all"] = "Przytrzymaj Shift, aby przeciągnąć wszystkie punkty razem",
         ["reset"] = "Resetuj",
         ["disable"] = "Wyłącz",

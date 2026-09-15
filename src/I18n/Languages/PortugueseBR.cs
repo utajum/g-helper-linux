@@ -401,6 +401,9 @@ public static class PortugueseBR
         // FANS WINDOW
         ["fans_title"] = "Ventoinhas e energia",
         ["fan_curves"] = "Curvas de ventoinhas",
+        ["manual_fan_control"] = "Controle manual das ventoinhas (experimental)",
+        ["manual_fan_hint"] = "Define a potência das ventoinhas via EC a cada segundo seguindo suas curvas, o mesmo caminho do teste de ventoinhas do MyASUS. Para TUF FA506/FA507/FX506/FX507 e modelos similares cujo firmware não suporta curvas. Ativo por modo junto com Aplicação automática na janela de ventoinhas. Requer root via gpu-helper. As ventoinhas voltam ao BIOS ao desativar ou fechar o app.",
+        ["manual_fan_unsupported"] = "O firmware deste modelo não tem interface de controle de ventoinhas",
         ["fan_drag_all"] = "Segure Shift para arrastar todos os pontos juntos",
         ["reset"] = "Redefinir",
         ["disable"] = "Desativar",

@@ -401,6 +401,9 @@ public static class Turkish
         // FANS WINDOW
         ["fans_title"] = "Fanlar ve Güç",
         ["fan_curves"] = "Fan Eğrileri",
+        ["manual_fan_control"] = "Manuel fan kontrolü (deneysel)",
+        ["manual_fan_hint"] = "Fan gücünü her saniye eğrilerinize göre EC üzerinden ayarlar, MyASUS fan testiyle aynı yolu kullanır. Bellenimi fan eğrisini desteklemeyen TUF FA506/FA507/FX506/FX507 ve benzeri modeller için. Fan penceresindeki Otomatik uygula ile birlikte mod bazında etkindir. gpu-helper üzerinden root gerektirir. Kapatıldığında veya uygulamadan çıkıldığında fanlar BIOS denetimine döner.",
+        ["manual_fan_unsupported"] = "Bu modelin donanım yazılımında fan kontrol arayüzü yok",
         ["fan_drag_all"] = "Tüm noktaları birlikte sürüklemek için Shift tuşunu basılı tutun",
         ["reset"] = "Sıfırla",
         ["disable"] = "Devre Dışı",

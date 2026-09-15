@@ -230,7 +230,7 @@ rec {
     buildPhase = ''
       cc -O2 -Wall -Wno-unused-result -DNDEBUG \
          -o gpu-helper gpu-helper.c \
-         process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c msr_ops.c \
+         process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c \
          lenovo_ops.c \
          -ldl
     '';

@@ -404,6 +404,9 @@ public static class Finnish
         // FANS WINDOW
         ["fans_title"] = "Tuulettimet ja teho",
         ["fan_curves"] = "Tuuletinkäyrät",
+        ["manual_fan_control"] = "Manuaalinen tuuletinohjaus (kokeellinen)",
+        ["manual_fan_hint"] = "Asettaa tuulettimien tehon EC:n kautta joka sekunti käyriesi mukaan, samaa reittiä kuin MyASUS-tuuletintesti. Malleille TUF FA506/FA507/FX506/FX507 ja vastaaville, joiden laiteohjelmisto ei tue tuuletinkäyriä. Käytössä tilakohtaisesti yhdessä tuuletinikkunan automaattisen käyttöönoton kanssa. Vaatii root-oikeudet gpu-helperin kautta. Tuulettimet palaavat BIOSin hallintaan, kun tämä poistetaan tai sovellus suljetaan.",
+        ["manual_fan_unsupported"] = "Tämän mallin laiteohjelmistossa ei ole tuuletinohjauksen rajapintaa",
         ["fan_drag_all"] = "Pidä Shift pohjassa vetääksesi kaikkia pisteitä yhdessä",
         ["reset"] = "Nollaa",
         ["disable"] = "Poista käytöstä",

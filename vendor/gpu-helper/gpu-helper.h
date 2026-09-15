@@ -66,6 +66,9 @@ int do_wmi_dsts(int argc, char **argv);
 int do_wmi_devs(int argc, char **argv);
 int do_wmi_probe(void);
 
+/* ec_ops.c */
+int do_ec_fanctl(void);
+
 /* msr_ops.c */
 int do_msr_uv(int argc, char **argv);
 

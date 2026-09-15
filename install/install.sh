@@ -307,7 +307,7 @@ if [[ -f /etc/NIXOS ]]; then
     _gh_nix_fetch "$RAW/nixos/package.nix" "$GH_NIX_ROOT/nixos/package.nix" || exit 1
     # Full gpu-helper source tree; package.nix compiles all of it.
     for f in gpu-helper.c gpu-helper.h process_ops.c nvidia_ops.c \
-             pci_ops.c wmi_ops.c msr_ops.c lenovo_ops.c; do
+             pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c; do
         _gh_nix_fetch "$RAW/vendor/gpu-helper/$f" "$GH_NIX_ROOT/vendor/gpu-helper/$f" || exit 1
     done
     for f in 90-ghelper.rules gpu-block-helper.sh ghelper-gpu-boot.sh ghelper.desktop ghelper.png; do

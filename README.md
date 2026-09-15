@@ -364,6 +364,7 @@ g-helper-linux/
       nvidia_ops.c                        #   NVML process scan, refcnt, MPS
       pci_ops.c                           #   PCI power control, DRM unbind
       wmi_ops.c                           #   ACPI/WMI raw calls
+      ec_ops.c                            #   ASUS EC manual fan duty
       msr_ops.c                           #   Intel MSR undervolting
       process_ops.c                       #   Process kill for GPU holders
       lenovo_ops.c                        #   Lenovo WMI fan/thermal

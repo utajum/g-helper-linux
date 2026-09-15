@@ -404,6 +404,9 @@ public static class ChineseSimplified
         // FANS WINDOW
         ["fans_title"] = "风扇与功率",
         ["fan_curves"] = "风扇曲线",
+        ["manual_fan_control"] = "手动风扇控制（实验性）",
+        ["manual_fan_hint"] = "每秒按你的曲线通过 EC 直接设置风扇占空比，与 MyASUS 风扇测试相同的路径。适用于 TUF FA506/FA507/FX506/FX507 及固件不支持风扇曲线的类似机型。按模式生效，需配合风扇窗口中的自动应用。需要通过 gpu-helper 获取 root 权限。关闭或退出应用后风扇交还 BIOS 控制。",
+        ["manual_fan_unsupported"] = "该机型固件没有风扇控制接口",
         ["fan_drag_all"] = "按住 Shift 拖动所有点",
         ["reset"] = "重置",
         ["disable"] = "禁用",

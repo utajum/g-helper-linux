@@ -569,6 +569,9 @@
                                   VerticalAlignment="Center"
                                   IsCheckedChanged="CheckApplyFans_Changed" />
                     </StackPanel>
+                    <!-- experimental EC manual fan follower: live duties or a status key -->
+                    <TextBlock x:Name="labelManualFanStatus" Classes="label-dim"
+                               Text="" FontSize="11" Margin="0,4,0,0" IsVisible="False" />
                 </StackPanel>
             </Border>
 
