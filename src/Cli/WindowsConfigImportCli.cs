@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 
 namespace GHelper.Linux.Cli;
@@ -106,8 +105,10 @@ public static class WindowsConfigImportCli
             return 0;
         }
 
-        Directory.CreateDirectory(Path.GetDirectoryName(target)
-            ?? throw new InvalidOperationException("Target config has no parent directory."));
+        string? targetDir = Path.GetDirectoryName(target);
+        Directory.CreateDirectory(string.IsNullOrWhiteSpace(targetDir)
+            ? Directory.GetCurrentDirectory()
+            : targetDir);
 
         if (File.Exists(target))
         {
@@ -183,7 +184,14 @@ public static class WindowsConfigImportCli
 
     private static JsonElement JsonString(string value)
     {
-        using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStringValue(value);
+            writer.Flush();
+        }
+
+        using var document = JsonDocument.Parse(stream.ToArray());
         return document.RootElement.Clone();
     }
 
