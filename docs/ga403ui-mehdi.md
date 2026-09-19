@@ -72,3 +72,21 @@ profile as production-ready:
 No unsafe firmware fallback is enabled by this profile. If an ASUS kernel
 attribute is missing, that feature should remain unavailable until the machine
 is inspected rather than forcing raw ACPI writes.
+
+
+## First Arch boot: collect the real hardware map
+
+Before changing any firmware values, run the read-only probe from the repository:
+
+```bash
+chmod +x scripts/ga403ui-probe.sh
+./scripts/ga403ui-probe.sh
+```
+
+It creates a timestamped `ga403ui-probe-*.txt` file. The script only reads
+sysfs/device information; it does not change GPU mode, fan curves, battery
+limits, Slash/Aura state or firmware attributes.
+
+That file is the source of truth for the final GA403UI-specific layer. In
+particular it lets us verify which `asus-armoury` attributes exist on the
+installed kernel and which HID interface the 2024 Slash device actually exposes.
