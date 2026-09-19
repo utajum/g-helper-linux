@@ -225,6 +225,9 @@ public class App : Application
             // Re-apply saved battery charge limit on startup
             Battery.BatteryControl.AutoBattery(init: true);
 
+            // Re-apply auto refresh rate on startup (backends spawn xrandr)
+            Task.Run(() => AutoScreen(init: true));
+
             // Init fan sensor defaults for model-specific RPM formatting
             Fan.FanSensorControl.InitFanMax();
 
@@ -630,9 +633,9 @@ public class App : Application
     /// <summary>
     /// Auto-switch screen refresh rate based on AC/battery power.
     /// AC → max refresh + overdrive ON, Battery → 60Hz + overdrive OFF.
-    /// Called on power state change and when user enables auto mode.
+    /// Called on power state change, at startup, and when user enables auto mode.
     /// </summary>
-    public void AutoScreen()
+    public void AutoScreen(bool init = false)
     {
         if (!AppConfig.Is("screen_auto"))
         {
@@ -657,7 +660,8 @@ public class App : Application
             Wmi?.SetPanelOverdrive(true);
             AppConfig.Set("panel_od", 1);
             Logger.WriteLine($"AutoScreen: AC power -> {maxHz}Hz + overdrive ON");
-            System?.ShowNotification(Labels.Get("display"), Labels.Format("auto_screen_ac", maxHz), "video-display");
+            if (!init)
+                System?.ShowNotification(Labels.Get("display"), Labels.Format("auto_screen_ac", maxHz), "video-display");
         }
         else
         {
@@ -665,7 +669,8 @@ public class App : Application
             Wmi?.SetPanelOverdrive(false);
             AppConfig.Set("panel_od", 0);
             Logger.WriteLine("AutoScreen: Battery -> 60Hz + overdrive OFF");
-            System?.ShowNotification(Labels.Get("display"), Labels.Get("auto_screen_battery"), "video-display");
+            if (!init)
+                System?.ShowNotification(Labels.Get("display"), Labels.Get("auto_screen_battery"), "video-display");
         }
 
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
