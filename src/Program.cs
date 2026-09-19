@@ -18,6 +18,13 @@ class Program
 
         SetGpuPreferenceEnv();
 
+        var importRc = WindowsConfigImportCli.TryDispatch(args);
+        if (importRc.HasValue)
+        {
+            Environment.Exit(importRc.Value);
+            return;
+        }
+
         var rc = ResourceExtractorCli.TryDispatch(args);
         if (rc.HasValue)
         {
