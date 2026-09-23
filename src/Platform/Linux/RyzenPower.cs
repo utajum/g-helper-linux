@@ -34,6 +34,10 @@ public static class RyzenPower
     /// be probed by reading. ryzenadj reports per-arg errors on apply.</summary>
     private static readonly string[] UnprobeableParams = ["min-gfxclk", "max-gfxclk"];
 
+    /// <summary>Families whose SMU accepts the gfxclk pair (ryzenadj
+    /// set_min/max_gfxclk_freq); every newer APU rejects it (#191).</summary>
+    private static readonly string[] GfxClkFamilies = ["Raven", "Picasso", "Dali", "Lucienne"];
+
     /// <summary>
     /// Sane slider defaults for params the PM table reports as 0/nan,
     /// taken from Ryzen Controller's option definitions (display units).
@@ -184,11 +188,12 @@ public static class RyzenPower
 
             if (supported.Count > 0)
             {
-                // Settable on APUs but absent from the -i table; apply
+                // Settable on old APUs but absent from the -i table; apply
                 // output confirms/denies them per family.
-                foreach (var p in UnprobeableParams)
-                    if (!_confirmedUnsupported.Contains(p))
-                        supported.Add(p);
+                if (Family != null && GfxClkFamilies.Contains(Family))
+                    foreach (var p in UnprobeableParams)
+                        if (!_confirmedUnsupported.Contains(p))
+                            supported.Add(p);
                 _supported = supported;
                 _limits = limits;
                 SnapshotStock(limits);
