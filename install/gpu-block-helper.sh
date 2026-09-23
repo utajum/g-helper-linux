@@ -56,6 +56,8 @@ case "${1:-}" in
 
         if [[ "$MODE" == "eco" ]]; then
             # Modprobe block: strongest form, prevents loading by any means.
+            # amdgpu is not blocked: it also drives AMD iGPUs, so AMD dGPUs
+            # are left to the boot_vga-guarded udev rule below (#180).
             cat > "$MODPROBE_DEST" << 'GHELPER_EOF'
 # ghelper: block dGPU driver modules for Eco mode
 # NVIDIA modules
@@ -66,8 +68,6 @@ install nvidia_uvm /bin/false
 install nvidia_wmi_ec_backlight /bin/false
 # Open-source NVIDIA driver
 install nouveau /bin/false
-# AMD dGPU driver
-install amdgpu /bin/false
 GHELPER_EOF
             chmod 644 "$MODPROBE_DEST"
 

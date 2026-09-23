@@ -3191,7 +3191,8 @@ public class GPUModeControl
         return null;
     }
 
-    /// <summary>Content for the modprobe.d block file (vendor-aware: NVIDIA + AMD).</summary>
+    /// <summary>Content for the modprobe.d block file. NVIDIA only: amdgpu also
+    /// drives AMD iGPUs, so AMD dGPUs are left to the udev rule (#180).</summary>
     private const string ModprobeBlockContent =
         "# ghelper: block dGPU driver modules so dGPU can be safely disabled on next boot\n" +
         "# Auto-generated - will be removed after Eco mode is applied\n" +
@@ -3203,9 +3204,7 @@ public class GPUModeControl
         "install nvidia_uvm /bin/false\n" +
         "install nvidia_wmi_ec_backlight /bin/false\n" +
         "# Open-source NVIDIA driver\n" +
-        "install nouveau /bin/false\n" +
-        "# AMD dGPU driver\n" +
-        "install amdgpu /bin/false\n";
+        "install nouveau /bin/false\n";
 
     /// <summary>Content for the udev rule that PCI-removes dGPU devices (NVIDIA + AMD) on add.</summary>
     private const string UdevRemoveContent =

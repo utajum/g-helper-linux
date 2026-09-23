@@ -225,6 +225,8 @@ install_block_artifacts() {
         return 0
     fi
     mkdir -p "$(dirname "$MODPROBE_BLOCK")" "$(dirname "$UDEV_BLOCK")" 2>/dev/null || true
+    # amdgpu is not blocked: it also drives AMD iGPUs, so AMD dGPUs are
+    # left to the boot_vga-guarded udev rule below (#180).
     cat > "$MODPROBE_BLOCK" 2>/dev/null << 'GHELPER_EOF' || true
 # ghelper: block dGPU driver modules for Eco mode
 install nvidia /bin/false
@@ -233,7 +235,6 @@ install nvidia_modeset /bin/false
 install nvidia_uvm /bin/false
 install nvidia_wmi_ec_backlight /bin/false
 install nouveau /bin/false
-install amdgpu /bin/false
 GHELPER_EOF
     chmod 644 "$MODPROBE_BLOCK" 2>/dev/null || true
     cat > "$UDEV_BLOCK" 2>/dev/null << 'GHELPER_EOF' || true
@@ -365,6 +366,18 @@ apply_mem_sleep() {
     fi
 }
 apply_mem_sleep
+
+# Older block files also blocked amdgpu, which breaks AMD iGPUs (#180).
+# Strip that line from any file left on disk (persistent Eco and the PCI
+# backend keep the file across boots).
+if [[ -f "$MODPROBE_BLOCK" ]] && grep -q '^install amdgpu ' "$MODPROBE_BLOCK" 2>/dev/null; then
+    sed -i '/^install amdgpu /d' "$MODPROBE_BLOCK" 2>/dev/null && log "removed stale amdgpu block from $MODPROBE_BLOCK"
+    # udev coldplug already asked for amdgpu and was refused; load it now so
+    # the iGPU has its driver this boot, not the next one.
+    if [[ -z "$ROOT" ]] && [[ ! -d /sys/module/amdgpu ]]; then
+        modprobe amdgpu 2>/dev/null && log "loaded amdgpu for the iGPU" || log "modprobe amdgpu failed"
+    fi
+fi
 
 # Resolve hardware paths.
 dgpu_path=$(resolve_sysfs_path "dgpu_disable")

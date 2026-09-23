@@ -1599,6 +1599,26 @@ test_90_mux0_clean_ultimate() {
     expect_file_content /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode 0 || return 1
 }
 
+# Scenario 91: pre-v1.0.94 block file with an amdgpu line (#180).
+# PCI backend keeps the file across boots, so it must be repaired in place
+# and the nvidia lines must survive.
+test_91_stale_amdgpu_block_stripped() {
+    set_backend pci
+    printf 'install nvidia /bin/false\ninstall amdgpu /bin/false\ninstall nouveau /bin/false\n' \
+        > "$SANDBOX/etc/modprobe.d/ghelper-gpu-block.conf"
+    run_boot_script || return 1
+    expect_log_contains "removed stale amdgpu block" || return 1
+    expect_file_exists /etc/modprobe.d/ghelper-gpu-block.conf || return 1
+    if grep -q amdgpu "$SANDBOX/etc/modprobe.d/ghelper-gpu-block.conf"; then
+        echo "  ASSERT FAIL: amdgpu line still present"
+        return 1
+    fi
+    if ! grep -q '^install nvidia ' "$SANDBOX/etc/modprobe.d/ghelper-gpu-block.conf"; then
+        echo "  ASSERT FAIL: nvidia line was lost"
+        return 1
+    fi
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "═"
 echo " ghelper-gpu-boot.sh scenario tests"
@@ -1693,6 +1713,7 @@ for name in \
     88_mux0_persistent_eco_nvidia_bound \
     89_mux0_oneshot_eco_with_blocks \
     90_mux0_clean_ultimate \
+    91_stale_amdgpu_block_stripped \
 ; do
     scenario "$name"
 done
