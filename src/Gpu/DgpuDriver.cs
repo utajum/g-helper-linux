@@ -639,6 +639,11 @@ internal static class DgpuDriver
     private static bool IsNvidiaBound(string gfxBdf)
         => Directory.Exists(GPUModeControl.TestPathPrefix + $"/sys/bus/pci/drivers/nvidia/{gfxBdf}");
 
+    /// <summary>nvidia.ko resolvable for the running kernel. modinfo honours
+    /// updates/, extra/ and compressed modules, unlike a /lib/modules glob.</summary>
+    private static bool IsNvidiaModuleInstalled()
+        => SysfsHelper.RunCommand("modinfo", "-F filename nvidia") != null;
+
     private const int NvidiaLoadAttempts = 3;
 
     private const int NvidiaLoadSettleMs = 4000;
@@ -807,6 +812,14 @@ internal static class DgpuDriver
             SysfsHelper.RunSudoOrPkexec(SysfsHelper.GpuHelperPath, new[] { "modprobe", "amdgpu" }, sudoTimeoutMs: 10000);
             if (dgpuDev != null)
                 DgpuPci.EnsureBound(dgpuDev.Value.bdf, isAmd: true);
+        }
+        else if (!IsNvidiaModuleInstalled())
+        {
+            // No nvidia.ko for the running kernel (unbuilt akmod/dkms).
+            // The load ladder cannot bind and re-enumeration will not
+            // change that; the dGPU is on the bus and powered. Reporting
+            // failure made startup re-apply Eco every reboot (#193).
+            Logger.WriteLine("GPUModeControl: nvidia.ko is not installed for this kernel - skipping nvidia load (kernel may bind nouveau)");
         }
         else
         {
