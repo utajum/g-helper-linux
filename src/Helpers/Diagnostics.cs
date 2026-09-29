@@ -576,6 +576,10 @@ public static class Diagnostics
         if (!nvidiaLoaded)
         {
             sb.AppendLine("  Kernel driver: not loaded");
+            // "not loaded" vs "not installed for this kernel" (unbuilt
+            // akmod/dkms), which leaves Standard driverless (#193).
+            var koPath = Platform.Linux.SysfsHelper.RunCommand("modinfo", "-F filename nvidia");
+            sb.AppendLine($"  Module on disk: {(string.IsNullOrWhiteSpace(koPath) ? "NOT INSTALLED for this kernel" : koPath.Trim())}");
             // Even when the driver isn't loaded the dGPU may be on the PCI
             // bus (likely bound to nothing or to vfio-pci); show its state.
             var bdfNoDriver = FindPciGpuBdf(vendorId: "0x10de");
