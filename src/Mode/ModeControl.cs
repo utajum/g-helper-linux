@@ -20,7 +20,7 @@ public class ModeControl
     private int _customPower;
 
     // Power-limit reapply timer. Off when reapply_time <= 0. Periodically re-writes
-    // PPT/CPU-temp/GPU values to fight BIOS clobber on some models.
+    // fan curves and CPU PPT values to fight BIOS clobber on some models.
     private System.Timers.Timer? _reapplyTimer;
 
     /// <summary>
@@ -338,12 +338,12 @@ public class ModeControl
             // Re-apply fan curves first so FANM=4 is set before PPT writes.
             // Some firmware silently ignores PPT writes when not in manual
             // fan mode. AutoFans sets FANM=4 when auto_apply_fans is ON;
-            // AutoCpuPower/AutoGpuPower call EnsureManualFanMode() themselves
-            // when auto_apply_fans is OFF.
+            // AutoCpuPower calls EnsureManualFanMode() itself when
+            // auto_apply_fans is OFF. GPU tuning is not re-applied here:
+            // each tick restarted nvidia-powerd and cut GPU power (#209).
             int mode = Modes.GetCurrent();
             AutoFans(mode);
             AutoCpuPower(mode);
-            AutoGpuPower(mode);
         }
         catch (Exception ex)
         {
@@ -602,7 +602,8 @@ public class ModeControl
 
         int maxGpuBoost = GetMaxGpuBoost();
 
-        // Restart nvidia-powerd once after the batch, not per attribute.
+        // Restart nvidia-powerd once after the batch, not per attribute, and
+        // only when a value actually changed (SetPptLimit skips unchanged ones).
         bool nvAttrWritten = false;
 
         int nvBoost = Helpers.AppConfig.GetMode("gpu_boost");
@@ -610,31 +611,25 @@ public class ModeControl
             nvBoost = maxGpuBoost;
         if (nvBoost > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvDynamicBoost))
         {
-            wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvDynamicBoost, nvBoost);
-            nvAttrWritten = true;
+            nvAttrWritten |= wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvDynamicBoost, nvBoost);
             Helpers.Logger.WriteLine($"AutoGpuPower: GPU boost = {nvBoost}W (max={maxGpuBoost}W)");
         }
 
         int nvTemp = Helpers.AppConfig.GetMode("gpu_temp");
         if (nvTemp > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvTempTarget))
-        {
-            wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvTempTarget, nvTemp);
-            nvAttrWritten = true;
-        }
+            nvAttrWritten |= wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvTempTarget, nvTemp);
 
         int nvBaseTgp = Helpers.AppConfig.GetMode("gpu_base_tgp");
         if (nvBaseTgp > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvBaseTgp))
         {
-            wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvBaseTgp, nvBaseTgp);
-            nvAttrWritten = true;
+            nvAttrWritten |= wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvBaseTgp, nvBaseTgp);
             Helpers.Logger.WriteLine($"AutoGpuPower: nv_base_tgp = {nvBaseTgp}W");
         }
 
         int nvTgp = Helpers.AppConfig.GetMode("gpu_tgp");
         if (nvTgp > 0 && wmi.IsFeatureSupported(Platform.Linux.AsusAttributes.NvTgp))
         {
-            wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvTgp, nvTgp);
-            nvAttrWritten = true;
+            nvAttrWritten |= wmi.SetPptLimit(Platform.Linux.AsusAttributes.NvTgp, nvTgp);
             Helpers.Logger.WriteLine($"AutoGpuPower: nv_tgp = {nvTgp}W");
         }
 
@@ -694,8 +689,7 @@ public class ModeControl
         var range = wmi.GetAttributeRange(attr);
         if (range == null || range.Default <= 0)
             return false;
-        wmi.SetPptLimit(attr, range.Default);
-        return true;
+        return wmi.SetPptLimit(attr, range.Default);
     }
 
     /// <summary>

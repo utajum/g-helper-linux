@@ -117,8 +117,9 @@ public interface IHardwareControl : IDisposable
 
     // PPT / Power limits
 
-    /// <summary>Set PPT limit by sysfs attribute name and value in watts.</summary>
-    void SetPptLimit(string attribute, int watts);
+    /// <summary>Set PPT limit by sysfs attribute name and value in watts.
+    /// Returns true only when a value was written (false if unchanged or failed).</summary>
+    bool SetPptLimit(string attribute, int watts);
 
     /// <summary>Read PPT limit by sysfs attribute name. Returns watts or -1.</summary>
     int GetPptLimit(string attribute);

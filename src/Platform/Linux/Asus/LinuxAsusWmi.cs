@@ -1089,13 +1089,13 @@ public class LinuxAsusWmi : IHardwareControl
 
     // PPT / Power limits
 
-    public void SetPptLimit(string attribute, int watts)
+    public bool SetPptLimit(string attribute, int watts)
     {
         // Lock: the FW-attr watcher thread reads this dictionary.
         lock (_lastWrittenInt)
         {
             if (_lastWrittenInt.TryGetValue(attribute, out int prev) && prev == watts)
-                return;
+                return false;
         }
 
         // AMD: asus-wmi PPT sysfs is a no-op on some boards. Route through
@@ -1104,7 +1104,7 @@ public class LinuxAsusWmi : IHardwareControl
         {
             lock (_lastWrittenInt)
                 _lastWrittenInt[attribute] = watts;
-            return;
+            return true;
         }
 
         // On dual-backend kernels (asus-nb-wmi + asus-armoury), we cannot predict which
@@ -1129,11 +1129,12 @@ public class LinuxAsusWmi : IHardwareControl
         if (!written)
         {
             Helpers.Logger.WriteLine($"SetPptLimit: {attribute}={watts} write failed, not caching");
-            return;
+            return false;
         }
 
         lock (_lastWrittenInt)
             _lastWrittenInt[attribute] = watts;
+        return true;
     }
 
     public AttrRange? GetAttributeRange(AttrDef attr) => AsusAttributeRange.Read(attr);
