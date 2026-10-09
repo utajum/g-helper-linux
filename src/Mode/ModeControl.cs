@@ -301,9 +301,7 @@ public class ModeControl
     /// </summary>
     public void RefreshReapplyTimer()
     {
-        // Default 30 s for models whose EC silently resets the temp limit under load 
-        int defaultSeconds = Helpers.AppConfig.IsReapplyTempRequired() ? 30 : 0;
-        int seconds = Helpers.AppConfig.Get("reapply_time", defaultSeconds);
+        int seconds = Helpers.AppConfig.GetReapplyTime();
 
         if (seconds <= 0)
         {
