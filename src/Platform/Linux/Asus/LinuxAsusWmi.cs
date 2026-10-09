@@ -1151,6 +1151,17 @@ public class LinuxAsusWmi : IHardwareControl
         return SysfsHelper.ReadInt(path, -1);
     }
 
+    /// <summary>
+    /// Drop the SetPptLimit dedupe cache. A platform profile write resets PPT
+    /// and nv_* limits in firmware while sysfs keeps the old values, so the
+    /// next write of the same value must not be skipped (#208).
+    /// </summary>
+    public void ForgetPptWrites()
+    {
+        lock (_lastWrittenInt)
+            _lastWrittenInt.Clear();
+    }
+
     // Keyboard
 
     /// <summary>

@@ -143,6 +143,10 @@ public class ModeControl
         };
         App.Power?.SetPlatformProfile(profile);
 
+        // Firmware resets PPT and nv_* limits on a profile write (asusctl
+        // ctrl_platform.rs), so AutoCpuPower/AutoGpuPower must re-write them.
+        (App.Wmi as Platform.Linux.LinuxAsusWmi)?.ForgetPptWrites();
+
         // Apply per-mode EPP override if set. Done after platform_profile
         // because changing the profile can reset EPP on amd/intel pstate.
         string? epp = Helpers.AppConfig.GetString($"epp_{baseMode}");
@@ -708,6 +712,7 @@ public class ModeControl
         try
         {
             App.RefreshGpuControlIfMissing();
+            (App.Wmi as Platform.Linux.LinuxAsusWmi)?.ForgetPptWrites();
             if (Helpers.AppConfig.IsModeReapply())
                 SetPerformanceMode(Modes.GetCurrent());
             else
