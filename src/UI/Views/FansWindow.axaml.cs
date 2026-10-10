@@ -1958,7 +1958,7 @@ public partial class FansWindow : Window
         {
             int mode = Mode.Modes.GetCurrent();
             textModeCommand.Text = Helpers.AppConfig.GetString($"mode_command_{mode}") ?? "";
-            int reapply = Helpers.AppConfig.Get("reapply_time", 0);
+            int reapply = Helpers.AppConfig.GetReapplyTime();
             if (reapply < 0)
                 reapply = 0;
             numReapplyTime.Value = reapply;

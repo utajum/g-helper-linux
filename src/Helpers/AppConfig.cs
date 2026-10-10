@@ -579,6 +579,9 @@ public static class AppConfig
 
     public static bool IsReapplyTempRequired() => ContainsModel("GA402") || ContainsModel("GV601");
 
+    /// <summary>Reapply timer seconds, 0 = off. Default 30 on models whose EC resets the temp limit under load.</summary>
+    public static int GetReapplyTime() => Get("reapply_time", IsReapplyTempRequired() ? 30 : 0);
+
     public static bool IsReapplyRyzen() => ContainsModel("G614F") || ContainsModel("G814F") || ContainsModel("G733P");
 
     // FX506HC / FA808U: if dgpu_disable=1 is the live state at shutdown,

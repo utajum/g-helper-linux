@@ -399,21 +399,21 @@ public class LinuxLenovoWmi : IHardwareControl
         return false;
     }
 
-    public void SetPptLimit(string attribute, int watts)
+    public bool SetPptLimit(string attribute, int watts)
     {
         var path = LenovoSysfs.FirmwareAttrCurrentValue(MapPptAttribute(attribute));
         if (path == null)
-            return;
+            return false;
 
         // Firmware rejects writes (-EBUSY) unless platform_profile is "custom"
         var profile = SysfsHelper.ReadAttribute(SysfsHelper.PlatformProfile);
         if (profile != null && profile != "custom")
         {
             if (!SwitchToCustomProfile(profile))
-                return;
+                return false;
         }
 
-        SysfsHelper.WriteInt(path, watts);
+        return SysfsHelper.WriteInt(path, watts);
     }
 
     public int GetPptLimit(string attribute)
