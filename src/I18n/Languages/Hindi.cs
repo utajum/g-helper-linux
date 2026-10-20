@@ -699,6 +699,7 @@ public static class Hindi
         ["aura_flash"] = "फ्लैश",
         ["aura_heatmap"] = "हीटमैप",
         ["aura_gpu_mode"] = "GPU मोड",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "बैटरी",
         ["aura_gradient"] = "ग्रेडिएंट",
         ["aura_zone_test"] = "ज़ोन परीक्षण",

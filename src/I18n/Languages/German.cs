@@ -552,6 +552,7 @@ public static class German
         ["aura_flash"] = "Blitz",
         ["aura_heatmap"] = "Heatmap",
         ["aura_gpu_mode"] = "GPU-Modus",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Batterie",
         ["aura_gradient"] = "Verlauf",
         ["aura_zone_test"] = "Zonentest",

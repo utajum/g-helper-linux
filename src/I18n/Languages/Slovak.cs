@@ -699,6 +699,7 @@ public static class Slovak
         ["aura_flash"] = "Záblesk",
         ["aura_heatmap"] = "Teplotná mapa",
         ["aura_gpu_mode"] = "Režim GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Batéria",
         ["aura_gradient"] = "Prechod",
         ["aura_zone_test"] = "Test zón",

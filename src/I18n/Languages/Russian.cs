@@ -552,6 +552,7 @@ public static class Russian
         ["aura_flash"] = "Вспышка",
         ["aura_heatmap"] = "Тепловая карта",
         ["aura_gpu_mode"] = "Режим GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Батарея",
         ["aura_gradient"] = "Градиент",
         ["aura_zone_test"] = "Тест зон",

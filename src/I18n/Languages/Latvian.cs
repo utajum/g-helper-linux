@@ -699,6 +699,7 @@ public static class Latvian
         ["aura_flash"] = "Zibsnis",
         ["aura_heatmap"] = "Siltuma karte",
         ["aura_gpu_mode"] = "GPU režīms",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Akumulators",
         ["aura_gradient"] = "Gradients",
         ["aura_zone_test"] = "Zonu tests",

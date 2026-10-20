@@ -555,6 +555,7 @@ public static class Serbian
         ["aura_flash"] = "Блесак",
         ["aura_heatmap"] = "Топлотна мапа",
         ["aura_gpu_mode"] = "GPU режим",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Батерија",
         ["aura_gradient"] = "Градијент",
         ["aura_zone_test"] = "Тест зона",

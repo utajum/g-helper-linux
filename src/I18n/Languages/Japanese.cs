@@ -555,6 +555,7 @@ public static class Japanese
         ["aura_flash"] = "フラッシュ",
         ["aura_heatmap"] = "ヒートマップ",
         ["aura_gpu_mode"] = "GPU モード",
+        ["aura_ambient"] = "アンビエント",
         ["aura_battery"] = "バッテリー",
         ["aura_gradient"] = "グラデーション",
         ["aura_zone_test"] = "ゾーンテスト",

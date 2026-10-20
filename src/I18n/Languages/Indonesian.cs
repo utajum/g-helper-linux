@@ -555,6 +555,7 @@ public static class Indonesian
         ["aura_flash"] = "Kilat",
         ["aura_heatmap"] = "Peta Panas",
         ["aura_gpu_mode"] = "Mode GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Baterai",
         ["aura_gradient"] = "Gradien",
         ["aura_zone_test"] = "Tes Zona",

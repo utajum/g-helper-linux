@@ -699,6 +699,7 @@ public static class Bengali
         ["aura_flash"] = "ফ্ল্যাশ",
         ["aura_heatmap"] = "হিটম্যাপ",
         ["aura_gpu_mode"] = "GPU মোড",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "ব্যাটারি",
         ["aura_gradient"] = "গ্রেডিয়েন্ট",
         ["aura_zone_test"] = "জোন পরীক্ষা",

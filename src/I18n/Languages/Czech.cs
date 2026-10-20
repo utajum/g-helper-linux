@@ -552,6 +552,7 @@ public static class Czech
         ["aura_flash"] = "Záblesk",
         ["aura_heatmap"] = "Tepelná mapa",
         ["aura_gpu_mode"] = "Režim GPU",
+        ["aura_ambient"] = "Ambientní",
         ["aura_battery"] = "Baterie",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Test zón",

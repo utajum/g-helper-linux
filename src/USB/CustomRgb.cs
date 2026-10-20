@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using GHelper.Linux.Gpu;
 using GHelper.Linux.Helpers;
 
@@ -6,11 +7,10 @@ namespace GHelper.Linux.USB;
 /// <summary>
 /// Software-driven "custom" AURA modes. These don't ride the AURA HID
 /// firmware effects - they read a runtime signal (CPU temp, battery %,
-/// GPU mode) and paint the keyboard via <see cref="Aura.ApplyDirect"/>
+/// GPU mode, screen colors) and paint the keyboard via <see cref="Aura.ApplyDirect"/>
 /// / <see cref="Aura.ApplyDirectZones"/>.
 ///
-/// Linux port of upstream g-helper's <c>Aura.CustomRGB</c> inner class,
-/// minus AMBIENT
+/// Linux port of upstream g-helper's <c>Aura.CustomRGB</c> inner class.
 /// </summary>
 public static class CustomRgb
 {
@@ -149,6 +149,84 @@ public static class CustomRgb
             _ => ColorGpuStandard,
         };
         Aura.ApplyDirect(color.R, color.G, color.B);
+    }
+
+    private static readonly byte[] _ambientGrid = new byte[Platform.Linux.ScreenCapture.GridSize];
+    private static readonly byte[] _ambientZones = new byte[8 * 3];
+    private static int _ambientBusy;
+    private static bool _ambientInit;
+
+    /// <summary>
+    /// Ambient mode tick: screen colors to the keyboard. Strix zoned keyboards
+    /// get the top grid row on the 4 key zones and the bottom row on the
+    /// lightbar; others get the average color. <paramref name="init"/> starts
+    /// the capture; the HID init rides on the first frame that arrives.
+    /// </summary>
+    public static void ApplyAmbient(bool init = false)
+    {
+        if (init)
+        {
+            _ambientInit = true;
+            Platform.Linux.ScreenCapture.Start();
+        }
+        if (Interlocked.Exchange(ref _ambientBusy, 1) == 1)
+            return;
+        try
+        {
+            var grid = _ambientGrid;
+            if (!Platform.Linux.ScreenCapture.TryGetGrid(grid))
+                return;
+
+            Color Cell(int x, int y) => Color.FromRgb(grid[(y * 4 + x) * 3], grid[(y * 4 + x) * 3 + 1], grid[(y * 4 + x) * 3 + 2]);
+
+            var colors = new Color[8];
+            int zones = 8;
+            if (Aura.IsStrixZoned)
+            {
+                colors[4] = ColorUtils.HSV.UpSaturation(Cell(1, 1)); // left
+                colors[5] = ColorUtils.HSV.UpSaturation(ColorUtils.GetMidColor(Cell(0, 1), Cell(1, 1)));
+                colors[6] = ColorUtils.HSV.UpSaturation(ColorUtils.GetMidColor(Cell(2, 1), Cell(3, 1)));
+                colors[7] = ColorUtils.HSV.UpSaturation(Cell(3, 1)); // right
+                for (int i = 0; i < 4; i++)
+                    colors[i] = ColorUtils.HSV.UpSaturation(Cell(i, 0));
+            }
+            else
+            {
+                zones = 1;
+                int r = 0, g = 0, b = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    r += grid[i * 3];
+                    g += grid[i * 3 + 1];
+                    b += grid[i * 3 + 2];
+                }
+                colors[0] = ColorUtils.HSV.UpSaturation(Color.FromRgb((byte)(r / 8), (byte)(g / 8), (byte)(b / 8)), 0.3f);
+            }
+
+            bool init0 = _ambientInit;
+            bool fresh = init0;
+            for (int i = 0; i < zones; i++)
+            {
+                var c = colors[i];
+                if (_ambientZones[i * 3] != c.R || _ambientZones[i * 3 + 1] != c.G || _ambientZones[i * 3 + 2] != c.B)
+                    fresh = true;
+                _ambientZones[i * 3] = c.R;
+                _ambientZones[i * 3 + 1] = c.G;
+                _ambientZones[i * 3 + 2] = c.B;
+            }
+            if (!fresh)
+                return;
+
+            _ambientInit = false;
+            if (zones == 8)
+                Aura.ApplyDirectZones(_ambientZones, init0);
+            else
+                Aura.ApplyDirect(_ambientZones[0], _ambientZones[1], _ambientZones[2], init0);
+        }
+        finally
+        {
+            Volatile.Write(ref _ambientBusy, 0);
+        }
     }
 
     /// <summary>

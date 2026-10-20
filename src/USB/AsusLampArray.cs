@@ -245,7 +245,7 @@ public static class AsusLampArray
         if (!Available)
             return;
         bool streaming = mode is AuraMode.Heatmap or AuraMode.Battery
-            or AuraMode.Gradient or AuraMode.ZoneTest;
+            or AuraMode.Ambient or AuraMode.Gradient or AuraMode.ZoneTest;
         if (streaming)
             _controlled = false;
         else

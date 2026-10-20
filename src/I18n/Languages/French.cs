@@ -552,6 +552,7 @@ public static class French
         ["aura_flash"] = "Flash",
         ["aura_heatmap"] = "Carte thermique",
         ["aura_gpu_mode"] = "Mode GPU",
+        ["aura_ambient"] = "Ambiant",
         ["aura_battery"] = "Batterie",
         ["aura_gradient"] = "Dégradé",
         ["aura_zone_test"] = "Test des zones",
