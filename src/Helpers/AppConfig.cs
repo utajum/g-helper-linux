@@ -231,7 +231,6 @@ public static class AppConfig
         }
     }
 
-    /// <summary>Copy a value as-is (int or string). No-op when <paramref name="from"/> is unset.</summary>
     public static void Copy(string from, string to)
     {
         lock (_lock)
