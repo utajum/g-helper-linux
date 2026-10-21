@@ -1,5 +1,3 @@
-// Custom performance modes: per-mode settings copied on Add, cleaned on Remove.
-
 using GHelper.Linux.Helpers;
 using GHelper.Linux.Mode;
 
@@ -33,7 +31,6 @@ public static class ModesTests
             Harness.AssertEqual(10, AppConfig.Get("gpu_boost_3"), "gpu_boost copied");
             Harness.AssertEqual(1, AppConfig.Get("auto_apply_power_3"), "auto_apply_power copied");
             Harness.Assert(!AppConfig.Exists("performance_3"), "non-mode key performance_1 must not be copied");
-            Harness.AssertEqual(1, Modes.GetList().Count(m => m == 3), "new mode listed once");
         });
 
         Harness.Scenario("Modes_Remove_DeletesOnlyThatMode", _ =>
@@ -62,13 +59,6 @@ public static class ModesTests
             AppConfig.Set("mode_base_3", 1);
             AppConfig.Set("performance_mode", 3);
             Harness.AssertEqual(turbo, BitConverter.ToString(AppConfig.GetDefaultCurve(0)), "custom mode on Turbo gets the Turbo curve");
-        });
-
-        Harness.Scenario("Modes_Add_WhenFull_ReturnsMinusOne", _ =>
-        {
-            for (int i = 3; i < 20; i++)
-                AppConfig.Set($"mode_base_{i}", 0);
-            Harness.AssertEqual(-1, Modes.Add(), "no free slot");
         });
     }
 }

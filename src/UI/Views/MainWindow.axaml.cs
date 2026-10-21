@@ -434,7 +434,7 @@ public partial class MainWindow : Window
 
         _currentPerfMode = wmi.GetThrottleThermalPolicy();
 
-        // Custom mode running on its base: show it on the Fans + Power button (as upstream)
+        // Custom mode running on its base: show it on the Fans + Power button
         int mode = Mode.Modes.GetCurrent();
         if (mode > 2 && Mode.Modes.GetBase(mode) == _currentPerfMode)
             _currentPerfMode = mode;
