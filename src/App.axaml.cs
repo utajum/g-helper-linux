@@ -812,7 +812,7 @@ public class App : Application
     {
         var menu = new NativeMenu();
 
-        // Performance modes: Silent, Balanced, Turbo, then custom modes
+        // Performance modes
         foreach (var (id, name) in Modes.GetDictionary())
         {
             var item = new NativeMenuItem(name);

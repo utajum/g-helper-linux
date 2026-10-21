@@ -997,8 +997,6 @@ public partial class FansWindow : Window
         App.MainWindowInstance?.RefreshPerformanceMode();
     }
 
-    // Custom modes: add copies the current mode, remove falls back to Balanced (as upstream)
-
     private void ButtonModeAdd_Click(object? sender, RoutedEventArgs e)
     {
         int mode = Mode.Modes.Add();

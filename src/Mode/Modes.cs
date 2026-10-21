@@ -124,15 +124,13 @@ public static class Modes
         return modes[index];
     }
 
-    // Settings stored per mode as "<setting>_<mode>". Power limits ("limit_*",
-    // names come from firmware attributes) and fan curves ("fan_profile_*")
-    // match by prefix.
+    // Per-mode keys are "<setting>_<mode>"; limit_* and fan_profile_* match by prefix
     private static readonly HashSet<string> ModeSettings = new()
     {
-        "fan_xgm", "gpu_boost", "gpu_temp", "gpu_power_lim", "gpu_tgp", "gpu_base_tgp",
+        "gpu_boost", "gpu_temp", "gpu_power_lim", "gpu_tgp", "gpu_base_tgp",
         "gpu_clock_core", "gpu_clock_mem", "gpu_clock_lock", "gpu_mem_clock_lock",
         "cpu_uv", "cpu_uv_mv", "igpu_uv", "auto_uv", "auto_boost",
-        "auto_apply", "auto_apply_power", "auto_apply_fans", "auto_apply_gpu",
+        "auto_apply_power", "auto_apply_fans", "auto_apply_gpu",
         "hysteresis_up", "hysteresis_down", "mode_command",
     };
 
