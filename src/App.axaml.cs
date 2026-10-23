@@ -745,6 +745,18 @@ public class App : Application
         }
     }
 
+    /// <summary>Rebuild the tray menu (custom modes added, renamed or removed).</summary>
+    public static void RefreshTrayMenu()
+    {
+        if (Current is not App app || app.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            return;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (TrayIconInstance != null)
+                TrayIconInstance.Menu = app.CreateTrayMenu(desktop);
+        });
+    }
+
     /// <summary>Update tray icon and tooltip to reflect current performance mode.</summary>
     public static void UpdateTrayIcon()
     {
@@ -801,17 +813,12 @@ public class App : Application
         var menu = new NativeMenu();
 
         // Performance modes
-        var silent = new NativeMenuItem(Labels.Get("mode_silent"));
-        silent.Click += (_, _) => { Mode?.SetPerformanceMode(2, true); UpdateTrayIcon(); MainWindowInstance?.RefreshPerformanceMode(); };
-        menu.Add(silent);
-
-        var balanced = new NativeMenuItem(Labels.Get("mode_balanced"));
-        balanced.Click += (_, _) => { Mode?.SetPerformanceMode(0, true); UpdateTrayIcon(); MainWindowInstance?.RefreshPerformanceMode(); };
-        menu.Add(balanced);
-
-        var turbo = new NativeMenuItem(Labels.Get("mode_turbo"));
-        turbo.Click += (_, _) => { Mode?.SetPerformanceMode(1, true); UpdateTrayIcon(); MainWindowInstance?.RefreshPerformanceMode(); };
-        menu.Add(turbo);
+        foreach (var (id, name) in Modes.GetDictionary())
+        {
+            var item = new NativeMenuItem(name);
+            item.Click += (_, _) => { Mode?.SetPerformanceMode(id, true); UpdateTrayIcon(); MainWindowInstance?.RefreshPerformanceMode(); };
+            menu.Add(item);
+        }
 
         menu.Add(new NativeMenuItemSeparator());
 

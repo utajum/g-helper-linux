@@ -549,6 +549,25 @@
                         <ComboBox x:Name="comboMode" Width="200" Height="28"
                                   VerticalAlignment="Center"
                                   SelectionChanged="ComboMode_Changed" />
+                        <!-- custom mode name editor, replaces comboMode while renaming -->
+                        <TextBox x:Name="textModeName" Width="200" Height="28" IsVisible="False"
+                                 VerticalAlignment="Center" MaxLength="40"
+                                 KeyDown="TextModeName_KeyDown" LostFocus="TextModeName_LostFocus" />
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Button x:Name="buttonModeAdd" Classes="ghelper" Width="32" Height="28" Padding="0"
+                                    Click="ButtonModeAdd_Click">
+                                <Path Data="M 5,0 H 7 V 5 H 12 V 7 H 7 V 12 H 5 V 7 H 0 V 5 H 5 Z" Fill="#F0F0F0" />
+                            </Button>
+                            <!-- not focusable: a click while renaming must toggle, not trigger LostFocus first -->
+                            <Button x:Name="buttonModeRename" Classes="ghelper" Width="32" Height="28" Padding="0"
+                                    Focusable="False" Click="ButtonModeRename_Click">
+                                <Path Data="M 0,12 L 0.6,8.6 L 8.4,0.8 L 11.2,3.6 L 3.4,11.4 Z" Fill="#F0F0F0" />
+                            </Button>
+                            <Button x:Name="buttonModeRemove" Classes="ghelper" Width="32" Height="28" Padding="0"
+                                    Click="ButtonModeRemove_Click">
+                                <Path Data="M 0,5 H 12 V 7 H 0 Z" Fill="#F0F0F0" />
+                            </Button>
+                        </StackPanel>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
                         <Button x:Name="buttonMonitor" Classes="ghelper" Height="30"

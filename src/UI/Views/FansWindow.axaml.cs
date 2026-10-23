@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -967,6 +968,7 @@ public partial class FansWindow : Window
                 idx++;
             }
             comboMode.SelectedIndex = selectedIdx;
+            buttonModeRename.IsVisible = buttonModeRemove.IsVisible = Mode.Modes.IsCurrentCustom();
         }
         finally
         {
@@ -983,7 +985,81 @@ public partial class FansWindow : Window
         if (modeId == Mode.Modes.GetCurrent())
             return;
 
-        App.Mode?.SetPerformanceMode(modeId);
+        SwitchMode(modeId);
+    }
+
+    private void SwitchMode(int mode)
+    {
+        App.Mode?.SetPerformanceMode(mode);
+        // Posted: may run inside comboMode's SelectionChanged, which can't clear its items
+        Dispatcher.UIThread.Post(InitModeCombo);
+        App.UpdateTrayIcon();
+        App.MainWindowInstance?.RefreshPerformanceMode();
+    }
+
+    private void ButtonModeAdd_Click(object? sender, RoutedEventArgs e)
+    {
+        int mode = Mode.Modes.Add();
+        if (mode < 0)
+            return;
+        SwitchMode(mode);
+        App.RefreshTrayMenu();
+    }
+
+    private void ButtonModeRemove_Click(object? sender, RoutedEventArgs e)
+    {
+        if (!Mode.Modes.IsCurrentCustom())
+            return;
+        Mode.Modes.Remove(Mode.Modes.GetCurrent());
+        SwitchMode(0);
+        App.RefreshTrayMenu();
+    }
+
+    private void ButtonModeRename_Click(object? sender, RoutedEventArgs e)
+    {
+        if (textModeName.IsVisible)
+        {
+            EndRename(true);
+            return;
+        }
+        if (!Mode.Modes.IsCurrentCustom())
+            return;
+        _renameMode = Mode.Modes.GetCurrent();
+        textModeName.Text = Mode.Modes.GetCurrentName();
+        comboMode.IsVisible = false;
+        textModeName.IsVisible = true;
+        textModeName.Focus();
+        textModeName.SelectAll();
+    }
+
+    private void TextModeName_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is Key.Enter or Key.Escape)
+        {
+            EndRename(e.Key == Key.Enter);
+            e.Handled = true;
+        }
+    }
+
+    private void TextModeName_LostFocus(object? sender, RoutedEventArgs e) => EndRename(true);
+
+    // Mode being renamed: the current mode may change while the editor is open
+    private int _renameMode = -1;
+
+    private void EndRename(bool save)
+    {
+        if (!textModeName.IsVisible)
+            return;
+        textModeName.IsVisible = false;
+        comboMode.IsVisible = true;
+
+        string name = textModeName.Text?.Trim() ?? "";
+        if (!save || name.Length == 0 || _renameMode <= 2 || !Mode.Modes.Exists(_renameMode))
+            return;
+        Helpers.AppConfig.Set($"mode_name_{_renameMode}", name);
+        InitModeCombo();
+        App.RefreshTrayMenu();
+        App.MainWindowInstance?.RefreshPerformanceMode();
     }
 
     // Fan Curves
