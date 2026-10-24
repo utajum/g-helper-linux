@@ -552,6 +552,7 @@ public static class Ukrainian
         ["aura_flash"] = "Спалах",
         ["aura_heatmap"] = "Теплова карта",
         ["aura_gpu_mode"] = "Режим GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Акумулятор",
         ["aura_gradient"] = "Градієнт",
         ["aura_zone_test"] = "Тест зон",

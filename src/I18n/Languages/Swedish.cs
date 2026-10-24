@@ -555,6 +555,7 @@ public static class Swedish
         ["aura_flash"] = "Blixt",
         ["aura_heatmap"] = "Värmekarta",
         ["aura_gpu_mode"] = "GPU-läge",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Batteri",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Zontest",

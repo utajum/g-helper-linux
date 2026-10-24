@@ -552,6 +552,7 @@ public static class Spanish
         ["aura_flash"] = "Destello",
         ["aura_heatmap"] = "Mapa de calor",
         ["aura_gpu_mode"] = "Modo GPU",
+        ["aura_ambient"] = "Ambiente",
         ["aura_battery"] = "Batería",
         ["aura_gradient"] = "Degradado",
         ["aura_zone_test"] = "Prueba de zonas",

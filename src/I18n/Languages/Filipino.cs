@@ -699,6 +699,7 @@ public static class Filipino
         ["aura_flash"] = "Flash",
         ["aura_heatmap"] = "Heatmap",
         ["aura_gpu_mode"] = "GPU Mode",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Baterya",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Zone Test",

@@ -699,6 +699,7 @@ public static class Nepali
         ["aura_flash"] = "फ्ल्यास",
         ["aura_heatmap"] = "हिटम्याप",
         ["aura_gpu_mode"] = "GPU मोड",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "ब्याट्री",
         ["aura_gradient"] = "ग्रेडियन्ट",
         ["aura_zone_test"] = "जोन परीक्षण",

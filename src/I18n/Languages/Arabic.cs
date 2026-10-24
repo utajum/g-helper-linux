@@ -555,6 +555,7 @@ public static class Arabic
         ["aura_flash"] = "وميض سريع",
         ["aura_heatmap"] = "خريطة الحرارة",
         ["aura_gpu_mode"] = "وضع GPU",
+        ["aura_ambient"] = "محيط",
         ["aura_battery"] = "البطارية",
         ["aura_gradient"] = "تدرج",
         ["aura_zone_test"] = "اختبار المناطق",

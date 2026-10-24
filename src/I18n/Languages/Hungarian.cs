@@ -552,6 +552,7 @@ public static class Hungarian
         ["aura_flash"] = "Villanás",
         ["aura_heatmap"] = "Hőtérkép",
         ["aura_gpu_mode"] = "GPU mód",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Akkumulátor",
         ["aura_gradient"] = "Színátmenet",
         ["aura_zone_test"] = "Zónateszt",

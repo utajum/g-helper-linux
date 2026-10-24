@@ -555,6 +555,7 @@ public static class Thai
         ["aura_flash"] = "แฟลช",
         ["aura_heatmap"] = "แผนที่ความร้อน",
         ["aura_gpu_mode"] = "โหมด GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "แบตเตอรี่",
         ["aura_gradient"] = "การไล่ระดับ",
         ["aura_zone_test"] = "ทดสอบโซน",

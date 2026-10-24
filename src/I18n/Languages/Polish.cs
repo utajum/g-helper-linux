@@ -552,6 +552,7 @@ public static class Polish
         ["aura_flash"] = "Błysk",
         ["aura_heatmap"] = "Mapa cieplna",
         ["aura_gpu_mode"] = "Tryb GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Bateria",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Test stref",

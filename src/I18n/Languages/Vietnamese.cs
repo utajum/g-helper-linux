@@ -552,6 +552,7 @@ public static class Vietnamese
         ["aura_flash"] = "Lóe sáng",
         ["aura_heatmap"] = "Bản đồ nhiệt",
         ["aura_gpu_mode"] = "Chế độ GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Pin",
         ["aura_gradient"] = "Chuyển sắc",
         ["aura_zone_test"] = "Kiểm tra vùng",
