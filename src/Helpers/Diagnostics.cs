@@ -1384,7 +1384,7 @@ public static class Diagnostics
         for (int mode = 0; mode <= 2; mode++)
         {
             string label = mode switch { 1 => "turbo", 2 => "silent", _ => "balanced" };
-            string key = $"fan_xgm_{mode}";
+            string key = $"fan_profile_xgm_{mode}";
             string? raw = AppConfig.GetString(key);
             sb.AppendLine(string.IsNullOrEmpty(raw)
                 ? $"  fan_xgm[{label}]      : (default)"
@@ -1947,13 +1947,15 @@ public static class Diagnostics
 
         // performance_mode → label
         int perfMode = AppConfig.Get("performance_mode", -1);
-        string perfLabel = perfMode switch
+        string perfLabel = Mode.Modes.GetBase(perfMode) switch
         {
             0 => "Balanced",
             1 => "Turbo",
             2 => "Silent",
             _ => "(not set)",
         };
+        if (perfMode > 2)
+            perfLabel = $"custom, base {perfLabel}";
         sb.AppendLine($"  performance_mode: {(perfMode < 0 ? "-1" : perfMode.ToString())} ({perfLabel})");
 
         int chargeLimit = AppConfig.Get("charge_limit", -1);
@@ -1968,9 +1970,11 @@ public static class Diagnostics
         sb.AppendLine($"  auto_apply_power: {YesNo(AppConfig.IsMode("auto_apply_power"))}");
 
         // Per-mode fan/GPU auto-apply flags and saved fan curves.
-        for (int m = 0; m < 3; m++)
+        foreach (int m in Mode.Modes.GetList().Order())
         {
-            string mName = m switch { 0 => "Balanced", 1 => "Turbo", 2 => "Silent", _ => "?" };
+            string mName = Mode.Modes.GetBase(m) switch { 0 => "Balanced", 1 => "Turbo", 2 => "Silent", _ => "?" };
+            if (m > 2)
+                mName = $"custom {m - 2}, base {mName}";
             bool fans = AppConfig.Get($"auto_apply_fans_{m}", 0) == 1;
             bool gpu = AppConfig.Get($"auto_apply_gpu_{m}", 0) == 1;
             string cpuCurve = AppConfig.GetString($"fan_profile_cpu_{m}") ?? "-";

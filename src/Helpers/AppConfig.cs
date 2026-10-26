@@ -223,6 +223,25 @@ public static class AppConfig
         ScheduleWrite();
     }
 
+    public static string[] GetKeys()
+    {
+        lock (_lock)
+        {
+            return _config.Keys.ToArray();
+        }
+    }
+
+    public static void Copy(string from, string to)
+    {
+        lock (_lock)
+        {
+            if (!_config.TryGetValue(from, out var je))
+                return;
+            _config[to] = je.Clone();
+        }
+        ScheduleWrite();
+    }
+
     /// <summary>Store a dictionary as a JSON sub-object. AOT-safe (no reflection).</summary>
     public static void SetObject(string name, Dictionary<string, object> value)
     {
@@ -363,7 +382,7 @@ public static class AppConfig
     /// <summary>Default fan curves per mode (from original G-Helper).</summary>
     public static byte[] GetDefaultCurve(int fanIndex)
     {
-        int mode = GetCurrentMode();
+        int mode = Mode.Modes.GetCurrentBase();
 
         return mode switch
         {

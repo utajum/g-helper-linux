@@ -124,6 +124,30 @@ public static class Modes
         return modes[index];
     }
 
+    // Per-mode keys are "<setting>_<mode>"; limit_* and fan_profile_* match by prefix
+    private static readonly HashSet<string> ModeSettings = new()
+    {
+        "gpu_boost", "gpu_temp", "gpu_power_lim", "gpu_tgp", "gpu_base_tgp",
+        "gpu_clock_core", "gpu_clock_mem", "gpu_clock_lock", "gpu_mem_clock_lock",
+        "cpu_uv", "cpu_uv_mv", "igpu_uv", "auto_uv", "auto_boost",
+        "auto_apply_power", "auto_apply_fans", "auto_apply_gpu",
+        "hysteresis_up", "hysteresis_down", "mode_command",
+    };
+
+    private static bool IsModeSetting(string name) =>
+        ModeSettings.Contains(name) || name.StartsWith("limit_") || name.StartsWith("fan_profile_");
+
+    /// <summary>Config keys of <paramref name="mode"/> as (key, setting name).</summary>
+    private static IEnumerable<(string Key, string Setting)> ModeKeys(int mode)
+    {
+        string suffix = $"_{mode}";
+        foreach (var key in Helpers.AppConfig.GetKeys())
+        {
+            if (key.EndsWith(suffix) && IsModeSetting(key[..^suffix.Length]))
+                yield return (key, key[..^suffix.Length]);
+        }
+    }
+
     /// <summary>Add a new custom mode (copies from current mode).</summary>
     public static int Add()
     {
@@ -137,6 +161,9 @@ public static class Modes
             Helpers.AppConfig.Set($"mode_base_{i}", GetCurrentBase());
             Helpers.AppConfig.Set($"mode_name_{i}", Labels.Format("mode_custom", i - 2));
 
+            foreach (var (key, setting) in ModeKeys(currentMode))
+                Helpers.AppConfig.Copy(key, $"{setting}_{i}");
+
             return i;
         }
 
@@ -149,20 +176,9 @@ public static class Modes
         if (mode <= 2)
             return; // Can't remove built-in modes
 
-        var keys = new[]
-        {
-            "mode_base", "mode_name", "powermode", "limit_total",
-            "limit_slow", "limit_fast", "limit_cpu",
-            "fan_profile_cpu", "fan_profile_gpu", "fan_profile_mid",
-            "gpu_power", "gpu_boost", "gpu_temp",
-            "gpu_core", "gpu_memory", "gpu_clock_limit",
-            "auto_boost", "auto_apply", "auto_apply_power",
-            "auto_apply_fans"
-        };
-
-        foreach (var key in keys)
-        {
-            Helpers.AppConfig.Remove($"{key}_{mode}");
-        }
+        foreach (var (key, _) in ModeKeys(mode))
+            Helpers.AppConfig.Remove(key);
+        Helpers.AppConfig.Remove($"mode_base_{mode}");
+        Helpers.AppConfig.Remove($"mode_name_{mode}");
     }
 }

@@ -432,11 +432,17 @@ public partial class MainWindow : Window
 
         _currentPerfMode = wmi.GetThrottleThermalPolicy();
 
+        // Custom mode running on its base: show it on the Fans + Power button
+        int mode = Mode.Modes.GetCurrent();
+        if (mode > 2 && Mode.Modes.GetBase(mode) == _currentPerfMode)
+            _currentPerfMode = mode;
+
         string modeName = _currentPerfMode switch
         {
             0 => Labels.Get("mode_balanced"),
             1 => Labels.Get("mode_turbo"),
             2 => Labels.Get("mode_silent"),
+            > 2 => Mode.Modes.GetName(_currentPerfMode),
             _ => Labels.Get("mode_unknown")
         };
 
@@ -451,6 +457,7 @@ public partial class MainWindow : Window
         SetButtonActive(buttonSilent, _currentPerfMode == 2);
         SetButtonActive(buttonBalanced, _currentPerfMode == 0);
         SetButtonActive(buttonTurbo, _currentPerfMode == 1);
+        SetButtonActive(buttonFans, _currentPerfMode > 2);
     }
 
     private void SetPerformanceMode(int mode)
