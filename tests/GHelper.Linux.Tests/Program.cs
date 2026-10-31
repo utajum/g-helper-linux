@@ -28,6 +28,7 @@ public static class Program
             ManualFanTests.RunAll();
             XrandrPanelTests.RunAll();
             HidPPDecodeTests.RunAll();
+            AppProfilesTests.RunAll();
         }
         finally
         {

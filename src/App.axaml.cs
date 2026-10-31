@@ -219,6 +219,8 @@ public class App : Application
             if (!gameMode)
                 OfferSteamShortcutOnce();
 
+            AppProfiles.Init();
+
             // Apply saved performance mode on startup. Off the UI thread: the
             // sysfs/WMI writes can take hundreds of ms before the first frame.
             Task.Run(() =>

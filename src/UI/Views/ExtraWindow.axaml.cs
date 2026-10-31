@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using GHelper.Linux.Display;
 using GHelper.Linux.Gpu;
@@ -53,6 +54,7 @@ public partial class ExtraWindow : Window
             RefreshLenovo();
             RefreshTrayIcons();
             RefreshPower();
+            RefreshAppProfiles();
             RefreshSystemInfo();
             RefreshAdvanced();
             ApplyLabels();
@@ -291,6 +293,9 @@ public partial class ExtraWindow : Window
         labelEppBalanced.Text = Labels.Get("epp_balanced_label");
         labelEppTurbo.Text = Labels.Get("epp_turbo_label");
         ToolTip.SetTip(panelEpp, Labels.Get("epp_tooltip"));
+        labelAppProfiles.Text = Labels.Get("app_profiles");
+        textAppProfileFilter.PlaceholderText = Labels.Get("app_profile_filter");
+        ToolTip.SetTip(buttonAppProfileBrowse, Labels.Get("app_profile_browse"));
         labelBatteryDetails.Text = Labels.Get("details");
 
         // System Info
@@ -1581,7 +1586,7 @@ public partial class ExtraWindow : Window
             Helpers.AppConfig.Remove("platform_profile_1");
         // Re-apply if currently in Turbo so the change takes effect now.
         if (Mode.Modes.GetCurrentBase() == 1)
-            App.Mode?.SetPerformanceMode();
+            App.Mode?.SetPerformanceMode(persist: false);
         RefreshPower();
     }
 
@@ -2434,6 +2439,192 @@ public partial class ExtraWindow : Window
         {
             _systemInfoWindow.Activate();
         }
+    }
+
+    // APP PROFILES
+
+    private int _appProfileGen;
+
+    // Scans /proc, Steam and icons off the UI thread; with no rules only once the list opens.
+    private void RefreshAppProfiles(bool listOpened = false)
+    {
+        int gen = ++_appProfileGen;
+        if (!listOpened && Mode.AppProfiles.Load().Count == 0)
+        {
+            var (rule, name) = Mode.AppProfiles.AnyGame();
+            ShowAppProfiles([], [new AppProfileItem(rule, name, null)]);
+            return;
+        }
+        Task.Run(() =>
+        {
+            try
+            {
+                var rules = Mode.AppProfiles.Load();
+                var candidates = Mode.AppProfiles.Candidates();
+                var iconOf = Mode.AppProfiles.IconFinder();
+                var rows = rules.Select(r => new AppProfileItem(r,
+                    candidates.FirstOrDefault(c => Mode.AppProfiles.SameApp(c.Rule, r)).Name
+                        ?? (r.Kind == "steam" ? $"Steam {r.Value}" : Path.GetFileName(r.Value)),
+                    iconOf(r))).ToList();
+                var items = candidates.Where(c => !rules.Any(r => Mode.AppProfiles.SameApp(r, c.Rule)))
+                    .Select(c => new AppProfileItem(c.Rule, c.Name, iconOf(c.Rule))).ToList();
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (gen == _appProfileGen)
+                        ShowAppProfiles(rows, items);
+                });
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine("AppProfiles: refresh failed", ex);
+            }
+        });
+    }
+
+    private void ShowAppProfiles(List<AppProfileItem> rows, List<AppProfileItem> items)
+    {
+        panelAppProfiles.Children.Clear();
+        foreach (var (rule, name, iconPath) in rows)
+        {
+            var combo = new ComboBox { Width = 140 };
+            foreach (var (id, modeName) in Mode.Modes.GetDictionary())
+            {
+                combo.Items.Add(new ComboBoxItem { Content = modeName, Tag = id });
+                if (id == rule.Mode)
+                    combo.SelectedIndex = combo.Items.Count - 1;
+            }
+            combo.SelectionChanged += (_, _) =>
+            {
+                if (_suppressEvents || combo.SelectedItem is not ComboBoxItem { Tag: int mode })
+                    return;
+                Mode.AppProfiles.Save(Mode.AppProfiles.WithMode(Mode.AppProfiles.Load(), rule, mode));
+            };
+
+            var remove = new Button { Content = "-", Width = 28, Height = 28, Margin = new Avalonia.Thickness(6, 0, 0, 0) };
+            remove.Classes.Add("ghelper");
+            remove.Click += (_, _) =>
+            {
+                Mode.AppProfiles.Save(Mode.AppProfiles.Without(Mode.AppProfiles.Load(), rule));
+                RefreshAppProfiles();
+            };
+
+            var label = new TextBlock
+            {
+                Text = name,
+                Classes = { "label-dim" },
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            };
+            if (rule.Value.Contains('/'))
+                ToolTip.SetTip(label, rule.Value);
+            var icon = AppIcon(rule, iconPath);
+            icon.Margin = new Avalonia.Thickness(0, 0, 8, 0);
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), Margin = new Avalonia.Thickness(0, 2) };
+            Grid.SetColumn(label, 1);
+            Grid.SetColumn(combo, 2);
+            Grid.SetColumn(remove, 3);
+            row.Children.Add(icon);
+            row.Children.Add(label);
+            row.Children.Add(combo);
+            row.Children.Add(remove);
+            panelAppProfiles.Children.Add(row);
+        }
+
+        // Data items + template: the closed combo shows the icon too, and
+        // icons decode only when their item is shown.
+        comboAppProfileAdd.ItemTemplate ??= new Avalonia.Controls.Templates.FuncDataTemplate<AppProfileItem>((item, _) =>
+            item is null ? null : new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                Spacing = 8,
+                Children =
+                {
+                    AppIcon(item.Rule, item.Icon),
+                    new TextBlock { Text = item.Name, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center },
+                },
+            });
+        _appProfileItems.Clear();
+        _appProfileItems.AddRange(items);
+        FilterAppProfiles();
+    }
+
+    private readonly List<AppProfileItem> _appProfileItems = [];
+
+    private void TextAppProfileFilter_TextChanged(object? sender, TextChangedEventArgs e) => FilterAppProfiles();
+
+    // Programs started after the window opened show up on the next open.
+    private void ComboAppProfileAdd_DropDownOpened(object? sender, EventArgs e) => RefreshAppProfiles(listOpened: true);
+
+    private void FilterAppProfiles()
+    {
+        string filter = (textAppProfileFilter.Text ?? "").Trim();
+        var selected = (comboAppProfileAdd.SelectedItem as AppProfileItem)?.Rule;
+        comboAppProfileAdd.Items.Clear();
+        int index = 0;
+        foreach (var item in _appProfileItems)
+            if (item.Name.Contains(filter, StringComparison.OrdinalIgnoreCase))
+            {
+                if (item.Rule == selected)
+                    index = comboAppProfileAdd.Items.Count;
+                comboAppProfileAdd.Items.Add(item);
+            }
+        comboAppProfileAdd.SelectedIndex = index;
+    }
+
+    private sealed record AppProfileItem(Mode.AppProfiles.Rule Rule, string Name, string? Icon);
+
+    /// <summary>20 px icon of a rule: the app's own icon, else gamepad for games and package for programs.</summary>
+    private static Control AppIcon(Mode.AppProfiles.Rule rule, string? path)
+    {
+        if (path != null)
+        {
+            try
+            {
+                if (path.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+                    return new Avalonia.Svg.Skia.Svg(default(Uri)!) { Path = path, Width = 20, Height = 20 };
+                using var stream = File.OpenRead(path);
+                return new Image { Source = Avalonia.Media.Imaging.Bitmap.DecodeToWidth(stream, 40), Width = 20, Height = 20 };
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine($"AppProfiles: icon {path} failed: {ex.Message}");
+            }
+        }
+        return new UI.Controls.Icon { IconName = rule.Kind == "exe" ? "package" : "gamepad", Width = 20, Height = 20 };
+    }
+
+    private void ButtonAppProfileAdd_Click(object? sender, RoutedEventArgs e)
+    {
+        if (comboAppProfileAdd.SelectedItem is not AppProfileItem item)
+            return;
+        var list = Mode.AppProfiles.Load();
+        if (!list.Any(r => Mode.AppProfiles.SameApp(r, item.Rule)))
+            list.Add(item.Rule);
+        Mode.AppProfiles.Save(list);
+        RefreshAppProfiles();
+    }
+
+    private async void ButtonAppProfileBrowse_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Labels.Get("app_profile_browse"),
+            AllowMultiple = false,
+        });
+        if (files.Count == 0 || files[0].TryGetLocalPath() is not { } path || path.Contains('\n'))
+            return;
+        string real = Mode.AppProfiles.RealPath(path);
+        if (!Mode.AppProfiles.IsProgram(real))
+        {
+            Helpers.Logger.WriteLine($"AppProfiles: {real} is not a program (ELF or .exe), skipped");
+            return;
+        }
+        var rule = new Mode.AppProfiles.Rule("exe", real, 1);
+        var list = Mode.AppProfiles.Load();
+        if (!list.Any(r => Mode.AppProfiles.SameApp(r, rule)))
+            list.Add(rule);
+        Mode.AppProfiles.Save(list);
+        RefreshAppProfiles();
     }
 
     // SYSTEM INFO

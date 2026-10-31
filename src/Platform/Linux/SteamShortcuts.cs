@@ -114,6 +114,43 @@ public static class SteamShortcuts
         return false;
     }
 
+    /// <summary>Non-Steam games in every user's library, without our own
+    /// entry: unsigned appid, name and icon path ("" when unset).</summary>
+    public static List<(uint Id, string Name, string Icon)> ListOthers()
+    {
+        var list = new List<(uint, string, string)>();
+        foreach (var user in UserFolders())
+        {
+            var file = Path.Combine(user, "config", "shortcuts.vdf");
+            if (!File.Exists(file))
+                continue;
+            try
+            {
+                foreach (var (_, value) in GetShortcutsMap(ParseFile(file)).Items)
+                {
+                    if (value is not VdfMap entry)
+                        continue;
+                    string name = "", icon = "";
+                    foreach (var (key, v) in entry.Items)
+                    {
+                        if (v is string s && key.Equals("appname", StringComparison.OrdinalIgnoreCase))
+                            name = s;
+                        else if (v is string i && key.Equals("icon", StringComparison.OrdinalIgnoreCase))
+                            icon = i.Trim('"');
+                    }
+                    uint id = EntryShortId(entry, 0);
+                    if (id != 0 && name != "" && name != AppName)
+                        list.Add((id, name, icon));
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"SteamShortcuts: parse {file} failed: {ex.Message}");
+            }
+        }
+        return list;
+    }
+
     /// <summary>Add the shortcut for every Steam user. True when at least one
     /// user was updated or already had it (Heroic's partial-success rule).</summary>
     public static bool Add(out string error)

@@ -2018,6 +2018,16 @@ public static class Diagnostics
         sb.AppendLine($"  toggle_clamshell_mode: {YesNo(AppConfig.Is("toggle_clamshell_mode"))}");
         sb.AppendLine($"  autostart: {YesNo(AppConfig.IsNotFalse("autostart"))}");
 
+        // Kinds and modes; the log lines carry the rule values.
+        var appRules = Mode.AppProfiles.Load();
+        sb.AppendLine($"  app_profiles: {appRules.Count} rule(s), {Mode.AppProfiles.Status}");
+        foreach (var r in appRules)
+        {
+            string kind = r.Kind != "exe" || !r.Value.Contains('/') ? r.Kind
+                : Mode.AppProfiles.IsProgram(r.Value) ? "exe path" : "exe path, not a program";
+            sb.AppendLine($"    {kind} -> mode {r.Mode}");
+        }
+
         sb.AppendLine();
     }
 

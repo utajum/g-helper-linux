@@ -479,6 +479,26 @@
                     <Border Classes="panel">
                         <StackPanel>
                             <Border Classes="panel-header" Margin="0,0,0,8">
+                                <TextBlock x:Name="labelAppProfiles" Classes="header" Text="App profiles" />
+                            </Border>
+                            <StackPanel x:Name="panelAppProfiles" />
+                            <Grid ColumnDefinitions="140,*,Auto,Auto" Margin="0,4">
+                                <TextBox Grid.Column="0" x:Name="textAppProfileFilter" Margin="0,0,6,0"
+                                         PlaceholderText="Filter" TextChanged="TextAppProfileFilter_TextChanged" />
+                                <ComboBox Grid.Column="1" x:Name="comboAppProfileAdd" HorizontalAlignment="Stretch"
+                                          DropDownOpened="ComboAppProfileAdd_DropDownOpened"
+                                          HorizontalContentAlignment="Left" />
+                                <Button Grid.Column="2" Classes="ghelper" Content="+" Width="28" Height="28"
+                                        Margin="6,0,0,0" Click="ButtonAppProfileAdd_Click" />
+                                <Button Grid.Column="3" x:Name="buttonAppProfileBrowse" Classes="ghelper" Content="..."
+                                        Width="28" Height="28" Margin="6,0,0,0" Click="ButtonAppProfileBrowse_Click" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="panel">
+                        <StackPanel>
+                            <Border Classes="panel-header" Margin="0,0,0,8">
                                 <TextBlock x:Name="headerBattery" Classes="header" Text="Battery" />
                             </Border>
 

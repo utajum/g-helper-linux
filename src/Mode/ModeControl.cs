@@ -96,14 +96,14 @@ public class ModeControl
     /// <summary>
     /// Set performance mode and apply all associated settings.
     /// </summary>
-    public void SetPerformanceMode(int mode = -1, bool notify = false)
+    public void SetPerformanceMode(int mode = -1, bool notify = false, bool persist = true)
     {
         // Serialized: startup applies the saved mode off the UI thread.
         lock (_setLock)
-            SetPerformanceModeLocked(mode, notify);
+            SetPerformanceModeLocked(mode, notify, persist);
     }
 
-    private void SetPerformanceModeLocked(int mode, bool notify)
+    private void SetPerformanceModeLocked(int mode, bool notify, bool persist)
     {
         int oldMode = Modes.GetCurrent();
         if (mode < 0)
@@ -111,7 +111,7 @@ public class ModeControl
         if (!Modes.Exists(mode))
             mode = 0;
 
-        Modes.SetCurrent(mode);
+        Modes.SetCurrent(mode, persist);
         int baseMode = Modes.GetBase(mode);
         int oldBaseMode = Modes.GetBase(oldMode);
 
@@ -404,7 +404,7 @@ public class ModeControl
         if (mode >= 0)
             SetPerformanceMode(mode, powerChanged);
         else
-            SetPerformanceMode(Modes.GetCurrent());
+            SetPerformanceMode(Modes.GetCurrent(), persist: false);
     }
 
     /// <summary>Apply saved fan curves for the given mode.</summary>
@@ -709,8 +709,9 @@ public class ModeControl
         try
         {
             App.RefreshGpuControlIfMissing();
+            // persist: false keeps an app profile's mode out of the AC/battery memory.
             if (Helpers.AppConfig.IsModeReapply())
-                SetPerformanceMode(Modes.GetCurrent());
+                SetPerformanceMode(Modes.GetCurrent(), persist: false);
             else
                 AutoGpuPower(Modes.GetCurrent());
         }

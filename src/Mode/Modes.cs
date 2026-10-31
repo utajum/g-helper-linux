@@ -18,10 +18,11 @@ public static class Modes
     }
 
     /// <summary>Set the current performance mode.</summary>
-    public static void SetCurrent(int mode)
+    public static void SetCurrent(int mode, bool persist = true)
     {
         bool onAc = App.Power?.IsOnAcPower() ?? true;
-        Helpers.AppConfig.Set($"performance_{(onAc ? 1 : 0)}", mode);
+        if (persist)
+            Helpers.AppConfig.Set($"performance_{(onAc ? 1 : 0)}", mode);
         Helpers.AppConfig.Set("performance_mode", mode);
     }
 
