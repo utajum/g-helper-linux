@@ -48,7 +48,7 @@ public static class NvidiaProcessScanner
 
     private static readonly int _selfPid = Environment.ProcessId;
 
-    private static readonly string HelperPath = SysfsHelper.GpuHelperPath;
+    private static string HelperPath => SysfsHelper.GpuHelperPath;
     private static volatile bool _helperChecked;
     private static readonly object _helperLock = new();
 

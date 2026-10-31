@@ -1,7 +1,7 @@
 /*
  * gpu-helper - single root entry point for g-helper's privileged GPU operations.
  *
- * Installed at /opt/ghelper/gpu-helper (root:root 755) and invoked through ONE
+ * Installed at /usr/local/lib/ghelper/gpu-helper (root:root 755) and invoked through ONE
  * bare-path sudoers NOPASSWD entry. Every subcommand validates its arguments
  * against a hardcoded whitelist, it just funnels them through one
  * validated dispatcher. No shell is ever invoked; passthrough subcommands
@@ -114,7 +114,7 @@
  *
  *
  * Sudoers (installed by install.sh, bare path = any subcommand/args):
- *   (root) NOPASSWD: /opt/ghelper/gpu-helper
+ *   (root) NOPASSWD: /usr/local/lib/ghelper/gpu-helper
  *
  * Exit codes: 0 success; 1 usage / not-permitted; 2 invalid signal;
  *             3 sysfs write error; 127 exec failure.

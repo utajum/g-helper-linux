@@ -321,7 +321,7 @@ GHELPER_DEV=1 ./dist/ghelper
 ║                                                                 ║
 ║  0xF0  Binary     /opt/ghelper/ghelper                         ║
 ║  0xF1  Symlink    /usr/local/bin/ghelper                       ║
-║  0xF2  Helpers    /opt/ghelper/gpu-helper, ryzenadj (AMD)      ║
+║  0xF2  Helpers    /usr/local/lib/ghelper/gpu-helper, ryzenadj  ║
 ║  0xF3  Scripts    /usr/local/lib/ghelper/*.sh                  ║
 ║  0xF4  Service    /etc/systemd/system/ghelper-gpu-boot.service ║
 ║  0xF5  sudoers    /etc/sudoers.d/zz-ghelper-gpu                ║

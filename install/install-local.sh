@@ -510,7 +510,7 @@ mkdir -p "$HELPER_DIR"
 _install_file "$SCRIPT_DIR/gpu-block-helper.sh" "$HELPER_DEST" 755 "GPU block helper" || true
 
 if [[ "$MODE" == "install" ]]; then
-    GPU_HELPER_DEST="$INSTALL_DIR/gpu-helper"
+    GPU_HELPER_DEST="$HELPER_DIR/gpu-helper"
     if "$INSTALL_DIR/ghelper" --extract-helper gpu-helper "$GPU_HELPER_DEST" >/dev/null 2>&1; then
         chown root:root "$GPU_HELPER_DEST"
         chmod 755 "$GPU_HELPER_DEST"
@@ -522,7 +522,7 @@ if [[ "$MODE" == "install" ]]; then
     # ryzenadj (upstream RyzenAdj CLI, embedded in ghelper): SMU power/temp
     # tuning. Only useful on AMD Ryzen APUs - skipped elsewhere.
     if grep -q "AuthenticAMD" /proc/cpuinfo && grep -qiE "Ryzen|Custom APU" /proc/cpuinfo; then
-        RYZENADJ_DEST="$INSTALL_DIR/ryzenadj"
+        RYZENADJ_DEST="$HELPER_DIR/ryzenadj"
         if "$INSTALL_DIR/ghelper" --extract-helper ryzenadj "$RYZENADJ_DEST" >/dev/null 2>&1; then
             chown root:root "$RYZENADJ_DEST"
             chmod 755 "$RYZENADJ_DEST"
@@ -533,13 +533,16 @@ if [[ "$MODE" == "install" ]]; then
     else
         _skip "ryzenadj → no AMD Ryzen CPU detected, skipping"
     fi
+
+    # TODO needs to be removed at some point. Legacy helpers in the user-owned $INSTALL_DIR (NOPASSWD root escalation).
+    rm -f "$INSTALL_DIR/gpu-helper" "$INSTALL_DIR/ryzenadj"
 fi
 
 # ryzenadj sudoers line applies when the CPU matches AND the binary is
 # present (presence check so appimage mode keeps an existing grant).
 RYZENADJ_APPLIES=0
 if grep -q "AuthenticAMD" /proc/cpuinfo && grep -qiE "Ryzen|Custom APU" /proc/cpuinfo \
-   && [[ -x "$INSTALL_DIR/ryzenadj" ]]; then
+   && [[ -x "$HELPER_DIR/ryzenadj" ]]; then
     RYZENADJ_APPLIES=1
 fi
 
@@ -548,10 +551,10 @@ fi
 # whitelist, so this is no broader than per-command rules).
 SUDOERS_CONTENT="# G-Helper: passwordless access to the root-owned helper binaries
 ALL ALL=(root) NOPASSWD: $HELPER_DEST
-ALL ALL=(root) NOPASSWD: /opt/ghelper/gpu-helper"
+ALL ALL=(root) NOPASSWD: $HELPER_DIR/gpu-helper"
 if [[ "$RYZENADJ_APPLIES" == "1" ]]; then
     SUDOERS_CONTENT="$SUDOERS_CONTENT
-ALL ALL=(root) NOPASSWD: /opt/ghelper/ryzenadj"
+ALL ALL=(root) NOPASSWD: $HELPER_DIR/ryzenadj"
 fi
 
 if [[ -f "$SUDOERS_DEST" ]] && echo "$SUDOERS_CONTENT" | cmp -s - "$SUDOERS_DEST"; then

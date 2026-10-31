@@ -18,7 +18,7 @@ Its purpose is privileged hardware control: GPU power and PCI
 bind/unbind, embedded controller writes, MSR access, fan curves, TDP
 limits, keyboard remapping.
 
-To do this it installs root-owned helper binaries under /opt/ghelper
+To do this it installs root-owned helpers in /usr/local/lib/ghelper
 and a passwordless sudoers rule for them. That is the documented
 design, not a defect. The application cannot perform its function
 without root access to hardware interfaces.
@@ -60,6 +60,11 @@ Untrusted:
   This includes local denial of service, killing or signalling
   processes, unbinding or power-cycling devices, unloading modules, and
   changing power limits.
+- Tampering with files, processes or settings the local user owns, for
+  example the ghelper binary in /opt/ghelper, ~/.config/ghelper, cache
+  or autostart entries. A compromised user account is already fully
+  compromised. Reports are in scope only if they reach root without
+  the user's authentication.
 - The existence of the root-owned helpers or the passwordless sudoers
   rule that invokes them. Both are required by design and documented
   above.
