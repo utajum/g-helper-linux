@@ -127,7 +127,7 @@ public static class Aura
         var t = new System.Timers.Timer(2000) { AutoReset = true };
         t.Elapsed += (_, _) =>
         {
-            if (!_backlight)
+            if (!BacklightOn())
                 return;
             try
             {
@@ -728,6 +728,18 @@ public static class Aura
         }
     }
 
+    // Fn keys and the desktop slider change brightness without ApplyBrightness.
+    private static bool BacklightOn()
+    {
+        if (!_backlight && (App.Wmi?.GetKeyboardBrightness() ?? 0) > 0)
+        {
+            Logger.WriteLine("Aura: backlight turned on outside G-Helper");
+            _initDirect = true;
+            _backlight = true;
+        }
+        return _backlight;
+    }
+
     /// <summary>
     /// Build the power zone control message.
     /// Controls which lighting zones stay on during boot/sleep/shutdown.
@@ -1162,7 +1174,7 @@ public static class Aura
     /// </summary>
     public static void ApplyDirect(byte r, byte g, byte b, bool init = false)
     {
-        if (!_backlight)
+        if (!BacklightOn())
             return;
 
         // LampArray models ignore legacy 0xBC direct writes
@@ -1238,7 +1250,7 @@ public static class Aura
     /// </summary>
     public static void ApplyDirectZones(byte[] colors, bool init = false)
     {
-        if (!_backlight)
+        if (!BacklightOn())
             return;
 
         // LampArray models ignore legacy 0xBC direct writes
@@ -1382,7 +1394,7 @@ public static class Aura
     /// </summary>
     public static void ApplyDirectLightbar(byte[] colors)
     {
-        if (!_backlight)
+        if (!BacklightOn())
             return;
 
         // LampArray path already paints the bar in SetColors
