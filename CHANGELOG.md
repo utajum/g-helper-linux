@@ -8,6 +8,33 @@
 
 ### Changed
 
+## v1.0.98 (2026-10-31)
+
+<img width="638" height="797" alt="Screenshot_20261031_151620" src="https://github.com/user-attachments/assets/5cc3a9ce-8e71-4d82-8e8f-c6804a6942e3" />
+
+### Added
+
+- App profiles in Extra > Power: pick a game or program and a mode. G-Helper uses that mode while it runs and goes back to your mode for the current power source when it closes (#232).
+- App profiles can target any game (Steam, Heroic, Lutris), one Steam or non-Steam game, a running program, or a program picked from disk. A rule for one game wins over "Any game", and a mode you pick by hand stays until the program closes (#232).
+- Ambient lighting mode: the keyboard follows the screen colors, on X11 and on Wayland through the screen sharing portal and PipeWire. Strix 4-zone keyboards and the lightbar get one color per zone (#215, #217).
+- Logitech MX Master 4 over Bluetooth (#228).
+
+### Fixed
+
+- Security: `gpu-helper` and `ryzenadj`, which sudo runs as root without a password, moved from the user-owned `/opt/ghelper` to root-owned `/usr/local/lib/ghelper`, so the user can no longer replace them. Existing installs move them after the startup prompt (Repair) or a new run of the install script (#234).
+- Heatmap, Battery and GPU Mode lighting stayed dark when keyboard brightness was 0 at start and was turned on later with Fn keys or the desktop slider (#215, #233).
+- KDE Plasma: G-Helper tray icons no longer swap places. Their titles start with "G-Helper", so Plasma keeps them together in a fixed order (#227, #229).
+- Logitech: mice, keyboards, trackballs and touchpads paired to a Unifying or Bolt receiver are found, with their full name (#228).
+- Logitech: battery level and charging state on older HID++ 1.0 mice (#228).
+- Logitech: settings without a real device command are hidden (sensitivity switch, idle effect, idle and sleep timeout, hand detection, side scrolling). Changing them sent commands to other device functions (#228).
+- NixOS: package version follows the latest release in CHANGELOG.md, it was stuck at 1.0.94.
+
+### Changed
+
+- Logitech: polling rates, DPI range and lighting modes come from the device instead of fixed per-model lists. Rainbow shows where the mouse supports it (#228).
+- Logitech: at start, lighting is re-applied only if you changed it in G-Helper, so the mouse keeps its own lighting otherwise (#228).
+- Releases no longer attach `90-ghelper.rules`. The install script and G-Helper install the udev rules themselves.
+
 ## v1.0.97 (2026-10-22)
 
 <img width="667" height="741" alt="image" src="https://github.com/user-attachments/assets/6ac233d3-1ee0-4cdf-97f1-aeda9437c6ea" />
