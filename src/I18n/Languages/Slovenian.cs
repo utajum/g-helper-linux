@@ -703,6 +703,7 @@ public static class Slovenian
         ["aura_flash"] = "Blisk",
         ["aura_heatmap"] = "Toplotna karta",
         ["aura_gpu_mode"] = "Način GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Baterija",
         ["aura_gradient"] = "Preliv",
         ["aura_zone_test"] = "Preizkus con",

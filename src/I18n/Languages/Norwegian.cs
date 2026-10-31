@@ -559,6 +559,7 @@ public static class Norwegian
         ["aura_flash"] = "Blink",
         ["aura_heatmap"] = "Varmekart",
         ["aura_gpu_mode"] = "GPU-modus",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Batteri",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Sonetest",

@@ -556,6 +556,7 @@ public static class Romanian
         ["aura_flash"] = "Bliț",
         ["aura_heatmap"] = "Hartă termică",
         ["aura_gpu_mode"] = "Mod GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Baterie",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Test zone",

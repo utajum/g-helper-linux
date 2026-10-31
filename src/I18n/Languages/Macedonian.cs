@@ -559,6 +559,7 @@ public static class Macedonian
         ["aura_flash"] = "Блесок",
         ["aura_heatmap"] = "Топлинска мапа",
         ["aura_gpu_mode"] = "GPU режим",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Батерија",
         ["aura_gradient"] = "Градиент",
         ["aura_zone_test"] = "Тест на зоните",

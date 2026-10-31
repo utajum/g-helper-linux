@@ -9,9 +9,6 @@ namespace GHelper.Linux.USB;
 /// Values 0-12 match the AURA HID protocol byte values.
 /// Values 20+ are software-driven "custom RGB" modes that don't use
 /// the firmware mode bytes - they timer-paint via ApplyDirect.
-/// 22 (AMBIENT) is intentionally reserved to keep numeric parity with
-/// upstream G-Helper; not yet implemented on Linux because
-/// Wayland screen capture needs xdg-desktop-portal Screencast wiring.
 /// </summary>
 public enum AuraMode : int
 {
@@ -31,7 +28,8 @@ public enum AuraMode : int
     Heatmap = 20,
     // GPU mode → keyboard color. Eco=green, Std=yellow, Ultimate=red. Refreshes when you switch via tray menu.
     GpuMode = 21,
-    // Ambient = 22 (reserved, see class comment)
+    // Screen colors -> keyboard (+ lightbar on Strix). Captured via X11 or the Wayland portal.
+    Ambient = 22,
     // Battery % → keyboard color. Red low, yellow mid, lime full. Unplug AC to watch it drift.
     Battery = 23,
     // Two-color gradient across keyboard + lightbar zones (Strix only). Pick Color1 + Color2; blends left→right.
@@ -140,6 +138,9 @@ public static class Aura
                         break;
                     case AuraMode.Battery:
                         CustomRgb.ApplyBattery();
+                        break;
+                    case AuraMode.Ambient:
+                        CustomRgb.ApplyAmbient();
                         break;
                 }
             }
@@ -268,7 +269,8 @@ public static class Aura
             && _mode != AuraMode.AuraRainbow
             && _mode != AuraMode.Heatmap
             && _mode != AuraMode.GpuMode
-            && _mode != AuraMode.Battery;
+            && _mode != AuraMode.Battery
+            && _mode != AuraMode.Ambient;
     }
 
     /// <summary>Whether the current mode honours the speed dropdown.
@@ -287,6 +289,7 @@ public static class Aura
             && _mode != AuraMode.Heatmap
             && _mode != AuraMode.GpuMode
             && _mode != AuraMode.Battery
+            && _mode != AuraMode.Ambient
             && _mode != AuraMode.Gradient
             && _mode != AuraMode.ZoneTest;
     }
@@ -372,6 +375,7 @@ public static class Aura
         // Software-driven Linux extras (always available outside Ally)
         modes[AuraMode.Heatmap] = Labels.Get("aura_heatmap");
         modes[AuraMode.GpuMode] = Labels.Get("aura_gpu_mode");
+        modes[AuraMode.Ambient] = Labels.Get("aura_ambient");
         modes[AuraMode.Battery] = Labels.Get("aura_battery");
 
         // Gradient + ZoneTest only on per-zone hardware (probe-confirmed)
@@ -1065,8 +1069,15 @@ public static class Aura
         // Custom RGB modes - software-driven, dispatched to CustomRgb.
         // Stop the timer first so a previous mode's tick can't race a new selection.
         _customTimer.Stop();
+        if (Mode != AuraMode.Ambient)
+            Platform.Linux.ScreenCapture.Stop();
         switch (Mode)
         {
+            case AuraMode.Ambient:
+                CustomRgb.ApplyAmbient(true);
+                _customTimer.Interval = AppConfig.Get("aura_refresh", AppConfig.IsStrix() ? 100 : 300);
+                _customTimer.Start();
+                return;
             case AuraMode.Heatmap:
                 CustomRgb.ApplyHeatmap(true);
                 _customTimer.Interval = 2000;

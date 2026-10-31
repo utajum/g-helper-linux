@@ -556,6 +556,7 @@ public static class PortugueseBR
         ["aura_flash"] = "Flash",
         ["aura_heatmap"] = "Mapa de calor",
         ["aura_gpu_mode"] = "Modo GPU",
+        ["aura_ambient"] = "Ambiente",
         ["aura_battery"] = "Bateria",
         ["aura_gradient"] = "Gradiente",
         ["aura_zone_test"] = "Teste de zonas",

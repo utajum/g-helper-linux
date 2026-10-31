@@ -559,6 +559,7 @@ public static class Finnish
         ["aura_flash"] = "Välähdys",
         ["aura_heatmap"] = "Lämpökartta",
         ["aura_gpu_mode"] = "GPU-tila",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Akku",
         ["aura_gradient"] = "Liukuväri",
         ["aura_zone_test"] = "Aluetesti",

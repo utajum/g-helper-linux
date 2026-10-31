@@ -703,6 +703,7 @@ public static class Lithuanian
         ["aura_flash"] = "Blyksnis",
         ["aura_heatmap"] = "Šilumos žemėlapis",
         ["aura_gpu_mode"] = "GPU režimas",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Baterija",
         ["aura_gradient"] = "Gradientas",
         ["aura_zone_test"] = "Zonų testas",

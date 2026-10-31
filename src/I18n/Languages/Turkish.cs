@@ -556,6 +556,7 @@ public static class Turkish
         ["aura_flash"] = "Flaş",
         ["aura_heatmap"] = "Isı Haritası",
         ["aura_gpu_mode"] = "GPU Modu",
+        ["aura_ambient"] = "Ortam",
         ["aura_battery"] = "Pil",
         ["aura_gradient"] = "Gradyan",
         ["aura_zone_test"] = "Bölge testi",

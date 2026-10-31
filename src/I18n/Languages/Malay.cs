@@ -703,6 +703,7 @@ public static class Malay
         ["aura_flash"] = "Denyar",
         ["aura_heatmap"] = "Peta haba",
         ["aura_gpu_mode"] = "Mod GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Bateri",
         ["aura_gradient"] = "Kecerunan",
         ["aura_zone_test"] = "Ujian zon",

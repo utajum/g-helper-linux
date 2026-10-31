@@ -559,6 +559,7 @@ public static class Greek
         ["aura_flash"] = "Αναλαμπή",
         ["aura_heatmap"] = "Θερμικός χάρτης",
         ["aura_gpu_mode"] = "Λειτουργία GPU",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Μπαταρία",
         ["aura_gradient"] = "Διαβάθμιση",
         ["aura_zone_test"] = "Δοκιμή ζωνών",

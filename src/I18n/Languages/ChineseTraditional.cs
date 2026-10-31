@@ -559,6 +559,7 @@ public static class ChineseTraditional
         ["aura_flash"] = "閃爍",
         ["aura_heatmap"] = "熱力圖",
         ["aura_gpu_mode"] = "GPU 模式",
+        ["aura_ambient"] = "環境",
         ["aura_battery"] = "電池",
         ["aura_gradient"] = "漸層",
         ["aura_zone_test"] = "區域測試",

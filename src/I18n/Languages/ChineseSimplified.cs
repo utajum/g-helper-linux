@@ -559,6 +559,7 @@ public static class ChineseSimplified
         ["aura_flash"] = "闪烁",
         ["aura_heatmap"] = "热力图",
         ["aura_gpu_mode"] = "GPU 模式",
+        ["aura_ambient"] = "环境",
         ["aura_battery"] = "电池",
         ["aura_gradient"] = "渐变",
         ["aura_zone_test"] = "区域测试",

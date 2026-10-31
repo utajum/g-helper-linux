@@ -556,6 +556,7 @@ public static class Dutch
         ["aura_flash"] = "Flits",
         ["aura_heatmap"] = "Heatmap",
         ["aura_gpu_mode"] = "GPU-modus",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Batterij",
         ["aura_gradient"] = "Verloop",
         ["aura_zone_test"] = "Zonetest",

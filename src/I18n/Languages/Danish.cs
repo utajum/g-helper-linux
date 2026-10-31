@@ -559,6 +559,7 @@ public static class Danish
         ["aura_flash"] = "Blink",
         ["aura_heatmap"] = "Varmekort",
         ["aura_gpu_mode"] = "GPU-tilstand",
+        ["aura_ambient"] = "Ambient",
         ["aura_battery"] = "Batteri",
         ["aura_gradient"] = "Gradient",
         ["aura_zone_test"] = "Zonetest",
