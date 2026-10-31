@@ -153,6 +153,16 @@ public static partial class Installer
     // (%wheel ALL=(ALL) ALL), which silently re-required a password.
     private const string LegacySudoersPath = "/etc/sudoers.d/ghelper-gpu";
 
+    // TODO needs to be removed at some point. Helpers formerly installed in the user-owned /opt/ghelper (NOPASSWD root escalation).
+    private static readonly Dictionary<string, string> LegacyHelperPaths = new()
+    {
+        ["gpu_helper"] = "/opt/ghelper/gpu-helper",
+        ["ryzenadj"] = "/opt/ghelper/ryzenadj",
+    };
+
+    // TODO needs to be removed at some point. sudoers last: it must name helpers already in place.
+    private static readonly string[] HelperPathGroup = ["gpu_helper", "ryzenadj", "gpu_boot_script", "sudoers"];
+
     private const string BootService = "ghelper-gpu-boot.service";
     private const string HicolorDir = "/usr/share/icons/hicolor";
     private const string NvidiaVulkanIcd = "/usr/share/vulkan/icd.d/nvidia_icd.json";
@@ -1062,6 +1072,10 @@ public static partial class Installer
         var post = new HashSet<string>();
         int failures = 0;
 
+        // TODO needs to be removed at some point. Files that name the helper paths must move together.
+        if (LegacyHelperPaths.Values.Any(File.Exists) && ids.Any(HelperPathGroup.Contains))
+            ids = [.. ids.Where(id => id != "sudoers").Union(HelperPathGroup.Where(id => byId[id].Applies()))];
+
         foreach (var id in ids)
         {
             if (!byId.TryGetValue(id, out var f))
@@ -1087,6 +1101,9 @@ public static partial class Installer
             if (WriteRoot(f, data, out string err))
             {
                 Console.WriteLine($"applied {id} -> {f.Dest}");
+                if (LegacyHelperPaths.TryGetValue(id, out var legacy))
+                    // TODO needs to be removed at some point
+                    TryDelete(legacy);
                 foreach (var p in f.Post)
                     post.Add(p);
             }
@@ -1174,6 +1191,9 @@ public static partial class Installer
         // Clean up legacy modules-load.d file superseded by ghelper.conf
         TryDelete(LegacyModulesLoadPath);
         TryDelete(LegacySudoersPath);
+        foreach (var legacy in LegacyHelperPaths.Values)
+            // TODO needs to be removed at some point
+            TryDelete(legacy);
 
         RestoreVulkanIcd();
         RunRemovePostActions(post);

@@ -79,7 +79,7 @@ pci_rescan() {
 }
 
 # Path to the privileged gpu-helper binary (whitelists rmmod/unbind/smi).
-GPU_HELPER="${ROOT:+$ROOT}/opt/ghelper/gpu-helper"
+GPU_HELPER="${ROOT:+$ROOT}/usr/local/lib/ghelper/gpu-helper"
 
 # Run gpu-helper with a timeout. Args: <timeout_sec> <subcommand> [args...]
 # Returns the gpu-helper exit code, or 124 on timeout.

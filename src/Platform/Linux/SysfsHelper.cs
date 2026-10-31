@@ -687,14 +687,15 @@ public static class SysfsHelper
 
     public static readonly string SudoPath = ResolveSudoPath();
 
-    public static readonly string GpuHelperPath = ResolveGpuHelperPath();
+    // Re-resolved per call so a Repair that moves the helper applies without restart.
+    public static string GpuHelperPath => ResolveGpuHelperPath();
 
     /// <summary>Where gpu-helper should be installed on this machine.
-    /// Sealed-root SteamOS cannot write /opt; /etc is a writable overlay.</summary>
+    /// Sealed-root SteamOS cannot write /usr/local; /etc is a writable overlay.</summary>
     internal static string DefaultGpuHelperInstallPath =>
         ImmutableOs.IsSteamOs && ImmutableOs.IsRootReadOnly()
             ? "/etc/ghelper/gpu-helper"
-            : "/opt/ghelper/gpu-helper";
+            : "/usr/local/lib/ghelper/gpu-helper";
 
     private static string ResolveGpuHelperPath()
     {
@@ -704,21 +705,22 @@ public static class SysfsHelper
             return nixPath;
 
         // /etc/ghelper is the sealed-root SteamOS location (writable overlay).
-        foreach (var p in new[] { "/opt/ghelper/gpu-helper", "/etc/ghelper/gpu-helper", "/usr/local/lib/ghelper/gpu-helper" })
+        // TODO needs to be removed at some point. /opt/ghelper is the legacy user-owned location, used only until Repair.
+        foreach (var p in new[] { "/usr/local/lib/ghelper/gpu-helper", "/etc/ghelper/gpu-helper", "/opt/ghelper/gpu-helper" })
             if (System.IO.File.Exists(p))
                 return p;
 
         return DefaultGpuHelperInstallPath;
     }
 
-    public static readonly string RyzenadjPath = ResolveRyzenadjPath();
+    public static string RyzenadjPath => ResolveRyzenadjPath();
 
     /// <summary>Where the bundled ryzenadj CLI should be installed.
-    /// Sealed-root SteamOS cannot write /opt; /etc is a writable overlay.</summary>
+    /// Sealed-root SteamOS cannot write /usr/local; /etc is a writable overlay.</summary>
     internal static string DefaultRyzenadjInstallPath =>
         ImmutableOs.IsSteamOs && ImmutableOs.IsRootReadOnly()
             ? "/etc/ghelper/ryzenadj"
-            : "/opt/ghelper/ryzenadj";
+            : "/usr/local/lib/ghelper/ryzenadj";
 
     private static string ResolveRyzenadjPath()
     {
@@ -727,7 +729,8 @@ public static class SysfsHelper
         if (nixPath != null)
             return nixPath;
 
-        foreach (var p in new[] { "/opt/ghelper/ryzenadj", "/etc/ghelper/ryzenadj" })
+        // TODO needs to be removed at some point. /opt/ghelper is the legacy user-owned location, used only until Repair.
+        foreach (var p in new[] { "/usr/local/lib/ghelper/ryzenadj", "/etc/ghelper/ryzenadj", "/opt/ghelper/ryzenadj" })
             if (System.IO.File.Exists(p))
                 return p;
 
