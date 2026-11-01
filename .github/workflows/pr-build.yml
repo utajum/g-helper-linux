@@ -59,6 +59,12 @@ jobs:
       - name: Run ghelper-gpu-boot.sh scenarios
         run: bash install/tests/test-ghelper-gpu-boot.sh
 
+      - name: Run gpu-block-helper.sh scenarios
+        run: bash install/tests/test-gpu-block-helper.sh
+
+      - name: Run gpu-helper argument checks
+        run: bash install/tests/test-gpu-helper.sh
+
   build:
     runs-on: ubuntu-latest
     steps:

@@ -21,6 +21,7 @@ public sealed class FakeAsusWmi : IHardwareControl
     public bool MuxLatchedUntilReboot; // readback keeps the old MUX until reboot
     public int PendingMux = -1;
     public Action? OnSetGpuEco; // runs inside SetGpuEco, e.g. to hold the switch busy
+    public bool IgnoreSetGpuEco; // write succeeds but readback keeps the old value
 
     // Call recording - useful for asserting side effects.
     public readonly List<(string Method, object? Arg)> Calls = new();
@@ -42,6 +43,7 @@ public sealed class FakeAsusWmi : IHardwareControl
             throw ex;
         }
         if (ThrowOnSetGpuEco) throw new IOException("simulated firmware rejection");
+        if (IgnoreSetGpuEco) return;
         EcoEnabled = enabled;
     }
 
