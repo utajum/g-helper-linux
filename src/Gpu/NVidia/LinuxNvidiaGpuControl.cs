@@ -483,7 +483,7 @@ public class LinuxNvidiaGpuControl : IGpuControl
         return null;
     }
 
-    public bool IsClockOffsetSupported() => QueryNvmlInfo()?.CoreRange != null;
+    public bool IsClockOffsetSupported() => QueryNvmlInfo()?.CoreRange is { } r && r.max > r.min;
 
     /// <summary>What this card supports, derived from the cached nvml-info probe.</summary>
     public GpuCapabilities GetCapabilities()
