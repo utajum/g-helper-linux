@@ -30,6 +30,7 @@ public static class Program
             XrandrPanelTests.RunAll();
             HidPPDecodeTests.RunAll();
             AppProfilesTests.RunAll();
+            DgpuIdleBackoffTests.RunAll();
         }
         finally
         {

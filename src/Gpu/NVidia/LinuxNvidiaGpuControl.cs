@@ -71,15 +71,30 @@ public class LinuxNvidiaGpuControl : IGpuControl
                 SysfsHelper.GpuHelperPath, new[] { "nvml-temp" }, allowPkexec: false);
             if (string.IsNullOrWhiteSpace(output))
                 return -1;
-            foreach (var token in output.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-            {
-                if (token.StartsWith("temp=", StringComparison.Ordinal) &&
-                    int.TryParse(token.AsSpan(5), out int t) && t > 0)
-                    return t;
-            }
+            int temp = ParseNvmlTemp(output, out bool busy);
+            if (busy)
+                DgpuIdleBackoff.NoteBusy(Environment.TickCount64);
+            return temp;
         }
         catch { }
         return -1;
+    }
+
+    /// <summary>Parse gpu-helper nvml-temp output: temp in C (-1 if absent), busy = util above 0.</summary>
+    internal static int ParseNvmlTemp(string output, out bool busy)
+    {
+        int temp = -1;
+        busy = false;
+        foreach (var token in output.Split(new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (token.StartsWith("temp=", StringComparison.Ordinal) &&
+                int.TryParse(token.AsSpan(5), out int t) && t > 0)
+                temp = t;
+            else if (token.StartsWith("util=", StringComparison.Ordinal) &&
+                int.TryParse(token.AsSpan(5), out int u) && u > 0)
+                busy = true;
+        }
+        return temp;
     }
 
     // Temperature
@@ -108,7 +123,11 @@ public class LinuxNvidiaGpuControl : IGpuControl
     {
         var output = RunNvidiaSmi("--query-gpu=utilization.gpu", "--format=csv,noheader,nounits");
         if (output != null && int.TryParse(output.Trim(), out int usage))
+        {
+            if (usage > 0)
+                DgpuIdleBackoff.NoteBusy(Environment.TickCount64);
             return usage;
+        }
 
         return null;
     }
@@ -400,8 +419,9 @@ public class LinuxNvidiaGpuControl : IGpuControl
         if (_nvmlCache != null && (DateTime.UtcNow - _nvmlCacheAt) < NvmlCacheTtl)
             return _nvmlCache;
         // Don't wake a suspended or idle dGPU to refresh NVML info; serve the
-        // last cache (applied offsets/ranges stay valid across suspend) or null.
-        if (ShouldSkipDgpuTelemetry())
+        // last cache (applied offsets/ranges stay valid across suspend). With no
+        // cache yet, probe an awake dGPU anyway: mode apply needs the capabilities.
+        if (ShouldSkipDgpuTelemetry() && (_nvmlCache != null || IsDgpuSuspended()))
             return _nvmlCache;
         if (!NvidiaProcessScanner.EnsureHelper())
             return null;
@@ -729,6 +749,7 @@ public class LinuxNvidiaGpuControl : IGpuControl
     // re-scan slowly so it appears after a later switch to Standard.
     private static string? _rtStatusPath;
     private static DateTime _rtRescanUtc;
+    private static bool _idleBackoffLogged;
 
     /// <summary>True when the discrete NVIDIA GPU is runtime-suspended (D3cold).
     /// Passive sysfs read; callers use it to avoid waking the dGPU for telemetry.</summary>
@@ -768,7 +789,10 @@ public class LinuxNvidiaGpuControl : IGpuControl
     public static bool ShouldSkipDgpuTelemetry()
     {
         if (IsDgpuSuspended())
+        {
+            DgpuIdleBackoff.NoteSuspended(Environment.TickCount64);
             return true;
+        }
         if (_rtStatusPath == null)
             return false;
         var powerDir = Path.GetDirectoryName(_rtStatusPath)!;
@@ -776,7 +800,16 @@ public class LinuxNvidiaGpuControl : IGpuControl
         if (SysfsHelper.ReadAttribute(Path.Combine(powerDir, "control")) != "auto")
             return false;
         // usage_count=0: no client holds the GPU, suspend is pending.
-        return SysfsHelper.ReadInt(Path.Combine(powerDir, "runtime_usage"), -1) == 0;
+        int usage = SysfsHelper.ReadInt(Path.Combine(powerDir, "runtime_usage"), -1);
+        if (usage >= 0)
+            return usage == 0;
+        // runtime_usage needs CONFIG_PM_ADVANCED_DEBUG; fall back to backoff (issue #157).
+        if (!_idleBackoffLogged)
+        {
+            _idleBackoffLogged = true;
+            Helpers.Logger.WriteLine("NVIDIA: runtime_usage unavailable, using idle backoff for dGPU telemetry");
+        }
+        return DgpuIdleBackoff.ShouldSkip(Environment.TickCount64);
     }
 
     /// <summary>

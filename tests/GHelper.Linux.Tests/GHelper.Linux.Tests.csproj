@@ -46,6 +46,7 @@
     <Compile Include="../../src/Gpu/GPUModeControl.cs" />
     <Compile Include="../../src/Gpu/NVidia/GpuQueryGate.cs" />
     <Compile Include="../../src/Gpu/NVidia/NvidiaProcessScanner.cs" />
+    <Compile Include="../../src/Gpu/NVidia/DgpuIdleBackoff.cs" />
     <!-- LinuxNvidiaGpuControl.GetTempViaNvml() NVML temp fallback + its interface -->
     <Compile Include="../../src/Gpu/NVidia/LinuxNvidiaGpuControl.cs" />
     <Compile Include="../../src/Platform/IGpuControl.cs" />
