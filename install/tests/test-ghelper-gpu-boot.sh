@@ -1599,6 +1599,258 @@ test_90_mux0_clean_ultimate() {
     expect_file_content /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode 0 || return 1
 }
 
+# Raw WMI debugfs node set. Arg: dsts content.
+add_debugfs() {
+    local d="$SANDBOX/sys/kernel/debug/asus-nb-wmi"
+    mkdir -p "$d"
+    : > "$d/dev_id"
+    : > "$d/ctrl_param"
+    echo "$1" > "$d/dsts"
+    echo "= 0x1" > "$d/devs"
+}
+
+# 91: Raw WMI Eco on ROG: DEVS 0x00090020 with value 1, trigger consumed.
+test_91_raw_wmi_eco_rog_registers() {
+    set_legacy_mux 1
+    add_debugfs "= 0x10000"
+    set_trigger eco
+    echo 2 > "$SANDBOX/etc/ghelper/eco-retry-count"
+    run_boot_script || return 1
+    expect_log_NOT_contains "Vivobook" || return 1
+    expect_file_content /sys/kernel/debug/asus-nb-wmi/dev_id 0x00090020 || return 1
+    expect_file_content /sys/kernel/debug/asus-nb-wmi/ctrl_param 1 || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+    expect_file_missing /etc/ghelper/eco-retry-count || return 1
+}
+
+# 92: Raw WMI Eco on Vivobook: ROG id answers "No such device", 0x00090120 is used.
+test_92_raw_wmi_eco_vivobook_fallback() {
+    set_legacy_mux 1
+    add_debugfs "cat: dsts: No such device"
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "eco: ROG endpoint not supported, trying Vivobook \(0x00090120\)" || return 1
+    expect_log_contains "DEVS 0x00090120, 1" || return 1
+    expect_file_content /sys/kernel/debug/asus-nb-wmi/dev_id 0x00090120 || return 1
+    expect_file_content /sys/kernel/debug/asus-nb-wmi/ctrl_param 1 || return 1
+}
+
+# 93: Raw WMI Standard on Vivobook: value 0 to 0x00090120.
+test_93_raw_wmi_standard_vivobook_fallback() {
+    set_legacy_mux 1
+    add_debugfs "cat: dsts: No such device"
+    set_trigger standard
+    run_boot_script || return 1
+    expect_log_contains "standard: ROG endpoint not supported, trying Vivobook" || return 1
+    expect_file_content /sys/kernel/debug/asus-nb-wmi/dev_id 0x00090120 || return 1
+    expect_file_content /sys/kernel/debug/asus-nb-wmi/ctrl_param 0 || return 1
+    expect_log_contains "PCI bus rescan triggered \(write completed\)" || return 1
+}
+
+# 94: Raw WMI Eco with the persistent marker installs and keeps the block.
+test_94_raw_wmi_persistent_eco_keeps_block() {
+    set_legacy_mux 1
+    add_debugfs "= 0x10000"
+    set_persistent eco
+    run_boot_script || return 1
+    expect_log_contains "raw WMI second write" || return 1
+    expect_file_exists /etc/modprobe.d/ghelper-gpu-block.conf || return 1
+    expect_file_exists /etc/udev/rules.d/50-ghelper-remove-dgpu.rules || return 1
+    expect_file_content /etc/ghelper/persistent-gpu-mode eco || return 1
+}
+
+# 95: Eco without sysfs and without debugfs records a failure.
+test_95_eco_no_sysfs_no_debugfs() {
+    set_legacy_mux 1
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "eco: failure #1: no sysfs or debugfs node available" || return 1
+    expect_file_content /etc/ghelper/eco-retry-count 1 || return 1
+}
+
+# 96: Standard with the dGPU already on still rescans (recovers a failed Eco).
+test_96_standard_dgpu_on_rescans_for_recovery() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    set_trigger standard
+    run_boot_script || return 1
+    expect_log_contains "standard: dgpu already enabled" || return 1
+    expect_log_contains "PCI bus rescan triggered \(recovery for prior failed Eco\)" || return 1
+    expect_file_content /sys/bus/pci/rescan 1 || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 0 || return 1
+}
+
+# 97: Standard from Eco writes dgpu_disable=0 and rescans.
+test_97_standard_from_eco_enables_and_rescans() {
+    set_legacy_dgpu 1
+    set_legacy_mux  1
+    set_modprobe_block
+    set_udev_block
+    set_trigger standard
+    run_boot_script || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 0 || return 1
+    expect_log_contains "PCI bus rescan triggered \(write completed\)" || return 1
+    expect_file_content /sys/bus/pci/rescan 1 || return 1
+    expect_file_missing /etc/modprobe.d/ghelper-gpu-block.conf || return 1
+    expect_file_missing /etc/udev/rules.d/50-ghelper-remove-dgpu.rules || return 1
+}
+
+# 98: Optimized from Eco enables the dGPU like Standard.
+test_98_optimized_from_eco_enables() {
+    set_legacy_dgpu 1
+    set_legacy_mux  1
+    set_trigger optimized
+    run_boot_script || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 0 || return 1
+    expect_log_contains "optimized: writing dgpu_disable=0" || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+}
+
+# 99: Ultimate with the MUX latch not visible yet: enables the dGPU, logs MUX.
+test_99_ultimate_logs_mux_readback() {
+    set_legacy_dgpu 1
+    set_legacy_mux  1
+    set_trigger ultimate
+    run_boot_script || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 0 || return 1
+    expect_log_contains "ultimate: MUX=1 \(expected 0 if latch took effect\)" || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode 1 || return 1
+}
+
+# 100: Ultimate without a dgpu_disable node still rescans and finishes.
+test_100_ultimate_no_dgpu_node() {
+    set_legacy_mux 0
+    set_trigger ultimate
+    run_boot_script || return 1
+    expect_log_contains "ultimate: PCI bus rescan triggered" || return 1
+    expect_log_contains "ultimate: MUX=0" || return 1
+    expect_log_contains "Boot GPU mode application complete" || return 1
+}
+
+# 101: MUX=0 + persistent Eco + Standard trigger: persistent dropped, Standard applied.
+test_101_mux0_persistent_eco_with_standard_trigger() {
+    set_legacy_dgpu 0
+    set_legacy_mux  0
+    set_persistent eco
+    set_trigger standard
+    run_boot_script || return 1
+    expect_log_contains "discarding impossible persistent Eco" || return 1
+    expect_file_missing /etc/ghelper/persistent-gpu-mode || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/gpu_mux_mode 1 || return 1
+    expect_log_contains "Pending GPU mode: 'standard'" || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+    expect_file_exists /etc/ghelper/last-recovery || return 1
+}
+
+# 102: Legacy asus-nb-wmi node wins over firmware-attributes.
+test_102_legacy_preferred_over_fwattr() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    set_fwattr_dgpu 0
+    set_fwattr_mux  1
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "dgpu_disable resolved: .*/sys/bus/platform/devices/asus-nb-wmi/dgpu_disable" || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 1 || return 1
+    expect_file_content /sys/class/firmware-attributes/asus-armoury/attributes/dgpu_disable/current_value 0 || return 1
+}
+
+# 103: Second legacy base /sys/devices/platform/asus-nb-wmi is found.
+test_103_second_legacy_base() {
+    echo 0 > "$SANDBOX/sys/devices/platform/asus-nb-wmi/dgpu_disable"
+    echo 1 > "$SANDBOX/sys/devices/platform/asus-nb-wmi/gpu_mux_mode"
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "dgpu_disable resolved: .*/sys/devices/platform/asus-nb-wmi/dgpu_disable" || return 1
+    expect_file_content /sys/devices/platform/asus-nb-wmi/dgpu_disable 1 || return 1
+}
+
+# 104: Saved suspend variant is restored when the kernel offers it.
+test_104_mem_sleep_restored() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    mkdir -p "$SANDBOX/sys/power"
+    echo "s2idle [deep]" > "$SANDBOX/sys/power/mem_sleep"
+    echo "s2idle" > "$SANDBOX/etc/ghelper/mem-sleep"
+    run_boot_script || return 1
+    expect_log_contains "mem_sleep restored: s2idle" || return 1
+    expect_file_content /sys/power/mem_sleep s2idle || return 1
+}
+
+# 105: Variant the kernel does not offer is skipped.
+test_105_mem_sleep_not_offered() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    mkdir -p "$SANDBOX/sys/power"
+    echo "[s2idle]" > "$SANDBOX/sys/power/mem_sleep"
+    echo "deep" > "$SANDBOX/etc/ghelper/mem-sleep"
+    run_boot_script || return 1
+    expect_log_contains "mem_sleep: 'deep' not offered by kernel, skipping" || return 1
+    expect_file_content /sys/power/mem_sleep "[s2idle]" || return 1
+}
+
+# 106: Invalid saved value is never written.
+test_106_mem_sleep_invalid_value() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    mkdir -p "$SANDBOX/sys/power"
+    echo "s2idle [deep]" > "$SANDBOX/sys/power/mem_sleep"
+    echo "deep;x" > "$SANDBOX/etc/ghelper/mem-sleep"
+    run_boot_script || return 1
+    expect_log_contains "mem_sleep: invalid value" || return 1
+    expect_file_content /sys/power/mem_sleep "s2idle[deep]" || return 1
+}
+
+# 107: Suspend variant is restored before the MUX=0 early exit.
+test_107_mem_sleep_before_mux0_exit() {
+    set_legacy_dgpu 0
+    set_legacy_mux  0
+    mkdir -p "$SANDBOX/sys/power"
+    echo "s2idle [deep]" > "$SANDBOX/sys/power/mem_sleep"
+    echo "deep" > "$SANDBOX/etc/ghelper/mem-sleep"
+    run_boot_script || return 1
+    expect_log_contains "mem_sleep restored: deep" || return 1
+    expect_log_contains "MUX=0 safety check complete" || return 1
+}
+
+# 108: No saved suspend variant: mem_sleep untouched.
+test_108_mem_sleep_no_state_file() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    mkdir -p "$SANDBOX/sys/power"
+    echo "s2idle [deep]" > "$SANDBOX/sys/power/mem_sleep"
+    run_boot_script || return 1
+    expect_log_NOT_contains "ghelper-gpu-boot: mem_sleep" || return 1
+    expect_file_content /sys/power/mem_sleep "s2idle[deep]" || return 1
+}
+
+# 109: Eco success clears an earlier failure marker and counter.
+test_109_eco_success_clears_failure_marker() {
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    echo 2 > "$SANDBOX/etc/ghelper/eco-retry-count"
+    echo "old failure" > "$SANDBOX/etc/ghelper/last-eco-failed"
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "dgpu_disable=1 confirmed" || return 1
+    expect_file_missing /etc/ghelper/eco-retry-count || return 1
+    expect_file_missing /etc/ghelper/last-eco-failed || return 1
+}
+
+# 110: PCI backend Standard with a stale failure counter resets it.
+test_110_pci_standard_resets_counter() {
+    set_backend pci
+    set_modprobe_block
+    set_udev_block
+    echo 2 > "$SANDBOX/etc/ghelper/eco-retry-count"
+    set_trigger standard
+    run_boot_script || return 1
+    expect_file_missing /etc/ghelper/eco-retry-count || return 1
+    expect_file_missing /etc/modprobe.d/ghelper-gpu-block.conf || return 1
+    expect_file_content /sys/bus/pci/rescan 1 || return 1
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "═"
 echo " ghelper-gpu-boot.sh scenario tests"
@@ -1693,6 +1945,26 @@ for name in \
     88_mux0_persistent_eco_nvidia_bound \
     89_mux0_oneshot_eco_with_blocks \
     90_mux0_clean_ultimate \
+    91_raw_wmi_eco_rog_registers \
+    92_raw_wmi_eco_vivobook_fallback \
+    93_raw_wmi_standard_vivobook_fallback \
+    94_raw_wmi_persistent_eco_keeps_block \
+    95_eco_no_sysfs_no_debugfs \
+    96_standard_dgpu_on_rescans_for_recovery \
+    97_standard_from_eco_enables_and_rescans \
+    98_optimized_from_eco_enables \
+    99_ultimate_logs_mux_readback \
+    100_ultimate_no_dgpu_node \
+    101_mux0_persistent_eco_with_standard_trigger \
+    102_legacy_preferred_over_fwattr \
+    103_second_legacy_base \
+    104_mem_sleep_restored \
+    105_mem_sleep_not_offered \
+    106_mem_sleep_invalid_value \
+    107_mem_sleep_before_mux0_exit \
+    108_mem_sleep_no_state_file \
+    109_eco_success_clears_failure_marker \
+    110_pci_standard_resets_counter \
 ; do
     scenario "$name"
 done

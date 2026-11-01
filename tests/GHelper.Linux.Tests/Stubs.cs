@@ -8,8 +8,8 @@ namespace GHelper.Linux.USB;
 /// Stub AURA mode enum. The real enum lives in src/USB/Aura.cs and is
 /// referenced by GPUModeControl.RequestModeSwitch when deciding whether
 /// to refresh the keyboard's GPU-color effect after a successful mode
-/// switch. Tests never set <c>aura_mode</c> so the cast result never
-/// equals <c>GpuMode</c> and <c>ApplyGpuColor()</c> is never called.
+/// switch. Only tests that set <c>aura_mode</c> to <c>GpuMode</c> reach
+/// <c>ApplyGpuColor()</c>.
 /// </summary>
 public enum AuraMode
 {
@@ -20,13 +20,12 @@ public enum AuraMode
 }
 
 /// <summary>
-/// Stub for the AURA keyboard colour helper. No-op in tests; production
+/// Stub for the AURA keyboard colour helper. Counts calls; production
 /// code talks to the HID device which is absent in the test environment.
 /// </summary>
 public static class CustomRgb
 {
-    public static void ApplyGpuColor()
-    {
-        // Intentionally empty - stubbed for tests.
-    }
+    public static int Calls;
+
+    public static void ApplyGpuColor() => Calls++;
 }

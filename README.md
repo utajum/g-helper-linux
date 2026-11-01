@@ -292,6 +292,8 @@ sudo ./install/install-local.sh
 # Before opening a PR (CI runs these too)
 dotnet run -c Debug --project tests/GHelper.Linux.Tests
 bash install/tests/test-ghelper-gpu-boot.sh
+bash install/tests/test-gpu-block-helper.sh
+bash install/tests/test-gpu-helper.sh
 ./scripts/i18n-check.sh
 ```
 

@@ -3,6 +3,7 @@
 
 using GHelper.Linux.Gpu;
 using GHelper.Linux.Helpers;
+using GHelper.Linux.Platform.Linux;
 
 namespace GHelper.Linux.Tests;
 
@@ -32,6 +33,47 @@ public static class GpuSwitchTests
         AppConfig.Set("gpu_optimized_enabled", 1);
         AppConfig.Set("gpu_auto", 1);
         sb.Power.OnAc = onAc;
+    }
+
+    // Fake PCI function under the sandbox /sys/bus/pci/devices.
+    private static string Device(Harness.Sandbox sb, string bdf, string vendor, string cls,
+        string? bootVga = null, string? runtime = null, bool drm = false, bool driver = false, bool panel = false)
+    {
+        string dev = Path.Combine(sb.TempRoot, "sys", "bus", "pci", "devices", bdf);
+        Directory.CreateDirectory(dev);
+        File.WriteAllText(Path.Combine(dev, "vendor"), vendor + "\n");
+        File.WriteAllText(Path.Combine(dev, "class"), cls + "\n");
+        if (bootVga != null)
+            File.WriteAllText(Path.Combine(dev, "boot_vga"), bootVga + "\n");
+        if (runtime != null)
+        {
+            Directory.CreateDirectory(Path.Combine(dev, "power"));
+            File.WriteAllText(Path.Combine(dev, "power", "runtime_status"), runtime + "\n");
+        }
+        if (drm || panel)
+            Directory.CreateDirectory(Path.Combine(dev, "drm", "card1"));
+        if (panel)
+        {
+            string conn = Path.Combine(dev, "drm", "card1", "card1-eDP-1");
+            Directory.CreateDirectory(conn);
+            File.WriteAllText(Path.Combine(conn, "status"), "connected\n");
+        }
+        if (driver)
+            Directory.CreateDirectory(Path.Combine(dev, "driver"));
+        LinuxAsusWmi.InvalidateGpuPresenceCache();
+        return bdf;
+    }
+
+    private static void AmdDgpu(Harness.Sandbox sb, string? runtime, bool drm = true) =>
+        Device(sb, "0000:03:00.0", "0x1002", "0x030000", bootVga: "0", runtime: runtime, drm: drm);
+
+    private static void Module(Harness.Sandbox sb, string name, int? refcnt)
+    {
+        string dir = Path.Combine(sb.TempRoot, "sys", "module", name);
+        Directory.CreateDirectory(dir);
+        if (refcnt != null)
+            File.WriteAllText(Path.Combine(dir, "refcnt"), refcnt + "\n");
+        LinuxAsusWmi.InvalidateGpuPresenceCache();
     }
 
     private static string Saved() => AppConfig.GetString("gpu_mode") ?? "";
@@ -531,6 +573,563 @@ public static class GpuSwitchTests
             Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.ScheduleModeForReboot(GpuMode.Eco), "result");
             Harness.Assert(sb.ModprobePresent(), "driver block written");
             Harness.Assert(!MuxWritten(sb), "no MUX write");
+        });
+
+        Harness.Scenario("NoMux_CurrentMode_EcoAndOptimized", sb =>
+        {
+            Wmi(sb, 1, true);
+            sb.Wmi.MuxModeSupported = false;
+            Harness.AssertEqual(GpuMode.Eco, sb.Controller.GetCurrentMode(), "dgpu_disable=1");
+            AppConfig.Set("gpu_auto", 1);
+            Harness.AssertEqual(GpuMode.Optimized, sb.Controller.GetCurrentMode(), "gpu_auto");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- dGPU driver detection (IsDgpuDriverActive) ---");
+
+        Harness.Scenario("Driver_NoModulesNoAmd_Idle", sb =>
+            Harness.Assert(!sb.Controller.IsDgpuDriverActive(), "idle"));
+
+        Harness.Scenario("Driver_NvidiaDrmInUse_Active", sb =>
+        {
+            Module(sb, "nvidia", 0);
+            Module(sb, "nvidia_drm", 1);
+            Harness.Assert(sb.Controller.IsDgpuDriverActive(), "nvidia_drm refcnt 1");
+        });
+
+        Harness.Scenario("Driver_NvidiaUvmInUse_Active", sb =>
+        {
+            Module(sb, "nvidia", 0);
+            Module(sb, "nvidia_uvm", 2);
+            Harness.Assert(sb.Controller.IsDgpuDriverActive(), "CUDA holds nvidia_uvm");
+        });
+
+        Harness.Scenario("Driver_NvidiaModesetInUse_Active", sb =>
+        {
+            Module(sb, "nvidia", 0);
+            Module(sb, "nvidia_modeset", 1);
+            Harness.Assert(sb.Controller.IsDgpuDriverActive(), "nvidia_modeset refcnt 1");
+        });
+
+        Harness.Scenario("Driver_NvidiaRefcntUnreadable_AssumedActive", sb =>
+        {
+            Module(sb, "nvidia", null);
+            Harness.Assert(sb.Controller.IsDgpuDriverActive(), "unreadable refcnt counts as active");
+        });
+
+        Harness.Scenario("Driver_AmdDgpuActive_Active", sb =>
+        {
+            AmdDgpu(sb, "active");
+            Harness.Assert(sb.Controller.IsDgpuDriverActive(), "runtime_status=active");
+        });
+
+        Harness.Scenario("Driver_AmdDgpuSuspended_Idle", sb =>
+        {
+            AmdDgpu(sb, "suspended");
+            Harness.Assert(!sb.Controller.IsDgpuDriverActive(), "runtime_status=suspended");
+        });
+
+        Harness.Scenario("Driver_AmdDgpuNoRuntimeStatus_AssumedActive", sb =>
+        {
+            AmdDgpu(sb, null);
+            Harness.Assert(sb.Controller.IsDgpuDriverActive(), "unknown status counts as active");
+        });
+
+        Harness.Scenario("Driver_AmdIgpuOnly_Idle", sb =>
+        {
+            Device(sb, "0000:06:00.0", "0x1002", "0x030000", bootVga: "1", runtime: "active", drm: true);
+            Harness.Assert(!sb.Controller.IsDgpuDriverActive(), "boot GPU is not the dGPU");
+        });
+
+        Harness.Scenario("Driver_AmdDgpuWithoutDrm_Idle", sb =>
+        {
+            AmdDgpu(sb, "active", drm: false);
+            Harness.Assert(!sb.Controller.IsDgpuDriverActive(), "no DRM node, no amdgpu driver");
+        });
+
+        Harness.Scenario("Driver_AmdActive_ClickEco_DriverBlocking", sb =>
+        {
+            Wmi(sb, 1, false);
+            AmdDgpu(sb, "active");
+            Harness.AssertEqual(GpuSwitchResult.DriverBlocking, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.Assert(!EcoWritten(sb), "no dgpu_disable=1 while amdgpu is active");
+        });
+
+        Harness.Scenario("Driver_AmdSuspended_ClickEco_Applied", sb =>
+        {
+            Wmi(sb, 1, false);
+            AmdDgpu(sb, "suspended");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.Assert(sb.Wmi.EcoEnabled, "dgpu_disable=1");
+        });
+
+        Harness.Scenario("Driver_Pci_AmdSuspended_ClickEco_Applied", sb =>
+        {
+            Pci(sb);
+            AmdDgpu(sb, "suspended");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "PCI Eco blocks written");
+        });
+
+        Harness.Scenario("Driver_Pci_AmdActive_ClickEco_DriverBlocking", sb =>
+        {
+            Pci(sb);
+            AmdDgpu(sb, "active");
+            Harness.AssertEqual(GpuSwitchResult.DriverBlocking, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.Assert(!sb.ModprobePresent(), "no blocks before the dialog answer");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- dGPU runtime status ---");
+
+        Harness.Scenario("Runtime_NoDevices_Null", sb =>
+            Harness.AssertEqual<string?>(null, GPUModeControl.DgpuRuntimeStatus(), "status"));
+
+        Harness.Scenario("Runtime_NvidiaDgpu_Status", sb =>
+        {
+            Device(sb, "0000:01:00.0", "0x10de", "0x030000", runtime: "suspended");
+            Harness.AssertEqual<string?>("suspended", GPUModeControl.DgpuRuntimeStatus(), "status");
+        });
+
+        Harness.Scenario("Runtime_Nvidia3dController_Status", sb =>
+        {
+            Device(sb, "0000:01:00.0", "0x10de", "0x030200", runtime: "active");
+            Harness.AssertEqual<string?>("active", GPUModeControl.DgpuRuntimeStatus(), "status");
+        });
+
+        Harness.Scenario("Runtime_AmdDgpu_Status", sb =>
+        {
+            Device(sb, "0000:06:00.0", "0x1002", "0x030000", bootVga: "1", runtime: "active");
+            Device(sb, "0000:03:00.0", "0x1002", "0x030000", bootVga: "0", runtime: "suspended");
+            Harness.AssertEqual<string?>("suspended", GPUModeControl.DgpuRuntimeStatus(), "status of the non-boot GPU");
+        });
+
+        Harness.Scenario("Runtime_OnlyBootGpuAudioAndIntel_Null", sb =>
+        {
+            Device(sb, "0000:06:00.0", "0x1002", "0x030000", bootVga: "1", runtime: "active");
+            Device(sb, "0000:01:00.1", "0x10de", "0x040300", runtime: "active");
+            Device(sb, "0000:00:02.0", "0x8086", "0x030000", runtime: "active");
+            Harness.AssertEqual<string?>(null, GPUModeControl.DgpuRuntimeStatus(), "status");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- Driverless dGPU recovery ---");
+
+        Harness.Scenario("Driverless_NvidiaOnBus_ClickStandard_RunsEnable", sb =>
+        {
+            Wmi(sb, 1, false);
+            Device(sb, "0000:01:00.0", "0x10de", "0x030000");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+            Harness.Assert(sb.Wmi.Calls.Any(c => c.Method == "SetGpuEco" && c.Arg is false), "enable path ran");
+            Harness.AssertEqual("standard", Saved(), "config");
+        });
+
+        Harness.Scenario("Driverless_NvidiaBound_ClickStandard_AlreadySet", sb =>
+        {
+            Wmi(sb, 1, false);
+            Device(sb, "0000:01:00.0", "0x10de", "0x030000", driver: true);
+            Harness.AssertEqual(GpuSwitchResult.AlreadySet, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+            Harness.Assert(!sb.Wmi.Calls.Any(c => c.Method == "SetGpuEco"), "no enable path");
+        });
+
+        Harness.Scenario("Driverless_NvidiaAudioOnly_AlreadySet", sb =>
+        {
+            Wmi(sb, 1, false);
+            Device(sb, "0000:01:00.1", "0x10de", "0x040300");
+            Harness.AssertEqual(GpuSwitchResult.AlreadySet, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+        });
+
+        Harness.Scenario("Driverless_AmdDgpu_ClickStandard_RunsEnable", sb =>
+        {
+            Wmi(sb, 1, false);
+            Device(sb, "0000:03:00.0", "0x1002", "0x030000", bootVga: "0");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+        });
+
+        Harness.Scenario("Driverless_AmdDrivingPanel_NotTheDgpu", sb =>
+        {
+            Wmi(sb, 1, false);
+            Device(sb, "0000:03:00.0", "0x1002", "0x030000", bootVga: "0", panel: true);
+            Harness.AssertEqual(GpuSwitchResult.AlreadySet, sb.Controller.RequestModeSwitch(GpuMode.Standard), "GPU with the eDP panel is the iGPU");
+        });
+
+        Harness.Scenario("Driverless_AmdBootVga_NotTheDgpu", sb =>
+        {
+            Wmi(sb, 1, false);
+            Device(sb, "0000:06:00.0", "0x1002", "0x030000", bootVga: "1");
+            Harness.AssertEqual(GpuSwitchResult.AlreadySet, sb.Controller.RequestModeSwitch(GpuMode.Standard), "boot GPU is the iGPU");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- Failed hardware writes ---");
+
+        Harness.Scenario("Fail_EcoReadbackStaysZero_FailedConfigKept", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("gpu_mode", "standard");
+            sb.Wmi.IgnoreSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.AssertEqual("standard", Saved(), "config not changed");
+        });
+
+        Harness.Scenario("Fail_EcoExitDoesNotTake_NoMuxWrite", sb =>
+        {
+            Wmi(sb, 1, true);
+            AppConfig.Set("gpu_mode", "eco");
+            sb.Wmi.IgnoreSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.RequestModeSwitch(GpuMode.Ultimate), "result");
+            Harness.Assert(!MuxWritten(sb), "no MUX write while dgpu_disable=1");
+            Harness.AssertEqual("eco", Saved(), "config not changed");
+        });
+
+        Harness.Scenario("Fail_EcoExitThrows_NoMuxWrite", sb =>
+        {
+            Wmi(sb, 1, true);
+            AppConfig.Set("gpu_mode", "eco");
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.RequestModeSwitch(GpuMode.Ultimate), "result");
+            Harness.Assert(!MuxWritten(sb), "no MUX write");
+            Harness.AssertEqual("eco", Saved(), "config not changed");
+        });
+
+        Harness.Scenario("Fail_MuxWriteThrows_FailedNoLatch", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("gpu_mode", "standard");
+            sb.Wmi.ThrowOnSetGpuMuxMode = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.RequestModeSwitch(GpuMode.Ultimate), "result");
+            Harness.AssertEqual("standard", Saved(), "config not changed");
+            Harness.AssertEqual("", AppConfig.GetString("mux_zero_latched_boot_id") ?? "", "no MUX=0 latch flag");
+        });
+
+        Harness.Scenario("Fail_MuxWriteThrows_LaterEcoStillAllowed", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.Wmi.ThrowOnSetGpuMuxMode = true;
+            sb.Controller.RequestModeSwitch(GpuMode.Ultimate);
+            sb.Wmi.ThrowOnSetGpuMuxMode = false;
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Eco), "Eco after a failed MUX write");
+        });
+
+        Harness.Scenario("Fail_AfterRebootUltimateMuxThrows_NoLatchFlag", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.Wmi.ThrowOnSetGpuMuxMode = true;
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.ScheduleModeForReboot(GpuMode.Ultimate), "result");
+            Harness.AssertEqual("ultimate", Saved(), "startup retries from config");
+            Harness.AssertEqual("", AppConfig.GetString("mux_zero_latched_boot_id") ?? "", "no MUX=0 latch flag");
+        });
+
+        Harness.Scenario("Fail_SwitchNowReadbackStaysZero_Deferred", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.Wmi.IgnoreSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Deferred, sb.Controller.TryReleaseAndSwitch(), "result");
+            Harness.AssertEqual("eco", Saved(), "Eco kept for next boot");
+        });
+
+        Harness.Scenario("Fail_SwitchNowUltimateMuxThrows_NoEcoBlocks", sb =>
+        {
+            Wmi(sb, 0, false);
+            sb.Wmi.ThrowOnSetGpuMuxMode = true;
+            Harness.AssertEqual(GpuSwitchResult.Deferred, sb.Controller.TryReleaseAndSwitch(), "result");
+            Harness.Assert(!sb.ModprobePresent() && !sb.UdevPresent(), "no Eco blocks for a MUX=0 boot");
+            Harness.Assert(!EcoWritten(sb), "no dgpu_disable=1");
+        });
+
+        Harness.Scenario("Fail_StartupEcoReadbackStaysZero_Failed", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("gpu_mode", "eco");
+            sb.Wmi.IgnoreSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.ApplyPendingOnStartup(), "result");
+        });
+
+        Harness.Scenario("Fail_StartupEcoWriteThrows_Failed", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("gpu_mode", "eco");
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.ApplyPendingOnStartup(), "result");
+        });
+
+        Harness.Scenario("Fail_StartupMuxWriteThrows_Failed", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("gpu_mode", "ultimate");
+            sb.Wmi.ThrowOnSetGpuMuxMode = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.ApplyPendingOnStartup(), "result");
+        });
+
+        Harness.Scenario("Fail_StartupEcoExitThrows_NoMuxWrite", sb =>
+        {
+            Wmi(sb, 1, true);
+            AppConfig.Set("gpu_mode", "ultimate");
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.ApplyPendingOnStartup(), "result");
+            Harness.Assert(!MuxWritten(sb), "no MUX write while dgpu_disable=1");
+        });
+
+        Harness.Scenario("Fail_StartupEnableThrows_Failed", sb =>
+        {
+            Wmi(sb, 1, true);
+            AppConfig.Set("gpu_mode", "standard");
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.ApplyPendingOnStartup(), "result");
+        });
+
+        Harness.Scenario("Fail_AutoAcEnableThrows_Failed", sb =>
+        {
+            Wmi(sb, 1, true);
+            Optimized(onAc: true, sb);
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.AutoGpuSwitch(), "result");
+        });
+
+        Harness.Scenario("Fail_AutoBatteryReadbackStaysZero_Failed", sb =>
+        {
+            Wmi(sb, 1, false);
+            Optimized(onAc: false, sb);
+            sb.Wmi.IgnoreSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.AutoGpuSwitch(), "result");
+        });
+
+        Harness.Scenario("Fail_ShutdownEcoThrows_NoCrash", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("gpu_mode", "eco");
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            sb.Controller.ApplyPendingOnShutdown();
+            Harness.Assert(!sb.Wmi.EcoEnabled, "dGPU still on");
+        });
+
+        Harness.Scenario("Fail_EnableThrows_Failed", sb =>
+        {
+            Wmi(sb, 1, true);
+            AppConfig.Set("gpu_mode", "eco");
+            sb.Wmi.ThrowOnSetGpuEco = true;
+            Harness.AssertEqual(GpuSwitchResult.Failed, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+            Harness.AssertEqual("eco", Saved(), "config not changed");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- PCI backend: pending switch and callbacks ---");
+
+        Harness.Scenario("PciPending_EcoScheduled_ClickStandard_LiveUndo", sb =>
+        {
+            Pci(sb);
+            sb.WriteBlockArtifacts();
+            sb.WriteTrigger("eco");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+            Harness.Assert(!sb.TriggerPresent() && !sb.ModprobePresent() && !sb.UdevPresent(), "pending Eco undone");
+        });
+
+        Harness.Scenario("PciPending_EcoScheduled_ClickEco_StillPending", sb =>
+        {
+            Pci(sb);
+            sb.WriteBlockArtifacts();
+            sb.WriteTrigger("eco");
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.AssertEqual("eco", sb.TriggerContent(), "trigger");
+            Harness.Assert(sb.ModprobePresent(), "blocks kept");
+        });
+
+        Harness.Scenario("PciPending_StandardScheduled_ClickEco_LiveEco", sb =>
+        {
+            Pci(sb);
+            sb.WriteTrigger("standard");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
+            Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks written");
+            Harness.AssertEqual("eco", sb.TriggerContent(), "trigger now eco");
+        });
+
+        Harness.Scenario("PciPending_StandardScheduled_ClickStandard_StillPending", sb =>
+        {
+            Pci(sb);
+            sb.WriteTrigger("standard");
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
+            Harness.AssertEqual("standard", sb.TriggerContent(), "trigger");
+            Harness.Assert(sb.Controller.IsPendingReboot(), "pending reboot");
+        });
+
+        Harness.Scenario("Pci_DriverActive_DialogThenAfterReboot", sb =>
+        {
+            Pci(sb);
+            sb.WriteFakeNvidiaModule();
+            Harness.AssertEqual(GpuSwitchResult.DriverBlocking, sb.Controller.RequestModeSwitch(GpuMode.Eco), "click");
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.ScheduleModeForReboot(GpuMode.Eco), "After Reboot");
+            Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks written");
+            Harness.AssertEqual("eco", sb.TriggerContent(), "trigger");
+            Harness.Assert(sb.Controller.IsPendingReboot(), "pending reboot");
+            Harness.AssertEqual(GpuMode.Eco, sb.Controller.GetCurrentMode(), "UI shows Eco");
+        });
+
+        Harness.Scenario("Pci_CurrentMode_IgnoresMuxAndFirmwareEco", sb =>
+        {
+            Pci(sb);
+            sb.Wmi.MuxMode = 0;
+            sb.Wmi.EcoEnabled = true;
+            AppConfig.Set("gpu_auto", 1);
+            Harness.AssertEqual(GpuMode.Standard, sb.Controller.GetCurrentMode(), "no blocks = Standard");
+        });
+
+        Harness.Scenario("Pci_SwitchNow_InvokesLiveTransitionCallback", sb =>
+        {
+            Pci(sb);
+            int calls = 0;
+            GPUModeControl.OnLivePciTransition = () => calls++;
+            try
+            {
+                Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.TryReleaseAndSwitch(), "result");
+                Harness.AssertEqual(1, calls, "callback calls");
+            }
+            finally
+            {
+                GPUModeControl.OnLivePciTransition = null;
+            }
+        });
+
+        Harness.Scenario("PushBackendMarker_KeepsBlocksAndTrigger", sb =>
+        {
+            sb.WriteBlockArtifacts();
+            sb.WriteTrigger("eco");
+            sb.Controller.PushBackendMarker("pci");
+            Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks kept");
+            Harness.AssertEqual("eco", sb.TriggerContent(), "trigger kept");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- After Reboot: more targets ---");
+
+        Harness.Scenario("AfterReboot_Wmi_OptimizedFromUltimate_LatchesMuxOne", sb =>
+        {
+            Wmi(sb, 0, false);
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.ScheduleModeForReboot(GpuMode.Optimized), "result");
+            Harness.AssertEqual(1, sb.Wmi.MuxMode, "MUX latched to 1");
+            Harness.AssertEqual("optimized", Saved(), "config");
+        });
+
+        Harness.Scenario("AfterReboot_Wmi_Standard_RemovesStaleBlocks", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.WriteBlockArtifacts();
+            sb.WriteTrigger("eco");
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.ScheduleModeForReboot(GpuMode.Standard), "result");
+            Harness.Assert(!sb.ModprobePresent() && !sb.UdevPresent() && !sb.TriggerPresent(), "stale Eco artifacts removed");
+            Harness.Assert(!MuxWritten(sb), "no MUX write");
+        });
+
+        Harness.Scenario("AfterReboot_Wmi_EcoTwice_SameArtifacts", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.Controller.ScheduleModeForReboot(GpuMode.Eco);
+            Harness.AssertEqual(GpuSwitchResult.RebootRequired, sb.Controller.ScheduleModeForReboot(GpuMode.Eco), "second time");
+            Harness.AssertEqual("eco", sb.TriggerContent(), "trigger");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- Mode changes that touch gpu_auto ---");
+
+        Harness.Scenario("Optimized_ThenStandard_ClearsGpuAuto", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.Controller.RequestModeSwitch(GpuMode.Optimized);
+            Harness.Assert(AppConfig.Is("gpu_auto"), "gpu_auto set");
+            sb.Controller.RequestModeSwitch(GpuMode.Standard);
+            Harness.Assert(!AppConfig.Is("gpu_auto"), "gpu_auto cleared");
+            Harness.AssertEqual(GpuMode.Standard, sb.Controller.GetCurrentMode(), "UI shows Standard");
+        });
+
+        Harness.Scenario("Optimized_ThenEco_ClearsGpuAuto", sb =>
+        {
+            Wmi(sb, 1, false);
+            sb.Controller.RequestModeSwitch(GpuMode.Optimized);
+            sb.Controller.RequestModeSwitch(GpuMode.Eco);
+            Harness.Assert(!AppConfig.Is("gpu_auto"), "gpu_auto cleared");
+            Harness.AssertEqual(GpuMode.Eco, sb.Controller.GetCurrentMode(), "UI shows Eco");
+        });
+
+        Harness.Scenario("Pending_Wmi_OptimizedSaved_MuxZero_True", sb =>
+        {
+            Wmi(sb, 0, false);
+            AppConfig.Set("gpu_mode", "optimized");
+            Harness.Assert(sb.Controller.IsPendingReboot(), "MUX change pending");
+        });
+
+        Harness.Scenario("Pending_Wmi_NothingSaved_False", sb =>
+        {
+            Wmi(sb, 0, true);
+            Harness.Assert(!sb.Controller.IsPendingReboot(), "nothing pending");
+        });
+
+        Harness.Scenario("Startup_UnknownSavedMode_TreatedAsStandard", sb =>
+        {
+            Wmi(sb, 1, true);
+            AppConfig.Set("gpu_mode", "turbo");
+            Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.ApplyPendingOnStartup(), "result");
+            Harness.Assert(!sb.Wmi.EcoEnabled, "dGPU enabled");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- GPU backend setting ---");
+
+        Harness.Scenario("Backend_Values", _ =>
+        {
+            foreach (var (raw, want) in new[] { ("pci", "pci"), (" PCI ", "pci"), ("asus-wmi", "asus-wmi"), ("ASUS-WMI", "asus-wmi"), ("garbage", "asus-wmi"), ("", "asus-wmi") })
+            {
+                AppConfig.Set("gpu_backend", raw);
+                Harness.AssertEqual(want, AppConfig.GetGpuBackend(), $"gpu_backend '{raw}'");
+                Harness.AssertEqual(want == "pci", AppConfig.IsPciGpuBackend(), $"IsPciGpuBackend '{raw}'");
+            }
+        });
+
+        Harness.Scenario("Backend_Unset_AsusWmi", _ =>
+            Harness.AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "default"));
+
+        Harness.Scenario("Backend_AutoDetectKeepsUserChoice", _ =>
+        {
+            foreach (var choice in new[] { "asus-wmi", "pci" })
+            {
+                AppConfig.Set("gpu_backend", choice);
+                AppConfig.AutoDetectGpuBackendIfUnset();
+                Harness.AssertEqual(choice, AppConfig.GetGpuBackend(), "user choice kept");
+            }
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- Keyboard GPU-mode color ---");
+
+        Harness.Scenario("AuraGpuColor_RefreshedOnAppliedAndAlreadySet", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("aura_mode", (int)USB.AuraMode.GpuMode);
+            USB.CustomRgb.Calls = 0;
+            sb.Controller.RequestModeSwitch(GpuMode.Eco);
+            Harness.AssertEqual(1, USB.CustomRgb.Calls, "after Applied");
+            sb.Controller.RequestModeSwitch(GpuMode.Eco);
+            Harness.AssertEqual(2, USB.CustomRgb.Calls, "after AlreadySet");
+        });
+
+        Harness.Scenario("AuraGpuColor_NotRefreshedWhenNothingChanged", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("aura_mode", (int)USB.AuraMode.GpuMode);
+            USB.CustomRgb.Calls = 0;
+            sb.WriteFakeNvidiaModule();
+            sb.Controller.RequestModeSwitch(GpuMode.Eco);
+            Harness.AssertEqual(0, USB.CustomRgb.Calls, "after DriverBlocking");
+            sb.Wmi.ThrowOnSetGpuMuxMode = true;
+            sb.Controller.RequestModeSwitch(GpuMode.Ultimate);
+            Harness.AssertEqual(0, USB.CustomRgb.Calls, "after Failed");
+        });
+
+        Harness.Scenario("AuraGpuColor_OtherModeUntouched", sb =>
+        {
+            Wmi(sb, 1, false);
+            AppConfig.Set("aura_mode", (int)USB.AuraMode.Static);
+            USB.CustomRgb.Calls = 0;
+            sb.Controller.RequestModeSwitch(GpuMode.Eco);
+            Harness.AssertEqual(0, USB.CustomRgb.Calls, "static color stays");
         });
     }
 }
