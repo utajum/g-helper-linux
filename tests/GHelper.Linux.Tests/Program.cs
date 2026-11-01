@@ -25,6 +25,7 @@ public static class Program
         try
         {
             Scenarios.RunAll();
+            GpuSwitchTests.RunAll();
             ManualFanTests.RunAll();
             XrandrPanelTests.RunAll();
             HidPPDecodeTests.RunAll();

@@ -903,10 +903,17 @@ public static class SysfsHelper
         return (pkOut, pkErr, pkExit);
     }
 
+    // Test runs must never execute privileged commands on the host.
+    private static bool BlockedInTests(string command) =>
+        (command == SudoPath || command == "pkexec")
+        && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GHELPER_TEST_ROOT"));
+
     /// <summary>Run a command and return (exitCode, stdout, stderr). Never returns null.</summary>
     private static (int exitCode, string stdout, string stderr) RunProcessWithStderr(
         string command, string[] args, int timeoutMs)
     {
+        if (BlockedInTests(command))
+            return (-1, "", "blocked in tests");
         try
         {
             var psi = new System.Diagnostics.ProcessStartInfo
@@ -978,6 +985,8 @@ public static class SysfsHelper
 
     private static string? RunProcess(System.Diagnostics.ProcessStartInfo psi, string fullCommand, int timeoutMs)
     {
+        if (BlockedInTests(psi.FileName))
+            return null;
         try
         {
             using var proc = System.Diagnostics.Process.Start(psi);
