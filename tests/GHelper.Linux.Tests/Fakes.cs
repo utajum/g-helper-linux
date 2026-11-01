@@ -18,6 +18,9 @@ public sealed class FakeAsusWmi : IHardwareControl
     public bool ThrowOnSetGpuEco;      // simulate firmware rejection
     public bool ThrowOnSetGpuMuxMode;
     public Exception? NextSetGpuEcoException;
+    public bool MuxLatchedUntilReboot; // readback keeps the old MUX until reboot
+    public int PendingMux = -1;
+    public Action? OnSetGpuEco; // runs inside SetGpuEco, e.g. to hold the switch busy
 
     // Call recording - useful for asserting side effects.
     public readonly List<(string Method, object? Arg)> Calls = new();
@@ -31,6 +34,7 @@ public sealed class FakeAsusWmi : IHardwareControl
     public void SetGpuEco(bool enabled)
     {
         Calls.Add(("SetGpuEco", enabled));
+        OnSetGpuEco?.Invoke();
         if (NextSetGpuEcoException != null)
         {
             var ex = NextSetGpuEcoException;
@@ -44,7 +48,7 @@ public sealed class FakeAsusWmi : IHardwareControl
     public int GetGpuMuxMode()
     {
         Calls.Add(("GetGpuMuxMode", null));
-        return MuxModeSupported ? MuxMode : 1;
+        return MuxModeSupported ? MuxMode : -1;
     }
 
     public void SetGpuMuxMode(int mode)
@@ -52,7 +56,8 @@ public sealed class FakeAsusWmi : IHardwareControl
         Calls.Add(("SetGpuMuxMode", mode));
         if (ThrowOnSetGpuMuxMode) throw new IOException("simulated MUX rejection");
         if (EcoEnabled) throw new InvalidOperationException("MUX write rejected while dgpu_disable=1");
-        MuxMode = mode;
+        if (MuxLatchedUntilReboot) PendingMux = mode;
+        else MuxMode = mode;
     }
 
     public bool IsFeatureSupported(string feature)

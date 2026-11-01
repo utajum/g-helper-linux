@@ -2922,7 +2922,7 @@ public class GPUModeControl
 
         try
         {
-            string pciDir = "/sys/bus/pci/devices";
+            string pciDir = TestPathPrefix + "/sys/bus/pci/devices";
             if (!Directory.Exists(pciDir))
                 return null;
 
