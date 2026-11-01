@@ -557,7 +557,7 @@ public static class AppConfig
         ContainsModel("G835L") || ContainsModel("G815L") ||
         ContainsModel("FA506") || ContainsModel("FX517") || ContainsModel("FX608");
 
-    public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("M560") || ContainsModel("GZ302") || IsOnlyAIMAX();
+    public static bool NoGpu() => Is("no_gpu") || ContainsModel("UX540") || ContainsModel("UX5606") || ContainsModel("M560") || ContainsModel("GZ302") || IsOnlyAIMAX();
     public static bool IsAMDiGPU() => ContainsModel("GV301RA") || ContainsModel("GV302XA") || ContainsModel("GZ302") || IsOnlyAIMAX() || IsAlly() ||
         ContainsModel("BM140") || ContainsModel("BM150") || ContainsModel("BM3406CH") || ContainsModel("BM3606CH") ||
         ContainsModel("E1404F") || ContainsModel("L5404") || ContainsModel("M1405") || ContainsModel("M1407") ||
@@ -679,7 +679,7 @@ public static class AppConfig
         ContainsModel("X1502") || ContainsModel("X1504V") || ContainsModel("X1505") || ContainsModel("X1605E") ||
         ContainsModel("X1605P") || ContainsModel("X1605V") || ContainsModel("X1607") || ContainsModel("X1704M") ||
         ContainsModel("X1704V") || ContainsModel("X515U");
-    public static bool NoAura() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("GA502IU") || ContainsModel("HN7306") || ContainsModel("H7606") || ContainsModel("M6500X") ||
+    public static bool NoAura() => (ContainsModel("GA401I") && !ContainsModel("GA401IHR")) || ContainsModel("GA502IU") || ContainsModel("HN7306") || ContainsModel("H760") || ContainsModel("H740") || ContainsModel("M6500X") ||
         ContainsModel("E410K") || ContainsModel("E510K") || ContainsModel("M1405Y") || ContainsModel("M3401Q") ||
         ContainsModel("M3500") || ContainsModel("M7400Q") || ContainsModel("UX482EAR") || ContainsModel("X1502Z") ||
         ContainsModel("X1605E") || ContainsModel("X515U");
@@ -812,7 +812,7 @@ public static class AppConfig
         ContainsModel("K660") || ContainsModel("UX84") || ContainsModel("M650") || ContainsModel("M550") ||
         ContainsModel("M540") || ContainsModel("K340") || ContainsModel("K350") || ContainsModel("M140") ||
         ContainsModel("S540") || ContainsModel("S550") || ContainsModel("M7400") || ContainsModel("N650") ||
-        ContainsModel("HN7306") || ContainsModel("H760") || ContainsModel("UX5406") || ContainsModel("M5606") ||
+        ContainsModel("HN7306") || ContainsModel("H760") || ContainsModel("H740") || ContainsModel("UX5406") || ContainsModel("M5606") ||
         ContainsModel("X513") || ContainsModel("N7400") || ContainsModel("UX760") || ContainsModel("Q530VJ") ||
         ContainsModel("TP3407") || ContainsModel("HT7407") || ContainsModel("3607");
     public static bool IsNoOverdrive() => Is("no_overdrive");
