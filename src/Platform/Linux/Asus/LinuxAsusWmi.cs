@@ -384,17 +384,21 @@ public class LinuxAsusWmi : IHardwareControl
         // Write all curve data points FIRST.
         // Each sysfs write to auto_point files updates the in-kernel fan_curve_data struct
         // and sets data->enabled = false (preventing premature writes to EC).
+        // Kernel 7.4+ rejects falling curves: never write a point below the previous one.
+        int temp = 0, fan = 0;
         for (int i = 0; i < 8; i++)
         {
+            temp = Math.Max(temp, curve[i]);
+            fan = Math.Max(fan, curve[8 + i]);
             // Temperature: asus_custom_fan_curve sysfs uses raw degrees (NOT millidegrees)
             SysfsHelper.WriteInt(
                 Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_temp"),
-                curve[i]);
+                temp);
 
             // Percentage 0-100 → PWM 0-255
             SysfsHelper.WriteInt(
                 Path.Combine(_asusFanCurveHwmonDir, $"pwm{pwmIndex}_auto_point{i + 1}_pwm"),
-                curve[8 + i] * 255 / 100);
+                fan * 255 / 100);
         }
 
         // Enable custom curve: pwm_enable=1 sets data->enabled=true and calls
