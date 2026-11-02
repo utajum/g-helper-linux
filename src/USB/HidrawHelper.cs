@@ -54,17 +54,9 @@ public static class HidrawHelper
     // sysfs idVendor file format: 4-char lowercase hex, no 0x prefix
     private const string ASUS_VENDOR_HEX = "0b05";
 
-    // Known AURA-capable product IDs (union of AsusHid.MAIN_AURA_PIDS + REAR_LIGHT_PIDS).
-    // Used only by the I2C-HID fallback path; the rear-light Z13 is USB-HID and
-    // will never be discovered through here in practice, but we keep its PID in
-    // the set for completeness.
-    private static readonly HashSet<ushort> AuraProductIds = new()
-    {
-        0x1A30, 0x1854, 0x1869, 0x1866, 0x19B6, 0x1822, 0x1837,
-        0x184A, 0x183D, 0x8502, 0x1807, 0x17E0, 0x18C6, 0x1ABE,
-        0x1B4C, 0x1B6E, 0x1B2C, 0x8854,
-        0x193B  // Slash LED bar (2024 models: GA403, GU605)
-    };
+    // AsusHid.ALL_PIDS + 2024 Slash bar; used for probes and writes on any bus
+    private static readonly HashSet<ushort> AuraProductIds =
+        AsusHid.ALL_PIDS.Select(p => (ushort)p).Append(AnimeMatrix.SlashDevice.ProductIdStandard).ToHashSet();
 
     // P/Invoke
 

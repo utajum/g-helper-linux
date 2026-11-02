@@ -967,7 +967,7 @@ public static class Aura
         /* LSFT ISO\ Z    X    C    V    B    N    M    ,    .    /  RSFT RSFT RSFT ARWU NXT15 NM1  NM2  NM3  NMER */
            105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 139, 121, 122, 123, 124, 125,
         /* LCTL LFNC LWIN LALT           SPC            RALT RFNC RCTL      ARWL ARWD ARWR PRT15      NM0  NMPD NMER */
-           126, 127, 128, 129,           131,           135, 136, 137,      159, 160, 161, 142,       144, 145, 146,
+           126, 127, 128, 129,           131,           135, 136, 137, 138, 159, 160, 161, 142,       144, 145, 146,
         /* LB1  LB2  LB3                                                    ARW? ARWL? ARWD? ARWR?     LB4  LB5  LB6  */
            174, 173, 172,                                                   120, 140, 141, 143,       171, 170, 169,
         /* KSTN LOGO LIDL LIDR */
@@ -989,7 +989,7 @@ public static class Aura
         /* LSFT ISO\ Z    X    C    V    B    N    M    ,    .    /  RSFT RSFT RSFT ARWU NXT15 NM1  NM2  NM3  NMER */
              0,   0,   0,   0,   1,   1,   1,   1,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3,   3,   3,   3,
         /* LCTL LFNC LWIN LALT           SPC            RALT RFNC RCTL      ARWL ARWD ARWR PRT15      NM0  NMPD NMER */
-             0,   0,   0,   0,            1,              2,   2,   2,        3,   3,   3,   3,         3,   3,   3,
+             0,   0,   0,   0,            1,              2,   2,   2,   2,   3,   3,   3,   3,         3,   3,   3,
         /* LB1  LB1  LB3                                                    ARW? ARW? ARW? ARW?       LB4  LB5  LB6  */
              5,   5,   4,                                                     3,   3,   3,   3,         6,   7,   7,
         /* KSTN LOGO LIDL LIDR */
@@ -1018,7 +1018,7 @@ public static class Aura
         /* LSFT ISO\ Z    X    C    V    B    N    M    ,    .    /  RSFT RSFT RSFT ARWU NXT15 NM1  NM2  NM3  NMER */
              0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
         /* LCTL LFNC LWIN LALT           SPC            RALT RFNC RCTL      ARWL ARWD ARWR PRT15      NM0  NMPD NMER */
-             0,   0,   0,   0,            1,              1,   2,   2,        2,   2,   2,   3,         3,   3,   3,
+             0,   0,   0,   0,            1,              1,   2,   2,   2,   2,   2,   2,   3,         3,   3,   3,
         /* LB1  LB1  LB3                                                    ARW? ARW? ARW? ARW?       LB4  LB5  LB6  */
              5,   5,   4,                                                     2,   2,   2,   3,         6,   7,   7,
         /* KSTN LOGO LIDL LIDR */
@@ -1281,8 +1281,8 @@ public static class Aura
         {
             _initDirect = false;
             // SetFeature handshake instead of output write; ancient Strix
-            // firmware wants trailing 0
-            AsusHid.SetFeatureAura(new byte[] { AsusHid.AURA_ID, 0xBC, (byte)(IsOldStrix ? 0 : 1) });
+            // firmware and S17 want trailing 0
+            AsusHid.SetFeatureAura(new byte[] { AsusHid.AURA_ID, 0xBC, (byte)(IsOldStrix || AppConfig.IsS17() ? 0 : 1) });
             Thread.Sleep(50);
         }
 

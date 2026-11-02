@@ -73,6 +73,7 @@ public static class PeripheralsProvider
         DetectMouse(new Mouse.Models.HarpeAceAimLabEditionWired());
         DetectMouse(new Mouse.Models.HarpeAceMiniWired());
         DetectMouse(new Mouse.Models.HarpeAceMiniOmni());
+        DetectMouse(new Mouse.Models.HarpeMiniCore());
         DetectMouse(new Mouse.Models.HarpeIIAceWireless());
         DetectMouse(new Mouse.Models.HarpeIIAceWired());
         DetectMouse(new Mouse.Models.TUFM3());

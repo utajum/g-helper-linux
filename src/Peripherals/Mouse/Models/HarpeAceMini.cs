@@ -25,3 +25,11 @@ public class HarpeAceMiniOmni : HarpeAceMiniWired
     public HarpeAceMiniOmni() : base(0x1ACE, "mi_02&col03", true, 0x03) { }
     public override string GetDisplayName() => "ROG Harpe Ace Mini";
 }
+
+public class HarpeMiniCore : HarpeAceMiniWired
+{
+    public HarpeMiniCore() : base(0x1C8F, "mi_00", false) { }
+    public override string GetDisplayName() => "ROG Harpe Mini Core";
+    public override uint MaxDPI() => 12000;
+    public override bool HasXYDPI() => false;
+}
