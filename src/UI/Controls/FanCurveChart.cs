@@ -300,7 +300,7 @@ public class FanCurveChart : Control
                 lo = data[8 + _dragIndex - 1];
             if (_dragIndex < PointCount - 1)
                 hi = data[8 + _dragIndex + 1];
-            fan = Math.Clamp(fan, lo, Math.Max(lo, hi));
+            fan = Math.Clamp(fan, Math.Min(lo, hi), Math.Max(lo, hi));
             data[8 + _dragIndex] = (byte)fan;
         }
 
