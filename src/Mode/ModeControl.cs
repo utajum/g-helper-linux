@@ -725,6 +725,9 @@ public class ModeControl
     // (RyzenSmu, CO steps); Intel uses the OC voltage-offset mailbox
     // (IntelUndervolt, millivolts). Exactly one backend is available per machine.
 
+    // Last offset the app applied (Windows _cpuUV/_igpuUV); auto mode resets only these, so a BIOS offset stays.
+    private static int _cpuUV, _igpuUV;
+
     /// <summary>Apply or reset CPU undervolt for the current mode (the "auto_uv" flag).</summary>
     public void AutoCpuUndervolt()
     {
@@ -732,8 +735,8 @@ public class ModeControl
         {
             if (Helpers.AppConfig.IsMode("auto_uv"))
                 SetIntelUv();
-            else
-                App.IntelUv.Reset();
+            else if (_cpuUV != 0)
+                ResetIntelUv();
             return;
         }
         AutoRyzen();
@@ -752,9 +755,9 @@ public class ModeControl
     public void ResetCpuUndervolt()
     {
         if (App.IntelUv?.IsAvailable == true)
-            App.IntelUv.Reset();
+            ResetIntelUv();
         else
-            ResetRyzen();
+            ResetRyzen(force: true);
     }
 
     /// <summary>Apply the current mode's saved cpu_uv_mv offset via the Intel mailbox.</summary>
@@ -763,9 +766,18 @@ public class ModeControl
         int mv = Helpers.AppConfig.GetMode("cpu_uv_mv", 0);
         mv = Math.Clamp(mv, Platform.Linux.IntelUndervolt.MinOffsetMv, Platform.Linux.IntelUndervolt.MaxOffsetMv);
         if (App.IntelUv?.Apply(mv) == true)
+        {
+            _cpuUV = mv;
             Helpers.Logger.WriteLine($"Intel UV: cpu_uv_mv={mv} applied");
+        }
         else
             Helpers.Logger.WriteLine($"Intel UV: cpu_uv_mv={mv} apply FAILED (locked or unsupported)");
+    }
+
+    private static void ResetIntelUv()
+    {
+        if (App.IntelUv?.Reset() == true)
+            _cpuUV = 0;
     }
 
     // Ryzen Curve Optimizer undervolt (mirrors Windows ModeControl.AutoRyzen/SetRyzen/ResetRyzen/SetUV)
@@ -792,26 +804,33 @@ public class ModeControl
             if (igpuUV != 0)
             {
                 if (App.Smu.SetIGpuCoAll(igpuUV))
+                {
+                    _igpuUV = igpuUV;
                     Helpers.Logger.WriteLine($"Ryzen iGPU UV: igpu_uv={igpuUV} applied");
+                }
                 else
                     Helpers.Logger.WriteLine($"Ryzen iGPU UV: igpu_uv={igpuUV} apply FAILED");
             }
         }
     }
 
-    /// <summary>Reset CPU undervolt to 0 (stock voltage).</summary>
-    public void ResetRyzen()
+    /// <summary>Reset CPU undervolt to 0 (stock voltage). Without force, only what the app applied.</summary>
+    public void ResetRyzen(bool force = false)
     {
-        SetUV(0);
-        if (App.Smu?.IsIGpuSupported == true)
-            App.Smu.SetIGpuCoAll(0);
+        if (force || _cpuUV != 0)
+            SetUV(0);
+        if (App.Smu?.IsIGpuSupported == true && (force || _igpuUV != 0) && App.Smu.SetIGpuCoAll(0))
+            _igpuUV = 0;
     }
 
     private static void SetUV(int cpuUV)
     {
         cpuUV = Math.Clamp(cpuUV, Platform.Linux.RyzenSmu.MinCPUUV, Platform.Linux.RyzenSmu.MaxCPUUV);
         if (App.Smu?.SetCoAll(cpuUV) == true)
+        {
+            _cpuUV = cpuUV;
             Helpers.Logger.WriteLine($"Ryzen UV: cpu_uv={cpuUV} applied");
+        }
         else
             Helpers.Logger.WriteLine($"Ryzen UV: cpu_uv={cpuUV} apply FAILED");
     }
