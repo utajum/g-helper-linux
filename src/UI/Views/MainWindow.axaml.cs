@@ -822,7 +822,10 @@ public partial class MainWindow : Window
         outerStack.Children.Add(btnClose);
 
         dialog.Content = outerStack;
-        dialog.ShowDialog(this);
+        if (IsVisible)
+            dialog.ShowDialog(this);
+        else
+            dialog.Show();
     }
 
     /// <summary>
@@ -1089,7 +1092,10 @@ public partial class MainWindow : Window
         dialog.Content = outerStack;
         dialog.Opened += (_, _) => holderRefreshTimer.Start();
         dialog.Closed += (_, _) => holderRefreshTimer.Stop();
-        dialog.ShowDialog(this);
+        if (IsVisible)
+            dialog.ShowDialog(this);
+        else
+            dialog.Show();
     }
 
     /// <summary>
@@ -1292,7 +1298,10 @@ public partial class MainWindow : Window
         outerStack.Children.Add(buttonPanel);
 
         dialog.Content = outerStack;
-        dialog.ShowDialog(this);
+        if (IsVisible)
+            dialog.ShowDialog(this);
+        else
+            dialog.Show();
     }
 
     private void ButtonEco_Click(object? sender, RoutedEventArgs e)
