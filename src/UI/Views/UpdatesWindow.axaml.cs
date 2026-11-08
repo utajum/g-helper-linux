@@ -1541,7 +1541,10 @@ public partial class UpdatesWindow : Window
             changelog.Closed += (_, _) => changelog = null;
             // Parented to the main window, not this prompt - dismissing the
             // prompt must not take the release notes with it.
-            changelog.Show(owner);
+            if (owner.IsVisible)
+                changelog.Show(owner);
+            else
+                changelog.Show();
         };
 
         var primaryRow = new StackPanel
