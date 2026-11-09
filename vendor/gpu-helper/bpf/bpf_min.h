@@ -47,6 +47,7 @@ static __u64 (*bpf_get_current_task)(void) = (void *)35;
 static long (*bpf_probe_read_user)(void *dst, __u32 size, const void *src) = (void *)112;
 static long (*bpf_probe_read_kernel)(void *dst, __u32 size, const void *src) = (void *)113;
 static long (*bpf_probe_read_user_str)(void *dst, __u32 size, const void *src) = (void *)114;
+static long (*bpf_loop)(__u32 nr_loops, void *callback_fn, void *callback_ctx, __u64 flags) = (void *)181;
 
 /*
  * Read one field out of a kernel struct.

