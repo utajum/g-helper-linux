@@ -328,6 +328,10 @@ public partial class ExtraWindow : Window
         labelGpuBackendIntro.Text = Labels.Get("gpu_backend_intro");
         checkPciGpuBackend.Content = Labels.Get("gpu_backend_pci_label");
         labelPciGpuBackendHint.Text = Labels.Get("gpu_backend_pci_hint");
+        checkBpfGpuBackend.Content = Labels.Get("gpu_backend_bpf_label");
+        labelBpfGpuBackendHint.Text = Labels.Get("gpu_backend_bpf_hint");
+        checkBpfOptimized.Content = Labels.Get("gpu_backend_bpf_optimized");
+        labelBpfOptimizedHint.Text = Labels.Get("gpu_tip_optimized");
         checkRawWmi.Content = Labels.Get("raw_wmi_mode");
         labelRawWmiHint.Text = Labels.Get("raw_wmi_hint");
 
@@ -2864,6 +2868,7 @@ public partial class ExtraWindow : Window
         {
             checkPciGpuBackend.IsChecked = Helpers.AppConfig.IsPciGpuBackend();
             checkRawWmi.IsChecked = Helpers.AppConfig.Is("raw_wmi");
+            RefreshBpfGpuBackend();
         }
         finally
         {
@@ -2871,14 +2876,183 @@ public partial class ExtraWindow : Window
         }
     }
 
+    /// <summary>Set up the eBPF backend row; a missing piece shows its reason inline.</summary>
+    private void RefreshBpfGpuBackend()
+    {
+        bool selected = Helpers.AppConfig.IsBpfGpuBackend();
+        checkBpfGpuBackend.IsChecked = selected;
+        checkBpfOptimized.IsChecked = Helpers.AppConfig.Is("gpu_bpf_optimized");
+        checkBpfOptimized.IsEnabled = selected;
+        buttonGpuApps.IsEnabled = selected;
+        labelGpuApps.Text = Labels.Format("gpu_apps_button", Gpu.Block.GpuBlockPolicy.List().Count);
+
+        string reason = Gpu.Block.GpuBlockCapability.UnavailableKey();
+        bool available = reason.Length == 0;
+
+        // Missing pieces are set up in Updates; a selected box can always be cleared.
+        checkBpfGpuBackend.IsEnabled = available || selected || !Gpu.Block.GpuBlockCapability.IsHardBlock(reason);
+
+        if (!available)
+        {
+            labelBpfGpuBackendState.Text = Labels.Get(reason);
+            labelBpfGpuBackendState.IsVisible = true;
+            return;
+        }
+
+        // The real power state shows if the filter saves power.
+        if (selected)
+        {
+            string state = Gpu.Block.DgpuPowerMonitor.CurrentText();
+            labelBpfGpuBackendState.Text = Labels.Format("gpu_block_state_power", state);
+            labelBpfGpuBackendState.IsVisible = true;
+        }
+        else
+        {
+            labelBpfGpuBackendState.IsVisible = false;
+        }
+    }
+
+    private GpuAppsWindow? _gpuAppsWindow;
+
+    private void ButtonGpuApps_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_gpuAppsWindow == null || !_gpuAppsWindow.IsVisible)
+        {
+            _gpuAppsWindow = new GpuAppsWindow();
+            if (Helpers.AppConfig.Is("topmost"))
+                _gpuAppsWindow.Topmost = true;
+            Helpers.WindowPositioner.CenterOfMainWindowOrPrimaryMonitor(_gpuAppsWindow);
+            _gpuAppsWindow.Closed += (_, _) =>
+                labelGpuApps.Text = Labels.Format("gpu_apps_button", Gpu.Block.GpuBlockPolicy.List().Count);
+            _gpuAppsWindow.Show();
+        }
+        else
+        {
+            _gpuAppsWindow.Activate();
+        }
+    }
+
+    private void CheckBpfOptimized_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents)
+            return;
+        bool enabled = checkBpfOptimized.IsChecked ?? false;
+        Helpers.AppConfig.Set("gpu_bpf_optimized", enabled ? 1 : 0);
+        Task.Run(() =>
+        {
+            // Leaving Optimized keeps the dGPU as it is now: Eco if hidden, else Standard.
+            if (!enabled && Helpers.AppConfig.Is("gpu_auto"))
+                App.GpuModeCtrl?.RequestModeSwitch(Gpu.Block.GpuBlockControl.IsActive() ? GpuMode.Eco : GpuMode.Standard);
+            App.RefreshTrayMenu();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => App.MainWindowInstance?.RefreshGpuModePublic());
+        });
+    }
+
+    private void CheckBpfGpuBackend_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents)
+            return;
+        bool enabled = checkBpfGpuBackend.IsChecked ?? false;
+        string newBackend = enabled ? "ebpf" : Helpers.AppConfig.DefaultGpuBackend();
+        string oldBackend = Helpers.AppConfig.GetGpuBackend();
+        if (newBackend == oldBackend)
+            return;
+
+        // One config value: selecting eBPF clears PCI.
+        if (enabled && (checkPciGpuBackend.IsChecked ?? false))
+        {
+            bool prev = _suppressEvents;
+            _suppressEvents = true;
+            try
+            { checkPciGpuBackend.IsChecked = false; }
+            finally { _suppressEvents = prev; }
+        }
+
+        Helpers.AppConfig.Set("gpu_backend", newBackend);
+        Helpers.AppConfig.Flush();
+        Helpers.Logger.WriteLine($"GPU backend → {newBackend}");
+
+        bool pushed = false;
+        try
+        {
+            pushed = App.GpuModeCtrl?.PushBackendMarker(newBackend) ?? false;
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.WriteLine($"GpuBackend toggle: marker push failed: {ex.Message}");
+        }
+
+        // The boot service follows the marker, so the config must not differ from it.
+        if (!pushed)
+        {
+            Helpers.Logger.WriteLine($"GpuBackend toggle: marker not saved, staying on {oldBackend}");
+            Helpers.AppConfig.Set("gpu_backend", oldBackend);
+            Helpers.AppConfig.Flush();
+            RefreshGpuBackend();
+            return;
+        }
+
+        RefreshBpfGpuBackend();
+        App.MainWindowInstance?.RefreshGpuModePublic();
+        RunBackendCleanup(oldBackend, newBackend);
+
+        // Something is missing: show the Updates rows that add it.
+        string reason = Gpu.Block.GpuBlockCapability.UnavailableKey();
+        if (enabled && reason.Length > 0 && reason != "gpu_block_unavail_reboot")
+            App.MainWindowInstance?.ShowUpdatesEbpfRows();
+    }
+
+    /// <summary>Undo the old backend off the UI thread, then refresh the GPU panel.</summary>
+    private void RunBackendCleanup(string oldBackend, string newBackend)
+    {
+        Task.Run(() =>
+        {
+            try
+            { App.GpuModeCtrl?.OnBackendChanged(oldBackend, newBackend); }
+            catch (Exception ex)
+            { Helpers.Logger.WriteLine($"GpuBackend toggle: cleanup failed: {ex.Message}"); }
+            // The udev watcher only runs on the ebpf backend.
+            App.SyncUdevMonitor();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                RefreshBpfGpuBackend();
+                App.MainWindowInstance?.RefreshGpuModePublic();
+            });
+            // Tray GPU items are backend dependent too.
+            App.RefreshTrayMenu();
+        });
+    }
+
     private void CheckPciGpuBackend_Changed(object? sender, RoutedEventArgs e)
     {
         if (_suppressEvents)
             return;
         bool enabled = checkPciGpuBackend.IsChecked ?? false;
-        string newBackend = enabled ? "pci" : "asus-wmi";
-        if (newBackend == Helpers.AppConfig.GetGpuBackend())
+        // Without asus-wmi, unticking pci stays on pci and re-ticks the box.
+        string newBackend = enabled ? "pci" : Helpers.AppConfig.DefaultGpuBackend();
+        string oldBackend = Helpers.AppConfig.GetGpuBackend();
+        if (newBackend == oldBackend)
+        {
+            if (!enabled && newBackend == "pci")
+            {
+                bool prev = _suppressEvents;
+                _suppressEvents = true;
+                try
+                { checkPciGpuBackend.IsChecked = true; }
+                finally { _suppressEvents = prev; }
+            }
             return;
+        }
+
+        // One config value: selecting PCI clears eBPF.
+        if (enabled && (checkBpfGpuBackend.IsChecked ?? false))
+        {
+            bool prevSuppress = _suppressEvents;
+            _suppressEvents = true;
+            try
+            { checkBpfGpuBackend.IsChecked = false; }
+            finally { _suppressEvents = prevSuppress; }
+        }
 
         Helpers.AppConfig.Set("gpu_backend", newBackend);
         Helpers.AppConfig.Flush();
@@ -2900,6 +3074,8 @@ public partial class ExtraWindow : Window
         // Refresh main window so the GPU panel re-evaluates which buttons
         // to show (Ultimate/Optimized are hidden in PCI mode).
         App.MainWindowInstance?.RefreshGpuModePublic();
+        // The mutual exclusion above can silently leave the ebpf backend.
+        RunBackendCleanup(oldBackend, newBackend);
     }
 
     private void SliderCpuCores_ValueChanged(object? sender,
@@ -3050,7 +3226,7 @@ public partial class ExtraWindow : Window
 
     private void InitNvidiaPowerdBattery()
     {
-        bool present = Gpu.GPUModeControl.HasNvidiaDaemonsInstalled();
+        bool present = Gpu.DgpuDriver.HasNvidiaDaemonsInstalled();
         checkNvidiaPowerdBattery.IsVisible = present;
         if (!present)
             return;
@@ -3071,7 +3247,7 @@ public partial class ExtraWindow : Window
 
         // Apply against the live power source right away rather than waiting
         // for the next AC/battery transition.
-        Task.Run(() => Gpu.GPUModeControl.ApplyNvidiaPowerdPolicy(
+        Task.Run(() => Gpu.DgpuDriver.ApplyNvidiaPowerdPolicy(
             App.Power?.IsOnAcPower() ?? true));
     }
 

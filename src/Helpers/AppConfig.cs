@@ -712,12 +712,12 @@ public static class AppConfig
     /// The only reliable path to disable the dGPU is reboot-based, so auto
     /// switching is not safe. Power users can re-enable the Optimized button
     /// and the tray entry by setting "gpu_optimized_enabled": 1 in
-    /// ~/.config/ghelper/config.json.
+    /// ~/.config/ghelper/config.json. The eBPF backend uses "gpu_bpf_optimized".
     /// </summary>
-    public static bool IsOptimizedGpuModeEnabled() => Is("gpu_optimized_enabled");
+    public static bool IsOptimizedGpuModeEnabled() => IsBpfGpuBackend() ? Is("gpu_bpf_optimized") : Is("gpu_optimized_enabled");
 
     /// <summary>
-    /// GPU backend selector. Two values are supported:
+    /// GPU backend selector. Three values are supported:
     ///   "asus-wmi" - the boot service writes dgpu_disable=1 via firmware
     ///                (asus-nb-wmi / asus-armoury). The modprobe + udev block
     ///                files are temporary trampolines cleaned up on success.
@@ -725,6 +725,7 @@ public static class AppConfig
     ///                firmware sysfs. The modprobe block + udev hot-remove
     ///                rule ARE the persistent Eco state and survive across
     ///                reboots until the user switches to Standard.
+    ///   "ebpf"     - an eBPF LSM filter hides the dGPU device nodes.
     /// Default "asus-wmi" so existing ASUS users see no behavioural change.
     /// Auto-detected on first run: <see cref="AutoDetectGpuBackendIfUnset"/>
     /// sets "pci" when no asus-nb-wmi / asus-armoury platform device is
@@ -739,6 +740,7 @@ public static class AppConfig
         return normalized switch
         {
             "pci" => "pci",
+            "ebpf" => "ebpf",
             "asus-wmi" => "asus-wmi",
             _ => "asus-wmi"
         };
@@ -747,6 +749,9 @@ public static class AppConfig
     /// <summary>True when the user (or first-run auto-detect) selected the
     /// PCI backend instead of the default ASUS WMI flow.</summary>
     public static bool IsPciGpuBackend() => GetGpuBackend() == "pci";
+
+    /// <summary>True when the user selected the eBPF filter backend.</summary>
+    public static bool IsBpfGpuBackend() => GetGpuBackend() == "ebpf";
 
     /// <summary>
     /// On first run, choose a sane default for the GPU backend if the user
@@ -761,11 +766,7 @@ public static class AppConfig
         {
             if (!string.IsNullOrWhiteSpace(GetString("gpu_backend")))
                 return; // user already chose
-            bool hasAsusPlatform =
-                Directory.Exists("/sys/bus/platform/devices/asus-nb-wmi") ||
-                Directory.Exists("/sys/devices/platform/asus-nb-wmi") ||
-                Directory.Exists("/sys/class/firmware-attributes/asus-armoury");
-            if (!hasAsusPlatform)
+            if (!HasAsusPlatformDevice())
             {
                 Set("gpu_backend", "pci");
                 Logger.WriteLine("AppConfig: no ASUS platform device detected - defaulting gpu_backend=pci");
@@ -776,6 +777,24 @@ public static class AppConfig
             Logger.WriteLine($"AppConfig: AutoDetectGpuBackendIfUnset failed: {ex.Message}");
         }
     }
+
+    /// <summary>True when the ASUS WMI platform driver is present.</summary>
+    public static bool HasAsusPlatformDevice()
+    {
+        try
+        {
+            return Directory.Exists("/sys/bus/platform/devices/asus-nb-wmi") ||
+                   Directory.Exists("/sys/devices/platform/asus-nb-wmi") ||
+                   Directory.Exists("/sys/class/firmware-attributes/asus-armoury");
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Backend after leaving ebpf or pci: pci when there is no ASUS platform driver.</summary>
+    public static string DefaultGpuBackend() => HasAsusPlatformDevice() ? "asus-wmi" : "pci";
 
     // Keyboard / input
     public static bool IsStrixNumpad() => ContainsModel("G713R");

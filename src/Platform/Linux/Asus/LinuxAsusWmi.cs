@@ -526,6 +526,10 @@ public class LinuxAsusWmi : IHardwareControl
         if (IsPciBackendUsable())
             return true;
 
+        // eBPF backend: needs no firmware, so no dgpu_disable is required.
+        if (IsBpfBackendUsable())
+            return true;
+
         if (!Helpers.AppConfig.Is("raw_wmi") || !AsusWmiDebugfs.IsAvailable())
             return false;
 
@@ -661,9 +665,7 @@ public class LinuxAsusWmi : IHardwareControl
             return true;
         try
         {
-            string prefix = TestPathPrefix;
-            if (File.Exists(prefix + "/etc/modprobe.d/ghelper-gpu-block.conf") ||
-                File.Exists(prefix + "/etc/udev/rules.d/50-ghelper-remove-dgpu.rules"))
+            if (Gpu.GpuBootFiles.EcoBlocksPresent())
                 return true;
         }
         catch
@@ -679,6 +681,14 @@ public class LinuxAsusWmi : IHardwareControl
         if (HasNvidiaModuleLoaded() || HasNvidiaProprietaryOnDisk())
             return true;
         return HasNouveauOnDisk() && Gpu.GPUModeControl.HasSecondGpu();
+    }
+
+    /// <summary>The eBPF backend is selected and a second GPU exists; the filter keeps it on the bus.</summary>
+    internal static bool IsBpfBackendUsable()
+    {
+        if (!Helpers.AppConfig.IsBpfGpuBackend())
+            return false;
+        return Gpu.GPUModeControl.HasSecondGpu();
     }
 
     /// <summary>

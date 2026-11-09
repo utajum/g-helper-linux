@@ -149,9 +149,38 @@ if command -v cc &>/dev/null; then
     echo "Building gpu-helper..."
     (
         cd "$GPU_HELPER_DIR"
+
+        # Optional eBPF filter: needs clang with a bpf target.
+        BPF_DEFINE=""
+        rm -f bpf_blob.h
+        if command -v clang &>/dev/null && clang -print-targets 2>/dev/null | grep -q bpf; then
+            if clang -O2 -g -Wall -target bpf -D__TARGET_ARCH_x86 \
+                     -c bpf/ghelper_gpublock.bpf.c -o bpf/ghelper_gpublock.bpf.o 2>/dev/null; then
+                # Embed as a C array so gpu-helper stays a single binary.
+                if command -v xxd &>/dev/null; then
+                    xxd -i -n gh_bpf_obj bpf/ghelper_gpublock.bpf.o > bpf_blob.h
+                else
+                    # Portable fallback for hosts without xxd (vim-less images).
+                    {
+                        printf 'unsigned char gh_bpf_obj[] = {\n'
+                        od -An -tx1 -v bpf/ghelper_gpublock.bpf.o \
+                            | awk '{for(i=1;i<=NF;i++) printf "0x%s,", $i; print ""}'
+                        printf '};\nunsigned int gh_bpf_obj_len = %s;\n' \
+                            "$(stat -c%s bpf/ghelper_gpublock.bpf.o)"
+                    } > bpf_blob.h
+                fi
+                BPF_DEFINE="-DGH_HAVE_BPF_BLOB"
+                echo "  gpu block filter built: $(du -sh bpf/ghelper_gpublock.bpf.o | cut -f1)"
+            else
+                echo "  NOTE: bpf filter compile failed, eBPF GPU block disabled."
+            fi
+        else
+            echo "  NOTE: clang with bpf target not found, eBPF GPU block disabled."
+        fi
+
         HELPER_SRCS="process_ops.c nvidia_ops.c pci_ops.c \
-                     wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c"
-        cc -O2 -Wall -Wno-unused-result -DNDEBUG \
+                     wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c"
+        cc -O2 -Wall -Wno-unused-result -DNDEBUG $BPF_DEFINE \
            -o gpu-helper gpu-helper.c $HELPER_SRCS \
            -ldl
         strip gpu-helper
@@ -193,17 +222,63 @@ rm -rf "$EMBED_DIR"
 mkdir -p "$EMBED_DIR"
 
 NUGET_DIR="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+ASSETS_FILE="$SRC_DIR/obj/project.assets.json"
+
+# Read the version the restore above actually resolved for a package.
+# The NuGet cache is shared across every project on the machine, so it can hold
+# newer versions than this project uses. Picking the newest directory embeds a
+# native library the managed assembly refuses to load: SkiaSharp gates on the
+# native major and aborts at startup with an "incompatible" error.
+resolved_pkg_version() {
+    local pkg_esc
+    pkg_esc=$(printf '%s' "$1" | sed 's/\./\\./g')
+    sed -n "s|^ *\"$pkg_esc/\([^\"]*\)\": {.*|\1|p" "$ASSETS_FILE" 2>/dev/null | sort -u
+}
+
+if [[ ! -f "$ASSETS_FILE" ]]; then
+    echo "ERROR: $ASSETS_FILE not found; cannot tell which native libraries to embed."
+    exit 1
+fi
+
 for lib_spec in \
-    "libSkiaSharp.so:skiasharp.nativeassets.linux:runtimes/linux-x64/native/libSkiaSharp.so" \
-    "libHarfBuzzSharp.so:harfbuzzsharp.nativeassets.linux:runtimes/linux-x64/native/libHarfBuzzSharp.so"; do
+    "libSkiaSharp.so:SkiaSharp.NativeAssets.Linux:runtimes/linux-x64/native/libSkiaSharp.so" \
+    "libHarfBuzzSharp.so:HarfBuzzSharp.NativeAssets.Linux:runtimes/linux-x64/native/libHarfBuzzSharp.so"; do
     IFS=':' read -r lib_name pkg_name pkg_path <<< "$lib_spec"
-    # Find the latest version directory for this package
-    pkg_dir=$(find "$NUGET_DIR/$pkg_name" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort -V | tail -1)
-    if [[ -n "$pkg_dir" && -f "$pkg_dir/$pkg_path" ]]; then
-        cp "$pkg_dir/$pkg_path" "$EMBED_DIR/$lib_name"
-        strip --strip-unneeded "$EMBED_DIR/$lib_name" 2>/dev/null || true
-        echo "  Embedded $lib_name: $(du -sh "$EMBED_DIR/$lib_name" | cut -f1) (stripped)"
+
+    pkg_ver=$(resolved_pkg_version "$pkg_name")
+    if [[ -z "$pkg_ver" ]]; then
+        echo "ERROR: $pkg_name is not in $ASSETS_FILE."
+        echo "       Cannot embed $lib_name. Check the package references in src/."
+        exit 1
     fi
+    if [[ $(wc -l <<< "$pkg_ver") -ne 1 ]]; then
+        echo "ERROR: $pkg_name resolved to multiple versions:" $pkg_ver
+        echo "       Refusing to guess which native $lib_name to embed."
+        exit 1
+    fi
+
+    # The restore writes into NUGET_PACKAGES, but read-only fallback folders can
+    # supply a package too, so check those before giving up. Fallback folders are
+    # colon separated.
+    src_so=""
+    IFS=':' read -r -a fallback_roots <<< "${NUGET_FALLBACK_PACKAGES:-}"
+    for root in "$NUGET_DIR" ${fallback_roots[@]+"${fallback_roots[@]}"}; do
+        [[ -n "$root" ]] || continue
+        cand="$root/${pkg_name,,}/$pkg_ver/$pkg_path"
+        if [[ -f "$cand" ]]; then
+            src_so="$cand"
+            break
+        fi
+    done
+    if [[ -z "$src_so" ]]; then
+        echo "ERROR: $lib_name not found for resolved $pkg_name $pkg_ver."
+        echo "       Looked under $NUGET_DIR/${pkg_name,,}/$pkg_ver/."
+        exit 1
+    fi
+
+    cp "$src_so" "$EMBED_DIR/$lib_name"
+    strip --strip-unneeded "$EMBED_DIR/$lib_name" 2>/dev/null || true
+    echo "  Embedded $lib_name: $(du -sh "$EMBED_DIR/$lib_name" | cut -f1) (stripped, $pkg_name $pkg_ver)"
 done
 
 # Embed ghelper-audio helper if it was built
@@ -262,6 +337,8 @@ fi
 # Clean gpu-helper build artifact from vendor dir (binary is embedded in ghelper)
 if [[ -n "$GPU_HELPER_BIN" ]]; then
     rm -f "$GPU_HELPER_DIR/gpu-helper"
+    rm -f "$GPU_HELPER_DIR/bpf_blob.h"
+    rm -f "$GPU_HELPER_DIR/bpf/ghelper_gpublock.bpf.o"
 fi
 
 # Summary

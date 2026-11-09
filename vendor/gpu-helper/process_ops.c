@@ -394,6 +394,21 @@ static void stop_service(int pid)
     }
 }
 
+/* Pids in units whose stop ends the boot or the session; never signalled. */
+static int in_protected_unit(int pid)
+{
+    static const char *const keep[] = {"init.scope", "systemd-", "dbus", "display-manager", "sddm", "gdm", "lightdm"};
+    char cgroup[CGROUP_BUF_SIZE];
+    if (!read_cgroup(pid, cgroup, sizeof(cgroup)))
+        return 0;
+    const char *leaf = strrchr(cgroup, '/');
+    leaf = leaf ? leaf + 1 : cgroup;
+    for (size_t i = 0; i < sizeof(keep) / sizeof(keep[0]); i++)
+        if (strncmp(leaf, keep[i], strlen(keep[i])) == 0)
+            return 1;
+    return 0;
+}
+
 static int parse_signal(const char *s)
 {
     if (strcmp(s, "-15") == 0 || strcmp(s, "15") == 0 || strcmp(s, "TERM") == 0 || strcmp(s, "SIGTERM") == 0)
@@ -423,6 +438,8 @@ int do_kill(int argc, char **argv)
         if (pid <= 1)
             continue;
         if (pid == (int)getpid())
+            continue;
+        if (in_protected_unit(pid))
             continue;
         stop_service(pid);
         if (kill(pid, sig) == 0)

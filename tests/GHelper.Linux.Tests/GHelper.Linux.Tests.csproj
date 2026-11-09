@@ -31,6 +31,11 @@
     <!-- We don't want to compile any Avalonia .axaml from the main proj. -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+
+    <!-- Doc comments are checked only for crefs: a cref left behind by a move fails the build. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1570;CS1591</NoWarn>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1574;CS1580;CS1584</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,7 +49,29 @@
     <Compile Include="../../src/Display/IDisplayBackend.cs" />
 
     <Compile Include="../../src/Gpu/GPUModeControl.cs" />
+    <Compile Include="../../src/Gpu/IGpuBackend.cs" />
+    <Compile Include="../../src/Gpu/FirmwareGpuBackend.cs" />
+    <Compile Include="../../src/Gpu/PciGpuBackend.cs" />
+    <Compile Include="../../src/Gpu/BpfGpuBackend.cs" />
+    <Compile Include="../../src/Gpu/DgpuDriver.cs" />
+    <Compile Include="../../src/Gpu/DgpuPci.cs" />
+    <Compile Include="../../src/Gpu/GpuBootFiles.cs" />
+    <Compile Include="../../src/Gpu/GpuSwitchNotice.cs" />
+    <Compile Include="../../src/Gpu/MuxLatch.cs" />
     <Compile Include="../../src/Gpu/NVidia/GpuQueryGate.cs" />
+    <!-- eBPF GPU block: GPUModeControl dispatches to it, and the parsers are
+         covered directly by the scenario tests. -->
+    <Compile Include="../../src/Gpu/Block/GpuBlockCapability.cs" />
+    <Compile Include="../../src/Gpu/Block/GpuBlockControl.cs" />
+    <Compile Include="../../src/Gpu/Block/GpuBlockSetup.cs" />
+    <Compile Include="../../src/Gpu/Block/DgpuPowerMonitor.cs" />
+    <Compile Include="../../src/Gpu/Block/DgpuDisplay.cs" />
+    <Compile Include="../../src/Platform/Linux/UdevMonitor.cs" />
+    <Compile Include="../../src/Gpu/Block/GpuBlockPolicy.cs" />
+    <!-- GpuProcessList: pure SplitNodes/Classify helpers covered directly. -->
+    <Compile Include="../../src/Gpu/Block/GpuProcessList.cs" />
+    <Compile Include="../../src/Gpu/Block/GpuAppCatalog.cs" />
+    <Compile Include="../../src/Cli/DgpuLauncher.cs" />
     <Compile Include="../../src/Gpu/NVidia/NvidiaProcessScanner.cs" />
     <!-- LinuxNvidiaGpuControl.GetTempViaNvml() NVML temp fallback + its interface -->
     <Compile Include="../../src/Gpu/NVidia/LinuxNvidiaGpuControl.cs" />

@@ -282,6 +282,14 @@ if [[ -f /etc/NIXOS ]]; then
     _step 1 "NixOS DETECTED - DECLARATIVE DEPLOYMENT"
 
     if [[ "$MODE" == "uninstall" ]]; then
+        # eBPF GPU block: detach the filter and drop its files before the rebuild removes the helper
+        if [[ -x /run/current-system/sw/bin/gpu-helper ]]; then
+            ebpf_rc=0
+            /run/current-system/sw/bin/gpu-helper bpf-block uninstall >/dev/null 2>&1 || ebpf_rc=$?
+            if [[ $ebpf_rc -eq 5 ]]; then
+                _info "eBPF: kernel LSM setting reverted, reboot to finish"
+            fi
+        fi
         if [[ -f "$GH_NIX_CONF" ]]; then
             cp "$GH_NIX_CONF" "${GH_NIX_CONF}.bak-ghelper-$(date +%s)"
             sed -i 's|\[ /etc/nixos/ghelper.nix \] ++ ||; s|\[ /etc/nixos/ghelper.nix \] ++||' "$GH_NIX_CONF"
@@ -353,6 +361,7 @@ if [[ "$MODE" == "uninstall" ]]; then
 
     echo "${RED}${BOLD}  ╔══[ CONFIRMATION REQUIRED ]════════════════════════════╗${RESET}"
     echo "${RED}${BOLD}  ║${RESET}  This will remove G-Helper Linux and all system files."
+    echo "${RED}${BOLD}  ║${RESET}  If G-Helper added bpf to the kernel LSM list, it is removed too; reboot to finish."
     echo "${RED}${BOLD}  ║${RESET}  ${DIM}User config (~/.config/ghelper) will NOT be removed.${RESET}"
     echo "${RED}${BOLD}  ╚═════════════════════════════════════════════════════════╝${RESET}"
     echo ""
@@ -382,6 +391,16 @@ if [[ "$MODE" == "uninstall" ]]; then
         systemctl disable ghelper-gpu-boot.service 2>/dev/null
         _info "ghelper-gpu-boot.service disabled"
     fi
+
+    # eBPF GPU block: detach the filter and undo the kernel LSM change while the helper exists
+    if [[ -x /usr/local/lib/ghelper/gpu-helper ]]; then
+        ebpf_rc=0
+        /usr/local/lib/ghelper/gpu-helper bpf-block uninstall >/dev/null 2>&1 || ebpf_rc=$?
+        if [[ $ebpf_rc -eq 5 ]]; then
+            _info "eBPF: kernel LSM setting reverted, reboot to finish"
+        fi
+    fi
+    rm -rf /sys/fs/bpf/ghelper 2>/dev/null || true
 
     _safe_remove "$INSTALL_DIR"                          "install directory ($INSTALL_DIR)"
     _safe_remove "/usr/local/bin/ghelper"                 "symlink"

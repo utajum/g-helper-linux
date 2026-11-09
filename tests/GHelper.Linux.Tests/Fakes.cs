@@ -118,6 +118,45 @@ public sealed class FakeAsusWmi : IHardwareControl
     public void TriggerKeyBindingEvent(string name) => KeyBindingEvent?.Invoke(name);
 }
 
+/// <summary>In-memory model of the eBPF filter for switching tests.</summary>
+public sealed class FakeBlockOps : GHelper.Linux.Gpu.Block.GpuBlockControl.IBlockOps
+{
+    public bool ActiveState;
+    public bool FailEnable;
+    public bool FailDisable;
+    public readonly List<string> Calls = new();
+
+    public bool Active => ActiveState;
+
+    public bool Enable(bool interactive)
+    {
+        Calls.Add(interactive ? "enable" : "enable-quiet");
+        if (FailEnable)
+            return false;
+        ActiveState = true;
+        return true;
+    }
+
+    public bool Disable(bool interactive)
+    {
+        Calls.Add(interactive ? "disable" : "disable-quiet");
+        if (FailDisable)
+            return false;
+        ActiveState = false;
+        return true;
+    }
+
+    public bool Refresh()
+    {
+        Calls.Add("refresh");
+        return true;
+    }
+
+    public readonly List<GHelper.Linux.Gpu.NVidia.NvidiaHolder> HolderList = new();
+
+    public List<GHelper.Linux.Gpu.NVidia.NvidiaHolder> Holders() => HolderList;
+}
+
 public sealed class FakePowerManager : IPowerManager
 {
     public bool OnAc = true;

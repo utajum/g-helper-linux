@@ -13,6 +13,8 @@
   clang,
   # Adds /run/opengl-driver/lib rpath (NVML dlopen)
   addDriverRunpath,
+  # gpu-helper dlopen()s libbpf for the eBPF GPU block
+  libbpf,
   # ghelper-audio build deps
   pkg-config,
   # wlr-randr build deps
@@ -240,17 +242,38 @@ rec {
 
     # dlopen("libnvidia-ml.so.1") resolves via the executable's RUNPATH on
     # NixOS, where the driver lives in /run/opengl-driver/lib.
-    nativeBuildInputs = [ addDriverRunpath ];
+    # clang builds the eBPF filter; libbpf is only a RUNPATH entry.
+    nativeBuildInputs = [
+      addDriverRunpath
+      clang
+    ];
 
     postFixup = ''
       addDriverRunpath $out/bin/gpu-helper
+      patchelf --add-rpath ${lib.makeLibraryPath [ libbpf ]} $out/bin/gpu-helper
     '';
 
+    # Mirrors build.sh, with its od/awk fallback instead of xxd.
     buildPhase = ''
-      cc -O2 -Wall -Wno-unused-result -DNDEBUG \
+      bpfDefine=""
+      if clang -O2 -g -Wall -target bpf -D__TARGET_ARCH_x86 \
+               -c bpf/ghelper_gpublock.bpf.c -o bpf/ghelper_gpublock.bpf.o; then
+        {
+          printf 'unsigned char gh_bpf_obj[] = {\n'
+          od -An -tx1 -v bpf/ghelper_gpublock.bpf.o \
+              | awk '{for(i=1;i<=NF;i++) printf "0x%s,", $i; print ""}'
+          printf '};\nunsigned int gh_bpf_obj_len = %s;\n' \
+              "$(stat -c%s bpf/ghelper_gpublock.bpf.o)"
+        } > bpf_blob.h
+        bpfDefine="-DGH_HAVE_BPF_BLOB"
+      else
+        echo "note: bpf filter compile failed, eBPF GPU block disabled"
+      fi
+
+      cc -O2 -Wall -Wno-unused-result -DNDEBUG $bpfDefine \
          -o gpu-helper gpu-helper.c \
          process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c \
-         lenovo_ops.c \
+         lenovo_ops.c bpf_ops.c lsm_ops.c \
          -ldl
     '';
 

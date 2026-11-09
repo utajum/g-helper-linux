@@ -302,6 +302,25 @@ public class App : Application
                 }
             }, null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(20));
 
+            // ebpf backstop for a missed udev event; no-op on other backends.
+            _gpuReconcileTimer = new System.Threading.Timer(_ =>
+            {
+                if (Interlocked.CompareExchange(ref _gpuReconcileRunning, 1, 0) != 0)
+                    return;
+                try
+                { GpuModeCtrl?.ReconcileBpfAuto(); }
+                catch (Exception ex)
+                {
+                    Logger.WriteLine($"GPU reconcile failed: {ex.Message}");
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _gpuReconcileRunning, 0);
+                }
+            }, null, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(60));
+
+            SyncUdevMonitor();
+
             // Ensure autostart .desktop file matches config preference and current binary path
             bool autostart = AppConfig.IsNotFalse("autostart");
             System?.SetAutostart(autostart);
@@ -335,23 +354,27 @@ public class App : Application
                 GpuModeCtrl?.CacheDgpuSlotIfPresent();
 
                 // Check for boot recovery marker (impossible state was fixed during boot)
-                const string RecoveryMarkerPath = "/etc/ghelper/last-recovery";
                 try
                 {
-                    if (File.Exists(RecoveryMarkerPath))
+                    string markerPath = Gpu.GPUModeControl.RecoveryMarkerPath;
+                    if (File.Exists(markerPath))
                     {
-                        string reason = File.ReadAllText(RecoveryMarkerPath).Trim();
-                        Logger.WriteLine($"Boot recovery detected: {reason}");
-                        System?.ShowNotification(Labels.Get("gpu_mode"),
-                            Labels.Get("gpu_reset_standard"),
-                            "dialog-warning");
-                        try
-                        { File.Delete(RecoveryMarkerPath); }
-                        catch (Exception delEx)
+                        string reason = File.ReadAllText(markerPath).Trim();
+                        // Notify once per marker: clearing it can fail without root.
+                        if (AppConfig.GetString("gpu_recovery_seen") != reason)
                         {
-                            Logger.WriteLine($"Could not delete recovery marker: {delEx.Message}");
-                            // Non-fatal - marker will be shown again next launch but that's acceptable
+                            Logger.WriteLine($"Boot recovery detected: {reason}");
+                            System?.ShowNotification(Labels.Get("gpu_mode"),
+                                Labels.Get("gpu_reset_standard"),
+                                "dialog-warning");
+                            AppConfig.Set("gpu_recovery_seen", reason);
                         }
+                        if (Gpu.GPUModeControl.ClearRecoveryMarker())
+                            AppConfig.Set("gpu_recovery_seen", "");
+                    }
+                    else if (!string.IsNullOrEmpty(AppConfig.GetString("gpu_recovery_seen")))
+                    {
+                        AppConfig.Set("gpu_recovery_seen", "");
                     }
                 }
                 catch (Exception ex)
@@ -747,6 +770,27 @@ public class App : Application
         }
     }
 
+    /// <summary>Rebuild the tray menu; its GPU items depend on the backend.</summary>
+    public static void RefreshTrayMenu()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (TrayIconInstance == null)
+                return;
+            if (Current is not App app
+                || app.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+                return;
+            try
+            {
+                TrayIconInstance.Menu = app.CreateTrayMenu(desktop);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"RefreshTrayMenu failed: {ex.Message}");
+            }
+        });
+    }
+
     /// <summary>Update tray icon and tooltip to reflect current performance mode.</summary>
     public static void UpdateTrayIcon()
     {
@@ -830,7 +874,10 @@ public class App : Application
             standard.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Standard);
             menu.Add(standard);
 
-            if (AppConfig.IsOptimizedGpuModeEnabled())
+            // Same gating as the main window buttons.
+            bool pciBackend = AppConfig.IsPciGpuBackend();
+            bool bpfBackend = AppConfig.IsBpfGpuBackend();
+            if (!pciBackend && AppConfig.IsOptimizedGpuModeEnabled())
             {
                 var optimized = new NativeMenuItem(Labels.Get("tray_gpu_optimized"));
                 optimized.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Optimized);
@@ -838,7 +885,8 @@ public class App : Application
             }
 
             // Ultimate (MUX switch) - only on models with gpu_mux_mode support
-            if (Wmi?.IsFeatureSupported(AsusAttributes.GpuMuxMode) == true)
+            if (!pciBackend && !bpfBackend
+                && Wmi?.IsFeatureSupported(AsusAttributes.GpuMuxMode) == true)
             {
                 var ultimate = new NativeMenuItem(Labels.Get("tray_gpu_ultimate"));
                 ultimate.Click += (_, _) => TrayGpuModeSwitch(GpuMode.Ultimate);
@@ -1024,6 +1072,7 @@ public class App : Application
     /// <summary>
     /// Tray menu GPU mode switch - runs GPUModeControl on background thread.
     /// Tray menu cannot show dialogs, so DriverBlocking → auto-schedule for reboot.
+    /// eBPF switches live instead: apps that hold the dGPU keep it until they close.
     /// </summary>
     private static void TrayGpuModeSwitch(GpuMode target)
     {
@@ -1033,39 +1082,15 @@ public class App : Application
                 return;
 
             var result = GpuModeCtrl.RequestModeSwitch(target);
+            // eBPF: no dialog here, so hide the dGPU anyway; running apps keep it until they close.
+            if (result == GpuSwitchResult.DriverBlocking && AppConfig.IsBpfGpuBackend())
+                result = GpuModeCtrl.TryReleaseAndSwitch(target);
 
             switch (result)
             {
                 case GpuSwitchResult.Applied:
                     if (target != GpuMode.Eco)
                         RefreshGpuControlIfMissing();
-                    string text = target switch
-                    {
-                        GpuMode.Eco => Labels.Get("gpu_notify_eco"),
-                        GpuMode.Standard => Labels.Get("gpu_notify_standard"),
-                        GpuMode.Optimized => Labels.Get("gpu_notify_optimized"),
-                        GpuMode.Ultimate => Labels.Get("gpu_notify_ultimate"),
-                        _ => Labels.Get("gpu_notify_changed")
-                    };
-                    System?.ShowNotification(Labels.Get("gpu_mode"), text, "video-display");
-                    break;
-
-                case GpuSwitchResult.RebootRequired:
-                    string rebootText = target switch
-                    {
-                        GpuMode.Ultimate => Labels.Get("gpu_reboot_ultimate"),
-                        GpuMode.Standard => Labels.Get("gpu_reboot_standard"),
-                        GpuMode.Optimized => Labels.Get("gpu_reboot_optimized"),
-                        GpuMode.Eco => Labels.Get("gpu_reboot_eco"),
-                        _ => Labels.Format("gpu_mode_reboot_format", target)
-                    };
-                    System?.ShowNotification(Labels.Get("gpu_mode"), rebootText, "system-reboot");
-                    break;
-
-                case GpuSwitchResult.EcoBlocked:
-                    System?.ShowNotification(Labels.Get("gpu_mode"),
-                        Labels.Get("gpu_eco_blocked_mux"),
-                        "dialog-warning");
                     break;
 
                 case GpuSwitchResult.DriverBlocking:
@@ -1074,17 +1099,9 @@ public class App : Application
                     System?.ShowNotification(Labels.Get("gpu_mode"),
                         Labels.Get("gpu_driver_scheduled"), "system-reboot");
                     break;
-
-                case GpuSwitchResult.Deferred:
-                    System?.ShowNotification(Labels.Get("gpu_mode"),
-                        Labels.Get("gpu_eco_after_reboot"), "system-reboot");
-                    break;
-
-                case GpuSwitchResult.Failed:
-                    System?.ShowNotification(Labels.Get("gpu_mode"),
-                        Labels.Get("gpu_switch_failed"), "dialog-error");
-                    break;
             }
+            if (GpuSwitchNotice.For(result, target) is { } notice)
+                System?.ShowNotification(Labels.Get("gpu_mode"), notice.Text, notice.Icon);
 
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 MainWindowInstance?.RefreshGpuModePublic());
@@ -1093,6 +1110,60 @@ public class App : Application
 
     /// <summary>Debounce guard, skip power events within 3 seconds of the last one.</summary>
     private long _lastPowerChangeMs;
+
+    /// <summary>Run the udev watcher only on the eBPF backend.</summary>
+    public static void SyncUdevMonitor()
+    {
+        try
+        {
+            bool want = AppConfig.IsBpfGpuBackend();
+            if (!want)
+            {
+                _udevMonitor?.Stop();
+                return;
+            }
+            if (_udevMonitor?.IsRunning == true)
+                return;
+
+            _udevMonitor ??= new Platform.Linux.UdevMonitor(
+                new[] { "drm", "pci", "thunderbolt" },
+                TimeSpan.FromMilliseconds(250),
+                OnUdevBatch);
+            _udevMonitor.Start();
+        }
+        catch (Exception ex)
+        {
+            Logger.WriteLine($"SyncUdevMonitor failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>DRM: re-check auto mode. PCI rebind or Thunderbolt: re-resolve the filter nodes.</summary>
+    private static void OnUdevBatch(IReadOnlyList<Platform.Linux.UdevMonitor.Event> batch)
+    {
+        bool drm = false, rebind = false;
+        foreach (var ev in batch)
+        {
+            if (ev.Subsystem == "drm")
+                drm = true;
+            else if (ev.Subsystem == "thunderbolt"
+                     || (ev.Subsystem == "pci" && (ev.Action == "bind" || ev.Action == "unbind")))
+                rebind = true;
+        }
+
+        if (!drm && !rebind)
+            return;
+
+        Logger.WriteLine($"Udev: {batch.Count} event(s) coalesced (drm={drm} rebind={rebind})");
+
+        if (rebind && Gpu.Block.GpuBlockControl.IsActive())
+        {
+            Logger.WriteLine("Udev: pci rebind while blocked - re-resolving the filter node list");
+            Gpu.Block.GpuBlockControl.Refresh();
+        }
+
+        if (drm)
+            GpuModeCtrl?.ReconcileBpfAuto();
+    }
 
     /// <summary>
     /// Handle power state change (AC plugged/unplugged).
@@ -1120,6 +1191,12 @@ public class App : Application
                         ? Labels.Get("gpu_optimized_ac")
                         : Labels.Get("gpu_optimized_battery");
                     System?.ShowNotification(Labels.Get("gpu_mode"), msg, "video-display");
+                }
+                else if (result == GpuSwitchResult.DriverBlocking && AppConfig.IsBpfGpuBackend())
+                {
+                    // Like Windows G-Helper: ask to close the apps before Eco.
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        MainWindowInstance?.ShowDriverBlockingDialog(GpuMode.Optimized));
                 }
                 else if (result == GpuSwitchResult.DriverBlocking)
                 {
@@ -1163,7 +1240,7 @@ public class App : Application
         Task.Run(() =>
         {
             try
-            { Gpu.GPUModeControl.ApplyNvidiaPowerdPolicy(onAc); }
+            { Gpu.DgpuDriver.ApplyNvidiaPowerdPolicy(onAc); }
             catch (Exception ex) { Logger.WriteLine($"ApplyNvidiaPowerdPolicy failed: {ex.Message}"); }
         });
 
@@ -1281,6 +1358,9 @@ public class App : Application
     /// this restores all persisted settings (DPI, scroll, lighting, etc.)
     private System.Threading.Timer? _peripheralPollTimer;
     private int _peripheralPollRunning;
+    private System.Threading.Timer? _gpuReconcileTimer;
+    private int _gpuReconcileRunning;
+    private static Platform.Linux.UdevMonitor? _udevMonitor;
 
     /// from config. For other mice, re-applies Hi-Res Scroll flags only.
     /// Idempotent - safe to call on resume, monitor wake, or reconnect.
@@ -1377,6 +1457,12 @@ public class App : Application
         catch { }
         try
         { _peripheralPollTimer?.Dispose(); }
+        catch { }
+        try
+        { _gpuReconcileTimer?.Dispose(); }
+        catch { }
+        try
+        { _udevMonitor?.Dispose(); }
         catch { }
         try
         { UI.Views.ExtraWindow.StopClamshellInhibit(); }

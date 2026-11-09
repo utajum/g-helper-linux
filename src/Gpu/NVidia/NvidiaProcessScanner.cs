@@ -79,6 +79,9 @@ public static class NvidiaProcessScanner
         // Display managers
         "sddm", "gdm", "lightdm",
 
+        // PID 1, logind, user manager: they hold copies of the compositor's DRM files
+        "systemd",
+
         // KDE Plasma
         "plasmashell", "kded", "kdeconnect", "ksmserver", "ksecretd",
         "kaccess", "kwalletd", "ksystemstats", "kglobalaccel", "polkit-kde",
@@ -113,7 +116,7 @@ public static class NvidiaProcessScanner
         "dbus-daemon", "dbus-broker", "at-spi-bus-lau", "at-spi2-registr",
     };
 
-    private static bool IsSystemProcess(string comm)
+    internal static bool IsSystemProcess(string comm)
     {
         foreach (var prefix in SystemCommPrefixes)
             if (comm.StartsWith(prefix, StringComparison.Ordinal))
@@ -779,6 +782,11 @@ public static class NvidiaProcessScanner
         // them on death. Killing the leaf alone does nothing - the parent
         // refills the slot within milliseconds. We must kill the tree root.
         int root = FindSameCommAncestor(pid);
+        if (root <= 1)
+        {
+            error = "refusing to kill PID 1";
+            return false;
+        }
         if (root != pid)
             Logger.WriteLine($"NvidiaProcessScanner.KillProcess: walked up from {pid} to root {root} (same comm {holder.Comm})");
 
@@ -878,6 +886,8 @@ public static class NvidiaProcessScanner
                 continue;
             // Walk up to root of same-comm tree (handles chrome zygote respawn)
             int root = FindSameCommAncestor(h.Pid);
+            if (root <= 1)
+                continue;
             if (root != h.Pid)
                 Logger.WriteLine($"NvidiaProcessScanner.KillAllHolders: walked {h.Pid} -> {root} (comm {h.Comm})");
             allTargets.Add(root);
@@ -1020,6 +1030,8 @@ public static class NvidiaProcessScanner
             if (h.Pid == _selfPid)
                 continue;
             int root = FindSameCommAncestor(h.Pid);
+            if (root <= 1)
+                continue;
             if (root != h.Pid)
                 Logger.WriteLine($"NvidiaProcessScanner.BuildKillTargets: walked {h.Pid} -> {root} (comm {h.Comm})");
             allTargets.Add(root);

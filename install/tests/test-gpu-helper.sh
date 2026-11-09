@@ -28,8 +28,18 @@ BIN="$WORK/gpu-helper"
 (
     cd "$SRC_DIR" || exit 1
     cc -O2 -Wall -Wno-unused-result -DNDEBUG -o "$BIN" gpu-helper.c \
-        process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c -ldl
+        process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c -ldl
 ) || { echo "FATAL: gpu-helper build failed" >&2; exit 2; }
+
+# lsm-enable/lsm-disable test build: paths in $LSM_DIR, no bootloader tool runs.
+LSM_DIR="$WORK/lsm"
+LSM_BIN="$WORK/gpu-helper-lsm"
+mkdir -p "$LSM_DIR"
+(
+    cd "$SRC_DIR" || exit 1
+    cc -O2 -Wall -Wno-unused-result -DNDEBUG -DGH_LSM_TEST="\"$LSM_DIR\"" -o "$LSM_BIN" gpu-helper.c \
+        process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c -ldl
+) || { echo "FATAL: gpu-helper lsm test build failed" >&2; exit 2; }
 
 # A BDF and a slot that exist on no machine, so accepted writes fail with ENOENT.
 NO_BDF="0000:fe:1f.7"
@@ -393,6 +403,78 @@ test_unknown_subcommand_lists() {
     expect 0 "" -- frobnicate
 }
 
+# -- bpf-block ------------------------------------------------------------------
+test_bpf_block_allow_pid_args() {
+    expect 1 "usage: bpf-block allow-pid" -- bpf-block allow-pid || return 1
+    expect 1 "usage: bpf-block allow-pid" -- bpf-block allow-pid 123 badopt || return 1
+    local p
+    for p in 1x "" 0 1 -5 99999999; do
+        expect 1 "invalid pid" -- bpf-block allow-pid "$p" || return 1
+    done
+    expect 1 "no such process" -- bpf-block allow-pid 4194303 || return 1
+}
+
+test_bpf_block_entry_validation() {
+    local e
+    for e in "A B=1" "=1" "A=" "A=x/y" "bad name" "a/b" "$(printf 'K=%046d' 0)"; do
+        expect 1 "invalid entry" -- bpf-block allow-comm "$e" || return 1
+    done
+    expect 1 "always allowed" -- bpf-block allow-comm gpu-helper || return 1
+}
+
+# -- lsm-enable / lsm-disable ----------------------------------------------------
+lsm_run() { OUT="$("$LSM_BIN" "$@" 2>&1)"; RC=$?; }
+
+# Fresh fake system: active LSM list without bpf and a grub defaults file.
+lsm_setup() {
+    rm -rf "$LSM_DIR" && mkdir -p "$LSM_DIR"
+    echo "lockdown,capability,yama,apparmor" > "$LSM_DIR/lsm"
+    printf 'GRUB_DEFAULT=0\nGRUB_CMDLINE_LINUX_DEFAULT="%s"\nGRUB_CMDLINE_LINUX=""\n' "$1" > "$LSM_DIR/grub"
+}
+
+grub_line() { grep '^GRUB_CMDLINE_LINUX_DEFAULT=' "$LSM_DIR/grub"; }
+
+test_lsm_round_trip_restores_replaced_token() {
+    lsm_setup "quiet lsm=landlock,yama splash"
+    lsm_run lsm-enable
+    [[ $RC -eq 5 ]] || { fail "enable rc=$RC"; return 1; }
+    [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash lsm=lockdown,capability,yama,apparmor,bpf"' ]] \
+        || { fail "enable: $(grub_line)"; return 1; }
+    # A parameter the user adds afterwards must survive the revert.
+    sed -i 's/bpf"$/bpf extra=1"/' "$LSM_DIR/grub"
+    lsm_run lsm-disable
+    [[ $RC -eq 5 ]] || { fail "disable rc=$RC"; return 1; }
+    [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash lsm=landlock,yama extra=1"' ]] \
+        || { fail "disable: $(grub_line)"; return 1; }
+    [[ ! -e "$LSM_DIR/state" && ! -e "$LSM_DIR/grub.ghelper-bak" ]] || { fail "state or backup left"; return 1; }
+    grep -qx 'GRUB_DEFAULT=0' "$LSM_DIR/grub" || { fail "other lines lost"; return 1; }
+}
+
+test_lsm_round_trip_drops_added_token() {
+    lsm_setup "quiet splash"
+    lsm_run lsm-enable
+    [[ $RC -eq 5 ]] || { fail "enable rc=$RC"; return 1; }
+    lsm_run lsm-disable
+    [[ $RC -eq 5 ]] || { fail "disable rc=$RC"; return 1; }
+    [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"' ]] || { fail "disable: $(grub_line)"; return 1; }
+}
+
+test_lsm_disable_leaves_token_changed_by_user() {
+    lsm_setup "quiet"
+    lsm_run lsm-enable
+    sed -i 's/lsm=[^" ]*/lsm=landlock,bpf/' "$LSM_DIR/grub"
+    lsm_run lsm-disable
+    [[ $RC -eq 6 ]] || { fail "rc=$RC"; return 1; }
+    [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet lsm=landlock,bpf"' ]] || { fail "touched: $(grub_line)"; return 1; }
+}
+
+test_lsm_disable_nothing_to_undo() {
+    lsm_setup "quiet lsm=landlock,bpf"
+    lsm_run lsm-disable
+    [[ $RC -eq 0 && "$OUT" == *"lsm=none"* ]] || { fail "rc=$RC"; return 1; }
+    [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet lsm=landlock,bpf"' ]] || { fail "touched: $(grub_line)"; return 1; }
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "="
 echo " gpu-helper argument tests"
@@ -440,6 +522,12 @@ for name in \
     list_output_format \
     no_args_lists \
     unknown_subcommand_lists \
+    bpf_block_allow_pid_args \
+    bpf_block_entry_validation \
+    lsm_round_trip_restores_replaced_token \
+    lsm_round_trip_drops_added_token \
+    lsm_disable_leaves_token_changed_by_user \
+    lsm_disable_nothing_to_undo \
 ; do
     scenario "$name"
 done

@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -64,6 +65,10 @@ public static partial class Installer
         public Func<byte[]?>? Generate; // produce content in-process (sudoers rule, filtered udev rules); null = resource unavailable
         public string[] Post = [];      // post-action tokens, run once after a root batch
         public Func<bool>? AppliesWhen; // null = always applies; else gate on hardware capability
+        public Func<FileState>? State;  // own check for rows that are not a plain copied file
+        public string[]? HelperApply;   // gpu-helper verb run as root instead of writing Dest
+        public string[]? HelperRemove;  // gpu-helper verb run as root instead of deleting Dest
+        public bool External;           // distro package: shown, never written or removed
 
         public bool Applies() => AppliesWhen?.Invoke() ?? true;
     }
@@ -94,6 +99,9 @@ public static partial class Installer
     // "Not authorized", no dialog ever shown - issue #143). Appended to the
     // failure message as a technical hint.
     private static string? _lastAuthHint;
+
+    // Set when the last apply skipped a distro package; its row shows the command.
+    private static bool _manualLeft;
 
     // comm values (15-char kernel truncation) of known polkit agents plus
     // the shells that embed one.
@@ -227,6 +235,24 @@ public static partial class Installer
                 Dest = "/etc/systemd/system/ghelper-gpu-boot.service",
                 Mode = M644, RootRequired = true, RootOwned = true,
                 Post = [PostSystemd], AppliesWhen = BootGpuApplies,
+            },
+            // eBPF setup: listed while the backend is selected or G-Helper's change remains.
+            new ManagedFile
+            {
+                Id = EbpfLsmId, NameKey = "sysfiles_name_ebpf_lsm",
+                Dest = Gpu.Block.GpuBlockSetup.LsmStatePath, RootRequired = true,
+                State = EbpfLsmState, HelperApply = ["lsm-enable"], HelperRemove = ["lsm-disable"],
+            },
+            new ManagedFile
+            {
+                Id = EbpfLibbpfId, NameKey = "sysfiles_name_ebpf_libbpf",
+                Dest = "libbpf.so.1", External = true, State = EbpfLibbpfState,
+            },
+            new ManagedFile
+            {
+                Id = "ebpf_allowed_apps", NameKey = "sysfiles_name_ebpf_allowed_apps",
+                Dest = Gpu.Block.GpuBlockPolicy.PolicyPath, RootRequired = true,
+                State = () => File.Exists(Gpu.Block.GpuBlockPolicy.PolicyPath) ? FileState.Ok : FileState.NotApplicable,
             },
             new ManagedFile
             {
@@ -439,6 +465,30 @@ public static partial class Installer
     /// removable) in the integrity panel. Uses a universal, Eco-resilient check.</summary>
     private static bool BootGpuApplies() => Gpu.GPUModeControl.HasDiscreteGpu();
 
+    private const string EbpfLsmId = "ebpf_lsm";
+    private const string EbpfLibbpfId = "ebpf_libbpf";
+
+    private static FileState EbpfLsmState() => ToFileState(Gpu.Block.GpuBlockSetup.KernelRowState(
+        AppConfig.IsBpfGpuBackend(), Gpu.Block.GpuBlockCapability.IsLsmBpfActive(),
+        File.Exists(Gpu.Block.GpuBlockSetup.LsmStatePath),
+        () => Gpu.Block.GpuBlockCapability.Query().KernelConfig != "n"));
+
+    private static FileState EbpfLibbpfState()
+    {
+        bool selected = AppConfig.IsBpfGpuBackend();
+        var caps = selected ? Gpu.Block.GpuBlockCapability.Query() : null;
+        return ToFileState(Gpu.Block.GpuBlockSetup.LibbpfRowState(
+            selected, caps is { HelperRan: true } ? caps.Libbpf : null));
+    }
+
+    private static FileState ToFileState(Gpu.Block.GpuBlockSetup.RowState s) => s switch
+    {
+        Gpu.Block.GpuBlockSetup.RowState.Ok => FileState.Ok,
+        Gpu.Block.GpuBlockSetup.RowState.Missing => FileState.Missing,
+        Gpu.Block.GpuBlockSetup.RowState.Unknown => FileState.Unknown,
+        _ => FileState.NotApplicable,
+    };
+
     // Status computation (no UI, no privilege)
     public static List<FileResult> ComputeStatus()
     {
@@ -450,6 +500,9 @@ public static partial class Installer
 
     public static FileState ComputeState(ManagedFile f)
     {
+        if (f.State != null)
+            return f.State();
+
         // NixOS: files live at Nix-provided locations (PATH, system profile,
         // declarative udev/sudoers/modules) instead of the FHS paths. Verify
         // those instead of the hardcoded Dest so the panel reflects reality.
@@ -815,6 +868,10 @@ public static partial class Installer
         return Encoding.UTF8.GetBytes(string.Join("\n", lines));
     }
 
+    /// <summary>A helper-made change is removable only while its record exists, so a setting G-Helper did not make stays.</summary>
+    private static bool CanRemove(ManagedFile f)
+        => !f.External && (f.HelperRemove == null || File.Exists(f.Dest));
+
     private static bool IsProblem(FileState s)
         => s is FileState.Missing or FileState.Outdated or FileState.WrongPerms or FileState.Disabled;
 
@@ -835,6 +892,9 @@ public static partial class Installer
 
     private static async Task<(bool ok, int changed, bool cancelled)> ApplyFilesAsync(List<ManagedFile> todo)
     {
+        // A distro package cannot be installed from here; its row shows the command.
+        _manualLeft = todo.Any(f => f.External);
+        todo = todo.Where(f => !f.External).ToList();
         if (todo.Count == 0)
             return (true, 0, false);
 
@@ -967,6 +1027,7 @@ public static partial class Installer
             return (true, 0, false);
 
         int removed = 0;
+        todo = todo.Where(f => !f.External).ToList();
 
         // User-level files first - never needs a prompt.
         foreach (var f in todo.Where(f => !f.RootRequired))
@@ -1087,6 +1148,20 @@ public static partial class Installer
             if (!f.RootRequired)
                 continue; // user-level files are handled by the unprivileged process
 
+            if (f.HelperApply != null)
+            {
+                // 5: done, takes effect after a reboot.
+                int rc = Run(SysfsHelper.GpuHelperPath, f.HelperApply);
+                if (rc is 0 or 5)
+                    Console.WriteLine($"applied {id}");
+                else
+                {
+                    Console.Error.WriteLine($"{id}: gpu-helper {f.HelperApply[0]} exit {rc}");
+                    failures++;
+                }
+                continue;
+            }
+
             byte[]? data = ExpectedBytes(f);
             if (data == null)
             {
@@ -1164,6 +1239,11 @@ public static partial class Installer
         if (ids.Contains("gpu_boot_service"))
             Run("systemctl", "disable", BootService);
 
+        // Undo the eBPF backend (filter, allowed apps, LSM change) while its helper still exists.
+        if (ids.Contains("gpu_helper") && File.Exists(byId["gpu_helper"].Dest)
+            && Run(byId["gpu_helper"].Dest, "bpf-block", "uninstall") == 5)
+            Console.WriteLine("ebpf: kernel LSM setting reverted, reboot to finish");
+
         foreach (var id in ids)
         {
             if (!byId.TryGetValue(id, out var f))
@@ -1174,6 +1254,20 @@ public static partial class Installer
             }
             if (!f.RootRequired)
                 continue; // user-level files are handled by the unprivileged process
+
+            if (f.HelperRemove != null)
+            {
+                // No record: nothing to undo. 5: reverted, reboot; 6: no longer in the boot config.
+                int rc = File.Exists(f.Dest) ? Run(SysfsHelper.GpuHelperPath, f.HelperRemove) : 0;
+                if (rc is 0 or 5 or 6)
+                    Console.WriteLine($"removed {id}");
+                else
+                {
+                    Console.Error.WriteLine($"{id}: gpu-helper {f.HelperRemove[0]} exit {rc}");
+                    failures++;
+                }
+                continue;
+            }
 
             if (DeleteRoot(f, out string err))
             {
@@ -1591,7 +1685,9 @@ public static partial class Installer
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Right,
         };
-        btnRow.Children.Add(btnConfirm);
+        // Nothing to install when only distro packages are missing.
+        if (problems.Any(p => !p.File.External))
+            btnRow.Children.Add(btnConfirm);
         btnRow.Children.Add(btnCancel);
         root.Children.Add(btnRow);
 
@@ -1618,6 +1714,65 @@ public static partial class Installer
         return await tcs.Task;
     }
 
+    /// <summary>Manual step for a row G-Helper cannot fix: libbpf, or the kernel parameter after a failed Repair.</summary>
+    private static (string? Note, string? Command) ManualStep(FileResult r, ICollection<string>? tried)
+    {
+        if (r.State != FileState.Missing)
+            return (null, null);
+        if (r.File.Id == EbpfLibbpfId)
+        {
+            string? cmd = Gpu.Block.GpuBlockSetup.LibbpfInstallCommand();
+            return cmd != null ? (null, cmd) : (Labels.Get("sysfiles_libbpf_manual"), null);
+        }
+        if (r.File.Id == EbpfLsmId && tried != null && tried.Contains(r.File.Id))
+            return (Labels.Get("gpu_block_setup_manual"), Gpu.Block.GpuBlockSetup.ManualParameter());
+        return (null, null);
+    }
+
+    private static TextBlock HintText(string text) => new()
+    {
+        Text = text,
+        FontSize = 11,
+        TextWrapping = TextWrapping.Wrap,
+        Foreground = new SolidColorBrush(Color.Parse("#999999")),
+    };
+
+    private static SelectableTextBlock CommandText(string command) => new()
+    {
+        Text = command,
+        FontSize = 12,
+        FontFamily = new FontFamily("monospace"),
+        Foreground = new SolidColorBrush(Color.Parse("#F0F0F0")),
+        TextWrapping = TextWrapping.Wrap,
+    };
+
+    private static Button CopyButton(string command)
+    {
+        var copy = new Button
+        {
+            Content = Labels.Get("sysinfo_copy"),
+            Classes = { "ghelper" },
+            FontSize = 11,
+            Padding = new Thickness(10, 3),
+            Margin = new Thickness(8, 0, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Center,
+            Cursor = new Cursor(StandardCursorType.Hand),
+        };
+        copy.Click += async (_, _) =>
+        {
+            var clipboard = TopLevel.GetTopLevel(copy)?.Clipboard;
+            if (clipboard == null)
+            {
+                copy.Content = Labels.Get("clipboard_unavailable");
+                return;
+            }
+            await clipboard.SetTextAsync(command);
+            copy.Content = Labels.Get("copied");
+        };
+        return copy;
+    }
+
     // UI: integrity panel (hosted in the Updates window)
     /// <summary>Build the integrity list. When <paramref name="onRepair"/> is
     /// supplied, problem rows get a per-item Repair button that invokes it; when
@@ -1628,11 +1783,11 @@ public static partial class Installer
 
     /// <summary>Overload for callers that already computed the status on a
     /// background thread (ComputeStatus spawns a sudo probe).</summary>
-    public static void PopulateIntegrityPanel(Panel panel, List<FileResult> results, Func<ManagedFile, Task>? onRepair = null, Func<ManagedFile, Task>? onRemove = null, Func<ManagedFile, Task>? onDiff = null)
+    public static void PopulateIntegrityPanel(Panel panel, List<FileResult> results, Func<ManagedFile, Task>? onRepair = null, Func<ManagedFile, Task>? onRemove = null, Func<ManagedFile, Task>? onDiff = null, ICollection<string>? tried = null)
     {
         panel.Children.Clear();
         foreach (var r in results)
-            panel.Children.Add(BuildRow(r, showPath: true, onRepair, onRemove, onDiff));
+            panel.Children.Add(BuildRow(r, showPath: true, onRepair, onRemove, onDiff, tried));
     }
 
     /// <summary>Run the fix flow from the integrity panel's button; returns a
@@ -1656,7 +1811,7 @@ public static partial class Installer
             return msg;
         }
         if (changed == 0)
-            return Labels.Get("sysfiles_all_ok");
+            return Labels.Get(_manualLeft ? "sysfiles_libbpf_manual" : "sysfiles_all_ok");
         return Labels.Format("sysfiles_applied", changed);
     }
 
@@ -1678,7 +1833,7 @@ public static partial class Installer
         return Labels.Get("sysfiles_removed");
     }
 
-    private static Control BuildRow(FileResult r, bool showPath, Func<ManagedFile, Task>? onRepair = null, Func<ManagedFile, Task>? onRemove = null, Func<ManagedFile, Task>? onDiff = null)
+    private static Control BuildRow(FileResult r, bool showPath, Func<ManagedFile, Task>? onRepair = null, Func<ManagedFile, Task>? onRemove = null, Func<ManagedFile, Task>? onDiff = null, ICollection<string>? tried = null)
     {
         var (glyph, color) = GlyphFor(r.State);
 
@@ -1708,7 +1863,13 @@ public static partial class Installer
             FontSize = 13,
             Foreground = new SolidColorBrush(Color.Parse("#F0F0F0")),
         });
-        if (showPath)
+        // A manual step takes the path line.
+        var (note, command) = ManualStep(r, tried);
+        if (note != null)
+            info.Children.Add(HintText(note));
+        if (command != null)
+            info.Children.Add(CommandText(command));
+        if (showPath && note == null && command == null)
             info.Children.Add(new TextBlock
             {
                 Text = Platform.Linux.NixOS.IsNixOS ? DisplayPathNixOS(r.File) : r.File.Dest,
@@ -1754,7 +1915,14 @@ public static partial class Installer
 
         // Per-row Repair button: only for actionable problem rows, and only when
         // the panel provided a repair handler (the startup popup passes none).
-        if (onRepair != null && IsRepairable(r))
+        // A manual step gets Copy instead; a distro package has nothing to repair.
+        if (command != null)
+        {
+            var copy = CopyButton(command);
+            Grid.SetColumn(copy, 4);
+            grid.Children.Add(copy);
+        }
+        else if (onRepair != null && IsRepairable(r) && !r.File.External)
         {
             var repair = new Button
             {
@@ -1782,7 +1950,7 @@ public static partial class Installer
         // are mutually exclusive (a row is either a problem or OK).
         // NixOS: files are module-managed (declarative); per-file removal can't
         // work (read-only /etc, or only deletes a non-existent FHS path), so hide.
-        if (onRemove != null && r.State == FileState.Ok && !Platform.Linux.NixOS.IsNixOS)
+        if (onRemove != null && r.State == FileState.Ok && !Platform.Linux.NixOS.IsNixOS && CanRemove(r.File))
         {
             var remove = new Button
             {

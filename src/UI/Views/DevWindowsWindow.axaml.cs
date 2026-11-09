@@ -19,6 +19,7 @@ public partial class DevWindowsWindow : Window
         ("System Info", () => new SystemInfoWindow()),
         ("Hardware Monitor", () => new MonitorWindow()),
         ("Nvidia Processes", () => new NvidiaProcessesWindow()),
+        ("dGPU Apps", () => new GpuAppsWindow()),
         ("Fn Lock Remap", () => new FnLockWindow()),
         ("Handheld (Ally)", () => new HandheldWindow()),
         ("NumberPad", () => new NumberPadWindow()),

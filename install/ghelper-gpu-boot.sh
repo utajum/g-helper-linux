@@ -78,6 +78,20 @@ pci_rescan() {
     echo 1 > "$PCI_RESCAN" 2>/dev/null || true
 }
 
+# True when a Mains supply is online, or when there is no Mains supply.
+on_ac_power() {
+    local ps found=0
+    for ps in "${ROOT}"/sys/class/power_supply/*; do
+        [[ -f "$ps/type" ]] || continue
+        [[ "$(cat "$ps/type" 2>/dev/null)" == "Mains" ]] || continue
+        found=1
+        if [[ "$(cat "$ps/online" 2>/dev/null)" == "1" ]]; then
+            return 0
+        fi
+    done
+    [[ "$found" == "0" ]]
+}
+
 # Path to the privileged gpu-helper binary (whitelists rmmod/unbind/smi).
 GPU_HELPER="${ROOT:+$ROOT}/usr/local/lib/ghelper/gpu-helper"
 
@@ -340,6 +354,69 @@ dgpu_foreign_driver() {
     return 1
 }
 
+# Bus address of the discrete GPU, for the ebpf backend.
+dgpu_pci_address() {
+    [[ -d "$PCI_DEVICES" ]] || return 1
+    local dev vendor boot_vga class
+    for dev in "$PCI_DEVICES"/*; do
+        [[ -e "$dev" ]] || continue
+        class=$(cat "$dev/class" 2>/dev/null || echo "")
+        case "$class" in
+            0x0300*|0x0302*) ;;
+            *) continue ;;
+        esac
+        boot_vga=$(cat "$dev/boot_vga" 2>/dev/null || echo "0")
+        [[ "$boot_vga" != "1" ]] || continue
+        vendor=$(cat "$dev/vendor" 2>/dev/null || echo "")
+        case "$vendor" in
+            0x10de|0x1002|0x8086) ;;
+            *) continue ;;
+        esac
+        basename "$dev"
+        return 0
+    done
+    return 1
+}
+
+# eBPF backend: re-attach the GPU block filter; bpffs is empty after a reboot.
+apply_ebpf_block() {
+    local bdf
+    if ! bdf=$(dgpu_pci_address); then
+        log "ebpf: no discrete GPU found, nothing to block"
+        return 1
+    fi
+    if ! run_gpu_helper 20 bpf-block on "$bdf"; then
+        log "ebpf: could not attach the filter for $bdf (is bpf in the LSM list?)"
+        return 1
+    fi
+    log "ebpf: filter attached for $bdf"
+    return 0
+}
+
+# ebpf boot block: drop other backends' artifacts, rescan, attach. $1: mode for logs.
+apply_ebpf_boot() {
+    local m="$1"
+    log "$m: ebpf backend - attaching GPU block filter"
+    # Block files from another backend keep the dGPU away from the filter.
+    if [[ -f "$MODPROBE_BLOCK" || -f "$UDEV_BLOCK" ]]; then
+        log "$m: ebpf backend - removing stale block artifacts"
+        rm -f "$MODPROBE_BLOCK" "$UDEV_BLOCK" 2>/dev/null
+        udevadm_reload
+    fi
+    if ! dgpu_pci_address >/dev/null; then
+        log "$m: ebpf backend - dGPU not on the bus, rescanning"
+        pci_rescan
+        udevadm_settle
+    fi
+    if apply_ebpf_block; then
+        rm -f "$TRIGGER" 2>/dev/null
+        reset_eco_retry_counter
+        log "$m: ebpf backend apply complete"
+    else
+        record_eco_failure "ebpf filter could not be attached"
+    fi
+}
+
 # Re-apply suspend variant. The kernel resets /sys/power/mem_sleep to the
 # firmware default on every boot, so the user's choice (written by ghelper
 # to /etc/ghelper/mem-sleep) must be restored here. Runs before the GPU
@@ -377,6 +454,7 @@ if [[ -f "$BACKEND_FILE" ]]; then
     case "$raw_backend" in
         pci)       BACKEND="pci" ;;
         asus-wmi)  BACKEND="asus-wmi" ;;
+        ebpf)      BACKEND="ebpf" ;;
         *)         log "backend: unknown value '$raw_backend' - falling back to asus-wmi" ;;
     esac
 fi
@@ -522,6 +600,12 @@ udevadm_settle
 # STEP 4: Apply mode.
 case "$MODE" in
     eco)
+        # eBPF backend: the driver stays loaded, so skip every step below.
+        if [[ "$BACKEND" == "ebpf" ]]; then
+            apply_ebpf_boot "eco"
+            exit 0
+        fi
+
         # Driver state check. nvidia may already be loaded by udev coldplug.
         # We never attempt rmmod/unbind/remove of a bound driver because
         # writing to the driver's sysfs or ACPI power path while bound
@@ -664,6 +748,31 @@ case "$MODE" in
         ;;
 
     standard|optimized)
+        # ebpf optimized: block on battery, never with MUX=0.
+        if [[ "$MODE" == "optimized" && "$BACKEND" == "ebpf" ]] && ! on_ac_power; then
+            mux_now=$([[ -n "$mux_path" ]] && cat "$mux_path" 2>/dev/null || echo "-1")
+            if [[ "$mux_now" == "0" ]]; then
+                log "optimized: MUX=0, dGPU drives the panel - not blocking"
+            else
+                apply_ebpf_boot "optimized"
+                exit 0
+            fi
+        fi
+
+        # eBPF backend: the filter is gone after a reboot; drop stale block files.
+        if [[ "$BACKEND" == "ebpf" ]]; then
+            log "$MODE: ebpf backend - filter does not survive reboot, dGPU already visible"
+            if [[ -f "$MODPROBE_BLOCK" || -f "$UDEV_BLOCK" ]]; then
+                log "$MODE: ebpf backend - removing stale block artifacts"
+                rm -f "$MODPROBE_BLOCK" "$UDEV_BLOCK" 2>/dev/null
+                udevadm_reload
+                pci_rescan
+            fi
+            rm -f "$TRIGGER" 2>/dev/null
+            reset_eco_retry_counter
+            exit 0
+        fi
+
         # PCI backend: remove blocks, rescan PCI so the dGPU reappears.
         if [[ "$BACKEND" == "pci" ]]; then
             log "$MODE: PCI backend - removing block artifacts, reloading udev, rescanning PCI"

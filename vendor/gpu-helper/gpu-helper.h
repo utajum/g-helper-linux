@@ -75,4 +75,12 @@ int do_msr_uv(int argc, char **argv);
 /* lenovo_ops.c */
 int do_lenovo_flip_to_start(int argc, char **argv);
 
+/* bpf_ops.c */
+int do_bpf_caps(void);
+int do_bpf_block(int argc, char **argv);
+
+/* lsm_ops.c */
+int do_lsm_enable(int argc, char **argv);
+int do_lsm_disable(int argc, char **argv);
+
 #endif

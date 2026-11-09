@@ -65,6 +65,25 @@ jobs:
       - name: Run gpu-helper argument checks
         run: bash install/tests/test-gpu-helper.sh
 
+  bpf-vm:
+    name: eBPF filter on a real kernel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install qemu, clang and libbpf
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 busybox-static libbpf1 clang zstd cpio xxd
+
+      # KVM when the runner exposes it; the script falls back to TCG.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm || true
+
+      - name: Load and exercise the filter in a VM
+        run: bash install/tests/test-bpf-vm.sh
+
   build:
     runs-on: ubuntu-latest
     steps:
