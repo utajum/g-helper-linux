@@ -153,6 +153,9 @@ internal sealed class BpfGpuBackend : IGpuBackend
 
         string? want = AppConfig.GetString("gpu_mode");
         bool active = Block.GpuBlockControl.IsActive();
+        // Filter left on by the boot service or a previous run: stop telemetry as Enable does.
+        if (active)
+            NVidia.GpuQueryGate.Hold("ebpf gpu block enabled");
 
         // Optimized: AutoGpuSwitch re-picks the leg; keep the saved mode.
         if (want == "optimized" && AppConfig.Is("gpu_auto"))
