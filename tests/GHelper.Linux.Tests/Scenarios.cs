@@ -2706,10 +2706,12 @@ public static class Scenarios
             sb.WriteBackend("ebpf");
             AppConfig.Set("gpu_mode", "eco");
             sb.BlockOps.ActiveState = true;
+            Gate.Resume();
 
             sb.Controller.ApplyPendingOnStartup();
 
             Assert(sb.BlockOps.Calls.Contains("refresh"), "node list re-resolved at startup");
+            Assert(Gate.IsPaused, "telemetry held, it would wake the dGPU");
         });
 
     static void Ebpf_Startup_Eco_ExternalDisplay_StaysVisible()
