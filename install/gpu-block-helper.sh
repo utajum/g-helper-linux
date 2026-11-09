@@ -9,12 +9,14 @@
 #   sudo gpu-block-helper.sh unpersist
 #   sudo gpu-block-helper.sh set-backend <backend>
 #   sudo gpu-block-helper.sh live-standard
+#   sudo gpu-block-helper.sh clear-recovery
 #   sudo gpu-block-helper.sh clean
 #   sudo gpu-block-helper.sh uninstall
 #
 # Backends:
 #   asus-wmi (default) - boot script writes dgpu_disable=1 via firmware.
 #                        Block files are temporary (removed after apply).
+#   ebpf               - eBPF LSM filter hides the dGPU; boot re-attaches it.
 #   pci                - modprobe block + udev rule are the persistent Eco
 #                        state. Boot script never touches firmware sysfs.
 set -euo pipefail
@@ -41,9 +43,9 @@ case "${1:-}" in
                 ;;
         esac
         case "$BACKEND" in
-            asus-wmi|pci) ;;
+            asus-wmi|pci|ebpf) ;;
             *)
-                echo "Error: invalid backend '$BACKEND' (expected: asus-wmi|pci)" >&2
+                echo "Error: invalid backend '$BACKEND' (expected: asus-wmi|pci|ebpf)" >&2
                 exit 1
                 ;;
         esac
@@ -54,7 +56,8 @@ case "${1:-}" in
         echo "$BACKEND" > "$BACKEND_DEST"
         chmod 644 "$BACKEND_DEST"
 
-        if [[ "$MODE" == "eco" ]]; then
+        # ebpf needs the dGPU on the bus: no block files, stale ones are dropped.
+        if [[ "$MODE" == "eco" && "$BACKEND" != "ebpf" ]]; then
             # Modprobe block: strongest form, prevents loading by any means.
             cat > "$MODPROBE_DEST" << 'GHELPER_EOF'
 # ghelper: block dGPU driver modules for Eco mode
@@ -94,7 +97,7 @@ ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1002", ATTR{class}=="0x040300"
 GHELPER_EOF
             chmod 644 "$UDEV_DEST"
         else
-            # Non-eco: remove any block files (switching out of Eco).
+            # Non-eco or ebpf: remove any block files.
             rm -f "$MODPROBE_DEST" "$UDEV_DEST"
         fi
 
@@ -104,11 +107,18 @@ GHELPER_EOF
     persist)
         # Write persistent Eco marker. Unlike the one-shot trigger, this
         # survives cleanup so Eco is re-applied on every boot.
+        # optimized is ebpf-only: the boot script picks the leg by AC state.
         MODE="${2:-eco}"
         case "$MODE" in
             eco) ;;
+            optimized)
+                if [[ "$(cat "$BACKEND_DEST" 2>/dev/null)" != "ebpf" ]]; then
+                    echo "Error: persist 'optimized' needs the ebpf backend" >&2
+                    exit 1
+                fi
+                ;;
             *)
-                echo "Error: persist only supports 'eco' (got '$MODE')" >&2
+                echo "Error: persist only supports 'eco' or 'optimized' (got '$MODE')" >&2
                 exit 1
                 ;;
         esac
@@ -127,22 +137,27 @@ GHELPER_EOF
         ;;
     uninstall)
         # Full reset: remove everything including backend and persistent markers.
-        rm -f "$MODPROBE_DEST" "$UDEV_DEST" "$TRIGGER_DEST" "$PERSISTENT_DEST" "$BACKEND_DEST"
+        rm -f "$MODPROBE_DEST" "$UDEV_DEST" "$TRIGGER_DEST" "$PERSISTENT_DEST" "$BACKEND_DEST" \
+              "$TRIGGER_DIR/gpu-allowed-comms"
         ;;
     set-backend)
         # Update the backend marker. Called from the UI when the user toggles
         # PCI mode so the boot service sees it on the next boot.
         BACKEND="${2:-asus-wmi}"
         case "$BACKEND" in
-            asus-wmi|pci) ;;
+            asus-wmi|pci|ebpf) ;;
             *)
-                echo "Error: invalid backend '$BACKEND' (expected: asus-wmi|pci)" >&2
+                echo "Error: invalid backend '$BACKEND' (expected: asus-wmi|pci|ebpf)" >&2
                 exit 1
                 ;;
         esac
         mkdir -p "$TRIGGER_DIR"
         echo "$BACKEND" > "$BACKEND_DEST"
         chmod 644 "$BACKEND_DEST"
+        ;;
+    clear-recovery)
+        # Drop the boot recovery marker; the app cannot unlink in root-owned /etc/ghelper.
+        rm -f "$TRIGGER_DIR/last-recovery"
         ;;
     live-standard)
         # Live recovery from PCI Eco to Standard. Drops block files, reloads
@@ -155,7 +170,7 @@ GHELPER_EOF
         modprobe amdgpu 2>/dev/null || true
         ;;
     *)
-        echo "Usage: $0 {write <mode> [backend]|persist <mode>|unpersist|set-backend <backend>|live-standard|clean|uninstall}" >&2
+        echo "Usage: $0 {write <mode> [backend]|persist <mode>|unpersist|set-backend <backend>|live-standard|clear-recovery|clean|uninstall}" >&2
         exit 1
         ;;
 esac

@@ -815,6 +815,40 @@ public static class Diagnostics
             foreach (var h in hazards)
                 sb.AppendLine($"    - {h}");
         }
+
+        AppendGpuBlockState(sb);
+    }
+
+    /// <summary>eBPF GPU block state, on every system: the LSM list explains a greyed-out option.</summary>
+    private static void AppendGpuBlockState(StringBuilder sb)
+    {
+        var lsm = Platform.Linux.SysfsHelper.ReadAttributeSilent("/sys/kernel/security/lsm");
+        bool bpfActive = (lsm ?? "").Split(',').Any(t => t.Trim() == "bpf");
+
+        sb.AppendLine("  eBPF GPU block:");
+        sb.AppendLine($"    active LSMs: {lsm ?? "unreadable"}");
+        sb.AppendLine($"    bpf LSM active: {(bpfActive ? "yes" : "no (needs lsm=...,bpf on the kernel cmdline)")}");
+
+        string? bdf = Gpu.Block.DgpuPowerMonitor.DiscreteBdf();
+        if (bdf != null)
+        {
+            sb.AppendLine($"    dGPU {bdf} power_state: {Gpu.Block.DgpuPowerMonitor.CurrentText()}");
+            string powerDir = $"/sys/bus/pci/devices/{bdf}/power";
+            sb.AppendLine($"    runtime PM control: {Platform.Linux.SysfsHelper.ReadAttributeSilent(Path.Combine(powerDir, "control")) ?? "unknown"}");
+            sb.AppendLine($"    runtime usage: {Platform.Linux.SysfsHelper.ReadAttributeSilent(Path.Combine(powerDir, "runtime_usage")) ?? "unknown"}");
+        }
+
+        if (AppConfig.IsBpfGpuBackend())
+        {
+            var status = Gpu.Block.GpuBlockControl.QueryStatus();
+            sb.AppendLine($"    backend selected: yes (attached={status.Attached} " +
+                          $"mode={status.Mode} blocked_files={status.BlockedFiles})");
+            sb.AppendLine($"    reached D3cold since enable: {Gpu.Block.DgpuPowerMonitor.ReachedCold}");
+        }
+        else
+        {
+            sb.AppendLine("    backend selected: no");
+        }
     }
 
     private static void AppendGpuSwitchingHealth(StringBuilder sb)

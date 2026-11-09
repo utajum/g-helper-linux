@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="using:GHelper.Linux.UI.Controls"
+        x:Class="GHelper.Linux.UI.Views.GpuAppsWindow"
+        Title="dGPU apps"
+        Width="620"
+        Height="620"
+        MinWidth="520"
+        MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        Background="#1C1C1C"
+        Icon="avares://ghelper/UI/Assets/standard.ico">
+
+    <Window.Styles>
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="12" />
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb">
+            <Setter Property="RenderTransform" Value="none" />
+            <Setter Property="Background" Value="#5A5A5A" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="#7A7A7A" />
+        </Style>
+        <Style Selector="ScrollBar /template/ Rectangle#TrackRect">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="Fill" Value="#2A2A2A" />
+        </Style>
+        <!-- One app row. Hover lifts it so the row reads as clickable. -->
+        <Style Selector="Border.row">
+            <Setter Property="Background" Value="#2E2E2E" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style Selector="Border.row:pointerover">
+            <Setter Property="Background" Value="#383838" />
+        </Style>
+        <!-- Which GPU an app sits on. Colour carries the meaning, so the
+             text stays short enough to never wrap. -->
+        <Style Selector="Border.tag">
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="12" RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Status line: what the block is doing right now. Without it the
+             list of apps has no context. -->
+        <Border Grid.Row="0" Classes="panel" Margin="0">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <ctrl:Icon Grid.Column="0" IconName="rocket" Width="20" Height="20"
+                           VerticalAlignment="Center" Margin="0,0,10,0" />
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock x:Name="labelState" Classes="header" Text="" />
+                    <TextBlock x:Name="labelStateDesc" Classes="label-dim"
+                               Text="" TextWrapping="Wrap" />
+                </StackPanel>
+                <Button Grid.Column="2" x:Name="buttonRefresh" Classes="ghelper"
+                        Click="ButtonRefresh_Click" Padding="12,4" FontSize="11"
+                        VerticalAlignment="Center">
+                    <TextBlock x:Name="labelRefresh" Text="Refresh" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Search doubles as the add box: type to narrow the running list,
+             or add a name that is not running yet. -->
+        <Border Grid.Row="1" Classes="panel" Margin="0,8,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" x:Name="inputName"
+                         PlaceholderText="Search apps and Steam games, or type a process name"
+                         Text=""
+                         VerticalAlignment="Center"
+                         Background="#1C1C1C"
+                         BorderBrush="#3A3A3A" />
+                <Button Grid.Column="1" x:Name="buttonAdd" Classes="ghelper"
+                        Click="ButtonAdd_Click" Padding="12,4" FontSize="11"
+                        Margin="8,0,0,0">
+                    <TextBlock x:Name="labelAdd" Text="Add" VerticalAlignment="Center" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      AllowAutoHide="False"
+                      Margin="0,8,0,0">
+            <StackPanel x:Name="panelRows" Spacing="6" Margin="0,0,4,0" />
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="3" x:Name="labelFooter" Classes="label-dim"
+                   Text="" TextWrapping="Wrap" Margin="4,8,4,0" />
+
+    </Grid>
+</Window>

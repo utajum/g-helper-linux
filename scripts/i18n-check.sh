@@ -5,6 +5,7 @@
 #   A) every other language defines exactly the same keys (no missing, no drift)
 #   B) every key defined in English is actually consumed by code
 #   C) no language file contains keys that don't exist in English
+#   E) no word mixes alphabets (looks right, breaks search and screen readers)
 #
 # Why this exists:
 #   The Labels.Get() method silently falls back to English when a key is missing
@@ -57,7 +58,11 @@ fi
 #     key as a ManagedFile.NameKey literal, resolved via Labels.Get(f.NameKey).
 #   - "mkey_": Input/MKeyControl.cs stores firmware-opcode label keys as string
 #     literals in its Choices table, resolved via Labels.Get(key) in OpcodeChoices.
-INDIRECT_PREFIXES=("sysinfo_" "bind_" "btn_" "ally_grp_" "controller_mode_" "sysfiles_name_" "mkey_")
+#   - "gpu_block_unavail_": Gpu/Block/GpuBlockCapability.cs returns the reason
+#     the block is unavailable as a label key, resolved via Labels.Get(reason).
+#   - "gpu_block_cold_": Gpu/Block/DgpuPowerMonitor.cs returns the reason a blocked
+#     dGPU stayed awake as a label key, resolved via Labels.Get(reasonKey).
+INDIRECT_PREFIXES=("sysinfo_" "bind_" "btn_" "ally_grp_" "controller_mode_" "sysfiles_name_" "mkey_" "gpu_block_unavail_" "gpu_block_cold_")
 
 # ----- argument parsing -----
 
@@ -302,10 +307,27 @@ fi
 loader_count=${#LOADER_SET[@]}
 detect_fail=$((detect_mismatch + detect_unregistered + detect_uncovered))
 
+# ----- Audit E: mixed alphabets -----
+# Words mixing Latin/Cyrillic/Greek, or Cyrillic in other languages; \n escapes blanked.
+
+CYRILLIC_LANGS=" Russian.cs Ukrainian.cs Serbian.cs Macedonian.cs "
+WORD='[\p{L}\p{M}]*'
+MIX_PAT="$WORD(?:[A-Za-z]$WORD[\p{Cyrillic}\p{Greek}]|[\p{Cyrillic}\p{Greek}]$WORD[A-Za-z]|\p{Cyrillic}$WORD\p{Greek}|\p{Greek}$WORD\p{Cyrillic})$WORD"
+MIXED_FILE="$WORK_DIR/mixed"
+: > "$MIXED_FILE"
+for file in "$LANG_DIR"/*.cs; do
+    name=$(basename "$file")
+    pat="$MIX_PAT"
+    [[ "$CYRILLIC_LANGS" == *" $name "* ]] || pat="$MIX_PAT|$WORD\p{Cyrillic}$WORD"
+    sed -E 's/\\[nrt"\\]/ /g' "$file" | LC_ALL=C.UTF-8 grep -noP "$pat" \
+        | sed "s|^|$name:|" >> "$MIXED_FILE" || true
+done
+mixed_count=$(grep -c . "$MIXED_FILE" || true)
+
 # ----- output -----
 
 exit_code=0
-if [[ $total_missing -gt 0 || $dead_count -gt 0 || $total_drift -gt 0 || $detect_fail -gt 0 ]]; then
+if [[ $total_missing -gt 0 || $dead_count -gt 0 || $total_drift -gt 0 || $detect_fail -gt 0 || $mixed_count -gt 0 ]]; then
     exit_code=1
 fi
 
@@ -322,6 +344,7 @@ if [[ "$mode" == "json" ]]; then
     printf '"detect_mismatch":%d,' "$detect_mismatch"
     printf '"detect_unregistered":%d,' "$detect_unregistered"
     printf '"detect_uncovered":%d,' "$detect_uncovered"
+    printf '"mixed_scripts":%d,' "$mixed_count"
     printf '"exit_code":%d' "$exit_code"
     printf '}\n'
     exit "$exit_code"
@@ -331,7 +354,7 @@ if [[ "$mode" == "summary" ]]; then
     if [[ $exit_code -eq 0 ]]; then
         echo "${GREEN}i18n OK${NC} - $en_count keys, $used_count used, 0 missing, 0 dead, 0 drift, $loader_count langs auto-detectable"
     else
-        echo "${RED}i18n FAIL${NC} - $en_count keys | $total_missing missing across ${#missing_files[@]} langs | $dead_count dead | $total_drift drift across ${#drift_files[@]} langs | detect: $detect_mismatch mismatch / $detect_unregistered unregistered / $detect_uncovered uncovered"
+        echo "${RED}i18n FAIL${NC} - $en_count keys | $total_missing missing across ${#missing_files[@]} langs | $dead_count dead | $total_drift drift across ${#drift_files[@]} langs | detect: $detect_mismatch mismatch / $detect_unregistered unregistered / $detect_uncovered uncovered | $mixed_count mixed-script"
     fi
     exit "$exit_code"
 fi
@@ -442,14 +465,27 @@ else
 fi
 print_full ""
 
+print_full "${BOLD}[E] Mixed alphabets${NC} ${DIM}(one word typed in two alphabets)${NC}"
+if [[ $mixed_count -eq 0 ]]; then
+    print_full "  ${GREEN}✓ No mixed-alphabet words${NC}"
+elif [[ "$mode" == "quiet" ]]; then
+    echo "${RED}MIXED${NC} $mixed_count words"
+else
+    echo "  ${RED}✗${NC} ${BOLD}$mixed_count mixed-alphabet word(s)${NC} ${DIM}(file:line:word)${NC}"
+    while IFS= read -r m; do
+        echo "      ${DIM}- $m${NC}"
+    done < "$MIXED_FILE"
+fi
+print_full ""
+
 # ---- Summary footer ----
 if [[ $exit_code -eq 0 ]]; then
     print_full "${GREEN}${BOLD}✓ All audits passed${NC}"
 else
     if [[ "$mode" == "quiet" ]]; then
-        echo "${RED}FAIL${NC} $total_missing missing | $dead_count dead | $total_drift drift | $detect_fail detect"
+        echo "${RED}FAIL${NC} $total_missing missing | $dead_count dead | $total_drift drift | $detect_fail detect | $mixed_count mixed"
     else
-        print_full "${RED}${BOLD}✗ i18n drift detected${NC} - $total_missing missing across ${#missing_files[@]} langs | $dead_count dead | $total_drift drift across ${#drift_files[@]} langs | $detect_fail DetectLocale issue(s)"
+        print_full "${RED}${BOLD}✗ i18n drift detected${NC} - $total_missing missing across ${#missing_files[@]} langs | $dead_count dead | $total_drift drift across ${#drift_files[@]} langs | $detect_fail DetectLocale issue(s) | $mixed_count mixed-alphabet word(s)"
     fi
 fi
 

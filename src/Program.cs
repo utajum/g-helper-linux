@@ -11,6 +11,13 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Before anything touches the environment the program inherits.
+        if (args.Length > 0 && args[0] == "--dgpu")
+        {
+            Environment.Exit(DgpuLauncher.Run(args[1..]));
+            return;
+        }
+
         // Early-start systemd units (COSMIC autostart) may lack session vars;
         // import them from the systemd user manager before anything reads them.
         if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP")))

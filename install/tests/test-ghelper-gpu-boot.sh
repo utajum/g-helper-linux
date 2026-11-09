@@ -70,6 +70,13 @@ set_udev_block()     { echo "rules" > "$SANDBOX/etc/udev/rules.d/50-ghelper-remo
 set_backend()        { echo "$1" > "$SANDBOX/etc/ghelper/backend"; }
 add_module()         { mkdir -p "$SANDBOX/sys/module/$1"; }
 
+# Fake a Mains power supply. Arg: 1 = plugged in, 0 = on battery.
+set_ac() {
+    mkdir -p "$SANDBOX/sys/class/power_supply/AC0"
+    echo "Mains" > "$SANDBOX/sys/class/power_supply/AC0/type"
+    echo "$1"    > "$SANDBOX/sys/class/power_supply/AC0/online"
+}
+
 # Fake a PCI device. Args: <bdf> <vendor_hex> <boot_vga 0|1> <driver "" or "amdgpu" or "nvidia"> [class]
 # class defaults to 0x030000 (VGA controller). Use 0x030200 for 3D controller.
 add_pci_device() {
@@ -1851,6 +1858,155 @@ test_110_pci_standard_resets_counter() {
     expect_file_content /sys/bus/pci/rescan 1 || return 1
 }
 
+# -- eBPF backend ---------------------------------------------------------------
+# The filter itself cannot run in a sandbox, so these assert the branch taken
+# (run_gpu_helper logs "test: would gpu-helper ..." instead of executing).
+
+# 111: ebpf eco -> attach the filter, never touch the driver or dgpu_disable
+test_111_ebpf_eco_attaches() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_module nvidia
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "backend: ebpf" || return 1
+    expect_log_contains "eco: ebpf backend - attaching GPU block filter" || return 1
+    expect_log_contains "would gpu-helper bpf-block on 0000:01:00.0" || return 1
+    expect_log_NOT_contains "dgpu_disable=1" || return 1
+    expect_log_NOT_contains "attempting driver release" || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 0 || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+}
+
+# 112: ebpf eco with artifacts from another backend -> heal them first
+test_112_ebpf_eco_heals_stale_artifacts() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 ""
+    set_trigger eco
+    set_modprobe_block
+    set_udev_block
+    run_boot_script || return 1
+    expect_log_contains "removing stale block artifacts" || return 1
+    expect_file_missing /etc/modprobe.d/ghelper-gpu-block.conf || return 1
+    expect_file_missing /etc/udev/rules.d/50-ghelper-remove-dgpu.rules || return 1
+    expect_log_contains "would gpu-helper bpf-block on" || return 1
+}
+
+# 113: ebpf eco with the dGPU missing from the bus -> rescan, then fail cleanly
+test_113_ebpf_eco_no_dgpu_rescans() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    set_trigger eco
+    run_boot_script || return 1
+    expect_log_contains "dGPU not on the bus, rescanning" || return 1
+    expect_log_contains "no discrete GPU found" || return 1
+    expect_file_exists /etc/ghelper/eco-retry-count || return 1
+}
+
+# 114: ebpf standard -> nothing to undo, stale artifacts healed
+test_114_ebpf_standard_heals() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_trigger standard
+    set_modprobe_block
+    set_udev_block
+    run_boot_script || return 1
+    expect_log_contains "filter does not survive reboot" || return 1
+    expect_log_contains "removing stale block artifacts" || return 1
+    expect_file_missing /etc/modprobe.d/ghelper-gpu-block.conf || return 1
+    expect_log_NOT_contains "bpf-block on" || return 1
+}
+
+# 115: ebpf optimized booted on AC -> leave the dGPU visible
+test_115_ebpf_optimized_ac_no_block() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_ac 1
+    set_trigger optimized
+    run_boot_script || return 1
+    expect_log_contains "backend: ebpf" || return 1
+    expect_log_NOT_contains "bpf-block on" || return 1
+    expect_log_contains "filter does not survive reboot" || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+}
+
+# 116: ebpf optimized booted on battery -> attach the filter
+test_116_ebpf_optimized_battery_blocks() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_ac 0
+    set_trigger optimized
+    run_boot_script || return 1
+    expect_log_contains "optimized: ebpf backend - attaching GPU block filter" || return 1
+    expect_log_contains "would gpu-helper bpf-block on 0000:01:00.0" || return 1
+    expect_log_NOT_contains "dgpu_disable=1" || return 1
+    expect_file_missing /etc/ghelper/pending-gpu-mode || return 1
+}
+
+# 117: ebpf optimized on battery but MUX=0 -> dGPU drives the panel, never block
+test_117_ebpf_optimized_battery_mux0_no_block() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  0
+    add_pci_device 0000:01:00.0 0x10de 1 nvidia
+    set_ac 0
+    set_trigger optimized
+    run_boot_script || return 1
+    expect_log_contains "MUX=0, dGPU drives the panel - not blocking" || return 1
+    expect_log_NOT_contains "bpf-block on" || return 1
+}
+
+# 118: persistent optimized marker, no one-shot trigger, battery -> blocks
+test_118_ebpf_persistent_optimized_battery() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_ac 0
+    set_persistent optimized
+    run_boot_script || return 1
+    expect_log_contains "Persistent GPU mode: 'optimized'" || return 1
+    expect_log_contains "would gpu-helper bpf-block on" || return 1
+    # The marker must survive so the next boot decides again.
+    expect_file_exists /etc/ghelper/persistent-gpu-mode || return 1
+}
+
+# 119: persistent optimized on AC -> no block, marker still kept
+test_119_ebpf_persistent_optimized_ac() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_ac 1
+    set_persistent optimized
+    run_boot_script || return 1
+    expect_log_contains "Persistent GPU mode: 'optimized'" || return 1
+    expect_log_NOT_contains "bpf-block on" || return 1
+    expect_file_exists /etc/ghelper/persistent-gpu-mode || return 1
+}
+
+# 120: no Mains supply at all (desktop/VM) -> treated as AC, never blocks
+test_120_ebpf_optimized_no_mains_treated_as_ac() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_trigger optimized
+    run_boot_script || return 1
+    expect_log_NOT_contains "bpf-block on" || return 1
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "═"
 echo " ghelper-gpu-boot.sh scenario tests"
@@ -1965,6 +2121,16 @@ for name in \
     108_mem_sleep_no_state_file \
     109_eco_success_clears_failure_marker \
     110_pci_standard_resets_counter \
+    111_ebpf_eco_attaches \
+    112_ebpf_eco_heals_stale_artifacts \
+    113_ebpf_eco_no_dgpu_rescans \
+    114_ebpf_standard_heals \
+    115_ebpf_optimized_ac_no_block \
+    116_ebpf_optimized_battery_blocks \
+    117_ebpf_optimized_battery_mux0_no_block \
+    118_ebpf_persistent_optimized_battery \
+    119_ebpf_persistent_optimized_ac \
+    120_ebpf_optimized_no_mains_treated_as_ac \
 ; do
     scenario "$name"
 done

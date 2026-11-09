@@ -306,10 +306,10 @@ public class LinuxLenovoWmi : IHardwareControl
     public bool IsGpuEcoAvailable()
     {
         // Mainline Lenovo has no firmware dgpu_disable; Eco is the PCI backend
-        // (driver block + reboot). Show the GPU panel whenever that path is
+        // (driver block + reboot) or eBPF. Show the GPU panel whenever that path is
         // usable so Eco/Standard stay reachable, including while the dGPU is
         // hot-removed in Eco (block artifacts present, device off the bus).
-        return LinuxAsusWmi.IsPciBackendUsable();
+        return LinuxAsusWmi.IsPciBackendUsable() || LinuxAsusWmi.IsBpfBackendUsable();
     }
 
     public bool CanToggleGpuBackend()

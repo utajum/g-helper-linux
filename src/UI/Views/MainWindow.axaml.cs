@@ -79,6 +79,8 @@ public partial class MainWindow : Window
                 });
             }
             PollXgmIfChanged();
+            PollGpuBlockColdState();
+            ApplyGpuBlockIndicator();
         };
 
         // Tray-icon model: hide on user-initiated close, dispose only when the
@@ -554,6 +556,9 @@ public partial class MainWindow : Window
                 labelGPU.Text += $" (dGPU {runtime})";
         }
 
+        _gpuHeaderBase = labelGPU.Text;
+        ApplyGpuBlockIndicator();
+
         UpdateGpuButtons();
 
         // GPU tip - check for pending reboot first
@@ -575,8 +580,10 @@ public partial class MainWindow : Window
         }
 
         bool pciBackend = Helpers.AppConfig.IsPciGpuBackend();
+        bool bpfBackend = Helpers.AppConfig.IsBpfGpuBackend();
         bool gpuDev = Helpers.AppConfig.Is("show_gpu_dev");
-        buttonUltimate.IsVisible = (!pciBackend && wmi.IsFeatureSupported(AsusAttributes.GpuMuxMode)) || gpuDev;
+        // Ultimate is a MUX write; the ebpf backend never touches the MUX.
+        buttonUltimate.IsVisible = (!pciBackend && !bpfBackend && wmi.IsFeatureSupported(AsusAttributes.GpuMuxMode)) || gpuDev;
         buttonOptimized.IsVisible = (!pciBackend && Helpers.AppConfig.IsOptimizedGpuModeEnabled()) || gpuDev;
 
         int visibleGpuButtons = 2
@@ -681,15 +688,6 @@ public partial class MainWindow : Window
                                 _fansWindow.RefreshGpuPublic();
                         });
                     });
-                string appliedText = target switch
-                {
-                    GpuMode.Eco => Labels.Get("gpu_notify_eco"),
-                    GpuMode.Standard => Labels.Get("gpu_notify_standard"),
-                    GpuMode.Optimized => Labels.Get("gpu_notify_optimized"),
-                    GpuMode.Ultimate => Labels.Get("gpu_notify_ultimate"),
-                    _ => Labels.Get("gpu_notify_changed")
-                };
-                App.System?.ShowNotification(Labels.Get("gpu_mode"), appliedText, "video-display");
                 break;
 
             case GpuSwitchResult.AlreadySet:
@@ -697,25 +695,13 @@ public partial class MainWindow : Window
                 break;
 
             case GpuSwitchResult.RebootRequired:
-                string rebootText = target switch
-                {
-                    GpuMode.Ultimate => Labels.Get("gpu_reboot_ultimate"),
-                    GpuMode.Standard => Labels.Get("gpu_reboot_standard"),
-                    GpuMode.Optimized => Labels.Get("gpu_reboot_optimized"),
-                    GpuMode.Eco => Labels.Get("gpu_reboot_eco"),
-                    _ => Labels.Get("gpu_reboot_generic")
-                };
                 labelTipGPU.Text = target == GpuMode.Optimized
                     ? Labels.Get("gpu_mux_reboot_auto")
                     : Labels.Get("gpu_mux_reboot");
-                App.System?.ShowNotification(Labels.Get("gpu_mode"), rebootText, "system-reboot");
                 break;
 
             case GpuSwitchResult.EcoBlocked:
                 labelTipGPU.Text = Labels.Get("gpu_eco_blocked_mux");
-                App.System?.ShowNotification(Labels.Get("gpu_mode"),
-                    Labels.Get("gpu_eco_blocked_mux"),
-                    "dialog-warning");
                 break;
 
             case GpuSwitchResult.DriverBlocking:
@@ -724,13 +710,6 @@ public partial class MainWindow : Window
 
             case GpuSwitchResult.Deferred:
                 labelTipGPU.Text = Labels.Get("gpu_eco_pending");
-                App.System?.ShowNotification(Labels.Get("gpu_mode"),
-                    Labels.Get("gpu_eco_after_reboot"), "system-reboot");
-                break;
-
-            case GpuSwitchResult.Failed:
-                App.System?.ShowNotification(Labels.Get("gpu_mode"),
-                    Labels.Get("gpu_switch_failed"), "dialog-error");
                 break;
 
             case GpuSwitchResult.DgpuReenableFailed:
@@ -738,6 +717,8 @@ public partial class MainWindow : Window
                 ShowDgpuReenableFailedDialog();
                 break;
         }
+        if (GpuSwitchNotice.For(result, target) is { } notice)
+            App.System?.ShowNotification(Labels.Get("gpu_mode"), notice.Text, notice.Icon);
     }
 
     /// <summary>
@@ -835,16 +816,21 @@ public partial class MainWindow : Window
     /// buttons and fights with dialog layout (HorizontalAlignment=Stretch, hover
     /// state overrides accent color).
     /// </summary>
-    private void ShowDriverBlockingDialog(GpuMode target)
+    public void ShowDriverBlockingDialog(GpuMode target)
     {
         bool dgpuSoleDisplay = (App.Wmi?.GetGpuMuxMode() ?? -1) == 0;
         // X11: Xorg holds nvidia_drm for PRIME offload, rmmod always fails
         bool x11Session = !Display.DisplayBackendFactory.IsWaylandSession();
-        bool canSwitchNow = !dgpuSoleDisplay && !x11Session;
+        // eBPF: nothing is unloaded and no reboot is needed; the dialog is about the apps.
+        bool bpf = Helpers.AppConfig.IsBpfGpuBackend();
+        // eBPF Optimized picks Eco or Standard by itself: no reboot step, nothing to ask on AC.
+        bool bpfOptimized = bpf && target == GpuMode.Optimized;
+        bool canSwitchNow = !dgpuSoleDisplay && (bpf || !x11Session);
+        string title = Labels.Get(bpf ? "gpu_dgpu_processes_title" : "gpu_driver_title");
 
         var dialog = new Window
         {
-            Title = Labels.Get("gpu_driver_title"),
+            Title = title,
             Width = 540,
             MaxHeight = 600,
             SizeToContent = SizeToContent.Height,
@@ -873,7 +859,7 @@ public partial class MainWindow : Window
 
         var titleText = new TextBlock
         {
-            Text = Labels.Get("gpu_driver_title"),
+            Text = title,
             FontSize = 15,
             FontWeight = Avalonia.Media.FontWeight.Bold,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
@@ -889,7 +875,7 @@ public partial class MainWindow : Window
 
         var body = new TextBlock
         {
-            Text = Labels.Get("gpu_driver_body"),
+            Text = Labels.Get(bpf ? "gpu_block_holders_body" : "gpu_driver_body"),
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             FontSize = 13,
             LineHeight = 20,
@@ -932,6 +918,8 @@ public partial class MainWindow : Window
         holderRefreshTimer.Tick += (_, _) =>
         {
             dgpuCountLabel.Text = ComposeHolderSummary();
+            if (bpfOptimized && App.Power?.IsOnAcPower() == true)
+                dialog.Close();
         };
         var dgpuViewButton = new Button
         {
@@ -1006,7 +994,7 @@ public partial class MainWindow : Window
             btnSwitchNow.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
             switchNowWarning = new TextBlock
             {
-                Text = Labels.Get("gpu_driver_switch_now_warning"),
+                Text = Labels.Get(bpf ? "gpu_block_switch_now_warning" : "gpu_driver_switch_now_warning"),
                 Foreground = new SolidColorBrush(Color.Parse("#E0A040")),
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
                 FontSize = 11,
@@ -1042,9 +1030,10 @@ public partial class MainWindow : Window
         // Button row: equal columns spanning full width, with equal vertical padding.
         // 3 columns (Switch Now + After Reboot + Cancel) normally; 2 columns
         // (After Reboot + Cancel) in Ultimate where Switch Now is omitted.
+        btnAfterReboot.IsVisible = !bpfOptimized;
         var buttonPanel = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions(btnSwitchNow != null ? "*,*,*" : "*,*"),
+            ColumnDefinitions = new ColumnDefinitions(btnSwitchNow != null && !bpfOptimized ? "*,*,*" : "*,*"),
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
             Margin = new Avalonia.Thickness(0, 16, 0, 16),
         };
@@ -1055,7 +1044,7 @@ public partial class MainWindow : Window
             btnCancel.Margin = new Avalonia.Thickness(6, 0, 0, 0);
             Grid.SetColumn(btnSwitchNow, 0);
             Grid.SetColumn(btnAfterReboot, 1);
-            Grid.SetColumn(btnCancel, 2);
+            Grid.SetColumn(btnCancel, bpfOptimized ? 1 : 2);
             buttonPanel.Children.Add(btnSwitchNow);
             buttonPanel.Children.Add(btnAfterReboot);
             buttonPanel.Children.Add(btnCancel);
@@ -1079,6 +1068,7 @@ public partial class MainWindow : Window
             FontSize = 11,
             LineHeight = 16,
             Margin = new Avalonia.Thickness(2, 0, 0, 0),
+            IsVisible = !bpfOptimized,
         };
 
         // Layout
@@ -1126,14 +1116,20 @@ public partial class MainWindow : Window
         {
             // Fresh scan at click time (the privileged scan caches up to 5s -
             // drop it so holders started after the dialog appeared are included).
+            // eBPF: allowed apps keep the dGPU, so they are not closed.
+            bool bpf = Helpers.AppConfig.IsBpfGpuBackend();
             Gpu.NVidia.NvidiaProcessScanner.InvalidateScanCache();
-            var snapshot = Gpu.NVidia.NvidiaProcessScanner.ScanHolders();
+            IReadOnlyList<NvidiaHolder> snapshot = bpf
+                ? Gpu.Block.GpuBlockControl.HoldersToClose()
+                : Gpu.NVidia.NvidiaProcessScanner.ScanHolders();
             Logger.WriteLine($"RunSwitchNowKillFlow: snapshot={snapshot.Count}");
             Gpu.NVidia.NvidiaProcessScanner.KillHoldersGracefulThenForce(snapshot, out var survivors);
             Logger.WriteLine($"RunSwitchNowKillFlow: snapshot-accounting survivors={survivors.Count}");
 
             System.Threading.Thread.Sleep(300);
-            var stillAlive = Gpu.NVidia.NvidiaProcessScanner.ScanHolders();
+            IReadOnlyList<NvidiaHolder> stillAlive = bpf
+                ? Gpu.Block.GpuBlockControl.HoldersToClose()
+                : Gpu.NVidia.NvidiaProcessScanner.ScanHolders();
             Logger.WriteLine($"RunSwitchNowKillFlow: verify-scan stillAlive={stillAlive.Count}");
 
             if (stillAlive.Count > 0)
@@ -1148,7 +1144,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var result = App.GpuModeCtrl?.TryReleaseAndSwitch() ?? GpuSwitchResult.Failed;
+            var result = App.GpuModeCtrl?.TryReleaseAndSwitch(target) ?? GpuSwitchResult.Failed;
             Dispatcher.UIThread.Post(() =>
             {
                 UnlockGpuButtons();
@@ -2359,6 +2355,50 @@ public partial class MainWindow : Window
         ToolTip.SetTip(buttonXGM, tip);
     }
 
+    /// <summary>eBPF: warn once when the blocked dGPU does not reach D3cold.</summary>
+    private void PollGpuBlockColdState()
+    {
+        if (!Helpers.AppConfig.IsBpfGpuBackend())
+            return;
+
+        string? reasonKey = Gpu.Block.DgpuPowerMonitor.PollForWarning();
+        if (reasonKey == null)
+            return;
+
+        App.System?.ShowNotification(
+            Labels.Get("gpu_block_section"),
+            Labels.Format("gpu_block_not_cold",
+                Gpu.Block.DgpuPowerMonitor.CurrentText(), Labels.Get(reasonKey)),
+            "dialog-warning");
+    }
+
+    private string _gpuHeaderBase = "";
+
+    /// <summary>eBPF: power state next to the GPU mode name; Optimized shows its live leg.</summary>
+    private void ApplyGpuBlockIndicator()
+    {
+        if (!Helpers.AppConfig.IsBpfGpuBackend() || _gpuHeaderBase.Length == 0)
+            return;
+
+        Task.Run(() =>
+        {
+            // 2 s tick: no privileged helper here.
+            bool blocked = Gpu.Block.GpuBlockControl.IsActiveFast();
+            bool onAc = App.Power?.IsOnAcPower() ?? true;
+            string dstate = Gpu.Block.DgpuPowerMonitor.CurrentText();
+            Dispatcher.UIThread.Post(() =>
+            {
+                labelGPU.Text = blocked
+                    ? $"{_gpuHeaderBase} ({Labels.Format("gpu_block_state_power", dstate)})"
+                    : _gpuHeaderBase;
+                // Optimized leg: Eco, Standard on AC, or Standard on battery while apps hold the dGPU.
+                if (_currentGpuMode == 2)
+                    labelTipGPU.Text = Labels.Get(blocked ? "gpu_optimized_battery"
+                        : onAc ? "gpu_optimized_ac" : "gpu_driver_staying");
+            });
+        });
+    }
+
     /// <summary>
     /// Hot-plug detection: re-read <c>egpu_connected</c> and
     /// <c>egpu_enable</c> on every refresh tick (every 2 s while the
@@ -2769,6 +2809,13 @@ public partial class MainWindow : Window
         {
             _updatesWindow.Activate();
         }
+    }
+
+    /// <summary>Open Updates on the system files, scrolled to the eBPF rows.</summary>
+    public void ShowUpdatesEbpfRows()
+    {
+        ButtonUpdates_Click(null, new RoutedEventArgs());
+        _updatesWindow?.FocusEbpfRows();
     }
 
     private void ButtonQuit_Click(object? sender, RoutedEventArgs e)

@@ -22,7 +22,10 @@ public static class Harness
         public string ConfigDir { get; }
         public FakeAsusWmi Wmi { get; }
         public FakePowerManager Power { get; }
+        public FakeBlockOps BlockOps { get; }
         public GPUModeControl Controller { get; }
+        /// <summary>Monitor plugged into a dGPU port.</summary>
+        public bool ExternalDisplay;
 
         public Sandbox(string scenarioName)
         {
@@ -73,6 +76,14 @@ public static class Harness
 
             Wmi = new FakeAsusWmi();
             Power = new FakePowerManager();
+            BlockOps = new FakeBlockOps();
+            // Always install the seam so no scenario can shell out to the
+            // real privileged helper by accident.
+            Gpu.Block.GpuBlockControl.TestOps = BlockOps;
+            // Model the display topology too, or results would depend on
+            // whatever monitors the machine running the tests has plugged in.
+            ExternalDisplay = false;
+            Gpu.Block.DgpuDisplay.TestOverride = () => ExternalDisplay;
             Controller = new GPUModeControl(Wmi, Power);
         }
 
@@ -85,12 +96,16 @@ public static class Harness
         public string TriggerPath => GPUModeControl.TriggerPath;
         public string BackendPath => GPUModeControl.BackendPath;
 
+        public string PersistentPath => GPUModeControl.PersistentTriggerPath;
+
         public bool ModprobePresent() => File.Exists(ModprobePath);
         public bool UdevPresent() => File.Exists(UdevPath);
         public bool TriggerPresent() => File.Exists(TriggerPath);
         public bool BackendPresent() => File.Exists(BackendPath);
+        public bool PersistentPresent() => File.Exists(PersistentPath);
         public string TriggerContent() => File.Exists(TriggerPath) ? File.ReadAllText(TriggerPath).Trim() : "";
         public string BackendContent() => File.Exists(BackendPath) ? File.ReadAllText(BackendPath).Trim() : "";
+        public string PersistentContent() => File.Exists(PersistentPath) ? File.ReadAllText(PersistentPath).Trim() : "";
 
         public void WriteBlockArtifacts()
         {

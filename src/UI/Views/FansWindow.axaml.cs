@@ -2147,7 +2147,7 @@ public partial class FansWindow : Window
                     }
 
                     if (nvAttrWritten)
-                        Gpu.GPUModeControl.RefreshNvidiaPowerd();
+                        Gpu.DgpuDriver.RefreshNvidiaPowerd();
                 }
                 if (nv != null && nv.IsAvailable())
                 {
@@ -2213,7 +2213,7 @@ public partial class FansWindow : Window
                     nvAttrWritten |= WriteFwAttrDefault(wmi, Platform.Linux.AsusAttributes.NvTempTarget);
 
                     if (nvAttrWritten)
-                        Gpu.GPUModeControl.RefreshNvidiaPowerd();
+                        Gpu.DgpuDriver.RefreshNvidiaPowerd();
                 }
                 if (nv != null && nv.IsAvailable())
                 {

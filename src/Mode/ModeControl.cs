@@ -641,7 +641,7 @@ public class ModeControl
         }
 
         if (nvAttrWritten)
-            Gpu.GPUModeControl.RefreshNvidiaPowerd();
+            Gpu.DgpuDriver.RefreshNvidiaPowerd();
 
         if (nvCtl != null && nvCtl.IsAvailable())
         {
@@ -677,7 +677,7 @@ public class ModeControl
         nvAttrWritten |= WriteFwAttrDefault(wmi, Platform.Linux.AsusAttributes.NvTgp);
 
         if (nvAttrWritten)
-            Gpu.GPUModeControl.RefreshNvidiaPowerd();
+            Gpu.DgpuDriver.RefreshNvidiaPowerd();
 
         if (nv != null && nv.IsAvailable())
         {

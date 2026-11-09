@@ -58,6 +58,9 @@ public partial class UpdatesWindow : Window
     private string? _biosVersion;
     private int _updatesCount;
     private bool _sysFilesExpanded;
+    private bool _focusEbpf;
+    // Rows the user tried to repair; a kernel row Repair cannot fix shows the manual step.
+    private readonly HashSet<string> _repairTried = new();
 
     public UpdatesWindow()
     {
@@ -110,14 +113,22 @@ public partial class UpdatesWindow : Window
             // managed file); the panel build resumes on the UI thread.
             var results = await Task.Run(Installer.ComputeStatus);
             Installer.PopulateIntegrityPanel(panelSystemFiles, results,
-                OnRepairOneAsync, OnRemoveOneAsync, OnShowDiffAsync);
+                OnRepairOneAsync, OnRemoveOneAsync, OnShowDiffAsync, _repairTried);
             AppendSteamRow();
-            _sysFilesExpanded = results.Any(r =>
+            _sysFilesExpanded = _focusEbpf || results.Any(r =>
                 r.State != Installer.FileState.Ok &&
                 r.State != Installer.FileState.Unknown &&
                 r.State != Installer.FileState.NotApplicable &&
                 r.State != Installer.FileState.Unavailable);
             ApplySysFilesExpanded();
+            if (_focusEbpf)
+            {
+                _focusEbpf = false;
+                int row = results.FindIndex(r => r.File.Id.StartsWith("ebpf_", StringComparison.Ordinal));
+                if (row >= 0)
+                    Dispatcher.UIThread.Post(() => panelSystemFiles.Children[row].BringIntoView(),
+                        DispatcherPriority.Background);
+            }
         }
         catch (Exception ex)
         {
@@ -233,8 +244,17 @@ public partial class UpdatesWindow : Window
         }
     }
 
+    /// <summary>Expand the system files and scroll to the eBPF rows once they are built.</summary>
+    public void FocusEbpfRows()
+    {
+        _focusEbpf = true;
+        if (IsLoaded)
+            RefreshSystemFiles();
+    }
+
     private async Task OnRepairOneAsync(Installer.ManagedFile file)
     {
+        _repairTried.Add(file.Id);
         buttonSysFilesFix.IsEnabled = false;
         buttonSysFilesRecheck.IsEnabled = false;
         try
@@ -315,6 +335,8 @@ public partial class UpdatesWindow : Window
 
     private async void ButtonSysFilesFix_Click(object? sender, RoutedEventArgs e)
     {
+        foreach (var f in Installer.Manifest)
+            _repairTried.Add(f.Id);
         buttonSysFilesFix.IsEnabled = false;
         try
         {
@@ -352,6 +374,13 @@ public partial class UpdatesWindow : Window
             // Best-effort: the shortcut points at the binary being removed.
             await Task.Run(() => SteamShortcuts.Remove(out _));
             string msg = await Installer.RunRemoveFromUiAsync();
+            // The eBPF backend left with its helper; the GPU panel must stop using it.
+            if (Helpers.AppConfig.IsBpfGpuBackend() && !File.Exists(SysfsHelper.GpuHelperPath))
+            {
+                string fallback = Helpers.AppConfig.DefaultGpuBackend();
+                Helpers.AppConfig.Set("gpu_backend", fallback);
+                await Task.Run(() => App.GpuModeCtrl?.OnBackendChanged("ebpf", fallback));
+            }
             // Expand the panel so the result line (which lives in the collapsed
             // body) is actually visible.
             _sysFilesExpanded = true;

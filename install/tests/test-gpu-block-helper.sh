@@ -309,6 +309,13 @@ test_persist_rejects_non_eco() {
     done
 }
 
+test_persist_optimized_with_ebpf_backend() {
+    helper set-backend ebpf
+    helper persist optimized
+    expect_rc 0 || return 1
+    expect_content $PERSISTENT optimized || return 1
+}
+
 test_persist_does_not_touch_blocks_or_trigger() {
     helper persist eco
     expect_missing $MODPROBE || return 1
@@ -507,7 +514,7 @@ shell_var() { grep -m1 -E "^$2=" "$1" | sed -E 's/^[^=]+="?//; s/"$//; s/\$\{ROO
 # Value of a C# string constant: <name> = TestPathPrefix + "..."
 cs_path() { grep -m1 -E "$2 = TestPathPrefix \+ \"" "$1" | sed -E 's/.*\+ "([^"]+)".*/\1/'; }
 
-GPU_MODE_CS="$REPO_DIR/src/Gpu/GPUModeControl.cs"
+GPU_MODE_CS="$REPO_DIR/src/Gpu/GpuBootFiles.cs"
 
 test_contract_block_paths() {
     local h b c
@@ -600,6 +607,15 @@ test_contract_sudoers_grant_both_helpers() {
     grep -q 'NOPASSWD: /usr/local/lib/ghelper/gpu-block-helper.sh' "$REPO_DIR/src/Install/Installer.cs" || fail "Repair sudoers has no block helper line"
 }
 
+test_contract_uninstall_reverts_ebpf() {
+    local f nix
+    for f in "$INSTALL_DIR/install.sh" "$INSTALL_DIR/install-local.sh"; do
+        nix=$(sed -n '/NixOS DETECTED/,/exit 0/p' "$f")
+        grep -q 'gpu-helper bpf-block uninstall' <<<"$nix" || { fail "$(basename "$f"): NixOS uninstall keeps the eBPF filter"; return 1; }
+        [[ $(grep -c 'gpu-helper bpf-block uninstall' "$f") -ge 2 ]] || { fail "$(basename "$f"): uninstall keeps the eBPF filter"; return 1; }
+    done
+}
+
 test_contract_helper_syntax() {
     bash -n "$HELPER" > "$SB/out" 2>&1 || { fail "bash -n gpu-block-helper.sh"; return 1; }
     bash -n "$BOOT_SCRIPT" > "$SB/out" 2>&1 || fail "bash -n ghelper-gpu-boot.sh"
@@ -632,6 +648,7 @@ for name in \
     persist_eco \
     persist_defaults_eco \
     persist_rejects_non_eco \
+    persist_optimized_with_ebpf_backend \
     persist_does_not_touch_blocks_or_trigger \
     unpersist_removes_marker_only \
     unpersist_when_missing_ok \
@@ -663,6 +680,7 @@ for name in \
     contract_boot_service_execstart \
     contract_boot_service_can_write_artifacts \
     contract_sudoers_grant_both_helpers \
+    contract_uninstall_reverts_ebpf \
     contract_helper_syntax \
 ; do
     scenario "$name"

@@ -105,6 +105,33 @@
  *       the lid opens). Hardcoded variable path; clears the efivarfs
  *       immutable flag first. Payload: 4-byte attrs (0x7) + enabled byte.
  *
+ *   bpf-caps
+ *       Report what the eBPF GPU block needs, one key=value line each:
+ *       lsm_active (bpf in the active LSM list), kernel_config (CONFIG_BPF_LSM),
+ *       bpffs, libbpf, filter (built into this helper), btf, lockdown, attached.
+ *
+ *   bpf-block <on|off|status|refresh|allow-comm|deny-comm|list-comms|allow-pid|refused|uninstall> [arg]
+ *       eBPF LSM filter that hides the dGPU from applications so it stays in
+ *       D3cold. "on" loads and attaches the filter, pins it into bpffs so it
+ *       outlives this process, and records the device's files. "off" clears the
+ *       gate and removes the pins, which detaches. "refresh" re-resolves the
+ *       files after device nodes were recreated. bdf is validated.
+ *       "allow-comm"/"deny-comm" edit the user list: a process name or a
+ *       KEY=VALUE environment entry. "allow-pid <pid> [force]" allows one
+ *       running process and what it starts. "refused" lists denied names.
+ *       "uninstall" removes all the backend added: filter, allowed apps,
+ *       ebpf boot markers, and the kernel LSM change (as lsm-disable).
+ *
+ *   lsm-enable
+ *       Add bpf to the kernel LSM list via the system's bootloader, so the
+ *       filter can attach after a reboot. Handles rpm-ostree, grubby, GRUB and
+ *       systemd-boot. Exit 5 = applied, reboot needed; exit 6 = manual steps.
+ *
+ *   lsm-disable
+ *       Undo lsm-enable: remove the lsm= token it added and put back the one it
+ *       replaced. Exit 0 = nothing to undo, 5 = reverted, reboot needed,
+ *       6 = the token was changed since and is left alone.
+ *
  *   msr-uv <mv>
  *       Intel CPU undervolt via the OC mailbox (MSR 0x150), applied to the core
  *       (plane 0) and cache (plane 2) voltage planes. mv is restricted to
@@ -117,7 +144,9 @@
  *   (root) NOPASSWD: /usr/local/lib/ghelper/gpu-helper
  *
  * Exit codes: 0 success; 1 usage / not-permitted; 2 invalid signal;
- *             3 sysfs write error; 127 exec failure.
+ *             3 sysfs write error; 4 feature unavailable on this system;
+ *             5 applied, reboot required; 6 manual steps required;
+ *             127 exec failure.
  */
 
 #include "gpu-helper.h"
@@ -224,6 +253,14 @@ int main(int argc, char **argv)
             return do_msr_uv(argc, argv);
         if (strcmp(argv[1], "lenovo-flip-to-start") == 0)
             return do_lenovo_flip_to_start(argc, argv);
+        if (strcmp(argv[1], "bpf-caps") == 0)
+            return do_bpf_caps();
+        if (strcmp(argv[1], "bpf-block") == 0)
+            return do_bpf_block(argc, argv);
+        if (strcmp(argv[1], "lsm-enable") == 0)
+            return do_lsm_enable(argc, argv);
+        if (strcmp(argv[1], "lsm-disable") == 0)
+            return do_lsm_disable(argc, argv);
     }
 
     /* Backward-compatible default: bare numeric arg is the legacy skip_pid. */

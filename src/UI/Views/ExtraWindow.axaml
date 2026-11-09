@@ -605,10 +605,11 @@
                     </Border>
 
                     <!-- GPU BACKEND how ghelper disables the dGPU.
-                         Two orthogonal options:
+                         Three orthogonal options:
                            * PCI mode:      modprobe block + udev hot-remove rule
+                           * eBPF mode:     LSM filter hides the dGPU device nodes
                            * Raw WMI mode:  ACPI debugfs DSTS/DEVS
-                         Both ship with explanatory hints so the user can pick the
+                         All ship with explanatory hints so the user can pick the
                          right one for their laptop. Panel visibility is gated by
                          IAsusWmi.CanToggleGpuBackend(). -->
                     <Border Classes="panel" x:Name="panelGpuBackend" IsVisible="False">
@@ -629,6 +630,30 @@
                                 <TextBlock x:Name="labelPciGpuBackendHint" Classes="label-dim"
                                            Text="Disables the dGPU via a modprobe blacklist plus a udev hot-remove rule. Required on non-ASUS laptops where there is no ASUS firmware to talk to, optional on ASUS where you prefer the kernel-only path. Every mode change requires a reboot because the rules only apply on the next boot."
                                            FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel>
+                                <CheckBox x:Name="checkBpfGpuBackend"
+                                          Content="Use eBPF dGPU block"
+                                          Margin="0,4"
+                                          IsCheckedChanged="CheckBpfGpuBackend_Changed" />
+                                <TextBlock x:Name="labelBpfGpuBackendHint" Classes="label-dim"
+                                           Text="Hides the dGPU from applications with a kernel eBPF filter instead of unloading the driver, so the card idles into D3cold and switching back is instant with no reboot. Apps that already use the GPU keep it until they close, and G-Helper offers to close them. Needs a kernel booted with bpf in the LSM list; use Updates to set that up."
+                                           FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap" />
+                                <TextBlock x:Name="labelBpfGpuBackendState" Classes="label-dim"
+                                           FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap"
+                                           IsVisible="False" />
+                                <CheckBox x:Name="checkBpfOptimized"
+                                          Content="Enable Optimized mode"
+                                          Margin="20,0,0,0"
+                                          IsCheckedChanged="CheckBpfOptimized_Changed" />
+                                <TextBlock x:Name="labelBpfOptimizedHint" Classes="label-dim"
+                                           Text="Auto Eco on battery, Standard on AC power"
+                                           FontSize="10" Margin="40,0,0,8" TextWrapping="Wrap" />
+                                <Button x:Name="buttonGpuApps" Classes="ghelper" Height="28" MinWidth="80"
+                                        Margin="20,0,0,8" HorizontalAlignment="Left" Click="ButtonGpuApps_Click">
+                                    <TextBlock x:Name="labelGpuApps" Text="dGPU apps" FontSize="11" />
+                                </Button>
                             </StackPanel>
 
                             <StackPanel>
