@@ -100,13 +100,20 @@ boot() {
         -device pcie-root-port,id=rp2,chassis=2,slot=2 -device pcie-pci-bridge,id=br1,bus=rp2 \
         -device secondary-vga,bus=br1,addr=1 -device virtio-rng-pci,bus=br1,addr=2 \
         -append "console=ttyS0 quiet panic=-1 lsm=lockdown,capability,landlock,yama,bpf $*" 2>&1 \
-        | tr -d '\r' | sed -n 's/.*VMTEST-BEGIN/VMTEST-BEGIN/; /VMTEST-BEGIN/,/RESULT/p'
+        | tr -d '\r' | tee "$W/raw" | sed -n 's/.*VMTEST-BEGIN/VMTEST-BEGIN/; /VMTEST-BEGIN/,/RESULT/p'
 }
 
 rc=0
 for args in "" "lockdown=integrity"; do
     echo "== kernel $(basename "$KERNEL") ${args:-(no lockdown)}"
-    out=$(boot $args)
+    out=$(boot $args) || true
+    if [[ "$out" != *VMTEST-BEGIN* && "$ACCEL" != "-accel tcg" ]]; then
+        # No test output: show why, then retry without KVM.
+        echo "-- no test output with $ACCEL, last qemu lines:"
+        tail -n 40 "$W/raw"
+        ACCEL="-accel tcg"
+        out=$(boot $args) || true
+    fi
     echo "$out"
     grep -q 'RESULT pass=[0-9]* fail=0$' <<<"$out" || rc=1
 done
