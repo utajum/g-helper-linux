@@ -94,7 +94,8 @@ ACCEL="-accel tcg"
 
 boot() {
     # iGPU: the boot VGA. dGPU: alone behind a root port. dGPU2: behind a bridge it shares.
-    timeout 600 qemu-system-x86_64 $ACCEL -m 1024 -smp 2 -nographic -no-reboot -M q35 \
+    # -cpu max: amd64v3 packages (busybox-static on CI) need AVX.
+    timeout 600 qemu-system-x86_64 $ACCEL -cpu max -m 1024 -smp 2 -nographic -no-reboot -M q35 \
         -kernel "$KERNEL" -initrd "$W/initrd.gz" -vga std \
         -device pcie-root-port,id=rp1,chassis=1,slot=1 -device secondary-vga,bus=rp1 \
         -device pcie-root-port,id=rp2,chassis=2,slot=2 -device pcie-pci-bridge,id=br1,bus=rp2 \
