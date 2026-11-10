@@ -544,16 +544,20 @@
             <!-- HEADER -->
             <Border Grid.Row="0" Classes="panel-header" Margin="10,10,10,5">
                 <StackPanel Spacing="6">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <TextBlock x:Name="headerFanCurves" Classes="header" Text="Fan Curves" FontSize="14" VerticalAlignment="Center" />
-                        <ComboBox x:Name="comboMode" Width="200" Height="28"
+                    <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto">
+                        <TextBlock x:Name="headerFanCurves" Classes="header" Text="Fan Curves" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <ComboBox x:Name="comboMode" Grid.Column="1" Width="200" Height="28"
                                   VerticalAlignment="Center"
                                   SelectionChanged="ComboMode_Changed" />
                         <!-- custom mode name editor, replaces comboMode while renaming -->
-                        <TextBox x:Name="textModeName" Width="200" Height="28" IsVisible="False"
+                        <TextBox x:Name="textModeName" Grid.Column="1" Width="200" Height="28" IsVisible="False"
                                  VerticalAlignment="Center" MaxLength="40"
                                  KeyDown="TextModeName_KeyDown" LostFocus="TextModeName_LostFocus" />
-                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <!-- custom mode base: Silent, Balanced or Turbo profile -->
+                        <ComboBox x:Name="comboModeBase" Grid.Row="1" Grid.Column="1" Width="200" Height="28"
+                                  Margin="0,6,0,0" IsVisible="False"
+                                  SelectionChanged="ComboModeBase_Changed" />
+                        <StackPanel Grid.Column="2" Margin="10,0,0,0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                             <Button x:Name="buttonModeAdd" Classes="ghelper" Width="32" Height="28" Padding="0"
                                     Click="ButtonModeAdd_Click">
                                 <Path Data="M 5,0 H 7 V 5 H 12 V 7 H 7 V 12 H 5 V 7 H 0 V 5 H 5 Z" Fill="#F0F0F0" />
@@ -568,7 +572,7 @@
                                 <Path Data="M 0,5 H 12 V 7 H 0 Z" Fill="#F0F0F0" />
                             </Button>
                         </StackPanel>
-                    </StackPanel>
+                    </Grid>
                     <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
                         <Button x:Name="buttonMonitor" Classes="ghelper" Height="30"
                                 Click="ButtonMonitor_Click">

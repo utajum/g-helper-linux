@@ -969,6 +969,16 @@ public partial class FansWindow : Window
             }
             comboMode.SelectedIndex = selectedIdx;
             buttonModeRename.IsVisible = buttonModeRemove.IsVisible = Mode.Modes.IsCurrentCustom();
+
+            if (comboModeBase.Items.Count == 0)
+            {
+                comboModeBase.Items.Add(new ComboBoxItem { Content = Labels.Get("profile_silent_label"), Tag = 2 });
+                comboModeBase.Items.Add(new ComboBoxItem { Content = Labels.Get("profile_balanced_label"), Tag = 0 });
+                comboModeBase.Items.Add(new ComboBoxItem { Content = Labels.Get("profile_turbo_label"), Tag = 1 });
+            }
+            int baseMode = Mode.Modes.GetBase(current);
+            comboModeBase.SelectedItem = comboModeBase.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag is int b && b == baseMode);
+            comboModeBase.IsVisible = Mode.Modes.IsCurrentCustom();
         }
         finally
         {
@@ -986,6 +996,18 @@ public partial class FansWindow : Window
             return;
 
         SwitchMode(modeId);
+    }
+
+    private void ComboModeBase_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressModeCombo || comboModeBase.SelectedItem is not ComboBoxItem { Tag: int baseMode })
+            return;
+        int mode = Mode.Modes.GetCurrent();
+        if (mode <= 2 || Mode.Modes.GetBase(mode) == baseMode)
+            return;
+
+        Mode.Modes.SetBase(mode, baseMode);
+        SwitchMode(mode);
     }
 
     private void SwitchMode(int mode)

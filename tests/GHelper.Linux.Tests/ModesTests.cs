@@ -52,6 +52,35 @@ public static class ModesTests
             Harness.AssertEqual(30, AppConfig.Get("limit_total_13"), "limit_total_13 untouched");
         });
 
+        Harness.Scenario("Modes_Remove_DropsAppRulesAndPowerMemory", _ =>
+        {
+            AppConfig.Set("mode_base_3", 0);
+            AppConfig.Set("mode_base_13", 2);
+            AppConfig.Set("app_profiles", "exe:steam|3\nsteam:570|13\nexe:/usr/bin/blender|1");
+            AppConfig.Set("performance_0", 3);
+            AppConfig.Set("performance_1", 13);
+
+            Modes.Remove(3);
+
+            Harness.AssertEqual("steam:570|13\nexe:/usr/bin/blender|1", AppConfig.GetString("app_profiles"), "only mode 3 rules dropped");
+            Harness.AssertEqual(0, AppConfig.Get("performance_0"), "battery memory back to Balanced");
+            Harness.AssertEqual(13, AppConfig.Get("performance_1"), "AC memory on another mode untouched");
+        });
+
+        Harness.Scenario("Modes_SetBase_OnlyCustomModes", _ =>
+        {
+            AppConfig.Set("mode_base_3", 0);
+
+            Modes.SetBase(3, 2);
+            Modes.SetBase(1, 2);
+            Modes.SetBase(4, 2);
+            Modes.SetBase(3, 5);
+
+            Harness.AssertEqual(2, Modes.GetBase(3), "custom mode moved to Silent");
+            Harness.AssertEqual(1, Modes.GetBase(1), "built-in mode keeps its base");
+            Harness.Assert(!Modes.Exists(4), "missing mode not created");
+        });
+
         Harness.Scenario("Modes_DefaultCurve_UsesBaseMode", _ =>
         {
             AppConfig.Set("performance_mode", 1);

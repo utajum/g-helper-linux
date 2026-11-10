@@ -34,6 +34,13 @@ public static class Modes
         return Helpers.AppConfig.Get($"mode_base_{mode}", -1);
     }
 
+    /// <summary>Move a custom mode onto another base (0-2): firmware mode and OS power profile.</summary>
+    public static void SetBase(int mode, int baseMode)
+    {
+        if (mode > 2 && baseMode is >= 0 and <= 2 && Exists(mode))
+            Helpers.AppConfig.Set($"mode_base_{mode}", baseMode);
+    }
+
     /// <summary>Get base mode of the current mode.</summary>
     public static int GetCurrentBase()
     {
@@ -181,5 +188,11 @@ public static class Modes
             Helpers.AppConfig.Remove(key);
         Helpers.AppConfig.Remove($"mode_base_{mode}");
         Helpers.AppConfig.Remove($"mode_name_{mode}");
+
+        // A mode added later reuses this slot: drop links to the old mode.
+        AppProfiles.ForgetMode(mode);
+        foreach (var key in new[] { "performance_0", "performance_1" })
+            if (Helpers.AppConfig.Get(key, -1) == mode)
+                Helpers.AppConfig.Set(key, 0);
     }
 }
