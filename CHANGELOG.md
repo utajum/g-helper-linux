@@ -8,6 +8,52 @@
 
 ### Changed
 
+## v1.0.99 (2026-11-10)
+
+<img width="1170" height="895" alt="image" src="https://github.com/user-attachments/assets/fcd819e6-faa3-49f3-afd1-f45d534f1171" />
+<img width="772" height="697" alt="image" src="https://github.com/user-attachments/assets/83b4f03d-77b3-4b49-ae2f-b830b3194fcb" />
+
+**NOTE:** In the future the eBPF GPU switching mode may become the default, and the MUX mode will become optional.
+
+**NOTE:** eBPF mode is for laptops with an iGPU and a dGPU. It finds the dGPU by PCI class, so it works with any vendor, but only NVIDIA is tested.
+
+- NVIDIA RTX 30 (Ampere) and newer: the dGPU powers off (D3cold) in Eco. The driver turns on runtime D3 by default.
+- NVIDIA RTX 20 and GTX 16 (Turing): the dGPU powers off only with `NVreg_DynamicPowerManagement=0x02` set for the nvidia module.
+- NVIDIA GTX 10 (Pascal) and older: Eco hides the dGPU and switching is instant, but the card stays on, so no power is saved.
+- AMD and Intel dGPUs: the filter hides them too, but this is not tested.
+
+### Added
+
+- Optional eBPF GPU switching: "Use eBPF dGPU block" checkbox in Extra > GPU, next to "Use PCI dGPU disable". Eco hides the dGPU from apps with a kernel filter while the driver stays loaded, so going back to Standard is instant, with no reboot. It also works on laptops without ASUS GPU firmware, for example Lenovo (#246).
+- eBPF: "Enable Optimized mode" checkbox. Optimized hides the dGPU on battery and shows it on AC. While a monitor is plugged into a dGPU port, the dGPU stays visible, so the screen does not go black (#246).
+- eBPF: dGPU apps window in Extra > GPU. Pick running apps, installed apps or Steam games that can still use the dGPU while it is hidden. `ghelper --dgpu <command>` starts any program on the dGPU (#246).
+- eBPF: the main window and Extra show the dGPU power state. A warning gives the reason when the dGPU stays awake with the block on: apps still use it, runtime power management is off, or NVIDIA runtime D3 is not set up (#246).
+- eBPF: Updates window rows for the kernel bpf setting, libbpf and the allowed apps list. Missing libbpf shows the install command with a Copy button. Adding bpf to the kernel LSM list works with GRUB, systemd-boot, grubby and rpm-ostree, and uninstall undoes it. Kernels that already have bpf in the LSM list need no change (#246).
+- eBPF: the boot service applies Eco, and Optimized on battery, at boot. The NixOS package builds the filter too (#246).
+- ROG Harpe Mini Core mouse (#239).
+
+### Fixed
+
+- KDE Plasma 6.8: KWin keeps every GPU open through logind, so Switch Now no longer kills systemd, logind, D-Bus or the display manager. With eBPF Eco, KWin lets go of the dGPU, and Standard gives it back (#246).
+- PCI backend: NVIDIA Vulkan and EGL files come back after Eco -> Standard, so games and PRIME offload work again without a reboot (#246).
+- Boot recovery notice is shown only once, and its marker is cleared (#246).
+- Tray menu shows only the GPU modes the selected backend can do, and it is rebuilt when the backend changes (#246).
+- Unticking PCI on laptops without asus-wmi stays on PCI, instead of a backend that cannot work there (#246).
+- Fan curves are written without falling points, because kernel 7.4+ rejects a curve that goes down. Dragging a fan curve point between neighbours that are out of order no longer fails (#240).
+- "What's new" in the startup update prompt crashed the app when G-Helper started hidden. GPU switch dialogs had the same problem (#244, #245).
+- NVIDIA clock offset sliders are hidden when the card reports no offset range (#239).
+- S17: keyboard lighting start-up sends the value the firmware expects (#239).
+- Per-key lighting: the bottom row key next to Right Ctrl was missing from the key map (#239).
+- Translations: letters from the wrong alphabet in Ukrainian, Serbian, Macedonian and Romanian. The i18n check now finds mixed alphabets (#246).
+- build.sh embeds the SkiaSharp and HarfBuzz native libraries of the version the project uses, not the newest one in the NuGet cache. A newer cached copy made local builds abort at start (#246).
+
+### Changed
+
+- GPU switching code is split into ASUS firmware, PCI and eBPF backends, with shared driver, PCI and boot file helpers (#246).
+- Model lists sync with upstream: UX5606 has no dGPU, H740 and H760 have no keyboard lighting, H740 is OLED, two more keyboard USB IDs. I2C keyboards use the same keyboard ID list (#239).
+- More GPU switching tests for the app, gpu-helper, the boot script and gpu-block-helper.sh, and a CI job that loads the eBPF filter in a VM. Tests never run sudo or pkexec on the host (#236, #237, #246).
+- global.json asks for .NET SDK 10.0.100.
+
 ## v1.0.98 (2026-10-31)
 
 <img width="638" height="797" alt="Screenshot_20261031_151620" src="https://github.com/user-attachments/assets/5cc3a9ce-8e71-4d82-8e8f-c6804a6942e3" />
