@@ -80,7 +80,7 @@ Pull requests and feature requests are welcome!
 │  Performance modes         Silent / Balanced / Turbo            │
 │  Custom fan curves         8-point drag-to-edit per fan         │
 │  Battery charge limit      Protect longevity (40-100%)          │
-│  GPU mode switching        Eco / Standard / Optimized (MUX)     │
+│  GPU mode switching        Eco/Standard/Optimized (MUX, eBPF)   │
 │  Power limits              CPU PL1/PL2, Dynamic Boost, temps    │
 │  Screen control            Refresh rate, Panel OD, MiniLED      │
 │  Keyboard backlight        Brightness + RGB (per-key Aura)      │
@@ -103,13 +103,13 @@ Pull requests and feature requests are welcome!
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-Experimental Lenovo support (IdeaPad / Legion / LOQ / Yoga): performance modes, battery conservation, fan monitoring, PPT limits and keyboard backlight via the mainline ideapad-laptop and lenovo-wmi kernel drivers (kernel 6.17+ for power limits).
+Experimental Lenovo support (IdeaPad / Legion / LOQ / Yoga): performance modes, battery conservation, fan monitoring, PPT limits and keyboard backlight via the mainline ideapad-laptop and lenovo-wmi kernel drivers (kernel 6.17+ for power limits). The eBPF dGPU block works without ASUS firmware.
 
 ---
 
 ## `░▒▓█ ╔══[ GPU MODE SWITCHING ]══╗ █▓▒░`
 
-G-Helper manages the ASUS dGPU (discrete GPU) power state and MUX switch through four modes:
+G-Helper manages the ASUS dGPU (discrete GPU) power state and MUX switch through four modes. Eco can block the card with the ASUS firmware, with PCI disable or with a kernel eBPF filter. Pick the backend in Extra > GPU.
 
 ```
 ╔══[ MODES ]═════════════════════════════════════════════════════╗
@@ -129,6 +129,16 @@ G-Helper manages the ASUS dGPU (discrete GPU) power state and MUX switch through
 ╚═════════════════════════════════════════════════════════════════╝
 ```
 
+### `╠══[ BLOCK BACKENDS ]══╣`
+
+| Backend | Eco does | Back to Standard |
+|---------|----------|------------------|
+| ASUS firmware (default) | `dgpu_disable=1` in the EC | Usually no reboot |
+| PCI disable | Unloads the driver, removes the card from the PCI bus | Rescan, usually no reboot |
+| eBPF block | Driver stays loaded, a kernel filter hides the dGPU from apps | Instant, no reboot |
+
+The reboot rules below are for the ASUS firmware backend. PCI and eBPF release Eco live.
+
 ### `╠══[ REBOOT REQUIREMENTS ]══╣`
 
 | Transition | Reboot? | Why |
@@ -146,6 +156,22 @@ Switching to Eco while the dGPU driver is active shows a dialog with three optio
 - **Switch Now** — closes the apps using the dGPU and unloads its driver (unsaved work in them is lost)
 - **After Reboot** — saves the mode for next boot (dGPU driver is blocked from loading via modprobe rules)
 - **Cancel** — keeps the current mode
+
+### `╠══[ eBPF dGPU BLOCK ]══╣`
+
+Extra > GPU: tick "Use eBPF dGPU block", next to "Use PCI dGPU disable".
+
+A kernel eBPF filter hides the dGPU PCI, DRM, hwmon and NVIDIA files from new processes. The driver stays loaded, so Standard is instant with no reboot. The hidden card can power off (D3cold), so Eco saves power without unloading anything.
+
+Needs:
+- a kernel built with `CONFIG_BPF_LSM=y` and booted with `bpf` in its LSM list. Updates shows the state and adds it to GRUB, systemd-boot, grubby or rpm-ostree. The first enable after that needs a reboot.
+- `libbpf` (package `libbpf1` on Debian/Ubuntu). Without it Updates shows the install command.
+- kernel lockdown not set to confidentiality.
+- a clang with the `bpf` target to build the filter. Release binaries and the AppImage already contain it.
+
+- **Optimized** on eBPF blocks on battery and releases on AC. It does not block while a monitor is connected to a dGPU port or while the MUX is on the dGPU.
+- **dGPU apps** in Extra > GPU: an allow list by process name, for apps and Steam games that may still use the hidden card. `ghelper --dgpu <command>` starts any other program on the dGPU.
+- The card stays awake, and no power is saved, while an allowed app runs, while an app still holds the dGPU, or while runtime D3 is off.
 
 ### `╠══[ KNOWN LIMITATIONS ]══╣`
 
@@ -224,6 +250,7 @@ lsmod | grep asus
 | Custom fan curves (8-point) | 5.17 |
 | PPT power limits (PL1, PL2, FPPT) | 6.2 |
 | GPU MUX switch | 6.1 |
+| eBPF dGPU block | 5.17 |
 | NVIDIA Dynamic Boost / Temp Target | 6.2 |
 | MiniLED mode control | 6.9 |
 
@@ -247,7 +274,7 @@ The binary and the AppImage also check their system files on every start and off
 curl -sL https://raw.githubusercontent.com/utajum/g-helper-linux/master/install/install.sh | sudo bash -s -- --uninstall
 ```
 
-Removes system files + udev rules + desktop entry. User config in `~/.config/ghelper` is preserved.
+Removes system files + udev rules + desktop entry, and undoes the bpf LSM change. User config in `~/.config/ghelper` is preserved.
 
 ### `╠══[ MANUAL DOWNLOAD ]══╣`
 
@@ -394,6 +421,9 @@ g-helper-linux/
       msr_ops.c                           #   Intel MSR undervolting
       process_ops.c                       #   Process kill for GPU holders
       lenovo_ops.c                        #   Lenovo WMI fan/thermal
+      bpf_ops.c                           #   eBPF filter load, hide lists, D3cold
+      lsm_ops.c                           #   Kernel LSM list edits (GRUB, systemd-boot)
+      bpf/ghelper_gpublock.bpf.c          #   Filter source, embedded at build time
     ryzenadj/                             # AMD SMU power tuning (bundled)
     wlr-randr/                            # Wayland display backend (bundled)
   audio-helper/                           # Native C PipeWire DSP helper
@@ -435,6 +465,10 @@ g-helper-linux/
       FanHysteresis.cs                    # Hysteresis smoothing
     Gpu/
       GPUModeControl.cs                   # Eco/Standard/Ultimate orchestrator
+      BpfGpuBackend.cs                    # eBPF backend: filter, allow list
+      PciGpuBackend.cs                    # PCI backend: driver block, rescan
+      FirmwareGpuBackend.cs               # ASUS firmware backend (dgpu_disable, MUX)
+      Block/                              # eBPF block policy, capability, power state
       NVidia/
         LinuxNvidiaGpuControl.cs          #   NVML + nvidia-smi monitoring
         NvidiaProcessScanner.cs           #   dGPU holder scan (proc/NVML/MPS)
