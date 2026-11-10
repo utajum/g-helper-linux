@@ -80,7 +80,7 @@ Pull requests and feature requests are welcome!
 │  Performance modes         Silent / Balanced / Turbo            │
 │  Custom fan curves         8-point drag-to-edit per fan         │
 │  Battery charge limit      Protect longevity (40-100%)          │
-│  GPU mode switching        Eco / Standard / Optimized + eBPF    │
+│  GPU mode switching        Eco/Standard/Optimized (MUX, eBPF)   │
 │  Power limits              CPU PL1/PL2, Dynamic Boost, temps    │
 │  Screen control            Refresh rate, Panel OD, MiniLED      │
 │  Keyboard backlight        Brightness + RGB (per-key Aura)      │
