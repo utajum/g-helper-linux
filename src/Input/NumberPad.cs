@@ -58,10 +58,9 @@ public static class NumberPad
     private const ushort ABS_MT_POSITION_X = 0x35;
     private const ushort ABS_MT_POSITION_Y = 0x36;
 
-    // Top-right corner activation zone. Some printed NumLK markers sit below
-    // the top 15% of the evdev range, so keep the vertical band forgiving.
-    private const double CornerXMinFrac = 0.85;
-    private const double CornerYMaxFrac = 0.20;
+    // The top-right activation zone is per-layout: most models keep the
+    // printed NumLK icon in the extreme corner, while the G614/G634 put
+    // its label in the rightmost quarter of the touchpad.
     private const long HoldDurationMs = 1000;
     private const int PollTimeoutMs = 500;
 
@@ -531,7 +530,7 @@ public static class NumberPad
     // EVENT LOOP
 
     private static bool InCorner(int x, int y)
-        => x > _xMax * CornerXMinFrac && y < _yMax * CornerYMaxFrac;
+        => x > _xMax * _layout.CornerXMinFrac && y < _yMax * _layout.CornerYMaxFrac;
 
     /// <summary>Cell index for a touch point, or -1 if out of range or inert.</summary>
     private static int CellFor(int x, int y)

@@ -6,6 +6,8 @@
 
 ### Fixed
 
+- NumberPad on ROG Strix G614/G634: use the 5x4 Strix layout instead of the universal 4x4. The operator column, Backspace and Enter now emit the keys printed on the touchpad, and the top-right activation zone covers the printed NUMLK label (rightmost 25%, top 25%) so holding it toggles the pad. G533 keeps its existing layout and activation zone.
+
 ### Changed
 
 ## v1.0.100 (2026-11-11)

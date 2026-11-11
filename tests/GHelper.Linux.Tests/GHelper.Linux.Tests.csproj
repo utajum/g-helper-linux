@@ -98,6 +98,7 @@
     <Compile Include="../../src/Fan/ManualFanMath.cs" />
     <Compile Include="../../src/Mode/AppProfiles.Match.cs" />
     <Compile Include="../../src/Peripherals/Logitech/HidPP/HidPPDecode.cs" />
+    <Compile Include="../../src/Input/NumberPadLayouts.cs" />
     <Compile Include="../../src/Helpers/AppConfig.cs" />
     <Compile Include="../../src/Helpers/Logger.cs" />
     <Compile Include="../../src/Helpers/MemoryHelper.cs" />
