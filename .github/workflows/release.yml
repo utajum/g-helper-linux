@@ -45,7 +45,7 @@ jobs:
   build:
     name: Build
     needs: [version]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
