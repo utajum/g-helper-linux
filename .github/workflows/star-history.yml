@@ -6,17 +6,73 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: star-history
   cancel-in-progress: true
 
 jobs:
-  star-history:
+  # Third-party action renders with a read-only token
+  render:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.chart.outputs.changed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: narayann7/star-history-action@12543ab7352b91fb7c5eb0c4fbb39772baa0c168 # v1.0.6
+        id: chart
         with:
           repos: ${{ github.repository }}
+          update-readme: 'false'
+          commit: 'false'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.chart.outputs.changed == 'true'
+        with:
+          name: star-history
+          path: assets/star-history/
+          include-hidden-files: true
+          retention-days: 1
+
+  # Commits only the chart files, no third-party code runs here
+  commit:
+    needs: render
+    if: needs.render.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: star-history
+          path: ${{ runner.temp }}/star-history
+      - name: Commit charts
+        env:
+          SRC: ${{ runner.temp }}/star-history
+        run: |
+          for f in star-history-light.svg star-history-dark.svg star-history.png .star-history.sig; do
+            if [[ ! -f "$SRC/$f" || -L "$SRC/$f" ]]; then
+              echo "::error::Missing chart file: $f"
+              exit 1
+            fi
+          done
+          for f in star-history-light.svg star-history-dark.svg; do
+            [[ "$(file -b --mime-type "$SRC/$f")" == image/svg+xml ]] || { echo "::error::Not an SVG: $f"; exit 1; }
+          done
+          [[ "$(file -b --mime-type "$SRC/star-history.png")" == image/png ]] || { echo "::error::Not a PNG"; exit 1; }
+          grep -qx '[0-9a-f]\{64\}' "$SRC/.star-history.sig" || { echo "::error::Bad signature file"; exit 1; }
+          install -m644 "$SRC"/star-history-light.svg "$SRC"/star-history-dark.svg "$SRC"/star-history.png "$SRC"/.star-history.sig assets/star-history/
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/star-history
+          if git diff --cached --quiet; then
+            echo "No chart changes."
+            exit 0
+          fi
+          git commit -m "chore: update star history [skip ci]"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
