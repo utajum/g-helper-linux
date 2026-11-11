@@ -14,9 +14,6 @@ public sealed class NumberPadLayout
     public ushort[]?[] Cells { get; init; } = Array.Empty<ushort[]?>();
 
     // Top-right activation zone as fractions of the touchpad's evdev range.
-    // Models differ: most layouts keep the printed NumLK icon in the
-    // extreme corner, while G614/G634 put its label in the rightmost
-    // quarter of the touchpad.
     public double CornerXMinFrac { get; init; } = 0.85;
     public double CornerYMaxFrac { get; init; } = 0.20;
 }
@@ -99,9 +96,9 @@ public static class NumberPadLayouts
     };
 
     /// <summary>
-    /// Shared key grid for the ROG Strix 16/18 touchpads: digits in a 3x4
+    /// Shared key grid for the ROG Strix G533/G614/G634 touchpads: digits in a 3x4
     /// area, a dedicated operator column, and tall Backspace/Enter cells on
-    /// the far right. Read-only after construction.
+    /// the far right.
     /// </summary>
     private static readonly ushort[]?[] RogStrix5x4Cells =
     {
@@ -112,8 +109,7 @@ public static class NumberPadLayouts
     };
 
     /// <summary>
-    /// ROG Strix G533 layout. Kept at the original activation zone so G533
-    /// behavior does not change until it is verified on that hardware.
+    /// ROG Strix G533 layout with the default activation zone.
     /// </summary>
     public static readonly NumberPadLayout RogG5335x4 = new()
     {

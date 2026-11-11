@@ -58,9 +58,6 @@ public static class NumberPad
     private const ushort ABS_MT_POSITION_X = 0x35;
     private const ushort ABS_MT_POSITION_Y = 0x36;
 
-    // The top-right activation zone is per-layout: most models keep the
-    // printed NumLK icon in the extreme corner, while the G614/G634 put
-    // its label in the rightmost quarter of the touchpad.
     private const long HoldDurationMs = 1000;
     private const int PollTimeoutMs = 500;
 
