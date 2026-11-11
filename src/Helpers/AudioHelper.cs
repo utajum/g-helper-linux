@@ -525,13 +525,17 @@ public sealed class AudioHelper : IDisposable
     {
         try
         {
-            string? line;
+            string? line, last = null;
             while ((line = proc.StandardError.ReadLine()) != null)
             {
+                last = line;
                 if (line.Contains("error", StringComparison.OrdinalIgnoreCase) ||
                     line.Contains("err=", StringComparison.OrdinalIgnoreCase))
                     ErrorReported?.Invoke(line);
             }
+            // stderr closed: the helper exited, e.g. the loader could not start it.
+            if (proc.WaitForExit(1000) && proc.ExitCode != 0)
+                Logger.WriteLine($"AudioHelper: ghelper-audio exited with code {proc.ExitCode}: {last}");
         }
         catch { }
     }
