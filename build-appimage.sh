@@ -19,6 +19,13 @@ INSTALL_DIR="$SCRIPT_DIR/install"
 APPDIR="$SCRIPT_DIR/GHelper.AppDir"
 OUTPUT="$SCRIPT_DIR/GHelper-x86_64.AppImage"
 APPIMAGETOOL="$SCRIPT_DIR/appimagetool"
+RUNTIME="$SCRIPT_DIR/appimage-runtime"
+
+# Pinned build tools: bump URL and sha256 together
+APPIMAGETOOL_URL="https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage"
+APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+RUNTIME_URL="https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64"
+RUNTIME_SHA256="2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d"
 
 echo "=== G-Helper AppImage Build ==="
 echo ""
@@ -33,14 +40,22 @@ fi
 
 # ── Download appimagetool if needed ───────────────────────────────────────────
 
-if [[ ! -x "$APPIMAGETOOL" ]]; then
-    echo "[1/4] Downloading appimagetool..."
-    curl -fsSL "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
-        -o "$APPIMAGETOOL"
-    chmod +x "$APPIMAGETOOL"
-else
-    echo "[1/4] appimagetool already present."
-fi
+# Download $1 to $3 unless $3 already has sha256 $2
+fetch_pinned() {
+    [[ -f "$3" && "$(sha256sum "$3" | cut -d' ' -f1)" == "$2" ]] && return
+    curl -fsSL "$1" -o "$3.tmp"
+    if [[ "$(sha256sum "$3.tmp" | cut -d' ' -f1)" != "$2" ]]; then
+        echo "ERROR: sha256 mismatch for $1"
+        rm -f "$3.tmp"
+        exit 1
+    fi
+    mv "$3.tmp" "$3"
+}
+
+echo "[1/4] Fetching appimagetool and runtime..."
+fetch_pinned "$APPIMAGETOOL_URL" "$APPIMAGETOOL_SHA256" "$APPIMAGETOOL"
+fetch_pinned "$RUNTIME_URL" "$RUNTIME_SHA256" "$RUNTIME"
+chmod +x "$APPIMAGETOOL"
 
 # ── Assemble AppDir ──────────────────────────────────────────────────────────
 
@@ -94,10 +109,10 @@ export ARCH=x86_64
 
 # appimagetool itself is an AppImage — if FUSE is not available, extract and run
 if "$APPIMAGETOOL" --version &>/dev/null 2>&1; then
-    "$APPIMAGETOOL" --no-appstream "$APPDIR" "$OUTPUT"
+    "$APPIMAGETOOL" --no-appstream --runtime-file "$RUNTIME" "$APPDIR" "$OUTPUT"
 else
     echo "  (FUSE not available, using --appimage-extract-and-run)"
-    "$APPIMAGETOOL" --no-appstream --appimage-extract-and-run "$APPDIR" "$OUTPUT"
+    "$APPIMAGETOOL" --no-appstream --appimage-extract-and-run --runtime-file "$RUNTIME" "$APPDIR" "$OUTPUT"
 fi
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────

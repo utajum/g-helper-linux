@@ -18,6 +18,7 @@ audio-helper/tests/cs/obj/
 *.AppImage
 GHelper.AppDir/
 appimagetool
+appimage-runtime
 
 # IDE / Editor
 .vs/
