@@ -6,6 +6,7 @@ namespace GHelper.Linux.Mode;
 // Pure part of AppProfiles (no /proc, no mode changes), compiled into the tests.
 public static partial class AppProfiles
 {
+    private const string RulesKey = "app_profiles";
     private const string RestoreKey = "app_profile_restore";
 
     public record Rule(string Kind, string Value, int Mode);
@@ -114,6 +115,15 @@ public static partial class AppProfiles
 
     internal static List<Rule> WithMode(List<Rule> rules, Rule rule, int mode) =>
         rules.Select(r => SameApp(r, rule) ? r with { Mode = mode } : r).ToList();
+
+    /// <summary>Drop the rules of a removed custom mode, so a mode added later in its slot does not get them.</summary>
+    internal static void ForgetMode(int mode)
+    {
+        var lines = (AppConfig.GetString(RulesKey) ?? "").Split('\n');
+        var kept = lines.Where(l => !l.EndsWith($"|{mode}")).ToArray();
+        if (kept.Length < lines.Length)
+            AppConfig.Set(RulesKey, string.Join("\n", kept));
+    }
 
     /// <summary>Same target app (kind and value); the mode may differ.</summary>
     internal static bool SameApp(Rule a, Rule b) => a.Kind == b.Kind && a.Value == b.Value;

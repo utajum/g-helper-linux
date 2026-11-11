@@ -20,7 +20,6 @@ namespace GHelper.Linux.Mode;
 /// </summary>
 public static partial class AppProfiles
 {
-    private const string RulesKey = "app_profiles";
     private const int PollMs = 3000;
 
     // Not games, but the running-programs list offers them for exe: rules.

@@ -31,6 +31,7 @@ public static class Program
             XrandrPanelTests.RunAll();
             HidPPDecodeTests.RunAll();
             AppProfilesTests.RunAll();
+            ModesTests.RunAll();
         }
         finally
         {
