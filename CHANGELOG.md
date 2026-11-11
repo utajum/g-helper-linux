@@ -8,6 +8,13 @@
 
 ### Changed
 
+## v1.0.100 (2026-11-11)
+
+### Fixed
+
+- G-Helper Microphone (noise suppression, EQ, delay, reverb) did not start in v1.0.99 on distros with glibc older than 2.43, for example Ubuntu 24.04, KDE neon, Mint 22, Debian 13 and Fedora 43. Releases are built on Ubuntu 24.04 again, since GitHub changed ubuntu-latest to 26.04 (#250).
+- The log shows the exit code and the last error line when the audio helper stops, so Diagnostics shows why the mic does not work (#250).
+
 ## v1.0.99 (2026-11-10)
 
 <img width="1170" height="895" alt="image" src="https://github.com/user-attachments/assets/fcd819e6-faa3-49f3-afd1-f45d534f1171" />
