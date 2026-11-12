@@ -10,6 +10,7 @@ permissions:
 jobs:
   version:
     name: Compute version
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.version.outputs.new_version }}
