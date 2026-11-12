@@ -12,6 +12,10 @@ public sealed class NumberPadLayout
     public int Rows { get; init; }
     public int Cols { get; init; }
     public ushort[]?[] Cells { get; init; } = Array.Empty<ushort[]?>();
+
+    // Top-right activation zone as fractions of the touchpad's evdev range.
+    public double CornerXMinFrac { get; init; } = 0.85;
+    public double CornerYMaxFrac { get; init; } = 0.20;
 }
 
 /// <summary>
@@ -92,27 +96,50 @@ public static class NumberPadLayouts
     };
 
     /// <summary>
-    /// ROG Strix G533 layout: digits in a 3x4 area, a dedicated operator
-    /// column, and tall Backspace/Enter cells on the far right.
+    /// Shared key grid for the ROG Strix G533/G614/G634 touchpads: digits in a 3x4
+    /// area, a dedicated operator column, and tall Backspace/Enter cells on
+    /// the far right.
+    /// </summary>
+    private static readonly ushort[]?[] RogStrix5x4Cells =
+    {
+        K(KEY_KP7), K(KEY_KP8), K(KEY_KP9),   K(KEY_KPSLASH),    K(KEY_BACKSPACE),
+        K(KEY_KP4), K(KEY_KP5), K(KEY_KP6),   K(KEY_KPASTERISK), K(KEY_BACKSPACE),
+        K(KEY_KP1), K(KEY_KP2), K(KEY_KP3),   K(KEY_KPMINUS),    K(KEY_KPENTER),
+        K(KEY_KP0), K(KEY_KP0), K(KEY_KPDOT), K(KEY_KPPLUS),     K(KEY_KPENTER),
+    };
+
+    /// <summary>
+    /// ROG Strix G533 layout with the default activation zone.
     /// </summary>
     public static readonly NumberPadLayout RogG5335x4 = new()
     {
         Name = "ROG G533",
         Rows = 4,
         Cols = 5,
-        Cells = new ushort[]?[]
-        {
-            K(KEY_KP7), K(KEY_KP8), K(KEY_KP9),   K(KEY_KPSLASH),    K(KEY_BACKSPACE),
-            K(KEY_KP4), K(KEY_KP5), K(KEY_KP6),   K(KEY_KPASTERISK), K(KEY_BACKSPACE),
-            K(KEY_KP1), K(KEY_KP2), K(KEY_KP3),   K(KEY_KPMINUS),    K(KEY_KPENTER),
-            K(KEY_KP0), K(KEY_KP0), K(KEY_KPDOT), K(KEY_KPPLUS),     K(KEY_KPENTER),
-        },
+        Cells = RogStrix5x4Cells,
+    };
+
+    /// <summary>
+    /// ROG Strix G614/G634 layout. Same 5x4 key grid as the G533, but the
+    /// printed NUMLK icon spans the rightmost ~25% x ~23% of the touchpad,
+    /// not just its extreme corner, so holding the label toggles the pad.
+    /// </summary>
+    public static readonly NumberPadLayout RogG6145x4 = new()
+    {
+        Name = "ROG G614/G634",
+        Rows = 4,
+        Cols = 5,
+        CornerXMinFrac = 0.75,
+        CornerYMaxFrac = 0.25,
+        Cells = RogStrix5x4Cells,
     };
 
     // Substring of DMI product_name -> layout. First match wins.
     private static readonly (string Needle, NumberPadLayout Layout)[] Overrides =
     {
         ("G533", RogG5335x4),
+        ("G614", RogG6145x4),
+        ("G634", RogG6145x4),
         ("UX3405MA", Operator5x4),
         ("UM3402", Operator5x4),
         ("B3302", Operator5x4),
