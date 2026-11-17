@@ -1477,6 +1477,7 @@ public partial class MainWindow : Window
         // Apply saved power state + mode so the keyboard lights up on startup
         Aura.ApplyPower();
         Aura.ApplyConfiguredBrightness("Startup");
+        Aura.ApplyWheel();
         Aura.ApplyAura();
 
         Task.Run(GHelper.Linux.Input.MKeyControl.ApplyAll);

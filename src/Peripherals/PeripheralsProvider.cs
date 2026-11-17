@@ -104,6 +104,8 @@ public static class PeripheralsProvider
         DetectMouse(new Mouse.Models.TUFGamingMiniMikuWired());
         DetectMouse(new Mouse.Models.Pugio());
         DetectMouse(new Mouse.Models.MD200());
+        DetectMouse(new Mouse.Models.MD301());
+        DetectMouse(new Mouse.Models.MD301Wired());
     }
 
     private static void DetectMouse(IMousePeripheral mouse)

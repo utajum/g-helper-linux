@@ -194,6 +194,9 @@ public static class Aura
     public static bool HasRearglow { get; private set; }
     private static bool _hasRearStrip;
 
+    /// <summary>Probed: device has an RGB wheel.</summary>
+    public static bool HasWheel { get; private set; }
+
     /// <summary>White-only keyboard flag. Initialized from <see cref="Helpers.AppConfig.IsWhite"/>
     /// (model list); FORCED to <c>true</c> by the probe FEAT2_ONE_ZONE_RED_EFFECT bit.
     /// AuraMessage / GetModes / UI checks read it directly without a wrapper.</summary>
@@ -645,10 +648,11 @@ public static class Aura
                 feat1 = FEAT1_LOGO | FEAT1_LIGHTBAR;
 
             HasLogo = (feat1 & FEAT1_LOGO) != 0 || AppConfig.IsLidLogo();
-            HasLightbar = (feat1 & FEAT1_LIGHTBAR) != 0;
+            HasLightbar = (feat1 & (FEAT1_LIGHTBAR | FEAT1_LOGO)) != 0;
             // VCUT bit = rearglow on old Scar. (#5590)
             HasRearglow = (feat1 & (FEAT1_REARGLOW | FEAT1_VCUT)) != 0 || AppConfig.IsZ13();
             _hasRearStrip = (feat1 & FEAT1_REARGLOW) != 0;
+            HasWheel = (feat2 & FEAT2_RGB_WHEEL) != 0;
 
             // FEAT2 ONE_ZONE_RED_EFFECT means white-only keyboard (single-zone
             // red firmware effect mapped to white). Force-flip the mutable static
@@ -811,6 +815,13 @@ public static class Aura
             rear |= 1 << 7;
 
         return new byte[] { AsusHid.AURA_ID, 0xBD, 0x01, keyb, bar, lid, rear, 0xFF };
+    }
+
+    /// <summary>Switch the RGB wheel light on, on models that have one.</summary>
+    public static void ApplyWheel()
+    {
+        if (HasWheel)
+            AsusHid.Write([AsusHid.AURA_ID, 0xBA, 0xC6, 0x64], "Wheel");
     }
 
     /// <summary>
