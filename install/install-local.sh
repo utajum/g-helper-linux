@@ -205,7 +205,7 @@ fi
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  NixOS BRANCH (declarative: stage module + binary, edit configuration.nix,
+#  NixOS BRANCH (declarative: stage source, edit configuration.nix,
 #  nixos-rebuild). NixOS /etc is read-only store symlinks, so the imperative
 #  flow below cannot run here.
 # ══════════════════════════════════════════════════════════════════════════════
@@ -274,7 +274,7 @@ if [[ -f /etc/NIXOS ]]; then
             _remove "configuration.nix import"
         fi
         _safe_remove "$GH_NIX_WRAPPER" "ghelper.nix wrapper"
-        _safe_remove "$GH_NIX_ROOT"    "staged module + binary"
+        _safe_remove "$GH_NIX_ROOT"    "staged source"
         _info "Rebuilding without ghelper..."
         nixos-rebuild switch 2>&1 | tail -5
         echo ""
@@ -282,30 +282,12 @@ if [[ -f /etc/NIXOS ]]; then
         exit 0
     fi
 
-    # Install: require the local build
-    if [[ ! -f "$DIST_DIR/ghelper" ]]; then
-        _fail "Missing $DIST_DIR/ghelper - run ./build.sh first"
-        exit 1
-    fi
-
-    _info "Staging module + binary under ${GH_NIX_ROOT}/"
+    _info "Staging source under ${GH_NIX_ROOT}/"
     rm -rf "$GH_NIX_ROOT"
-    mkdir -p "$GH_NIX_ROOT/nixos" "$GH_NIX_ROOT/dist" \
-             "$GH_NIX_ROOT/vendor/gpu-helper" "$GH_NIX_ROOT/install"
-    install -m644 "$PROJECT_DIR/nixos/module.nix"  "$GH_NIX_ROOT/nixos/module.nix"
-    install -m644 "$PROJECT_DIR/nixos/package.nix" "$GH_NIX_ROOT/nixos/package.nix"
-    install -m755 "$DIST_DIR/ghelper"              "$GH_NIX_ROOT/dist/ghelper"
-    # Folder (non-AOT) build: bring the .NET DLLs alongside the host.
-    if [[ -f "$DIST_DIR/ghelper.dll" ]]; then
-        cp -r "$DIST_DIR/." "$GH_NIX_ROOT/dist/"
-    fi
-    # Full gpu-helper source tree; package.nix compiles all of it.
-    # (ryzenadj is a nixpkgs package pulled in by module.nix, not built here.)
-    install -m644 "$PROJECT_DIR"/vendor/gpu-helper/*.c "$PROJECT_DIR"/vendor/gpu-helper/*.h \
-        "$GH_NIX_ROOT/vendor/gpu-helper/"
-    for f in 90-ghelper.rules gpu-block-helper.sh ghelper-gpu-boot.sh ghelper.desktop ghelper.png; do
-        install -m644 "$SCRIPT_DIR/$f" "$GH_NIX_ROOT/install/$f"
-    done
+    mkdir -p "$GH_NIX_ROOT"
+    # package.nix builds from source, so stage the whole tree without build outputs.
+    tar -C "$PROJECT_DIR" --exclude-vcs --exclude=./dist --exclude=./build --exclude=bin --exclude=obj \
+        --exclude='*.AppImage' -cf - . | tar -C "$GH_NIX_ROOT" -xf -
 
     _gh_nix_write_wrapper
     _inject "wrapper → $GH_NIX_WRAPPER"

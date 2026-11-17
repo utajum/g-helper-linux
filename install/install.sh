@@ -226,7 +226,7 @@ fi
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  NixOS BRANCH (declarative: fetch module + binary, edit configuration.nix,
+#  NixOS BRANCH (declarative: fetch source, edit configuration.nix,
 #  nixos-rebuild). NixOS /etc is read-only store symlinks, so the imperative
 #  flow below cannot run here.
 # ══════════════════════════════════════════════════════════════════════════════
@@ -234,7 +234,6 @@ REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-}")
 GH_NIX_ROOT="/etc/nixos/ghelper"
 GH_NIX_WRAPPER="/etc/nixos/ghelper.nix"
 GH_NIX_CONF="/etc/nixos/configuration.nix"
-RAW="https://raw.githubusercontent.com/$REPO/master"
 
 _gh_nix_inject() {
     if grep -q '/etc/nixos/ghelper.nix' "$GH_NIX_CONF"; then
@@ -296,7 +295,7 @@ if [[ -f /etc/NIXOS ]]; then
             _remove "configuration.nix import"
         fi
         _safe_remove "$GH_NIX_WRAPPER" "ghelper.nix wrapper"
-        _safe_remove "$GH_NIX_ROOT"    "staged module + binary"
+        _safe_remove "$GH_NIX_ROOT"    "staged source"
         _info "Rebuilding without ghelper..."
         nixos-rebuild switch 2>&1 | tail -5
         echo ""
@@ -304,23 +303,15 @@ if [[ -f /etc/NIXOS ]]; then
         exit 0
     fi
 
-    _info "Fetching module + binary into ${GH_NIX_ROOT}/"
+    _info "Fetching source into ${GH_NIX_ROOT}/"
     rm -rf "$GH_NIX_ROOT"
-    mkdir -p "$GH_NIX_ROOT/nixos" "$GH_NIX_ROOT/dist" \
-             "$GH_NIX_ROOT/vendor/gpu-helper" "$GH_NIX_ROOT/install"
+    mkdir -p "$GH_NIX_ROOT"
 
-    _gh_nix_fetch "https://github.com/$REPO/releases/latest/download/ghelper" "$GH_NIX_ROOT/dist/ghelper" || exit 1
-    chmod 755 "$GH_NIX_ROOT/dist/ghelper"
-    _gh_nix_fetch "$RAW/nixos/module.nix"  "$GH_NIX_ROOT/nixos/module.nix"  || exit 1
-    _gh_nix_fetch "$RAW/nixos/package.nix" "$GH_NIX_ROOT/nixos/package.nix" || exit 1
-    # Full gpu-helper source tree; package.nix compiles all of it.
-    for f in gpu-helper.c gpu-helper.h process_ops.c nvidia_ops.c \
-             pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c; do
-        _gh_nix_fetch "$RAW/vendor/gpu-helper/$f" "$GH_NIX_ROOT/vendor/gpu-helper/$f" || exit 1
-    done
-    for f in 90-ghelper.rules gpu-block-helper.sh ghelper-gpu-boot.sh ghelper.desktop ghelper.png; do
-        _gh_nix_fetch "$RAW/install/$f" "$GH_NIX_ROOT/install/$f" || exit 1
-    done
+    # package.nix builds from source, so stage the whole tree of the latest release.
+    GH_NIX_TAG=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest") || exit 1
+    _gh_nix_fetch "https://github.com/$REPO/archive/refs/tags/${GH_NIX_TAG##*/}.tar.gz" "$GH_NIX_ROOT/src.tar.gz" || exit 1
+    tar -xzf "$GH_NIX_ROOT/src.tar.gz" -C "$GH_NIX_ROOT" --strip-components=1
+    rm -f "$GH_NIX_ROOT/src.tar.gz"
 
     _gh_nix_write_wrapper
     _inject "wrapper → $GH_NIX_WRAPPER"
