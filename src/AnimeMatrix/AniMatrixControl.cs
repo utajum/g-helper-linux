@@ -74,6 +74,13 @@ public class AniMatrixControl : IDisposable
         bool auto = AppConfig.Is("matrix_auto");
         bool lid = AppConfig.Is("matrix_lid");
 
+        // Mode Off here: the Slash follows the Extra window settings (slash_* keys).
+        if (running == 0)
+        {
+            Task.Run(USB.Slash.Init);
+            return;
+        }
+
         Task.Run(() =>
         {
             try
@@ -284,7 +291,7 @@ public class AniMatrixControl : IDisposable
     /// <summary>Re-applies display state when AC/battery power changes, honouring matrix_auto.</summary>
     public void SetBatteryAuto()
     {
-        if (deviceSlash is not null)
+        if (deviceSlash is not null && AppConfig.Get("matrix_running", 0) != 0)
         {
             bool auto = AppConfig.Is("matrix_auto");
             deviceSlash.SetBatterySaver(auto);
