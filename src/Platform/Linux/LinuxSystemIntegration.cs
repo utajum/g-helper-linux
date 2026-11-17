@@ -351,6 +351,7 @@ public class LinuxSystemIntegration : ISystemIntegration
     /// <summary>Enable or disable the touchpad.</summary>
     public static void SetTouchpadEnabled(bool enabled)
     {
+        Input.NumberPad.SetTouchpadEnabled(enabled);
         if (Display.DisplayBackendFactory.IsWaylandSession())
         {
             string? compositor = Display.DisplayBackendFactory.DetectCompositor();

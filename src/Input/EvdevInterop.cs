@@ -61,6 +61,20 @@ internal static class EvdevInterop
     public const ushort BTN_START = 0x13b;  // Menu
     public const ushort BTN_MODE = 0x13c;   // Guide
 
+    // Touchpad codes used by NumberPad.
+    public const ushort BTN_LEFT = 0x110;
+    public const ushort BTN_TOOL_FINGER = 0x145;
+    public const ushort BTN_TOOL_QUINTTAP = 0x148;
+    public const ushort BTN_TOUCH = 0x14a;
+    public const ushort BTN_TOOL_DOUBLETAP = 0x14d;
+    public const ushort BTN_TOOL_TRIPLETAP = 0x14e;
+    public const ushort BTN_TOOL_QUADTAP = 0x14f;
+    public const ushort ABS_MT_SLOT = 0x2f;
+    public const ushort ABS_MT_POSITION_X = 0x35;
+    public const ushort ABS_MT_POSITION_Y = 0x36;
+    public const ushort ABS_MT_TRACKING_ID = 0x39;
+    public const ushort LED_NUML = 0x00;
+
     // MSC_* misc-event subcodes (used inside EV_MSC events).
     public const ushort MSC_SCAN = 0x04;
 
@@ -185,8 +199,15 @@ internal static class EvdevInterop
 
     public static readonly uint UI_SET_EVBIT = IOW('U', 100, sizeof(int));
     public static readonly uint UI_SET_KEYBIT = IOW('U', 101, sizeof(int));
+    public static readonly uint UI_SET_ABSBIT = IOW('U', 103, sizeof(int));
+    public static readonly uint UI_SET_LEDBIT = IOW('U', 105, sizeof(int));
+    public static readonly uint UI_SET_PROPBIT = IOW('U', 110, sizeof(int));
     public static readonly uint UI_DEV_CREATE = IO('U', 1);
     public static readonly uint UI_DEV_DESTROY = IO('U', 2);
+    // struct uinput_setup is 92 bytes, struct uinput_abs_setup 28 bytes.
+    public static readonly uint UI_DEV_SETUP = IOW('U', 3, 92);
+    public static readonly uint UI_ABS_SETUP = IOW('U', 4, 28);
+    public static uint EVIOCGPROP(uint len) => IOC(_IOC_READ, 'E', 0x09, len);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct InputId

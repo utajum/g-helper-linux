@@ -48,7 +48,7 @@ public partial class NumberPadWindow : Window
         }
 
         string model = Helpers.AppConfig.GetModel();
-        var layout = NumberPadLayouts.ForProduct(model);
+        var layout = NumberPadLayouts.Resolve(model, probe.TouchpadName);
         labelLayout.Text = $"{layout.Cols}x{layout.Rows} ({layout.Name})";
         labelModel.Text = model.Length > 0 ? model : "Unknown";
     }
