@@ -320,6 +320,24 @@ public static class NumberPadLayoutTests
             Harness.AssertEqual("Pointer", Kinds(Up(g, 0, 1100)), "lift goes to the pointer");
         });
 
+        Harness.Scenario("Gesture_TwoFingerScrollOnKeysIsPointer", _ =>
+        {
+            var g = Activated();
+            Down(g, 0, 41, 30, 1000);
+            Down(g, 1, 64, 30, 1000);
+            var o = new List<NumberPadOutput>();
+            for (int i = 1; i <= 8; i++)
+            {
+                o.AddRange(Move(g, 0, 41, 30 + i, 1000 + i * 8));
+                o.AddRange(Move(g, 1, 64, 30 + i, 1000 + i * 8));
+                o.AddRange(g.Tick(1000 + i * 8));
+            }
+            o.AddRange(Up(g, 1, 1100));
+            o.AddRange(Up(g, 0, 1100));
+            Harness.Assert(o.Count > 0 && o.All(x => x.Kind == NumberPadEvent.Pointer), "no key typed");
+            Harness.AssertEqual(2, o.Max(x => x.Frame!.Contacts.Count), "both fingers go to the pointer");
+        });
+
         Harness.Scenario("Gesture_TouchOutsideKeysIsPointer", _ =>
         {
             var g = Activated();
@@ -416,6 +434,18 @@ public static class NumberPadLayoutTests
             Harness.AssertEqual("/dev/i2c-0", t.I2cPath, "bus");
             Harness.AssertEqual(0x15, t.I2cAddr, "addr");
             Harness.AssertEqual("/dev/input/event7", t.EventPath, "event");
+        });
+
+        Harness.Scenario("NumLockDevices_ListsNumLockLeds", _ =>
+        {
+            string text = "N: Name=\"AT Translated Set 2 keyboard\"\nS: Sysfs=/devices/platform/i8042/serio0/input/input3\nH: Handlers=sysrq kbd event3 leds \nB: LED=7\n\n"
+                + "N: Name=\"Asus WMI hotkeys\"\nS: Sysfs=/devices/platform/asus-nb-wmi/input/input7\nH: Handlers=rfkill kbd event7 \n\n"
+                + "N: Name=\"caps only\"\nS: Sysfs=/devices/virtual/input/input40\nH: Handlers=kbd event8 \nB: LED=2\n\n"
+                + "N: Name=\"g-helper numberpad\"\nS: Sysfs=/devices/virtual/input/input41\nH: Handlers=event9 kbd leds \nB: LED=1\n\n";
+            var d = NumberPad.NumLockDevices(text);
+            Harness.AssertEqual(2, d.Count, "only devices with a NumLock LED");
+            Harness.AssertEqual("/dev/input/event3", d["/devices/platform/i8042/serio0/input/input3"], "keyboard node");
+            Harness.AssertEqual("/dev/input/event9", d["/devices/virtual/input/input41"], "event as first handler");
         });
 
         Harness.Scenario("FindTarget_AddressAndFamilies", _ =>

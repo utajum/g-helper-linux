@@ -75,6 +75,7 @@ public static class NumberPad
     private static int _touchFd = -1;
     private static int _ledVersion = -1;
     private static bool _numLock;
+    private static HashSet<string> _ledDevices = new();
     private static volatile bool _touchpadOff;
     private static TouchpadRange _range;
     private static Target? _target;
@@ -156,11 +157,17 @@ public static class NumberPad
                 return false;
             }
 
+            _numLock = IsNumLockOn();
             if (!CreateVirtualKeyboard())
             {
                 EvdevInterop.close(fd);
                 return false;
             }
+            // A new keyboard with LEDs makes the kernel reset every keyboard LED: restore NumLock, drop the reset.
+            var devices = NumLockDevices();
+            WriteNumLockLeds(devices.Values, _numLock);
+            _ledDevices = devices.Keys.ToHashSet();
+            DrainVirtualKeyboard();
 
             if (EvdevInterop.pipe(_stopPipe) != 0)
             {
@@ -328,6 +335,9 @@ public static class NumberPad
     private static uint Eviocgled(uint len)
         => 0x80000000u | (len << 16) | ((uint)'E' << 8) | 0x19u;
 
+    private static uint Eviocgmtslots(uint len)
+        => 0x80000000u | (len << 16) | ((uint)'E' << 8) | 0x0au;
+
     /// <summary>Read the X/Y maxima and resolution from EVIOCGABS, preferring single-touch axes.</summary>
     private static bool ReadAbsBounds(int fd, out TouchpadRange range)
     {
@@ -352,6 +362,36 @@ public static class NumberPad
             return (Marshal.ReadInt32(buf, 8), Marshal.ReadInt32(buf, 20));
         }
         finally { Marshal.FreeHGlobal(buf); }
+    }
+
+    /// <summary>Feed the current slot and positions: evdev does not send an X/Y equal to the last one again.</summary>
+    private static void SeedSlots(NumberPadGesture gesture)
+    {
+        IntPtr abs = Marshal.AllocHGlobal(24);
+        IntPtr buf = Marshal.AllocHGlobal(4 * 65);
+        try
+        {
+            if (EvdevInterop.ioctl_buf(_touchpadFd, Eviocgabs(EvdevInterop.ABS_MT_SLOT), abs) < 0)
+                return;
+            int slots = Math.Clamp(Marshal.ReadInt32(abs, 8) + 1, 1, 64);
+            foreach (ushort code in new[] { EvdevInterop.ABS_MT_POSITION_X, EvdevInterop.ABS_MT_POSITION_Y })
+            {
+                Marshal.WriteInt32(buf, code);
+                if (EvdevInterop.ioctl_buf(_touchpadFd, Eviocgmtslots((uint)(4 * (slots + 1))), buf) < 0)
+                    continue;
+                for (int s = 0; s < slots; s++)
+                {
+                    gesture.Feed(EvdevInterop.EV_ABS, EvdevInterop.ABS_MT_SLOT, s, 0);
+                    gesture.Feed(EvdevInterop.EV_ABS, code, Marshal.ReadInt32(buf, 4 * (s + 1)), 0);
+                }
+            }
+            gesture.Feed(EvdevInterop.EV_ABS, EvdevInterop.ABS_MT_SLOT, Marshal.ReadInt32(abs, 0), 0);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(abs);
+            Marshal.FreeHGlobal(buf);
+        }
     }
 
     // LED CONTROL
@@ -575,6 +615,18 @@ public static class NumberPad
         return true;
     }
 
+    private static void DrainVirtualKeyboard()
+    {
+        IntPtr buf = Marshal.AllocHGlobal(EvdevInterop.InputEventSize);
+        try
+        {
+            while (EvdevInterop.read(_uinputFd, buf, EvdevInterop.InputEventSize) == EvdevInterop.InputEventSize)
+            {
+            }
+        }
+        finally { Marshal.FreeHGlobal(buf); }
+    }
+
     private static void DestroyVirtualKeyboard()
     {
         if (_uinputFd < 0)
@@ -747,6 +799,50 @@ public static class NumberPad
         return false;
     }
 
+    private static Dictionary<string, string> NumLockDevices()
+    {
+        try
+        { return NumLockDevices(File.ReadAllText(ProcBusInputDevices)); }
+        catch
+        { return new(); }
+    }
+
+    /// <summary>Sysfs path to event node of every input device with a NumLock LED.</summary>
+    internal static Dictionary<string, string> NumLockDevices(string contents)
+    {
+        var devices = new Dictionary<string, string>();
+        foreach (string block in contents.Split("\n\n"))
+        {
+            string? sysfs = null, node = null;
+            bool numLed = false;
+            foreach (string line in block.Split('\n'))
+            {
+                if (line.StartsWith("S: Sysfs="))
+                    sysfs = line["S: Sysfs=".Length..];
+                else if (line.StartsWith("H: Handlers="))
+                    node = line["H: Handlers=".Length..].Split(' ').FirstOrDefault(t => t.StartsWith("event"));
+                else if (line.StartsWith("B: LED="))
+                    numLed = ulong.TryParse(line["B: LED=".Length..].Trim(), System.Globalization.NumberStyles.HexNumber, null, out ulong bits) && (bits & 1) != 0;
+            }
+            if (sysfs != null && node != null && numLed)
+                devices[sysfs] = "/dev/input/" + node;
+        }
+        return devices;
+    }
+
+    private static void WriteNumLockLeds(IEnumerable<string> nodes, bool on)
+    {
+        foreach (string node in nodes)
+        {
+            int fd = EvdevInterop.open(node, EvdevInterop.O_WRONLY | EvdevInterop.O_NONBLOCK | EvdevInterop.O_CLOEXEC);
+            if (fd < 0)
+                continue;
+            WriteEvent(fd, EvdevInterop.EV_LED, EvdevInterop.LED_NUML, on ? 1 : 0);
+            WriteEvent(fd, EvdevInterop.EV_SYN, EvdevInterop.SYN_REPORT, 0);
+            EvdevInterop.close(fd);
+        }
+    }
+
     // EVENT LOOP
 
     /// <summary>LEDs and evdev grab toggled in tandem; failures log and continue.</summary>
@@ -781,7 +877,7 @@ public static class NumberPad
 
         var gesture = new NumberPadGesture(new NumberPadSurface(_layout, _range));
         var pointer = new PointerWriter();
-        _numLock = IsNumLockOn();
+        SeedSlots(gesture);
 
         IntPtr buf = Marshal.AllocHGlobal(EvdevInterop.InputEventSize);
         try
@@ -814,7 +910,7 @@ public static class NumberPad
                     // Touchpad switched off: NumberPad and NumLock off.
                     if (gesture.Active)
                     {
-                        if (IsNumLockOn())
+                        if (_numLock)
                             EmitTap(new[] { NumberPadLayouts.KEY_NUMLOCK });
                         _numLock = false;
                         SetActive(gesture, pointer, false);
@@ -823,13 +919,29 @@ public static class NumberPad
                 }
 
                 // NumLock LED from the desktop: follow the last state only, resume replays a lit LED as off then on.
-                bool numLock = _numLock;
+                bool numLock = _numLock, ledEvent = false;
                 while ((poll[2].revents & EvdevInterop.POLLIN) != 0
                     && EvdevInterop.read(_uinputFd, buf, EvdevInterop.InputEventSize) == EvdevInterop.InputEventSize)
                 {
                     var led = Marshal.PtrToStructure<EvdevInterop.InputEvent>(buf);
                     if (led.type == EvdevInterop.EV_LED && led.code == EvdevInterop.LED_NUML)
+                    {
                         numLock = led.value != 0;
+                        ledEvent = true;
+                    }
+                }
+                if (ledEvent)
+                {
+                    var devices = NumLockDevices();
+                    bool added = devices.Keys.Any(d => !_ledDevices.Contains(d));
+                    _ledDevices = devices.Keys.ToHashSet();
+                    if (added)
+                    {
+                        // The kernel reset every LED for the new keyboard; NumLock did not change.
+                        numLock = _numLock;
+                        WriteNumLockLeds(devices.Values, _numLock);
+                        Logger.WriteLine($"NumberPad: LED reset by a new keyboard, NumLock LED {(_numLock ? "on" : "off")} restored");
+                    }
                 }
                 if (numLock != _numLock)
                 {
@@ -894,7 +1006,7 @@ public static class NumberPad
                     bool on = !gesture.Active;
                     if (on && _touchpadOff)
                         break;
-                    if (IsNumLockOn() != on)
+                    if (_numLock != on)
                         EmitTap(new[] { NumberPadLayouts.KEY_NUMLOCK });
                     _numLock = on;
                     SetActive(gesture, pointer, on);

@@ -19,6 +19,7 @@ public static class InputDispatcher
     // Legacy event codes for non-configurable keys
     public const int EventKbBrightnessUp = 196;   // Fn+F3
     public const int EventKbBrightnessDown = 197;  // Fn+F2
+    public const int EventTouchpadToggle = 107;    // Fn+F10
 
     /// <summary>
     /// Available actions for configurable key bindings (app-internal only).
@@ -149,6 +150,16 @@ public static class InputDispatcher
 
             case EventKbBrightnessDown:
                 CycleKeyboardBrightness(up: false);
+                break;
+
+            case EventTouchpadToggle:
+                // The desktop toggles the touchpad; the NumberPad follows its new state.
+                Task.Run(() =>
+                {
+                    Thread.Sleep(200);
+                    if (LinuxSystemIntegration.IsTouchpadEnabled() is bool on)
+                        NumberPad.SetTouchpadEnabled(on);
+                });
                 break;
         }
     }
