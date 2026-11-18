@@ -40,7 +40,7 @@ public sealed record NumberPadGeometry(
     int LockInset, int LockTop, bool LockOnLeft = false);
 
 /// <summary>
-/// Static NumberPad layouts. DMI overrides win; else the touchpad ACPI ID
+/// Static NumberPad layouts. The user's choice wins, then DMI overrides; else the touchpad ACPI ID
 /// picks a layout from the ASUS Windows driver; else a universal 4x4 grid.
 /// </summary>
 public static class NumberPadLayouts
@@ -235,12 +235,18 @@ public static class NumberPadLayouts
         ("B3302", Operator5x4),
     };
 
+    /// <summary>Every layout the user can choose, by name.</summary>
+    public static readonly NumberPadLayout[] All = new[] { Universal4x4, Operator5x4 }
+        .Concat(DriverLayouts.Values.OrderBy(l => l.Name, StringComparer.Ordinal)).ToArray();
+
     /// <summary>
-    /// Layout for a laptop: DMI override first, then the touchpad ACPI ID
+    /// Layout for a laptop: the user's choice first, then DMI override, then the touchpad ACPI ID
     /// ("ASUE1416" in "ASUE1416:00 04F3:3275 Touchpad"), then <see cref="Universal4x4"/>.
     /// </summary>
-    public static NumberPadLayout Resolve(string productName, string touchpadName = "")
+    public static NumberPadLayout Resolve(string productName, string touchpadName = "", string chosen = "")
     {
+        if (All.FirstOrDefault(l => l.Name == chosen) is { } choice)
+            return choice;
         foreach (var (needle, layout) in Overrides)
             if (productName.Contains(needle))
                 return layout;

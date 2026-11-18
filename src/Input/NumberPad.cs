@@ -119,6 +119,24 @@ public static class NumberPad
         return new ProbeResult { Status = ProbeStatus.Ok, TouchpadName = target.Name };
     }
 
+    /// <summary>Touchpad range for the layout preview; a 130x82 mm pad when it cannot be read.</summary>
+    public static TouchpadRange ReadRange()
+    {
+        lock (_lock)
+            if (_running)
+                return _range;
+        var target = Detect();
+        int fd = target == null ? -1 : EvdevInterop.open(target.EventPath, EvdevInterop.O_RDONLY | EvdevInterop.O_CLOEXEC);
+        if (fd >= 0)
+        {
+            bool ok = ReadAbsBounds(fd, out var range);
+            EvdevInterop.close(fd);
+            if (ok)
+                return range;
+        }
+        return new TouchpadRange(130 * 31, 82 * 31, 31, 31);
+    }
+
     /// <summary>
     /// Open the touchpad and virtual keyboard, then run the event loop on a
     /// background thread. Starts in idle (LEDs off, no grab), even when NumLock
@@ -180,7 +198,7 @@ public static class NumberPad
             _target = target;
             _touchpadFd = fd;
             _range = range;
-            _layout = NumberPadLayouts.Resolve(AppConfig.GetModel(), target.Name);
+            _layout = NumberPadLayouts.Resolve(AppConfig.GetModel(), target.Name, AppConfig.GetString("numberpad_layout", "")!);
             if (!CreateVirtualTouchpad(fd, target.Name))
                 Logger.WriteLine("NumberPad: no virtual touchpad, the pointer stops while active");
             _ledVersion = _layout.Geometry?.CalcWidth > 0 ? ReadLedVersion() : -1;

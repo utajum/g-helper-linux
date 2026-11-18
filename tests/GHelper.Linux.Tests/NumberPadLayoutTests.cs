@@ -89,6 +89,22 @@ public static class NumberPadLayoutTests
             Harness.AssertEqual("Operator column", layout.Name, "override");
         });
 
+        Harness.Scenario("Resolve_ChosenLayoutWins", _ =>
+        {
+            Harness.AssertEqual("Universal", NumberPadLayouts.Resolve(G614Model, G614Touchpad, "Universal").Name, "over model override");
+            Harness.AssertEqual("NHMOLFP", NumberPadLayouts.Resolve("ASUS Laptop", G614Touchpad, "NHMOLFP").Name, "over touchpad ID");
+            Harness.AssertEqual("GH3XLNDZ", NumberPadLayouts.Resolve(G614Model, G614Touchpad, "NoSuchLayout").Name, "unknown choice is Auto");
+        });
+
+        Harness.Scenario("All_ListsEveryLayoutOnce", _ =>
+        {
+            var names = NumberPadLayouts.All.Select(l => l.Name).ToList();
+            Harness.AssertEqual(26, names.Count, "count");
+            Harness.AssertEqual(26, names.Distinct().Count(), "unique");
+            Harness.Assert(names.All(n => n.Length > 0), "named");
+            Harness.AssertEqual("Universal", names[0], "first");
+        });
+
         Harness.Scenario("Resolve_TouchpadId_MatchesDriverTable", _ =>
         {
             var expected = new (string Id, string Layout)[]
