@@ -198,10 +198,9 @@ public static class NumberPad
             _target = target;
             _touchpadFd = fd;
             _range = range;
-            _layout = NumberPadLayouts.Resolve(AppConfig.GetModel(), target.Name, AppConfig.GetString("numberpad_layout", "")!);
+            LoadLayout(target);
             if (!CreateVirtualTouchpad(fd, target.Name))
                 Logger.WriteLine("NumberPad: no virtual touchpad, the pointer stops while active");
-            _ledVersion = _layout.Geometry?.CalcWidth > 0 ? ReadLedVersion() : -1;
 
             _running = true;
             _thread = new Thread(EventLoop) { IsBackground = true, Name = "numberpad" };
@@ -209,6 +208,23 @@ public static class NumberPad
 
             Logger.WriteLine($"NumberPad: started on {target.EventPath} '{target.Name}' i2c={target.I2cPath} addr=0x{target.I2cAddr:x2} layout={_layout.Name} {_layout.Cols}x{_layout.Rows} range={range} led={_ledVersion}");
             return true;
+        }
+    }
+
+    /// <summary>Layout from the user's choice, model or touchpad ID; the LED version is read only with a calculator zone.</summary>
+    private static void LoadLayout(Target target)
+    {
+        _layout = NumberPadLayouts.Resolve(AppConfig.GetModel(), target.Name, AppConfig.GetString("numberpad_layout", "")!);
+        _ledVersion = _layout.Geometry?.CalcWidth > 0 ? ReadLedVersion() : -1;
+    }
+
+    /// <summary>Apply a new "numberpad_layout" choice to the running NumberPad; it stays active or idle.</summary>
+    public static void ReloadLayout()
+    {
+        lock (_lock)
+        {
+            if (_running)
+                WakeLoop((byte)'l');
         }
     }
 
@@ -923,10 +939,12 @@ public static class NumberPad
                     continue;
                 if ((poll[1].revents & EvdevInterop.POLLIN) != 0)
                 {
-                    if (EvdevInterop.read(_stopPipe[0], buf, 1) != 1 || Marshal.ReadByte(buf) != 't' || !_running)
+                    if (EvdevInterop.read(_stopPipe[0], buf, 1) != 1 || Marshal.ReadByte(buf) is not ((byte)'t' or (byte)'l') || !_running)
                         break;
+                    if (Marshal.ReadByte(buf) == 'l')
+                        gesture = ReloadGesture(gesture, pointer);
                     // Touchpad switched off: NumberPad and NumLock off.
-                    if (gesture.Active)
+                    else if (gesture.Active)
                     {
                         if (_numLock)
                             EmitTap(new[] { NumberPadLayouts.KEY_NUMLOCK });
@@ -1046,6 +1064,21 @@ public static class NumberPad
     {
         Apply(gesture, pointer, gesture.SetActive(on));
         ApplyActiveState(on);
+    }
+
+    /// <summary>Gesture for a new layout choice; the active state is kept.</summary>
+    private static NumberPadGesture ReloadGesture(NumberPadGesture gesture, PointerWriter pointer)
+    {
+        bool on = gesture.Active;
+        if (on)
+            SetActive(gesture, pointer, false);
+        LoadLayout(_target!);
+        gesture = new NumberPadGesture(new NumberPadSurface(_layout, _range));
+        SeedSlots(gesture);
+        if (on)
+            SetActive(gesture, pointer, true);
+        Logger.WriteLine($"NumberPad: layout {_layout.Name} {_layout.Cols}x{_layout.Rows}");
+        return gesture;
     }
 
     private static void ReleaseAll()

@@ -260,9 +260,9 @@ public sealed class NumberPadGesture
                 c.Trail.Add((c.X, c.Y));
                 if (c.Trail.Count > ReplayFrames)
                     c.Trail.RemoveAt(0);
-                // With two or more fingers on keys the driver checks only the first contact.
+                // With two or more fingers on keys the driver checks only the first of them.
                 if (Dist(c.StartX, c.StartY, c.X, c.Y) > Mm(MoveMm)
-                    && (_contacts.Values.Count(o => o.Role is Role.Pending or Role.Key) == 1 || _contacts.Keys.First() == slot))
+                    && _contacts.First(o => o.Value.Role is Role.Pending or Role.Key).Key == slot)
                 {
                     _gestureMode = true;
                     foreach (var (s, o) in _contacts)

@@ -99,6 +99,8 @@ SUBSYSTEM=="i2c-dev", TAG+="uaccess", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="ASUE* Touchpad", MODE="0666"
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="ASUP* Touchpad", MODE="0666"
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="ASUF* Touchpad", MODE="0666"
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="ASCF* Touchpad", MODE="0666"
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="ASCP* Touchpad", MODE="0666"
 SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="ELAN* Touchpad", MODE="0666"
 
 #@section asus

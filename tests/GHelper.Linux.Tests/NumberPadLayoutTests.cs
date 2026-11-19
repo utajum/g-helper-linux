@@ -354,6 +354,29 @@ public static class NumberPadLayoutTests
             Harness.AssertEqual(2, o.Max(x => x.Frame!.Contacts.Count), "both fingers go to the pointer");
         });
 
+        Harness.Scenario("Gesture_TwoFingerScrollAfterFingerOffKeysIsPointer", _ =>
+        {
+            // Slot 0 holds a finger off the keys: a pointer on the border, or the NumLock hold.
+            foreach (var (x, y) in new[] { (5, 40), (109, 15) })
+            {
+                var g = Activated();
+                Down(g, 0, x, y, 1000);
+                Down(g, 1, 41, 30, 1000);
+                Down(g, 2, 64, 30, 1000);
+                var o = new List<NumberPadOutput>();
+                for (int i = 1; i <= 8; i++)
+                {
+                    o.AddRange(Move(g, 1, 41, 30 + i, 1000 + i * 8));
+                    o.AddRange(Move(g, 2, 64, 30 + i, 1000 + i * 8));
+                    o.AddRange(g.Tick(1000 + i * 8));
+                }
+                o.AddRange(g.Tick(1200));
+                o.AddRange(Up(g, 2, 1300));
+                o.AddRange(Up(g, 1, 1300));
+                Harness.Assert(o.All(e => e.Kind == NumberPadEvent.Pointer), $"no key typed, slot 0 at {x},{y} mm");
+            }
+        });
+
         Harness.Scenario("Gesture_TouchOutsideKeysIsPointer", _ =>
         {
             var g = Activated();
