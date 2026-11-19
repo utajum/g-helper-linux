@@ -17,5 +17,4 @@ void gtcrn_reset(gtcrn *st);
  * GTCRN_DELAY; dry gets in delayed by the same amount. */
 void gtcrn_process(gtcrn *st, const float *in, float *out, float *dry, int n);
 
-
 #endif

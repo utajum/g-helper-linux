@@ -60,7 +60,7 @@ struct eq_band
 static struct
 {
     _Atomic int rnnoise_on;
-    _Atomic int denoise_engine; /* 0 = RNNoise, 1 = GTCRN */
+    _Atomic int denoise_model; /* 0 = RNNoise, 1 = GTCRN */
     _Atomic int eq_on;
     _Atomic int delay_on;
     _Atomic int reverb_on;
@@ -1438,7 +1438,7 @@ static void dsp_process_block(const float *in, uint32_t n_samples)
             /* GTCRN replaces the RNNoise output; ref is its input, delayed to match. */
             float aligned[RNN_FRAME];
             const float *ref = g_rt.rn_in;
-            int gt_on = rnn_on && atomic_load(&g_params.denoise_engine) == 1;
+            int gt_on = rnn_on && atomic_load(&g_params.denoise_model) == 1;
             if (gt_on)
             {
                 if (!g_rt.gt_on)
@@ -2022,7 +2022,7 @@ static void parse_cmd(char *line)
     }
     else if (!strncmp(line, "NSE ", 4))
     {
-        atomic_store(&g_params.denoise_engine, strcmp(line + 4, "gtcrn") ? 0 : 1);
+        atomic_store(&g_params.denoise_model, strcmp(line + 4, "gtcrn") ? 0 : 1);
     }
     else if (!strncmp(line, "EQ ", 3))
     {
