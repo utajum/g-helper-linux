@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 13: denoise model choice (GTCRN default, RNNoise), checked offline on
+# Phase 13: denoise model choice (RNNoise default, GTCRN), checked offline on
 # the real DSP code (no PipeWire session needed).
 set -uo pipefail
 

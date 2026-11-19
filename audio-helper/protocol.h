@@ -62,7 +62,7 @@ struct gha_frame
  *                       virtual mic sounds like.
  *
  *   RNN <0|1>           enable/disable denoise
- *   NSE <gtcrn|rnnoise> denoise model (default gtcrn); RNNoise always gives the VAD
+ *   NSE <rnnoise|gtcrn> denoise model (default rnnoise); RNNoise always gives the VAD
  *   VOC <0|1>           enable/disable vocoder
  *   EQ  <0|1>           enable/disable parametric EQ
  *   DLY <0|1>           enable/disable delay

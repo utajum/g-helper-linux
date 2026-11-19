@@ -140,10 +140,10 @@ public sealed class AudioState
     }
 
     /// <summary>Denoise model names, by <see cref="NoiseModel"/> index.</summary>
-    public static readonly string[] NoiseModelNames = { "GTCRN", "RNNoise" };
+    public static readonly string[] NoiseModelNames = { "RNNoise", "GTCRN" };
 
     private int _noiseModel;
-    /// <summary>Denoise model: 0 = GTCRN (default), 1 = RNNoise.</summary>
+    /// <summary>Denoise model: 0 = RNNoise (default), 1 = GTCRN.</summary>
     public int NoiseModel
     {
         get => _noiseModel;

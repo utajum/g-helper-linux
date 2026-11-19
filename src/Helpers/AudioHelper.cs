@@ -146,7 +146,7 @@ public sealed class AudioHelper : IDisposable
     public void SetNoiseModel(int model)
     {
         AudioState.Instance.NoiseModel = model;
-        Send($"NSE {(model == 1 ? "rnnoise" : "gtcrn")}");
+        Send($"NSE {(model == 1 ? "gtcrn" : "rnnoise")}");
     }
     public void SetEq(bool on)
     {

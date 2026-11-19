@@ -3,8 +3,8 @@
 
 Runs the real DSP (audio-helper/render, built from main.c) and checks:
 
-  - GTCRN is the default and removes steady noise
-  - "NSE rnnoise" switches to RNNoise, "NSE gtcrn" back to GTCRN
+  - RNNoise is the default, "NSE gtcrn" switches to GTCRN
+  - GTCRN removes steady noise, "NSE rnnoise" switches back to RNNoise
 
 GTCRN removes synthetic voices as noise, so speech is not checked here.
 
@@ -41,12 +41,12 @@ pink = np.fft.irfft(spec / np.sqrt(np.maximum(np.fft.rfftfreq(FS * 4, 1 / FS), 2
 noise = pink / np.sqrt(np.mean(pink**2)) * 10 ** (-35 / 20)
 
 y = render(noise)
-check("GTCRN removes steady noise", db(y[-2 * FS:]) < -55, "%.1f dBFS from -35 dBFS" % db(y[-2 * FS:]))
-r = render(noise, "NSE rnnoise")
-check("NSE rnnoise changes the model", abs(db(r[-2 * FS:]) - db(y[-2 * FS:])) > 3,
-      "RNNoise %.1f dBFS, GTCRN %.1f dBFS" % (db(r[-2 * FS:]), db(y[-2 * FS:])))
+g = render(noise, "NSE gtcrn")
+check("GTCRN removes steady noise", db(g[-2 * FS:]) < -55, "%.1f dBFS from -35 dBFS" % db(g[-2 * FS:]))
+check("RNNoise is the default", abs(db(y[-2 * FS:]) - db(g[-2 * FS:])) > 3,
+      "default %.1f dBFS, GTCRN %.1f dBFS" % (db(y[-2 * FS:]), db(g[-2 * FS:])))
 
-g = render(noise, "NSE rnnoise", "NSE gtcrn")
-check("NSE gtcrn switches back", np.array_equal(g, y), "%.1f dBFS" % db(g[-2 * FS:]))
+r = render(noise, "NSE gtcrn", "NSE rnnoise")
+check("NSE rnnoise switches back", np.array_equal(r, y), "%.1f dBFS" % db(r[-2 * FS:]))
 
 sys.exit(1 if FAILS else 0)
