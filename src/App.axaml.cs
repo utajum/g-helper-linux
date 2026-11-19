@@ -1504,7 +1504,6 @@ public class App : Application
         catch { }
         Power?.StopPowerMonitoring();
         _peripheralPollTimer?.Dispose();
-        _udevMonitor?.Dispose();
         UI.Views.ExtraWindow.StopClamshellInhibit();
         FnLock?.Stop();
         OskWindowInstance?.ShutdownDevice();

@@ -64,6 +64,8 @@ public sealed class UdevMonitor : IDisposable
         _subsystems = subsystems;
         _debounce = debounce;
         _onBatch = onBatch;
+        // Runs on every exit (Quit, in-app restart), so udevadm does not outlive the app.
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Stop();
     }
 
     public bool IsRunning
