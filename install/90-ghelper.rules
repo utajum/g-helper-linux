@@ -89,9 +89,11 @@ KERNEL=="uinput", OPTIONS+="static_node=uinput", TAG+="uaccess", GROUP="input", 
 
 # ── NumberPad (ASUS illuminated touchpad) ──
 # The in-app NumberPad driver needs:
-#   * /dev/i2c-*  - to send the LED-control packet to the touchpad
+#   * the touchpad hidraw node - to send the LED commands (HID feature report)
+#   * /dev/i2c-*  - the LED-control packet when hidraw fails
 #                   (requires the i2c-dev kernel module)
 #   * /dev/uinput - to create the virtual keyboard that emits KEY_KP* codes
+SUBSYSTEM=="hidraw", KERNELS=="i2c-ASUE*|i2c-ASUP*|i2c-ASUF*|i2c-ASCF*|i2c-ASCP*|i2c-ELAN1*", TAG+="uaccess", GROUP="input", MODE="0660"
 SUBSYSTEM=="i2c-dev", TAG+="uaccess", GROUP="input", MODE="0660"
 
 # The touchpad evdev node is opened read/write so the driver can grab it

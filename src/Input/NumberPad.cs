@@ -6,9 +6,10 @@ namespace GHelper.Linux.Input;
 /// <summary>
 /// ASUS illuminated touchpad NumberPad driver. Two responsibilities:
 ///
-/// 1. LED control - the NumberPad LEDs are toggled by writing a 13-byte
-///    magic packet to the touchpad's I2C slave (0x15, or 0x38 on a few ASUF
-///    models). The bus number comes from parsing /proc/bus/input/devices.
+/// 1. LED control - the NumberPad LEDs are toggled by HID feature report 0x0d
+///    on the touchpad's hidraw node, or else by writing a 13-byte magic packet
+///    to the touchpad's I2C slave (0x15, or 0x38 on a few ASUF models). The bus
+///    number comes from parsing /proc/bus/input/devices.
 /// 2. Touch interception - while active the touchpad is EVIOCGRAB-ed, touches
 ///    on keys are mapped to the layout's key grid, and KEY_KP* keycodes are
 ///    emitted through a /dev/uinput virtual keyboard (keycodes, not characters,
@@ -64,6 +65,8 @@ public static class NumberPad
         public int I2cAddr;
         public string EventPath = "";
         public string Name = "";
+        public string Sysfs = "";
+        public string Hidraw = "";
     }
 
     private static readonly object _lock = new();
@@ -101,9 +104,11 @@ public static class NumberPad
         if (target == null)
             return new ProbeResult { Status = ProbeStatus.NoHardware };
 
-        if (!File.Exists(target.I2cPath))
+        // A writable hidraw node carries the LED commands; /dev/i2c-N is the fallback.
+        bool hid = target.Hidraw.Length > 0 && EvdevInterop.access(target.Hidraw, EvdevInterop.R_OK | EvdevInterop.W_OK) == 0;
+        if (!hid && !File.Exists(target.I2cPath))
             return new ProbeResult { Status = ProbeStatus.I2cUnavailable, Detail = target.I2cPath, TouchpadName = target.Name };
-        if (EvdevInterop.access(target.I2cPath, EvdevInterop.W_OK) != 0)
+        if (!hid && EvdevInterop.access(target.I2cPath, EvdevInterop.W_OK) != 0)
             return new ProbeResult { Status = ProbeStatus.PermissionDenied, Detail = target.I2cPath, TouchpadName = target.Name };
 
         if (!File.Exists(DevUinput))
@@ -206,7 +211,7 @@ public static class NumberPad
             _thread = new Thread(EventLoop) { IsBackground = true, Name = "numberpad" };
             _thread.Start();
 
-            Logger.WriteLine($"NumberPad: started on {target.EventPath} '{target.Name}' i2c={target.I2cPath} addr=0x{target.I2cAddr:x2} layout={_layout.Name} {_layout.Cols}x{_layout.Rows} range={range} led={_ledVersion}");
+            Logger.WriteLine($"NumberPad: started on {target.EventPath} '{target.Name}' i2c={target.I2cPath} addr=0x{target.I2cAddr:x2} hidraw={target.Hidraw} layout={_layout.Name} {_layout.Cols}x{_layout.Rows} range={range} led={_ledVersion}");
             return true;
         }
     }
@@ -295,7 +300,24 @@ public static class NumberPad
         { contents = File.ReadAllText(ProcBusInputDevices); }
         catch
         { return null; }
-        return FindTarget(contents, Helpers.AppConfig.IsAsusDevice());
+        var target = FindTarget(contents, Helpers.AppConfig.IsAsusDevice());
+        if (target != null)
+            target.Hidraw = HidrawNode(target.Sysfs);
+        return target;
+    }
+
+    /// <summary>hidraw node of the touchpad: its HID device is two levels above the input sysfs path.</summary>
+    private static string HidrawNode(string sysfs)
+    {
+        try
+        {
+            string dir = Path.GetDirectoryName(Path.GetDirectoryName("/sys" + sysfs)) + "/hidraw";
+            return Directory.Exists(dir)
+                ? Directory.EnumerateDirectories(dir).Select(d => "/dev/" + Path.GetFileName(d)).FirstOrDefault() ?? ""
+                : "";
+        }
+        catch
+        { return ""; }
     }
 
     /// <summary>Pick the NumberPad touchpad from /proc/bus/input/devices text.</summary>
@@ -357,6 +379,7 @@ public static class NumberPad
                 I2cAddr = addr,
                 EventPath = eventPath,
                 Name = name,
+                Sysfs = sysfs,
             };
         }
         return null;
@@ -430,6 +453,47 @@ public static class NumberPad
 
     // LED CONTROL
 
+    /// <summary>Send one LED command as HID feature report 0x0d on hidraw, else as the I2C packet.</summary>
+    private static void LedSend(byte state)
+    {
+        if (HidIoctl(EvdevInterop.HIDIOCSFEATURE(5), new byte[] { 0x0d, 0x14, 0x03, state, PacketTerminator }) < 0)
+            I2cSend(state);
+    }
+
+    /// <summary>One feature report ioctl on the touchpad's hidraw node; after a failure hidraw is not used again.</summary>
+    private static int HidIoctl(uint request, byte[] report)
+    {
+        var target = _target;
+        if (target == null || target.Hidraw.Length == 0)
+            return -1;
+        int rc = -1;
+        int fd = EvdevInterop.open(target.Hidraw, EvdevInterop.O_RDWR | EvdevInterop.O_CLOEXEC);
+        int err = Marshal.GetLastWin32Error();
+        if (fd >= 0)
+        {
+            IntPtr buf = Marshal.AllocHGlobal(report.Length);
+            try
+            {
+                Marshal.Copy(report, 0, buf, report.Length);
+                rc = EvdevInterop.ioctl_buf(fd, request, buf);
+                err = Marshal.GetLastWin32Error();
+                if (rc >= 0)
+                    Marshal.Copy(buf, report, 0, report.Length);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buf);
+                EvdevInterop.close(fd);
+            }
+        }
+        if (rc < 0)
+        {
+            Logger.WriteLine($"NumberPad: {target.Hidraw} failed (errno={err}), using I2C");
+            target.Hidraw = "";
+        }
+        return rc;
+    }
+
     /// <summary>Write one 13-byte LED-control packet to the touchpad's I2C slave.</summary>
     private static void I2cSend(byte state)
     {
@@ -474,7 +538,7 @@ public static class NumberPad
     /// <summary>
     /// LED protocol version, read as the Windows driver does: set feature report
     /// 0x0d [05 03 71 03], wait 50 ms, get it back as [71 03 lo hi]; the version is
-    /// the top nibble of hi. PixArt (093A) is always 1. Returns -1 when the read fails.
+    /// the top nibble of hi. PixArt (093A) is always 1. Uses hidraw, else I2C. Returns -1 when the read fails.
     /// </summary>
     private static int ReadLedVersion()
     {
@@ -483,6 +547,14 @@ public static class NumberPad
             return -1;
         if (target.Name.Contains(" 093A:"))
             return 1;
+
+        if (HidIoctl(EvdevInterop.HIDIOCSFEATURE(5), new byte[] { 0x0d, 0x05, 0x03, 0x71, 0x03 }) >= 0)
+        {
+            Thread.Sleep(50);
+            byte[] report = { 0x0d, 0, 0, 0, 0 };
+            if (HidIoctl(EvdevInterop.HIDIOCGFEATURE(5), report) >= 0)
+                return report[1] == 0x71 && report[2] == 0x03 ? report[4] >> 4 : -1;
+        }
 
         int fd = EvdevInterop.open(target.I2cPath, EvdevInterop.O_RDWR);
         if (fd < 0)
@@ -539,9 +611,9 @@ public static class NumberPad
     {
         bool dim = AppConfig.Get("numberpad_led", 1) == 2;
         if (_ledVersion is 0 or >= 2)
-            I2cSend(dim ? (byte)0x17 : StateEnable);
+            LedSend(dim ? (byte)0x17 : StateEnable);
         else
-            I2cSend(dim ? (byte)0x41 : (byte)0x40);
+            LedSend(dim ? (byte)0x41 : (byte)0x40);
     }
 
     // CALCULATOR
@@ -884,8 +956,8 @@ public static class NumberPad
     {
         if (active)
         {
-            I2cSend(StateUnlock);
-            I2cSend(StateEnable);
+            LedSend(StateUnlock);
+            LedSend(StateEnable);
             if (_layout.Geometry?.CalcWidth > 0 && AppConfig.Get("numberpad_led", 1) == 2)
                 ApplyLedLevel();
             if (EvdevInterop.ioctl_int(_touchpadFd, EvdevInterop.EVIOCGRAB, 1) < 0)
@@ -895,7 +967,7 @@ public static class NumberPad
         {
             if (EvdevInterop.ioctl_int(_touchpadFd, EvdevInterop.EVIOCGRAB, 0) < 0)
                 Logger.WriteLine($"NumberPad: ungrab failed (errno={Marshal.GetLastWin32Error()})");
-            I2cSend(StateDisable);
+            LedSend(StateDisable);
         }
     }
 
