@@ -351,6 +351,7 @@ public class LinuxSystemIntegration : ISystemIntegration
     /// <summary>Enable or disable the touchpad.</summary>
     public static void SetTouchpadEnabled(bool enabled)
     {
+        Input.NumberPad.SetTouchpadEnabled(enabled);
         if (Display.DisplayBackendFactory.IsWaylandSession())
         {
             string? compositor = Display.DisplayBackendFactory.DetectCompositor();
@@ -427,9 +428,10 @@ public class LinuxSystemIntegration : ISystemIntegration
 
     // KDE Wayland: KWin InputDevice D-Bus (session bus, busctl --user)
 
-    /// <summary>First touchpad sysName from KWin D-Bus, or null.</summary>
-    private static string? FindKwinTouchpadSysName()
+    /// <summary>Touchpad sysNames from KWin D-Bus, the NumberPad virtual touchpad included.</summary>
+    private static List<string> FindKwinTouchpadSysNames()
     {
+        var names = new List<string>();
         try
         {
             var result = SysfsHelper.RunCommandWithTimeout("busctl", new[]
@@ -439,7 +441,7 @@ public class LinuxSystemIntegration : ISystemIntegration
                 "org.kde.KWin.InputDeviceManager", "ListPointers"
             }, 3000);
             if (result == null)
-                return null;
+                return names;
 
             foreach (var name in ParseBusctlStringArray(result))
             {
@@ -450,19 +452,19 @@ public class LinuxSystemIntegration : ISystemIntegration
                     "org.kde.KWin.InputDevice", "touchpad"
                 }, 2000);
                 if (tp != null && tp.Contains("true", StringComparison.OrdinalIgnoreCase))
-                    return name;
+                    names.Add(name);
             }
         }
         catch (Exception ex)
         {
             Helpers.Logger.WriteLine($"KWin touchpad D-Bus query failed: {ex.Message}");
         }
-        return null;
+        return names;
     }
 
     private static bool? IsTouchpadEnabledKwin()
     {
-        var sysName = FindKwinTouchpadSysName();
+        var sysName = FindKwinTouchpadSysNames().FirstOrDefault();
         if (sysName == null)
             return null;
 
@@ -487,27 +489,30 @@ public class LinuxSystemIntegration : ISystemIntegration
 
     private static void SetTouchpadEnabledKwin(bool enabled)
     {
-        var sysName = FindKwinTouchpadSysName();
-        if (sysName == null)
+        var sysNames = FindKwinTouchpadSysNames();
+        if (sysNames.Count == 0)
         {
             Helpers.Logger.WriteLine("Touchpad not found via KWin D-Bus");
             return;
         }
 
-        try
+        foreach (var sysName in sysNames)
         {
-            SysfsHelper.RunCommandWithTimeout("busctl", new[]
+            try
             {
-                "--user", "set-property", "org.kde.KWin",
-                $"/org/kde/KWin/InputDevice/{sysName}",
-                "org.kde.KWin.InputDevice", "enabled", "b",
-                enabled ? "true" : "false"
-            }, 3000);
-            Helpers.Logger.WriteLine($"Touchpad {(enabled ? "enabled" : "disabled")} via KWin D-Bus ({sysName})");
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"KWin touchpad set failed: {ex.Message}");
+                SysfsHelper.RunCommandWithTimeout("busctl", new[]
+                {
+                    "--user", "set-property", "org.kde.KWin",
+                    $"/org/kde/KWin/InputDevice/{sysName}",
+                    "org.kde.KWin.InputDevice", "enabled", "b",
+                    enabled ? "true" : "false"
+                }, 3000);
+                Helpers.Logger.WriteLine($"Touchpad {(enabled ? "enabled" : "disabled")} via KWin D-Bus ({sysName})");
+            }
+            catch (Exception ex)
+            {
+                Helpers.Logger.WriteLine($"KWin touchpad set failed: {ex.Message}");
+            }
         }
     }
 

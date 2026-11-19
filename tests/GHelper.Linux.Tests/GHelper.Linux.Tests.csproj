@@ -99,6 +99,11 @@
     <Compile Include="../../src/Mode/AppProfiles.Match.cs" />
     <Compile Include="../../src/Peripherals/Logitech/HidPP/HidPPDecode.cs" />
     <Compile Include="../../src/Input/NumberPadLayouts.cs" />
+    <Compile Include="../../src/Input/NumberPadGesture.cs" />
+    <Compile Include="../../src/Input/NumberPadSurface.cs" />
+    <Compile Include="../../src/Input/NumberPadPointer.cs" />
+    <Compile Include="../../src/Input/NumberPad.cs" />
+    <Compile Include="../../src/Input/EvdevInterop.cs" />
     <Compile Include="../../src/Helpers/AppConfig.cs" />
     <Compile Include="../../src/Helpers/Logger.cs" />
     <Compile Include="../../src/Helpers/MemoryHelper.cs" />

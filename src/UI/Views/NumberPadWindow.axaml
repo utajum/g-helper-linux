@@ -1,9 +1,10 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="clr-namespace:GHelper.Linux.UI.Controls"
         x:Class="GHelper.Linux.UI.Views.NumberPadWindow"
         Title="NumberPad"
         Width="380"
-        Height="360"
+        Height="640"
         MinWidth="320"
         MinHeight="300"
         WindowStartupLocation="CenterScreen"
@@ -44,12 +45,16 @@
                         <TextBlock Classes="header" Text="Layout" />
                     </Border>
                     <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto" Margin="0,2">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="label-dim" Text="Grid" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="labelLayout" Classes="value" Text="--" />
+                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="label-dim" Text="Grid" VerticalAlignment="Center" />
+                        <ComboBox Grid.Row="0" Grid.Column="1" x:Name="comboLayout" HorizontalAlignment="Stretch"
+                                  SelectionChanged="ComboLayout_Changed" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Classes="label-dim" Text="Model" Margin="0,4,0,0" />
                         <TextBlock Grid.Row="1" Grid.Column="1" x:Name="labelModel" Classes="value" Text="--" Margin="0,4,0,0" />
                     </Grid>
+                    <ctrl:NumberPadPreview x:Name="previewLayout" Width="320" Margin="0,8,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Classes="label-dim" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Text="Orange: hold to toggle NumLock. Blue: calculator. Keep Auto unless the keys do not match the lit pad." />
                 </StackPanel>
             </Border>
 
