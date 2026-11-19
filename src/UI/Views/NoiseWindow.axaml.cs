@@ -10,6 +10,8 @@ public partial class NoiseWindow : Window
     public NoiseWindow()
     {
         InitializeComponent();
+        comboModel.ItemsSource = AudioState.NoiseModelNames;
+        comboModel.SelectedIndex = AudioState.Instance.NoiseModel;
         ApplyLabels();
         AudioHelper.Instance.FrameReceived += OnFrame;
         Labels.LanguageChanged += OnLanguageChanged;
@@ -28,10 +30,15 @@ public partial class NoiseWindow : Window
         // on/off bit, and that bit lives on the main window's chain tile.
         // A "Reset" inside this mini-window had nothing meaningful to do.
         Title = Labels.Get("audio_noise_title");
-        labelHeader.Text = Labels.Get("audio_noise_header");
         labelDescription.Text = Labels.Get("audio_noise_description");
         labelVadHeader.Text = Labels.Get("audio_noise_vad");
         labelRedHeader.Text = Labels.Get("audio_noise_reduction");
+    }
+
+    private void ComboModel_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (comboModel.SelectedIndex >= 0 && comboModel.SelectedIndex != AudioState.Instance.NoiseModel)
+            AudioHelper.Instance.SetNoiseModel(comboModel.SelectedIndex);
     }
 
     private void OnFrame(AudioFrame f)

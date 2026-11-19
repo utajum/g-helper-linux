@@ -237,7 +237,7 @@ public static class Slovak
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: Prepnúť režim ovládača",
         ["action_audio_toggle"] = "Zvuk: Prepnúť Audio Helper",
-        ["action_audio_rnnoise"] = "Zvuk: Prepnúť potlačenie šumu (RNNoise)",
+        ["action_audio_rnnoise"] = "Zvuk: Prepnúť potlačenie šumu",
         ["action_audio_vocoder"] = "Zvuk: Prepnúť Vocoder",
         ["action_audio_eq"] = "Zvuk: Prepnúť parametrický EQ",
         ["action_audio_delay"] = "Zvuk: Prepnúť oneskorenie",
@@ -269,7 +269,6 @@ public static class Slovak
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Oneskorenie",
         ["audio_effect_reverb"] = "Dozvuk",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robot",
         ["audio_effect_eq_sub"] = "9-pásmový",
         ["audio_effect_delay_sub"] = "Echo linka",
@@ -307,7 +306,6 @@ public static class Slovak
 
         // Noise mini-window
         ["audio_noise_title"] = "Potlačenie šumu",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Rozlišovanie hlasu/šumu pomocou neurónovej siete.",
         ["audio_noise_vad"] = "Živá hlasová aktivita",
         ["audio_noise_reduction"] = "Redukcia šumu",

@@ -237,7 +237,7 @@ public static class Hindi
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: कंट्रोलर मोड टॉगल करें",
         ["action_audio_toggle"] = "ऑडियो: Audio Helper टॉगल करें",
-        ["action_audio_rnnoise"] = "ऑडियो: डिनॉइज़ (RNNoise) टॉगल करें",
+        ["action_audio_rnnoise"] = "ऑडियो: डिनॉइज़ टॉगल करें",
         ["action_audio_vocoder"] = "ऑडियो: Vocoder टॉगल करें",
         ["action_audio_eq"] = "ऑडियो: पैरामेट्रिक EQ टॉगल करें",
         ["action_audio_delay"] = "ऑडियो: डिले टॉगल करें",
@@ -269,7 +269,6 @@ public static class Hindi
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "डिले",
         ["audio_effect_reverb"] = "रिवर्ब",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "रोबोट",
         ["audio_effect_eq_sub"] = "9-बैंड",
         ["audio_effect_delay_sub"] = "इको लाइन",
@@ -307,7 +306,6 @@ public static class Hindi
 
         // Noise mini-window
         ["audio_noise_title"] = "शोर दमन",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "न्यूरल-नेटवर्क वॉइस/शोर विभेदन।",
         ["audio_noise_vad"] = "लाइव वॉइस गतिविधि",
         ["audio_noise_reduction"] = "शोर में कमी",

@@ -237,7 +237,7 @@ public static class Filipino
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: I-toggle ang Controller Mode",
         ["action_audio_toggle"] = "Audio: I-toggle ang Audio Helper",
-        ["action_audio_rnnoise"] = "Audio: I-toggle ang Denoise (RNNoise)",
+        ["action_audio_rnnoise"] = "Audio: I-toggle ang Denoise",
         ["action_audio_vocoder"] = "Audio: I-toggle ang Vocoder",
         ["action_audio_eq"] = "Audio: I-toggle ang Parametric EQ",
         ["action_audio_delay"] = "Audio: I-toggle ang Delay",
@@ -269,7 +269,6 @@ public static class Filipino
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Delay",
         ["audio_effect_reverb"] = "Reverb",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robot",
         ["audio_effect_eq_sub"] = "9-band",
         ["audio_effect_delay_sub"] = "Echo line",
@@ -307,7 +306,6 @@ public static class Filipino
 
         // Noise mini-window
         ["audio_noise_title"] = "Noise Suppression",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Paghihiwalay ng boses at ingay gamit ang neural network.",
         ["audio_noise_vad"] = "Live na aktibidad ng boses",
         ["audio_noise_reduction"] = "Pagbawas ng ingay",

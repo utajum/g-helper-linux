@@ -7,7 +7,7 @@ using GHelper.Linux.I18n;
 namespace GHelper.Linux.UI.Views;
 
 /// <summary>
-/// Main hub for the embedded microphone DSP chain: rnnoise -> EQ -> delay
+/// Main hub for the embedded microphone DSP chain: denoise -> EQ -> delay
 /// -> reverb. Each chain tile uses a CheckBox to enable/disable the effect
 /// and a separate click target (the body) to open its detail window.
 ///
@@ -123,7 +123,6 @@ public partial class AudioWindow : Window
         checkDelay.Content = Labels.Get("audio_effect_delay");
         checkReverb.Content = Labels.Get("audio_effect_reverb");
 
-        labelRnnSubtitle.Text = Labels.Get("audio_effect_denoise_sub");
         labelVocoderSubtitle.Text = Labels.Get("audio_effect_vocoder_sub");
         labelEqSubtitle.Text = Labels.Get("audio_effect_eq_sub");
         labelDelaySubtitle.Text = Labels.Get("audio_effect_delay_sub");
@@ -226,8 +225,8 @@ public partial class AudioWindow : Window
 
             meterIn.Value = Math.Clamp((f.RmsInDb + 80.0) / 80.0 * 100.0, 0, 100);
             meterOut.Value = Math.Clamp((f.RmsOutDb + 80.0) / 80.0 * 100.0, 0, 100);
-            // NoiseReductionDb is the real noise removed by RNNoise (0..~40
-            // positive dB scale); 0 when RNNoise is bypassed. Replaces the
+            // NoiseReductionDb is the real noise removed by the denoiser (0..~40
+            // positive dB scale); 0 when denoise is bypassed. Replaces the
             // old whole-chain rms delta which polluted with EQ/reverb/etc.
             meterRed.Value = Math.Clamp(f.NoiseReductionDb, 0, 40);
             meterVad.Value = f.VadProb * 100.0;
@@ -246,6 +245,7 @@ public partial class AudioWindow : Window
     private void UpdateTileStyles(bool rn, bool voc, bool eq, bool dl, bool rv)
     {
         SetTileOn(tileRnn, rn);
+        labelRnnSubtitle.Text = AudioState.NoiseModelNames[AudioState.Instance.NoiseModel];
         SetTileOn(tileVocoder, voc);
         SetTileOn(tileEq, eq);
         SetTileOn(tileDelay, dl);

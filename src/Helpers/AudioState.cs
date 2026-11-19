@@ -41,6 +41,7 @@ public sealed class AudioState
         // so a fresh install matches the helper's params_init() values, and
         // a returning user gets exactly what they had last time.
         _rnnoiseOn = AppConfig.Get("audio_rnnoise_on", 1) == 1;
+        _noiseModel = AppConfig.Get("audio_noise_model", 0) == 1 ? 1 : 0;
         _vocoderOn = AppConfig.Get("audio_vocoder_on", 0) == 1;
         _eqOn = AppConfig.Get("audio_eq_on", 0) == 1;
         _delayOn = AppConfig.Get("audio_delay_on", 0) == 1;
@@ -79,9 +80,9 @@ public sealed class AudioState
         // per-band gains; persists across launches like every other knob.
         _eqGainCentiDb = AppConfig.Get("audio_eq_gain", 0);
 
-        // RNNoise post-gate aggressiveness, per-mille (0..1000). Default
+        // Denoise post-gate aggressiveness, per-mille (0..1000). Default
         // 700 gives a Zoom-like feel: speech is unchanged, room tone
-        // drops to near-inaudible during pauses. 0 = bare RNNoise output.
+        // drops to near-inaudible during pauses. 0 = bare denoiser output.
         _rnnoiseAggressiveness = AppConfig.Get("audio_rnnoise_aggressiveness", 700);
 
         // Voice-effects parameters used by vocoder presets to nail the
@@ -129,13 +130,24 @@ public sealed class AudioState
         }
     }
 
-    // --- Chain effect on/off (default: rnnoise only, matches helper) -------
+    // --- Chain effect on/off (default: denoise only, matches helper) -------
 
     private bool _rnnoiseOn;
     public bool RnnoiseOn
     {
         get => _rnnoiseOn;
         set { _rnnoiseOn = value; AppConfig.Set("audio_rnnoise_on", value ? 1 : 0); }
+    }
+
+    /// <summary>Denoise model names, by <see cref="NoiseModel"/> index.</summary>
+    public static readonly string[] NoiseModelNames = { "GTCRN", "RNNoise" };
+
+    private int _noiseModel;
+    /// <summary>Denoise model: 0 = GTCRN (default), 1 = RNNoise.</summary>
+    public int NoiseModel
+    {
+        get => _noiseModel;
+        set { _noiseModel = value; AppConfig.Set("audio_noise_model", value); }
     }
 
     private bool _eqOn;
@@ -257,11 +269,11 @@ public sealed class AudioState
         set { _eqGainCentiDb = value; AppConfig.Set("audio_eq_gain", value); }
     }
 
-    // --- RNNoise post-gate aggressiveness, per-mille ---------------------
+    // --- Denoise post-gate aggressiveness, per-mille ---------------------
 
     private int _rnnoiseAggressiveness;
     /// <summary>
-    /// Strength of the soft gate the helper applies after the RNNoise
+    /// Strength of the soft gate the helper applies after the denoise
     /// model output. 0 = raw model output (preserves the natural noise
     /// floor between phrases); 1000 = up to -24 dB of additional
     /// attenuation during silence. Default 700.
