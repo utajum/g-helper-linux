@@ -198,7 +198,7 @@ public sealed class AudioHelper : IDisposable
         Send(string.Format(CultureInfo.InvariantCulture, "EGN {0}", centiDb));
     }
     /// <summary>
-    /// Denoise post-gate aggressiveness, per-mille (0..1000). Higher
+    /// RNNoise post-gate aggressiveness, per-mille (0..1000). Higher
     /// values cut more residual hiss between phrases; lower values stay
     /// closer to the raw model output. Default 700 gives a Zoom-like
     /// feel. Drives the helper's <c>AGG</c> command.

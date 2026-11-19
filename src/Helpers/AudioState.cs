@@ -80,7 +80,7 @@ public sealed class AudioState
         // per-band gains; persists across launches like every other knob.
         _eqGainCentiDb = AppConfig.Get("audio_eq_gain", 0);
 
-        // Denoise post-gate aggressiveness, per-mille (0..1000). Default
+        // RNNoise post-gate aggressiveness, per-mille (0..1000). Default
         // 700 gives a Zoom-like feel: speech is unchanged, room tone
         // drops to near-inaudible during pauses. 0 = bare denoiser output.
         _rnnoiseAggressiveness = AppConfig.Get("audio_rnnoise_aggressiveness", 700);
@@ -130,7 +130,7 @@ public sealed class AudioState
         }
     }
 
-    // --- Chain effect on/off (default: denoise only, matches helper) -------
+    // --- Chain effect on/off (default: rnnoise only, matches helper) -------
 
     private bool _rnnoiseOn;
     public bool RnnoiseOn
@@ -269,7 +269,7 @@ public sealed class AudioState
         set { _eqGainCentiDb = value; AppConfig.Set("audio_eq_gain", value); }
     }
 
-    // --- Denoise post-gate aggressiveness, per-mille ---------------------
+    // --- RNNoise post-gate aggressiveness, per-mille ---------------------
 
     private int _rnnoiseAggressiveness;
     /// <summary>

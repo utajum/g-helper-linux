@@ -365,7 +365,8 @@ static void dp_block(const struct dp_w *w, float *inter_h, float *x)
             x[c * W + f] = xt[f][c] + z[f][c];
 }
 
-void gtcrn_frame(gtcrn *st, const float *spec, float *out)
+/* One 16 kHz STFT frame (257 bins, re/im interleaved) through the network. */
+static void gtcrn_frame(gtcrn *st, const float *spec, float *out)
 {
     float feat[3][NB], e[3][NE], s9[9 * NE];
     float en0[CH * W1], en1[CH * W], en[3][CH * W], x[CH * W], t[CH * W];
@@ -630,8 +631,7 @@ void gtcrn_process(gtcrn *st, const float *in, float *out, float *dry, int n)
         }
         st->hb_gain += hb_coef * (st->hb_target - st->hb_gain);
         out[i] = 3.0f * y + st->hb_gain * (x - 3.0f * r);
-        if (dry)
-            dry[i] = x;
+        dry[i] = x;
     }
 #ifdef __SSE__
     _mm_setcsr(csr);

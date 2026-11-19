@@ -14,10 +14,8 @@ void gtcrn_destroy(gtcrn *st);
 void gtcrn_reset(gtcrn *st);
 
 /* Denoise n samples of 48 kHz audio in -1..1. out is in delayed by
- * GTCRN_DELAY; dry (may be NULL) gets in delayed by the same amount. */
+ * GTCRN_DELAY; dry gets in delayed by the same amount. */
 void gtcrn_process(gtcrn *st, const float *in, float *out, float *dry, int n);
 
-/* One 16 kHz STFT frame (257 bins, re/im interleaved) through the network. */
-void gtcrn_frame(gtcrn *st, const float *spec, float *out);
 
 #endif

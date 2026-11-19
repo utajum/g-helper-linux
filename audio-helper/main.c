@@ -1,6 +1,5 @@
 /* G-Helper audio helper: PipeWire filter exposing a virtual "G-Helper Microphone"
- * source with a fixed DSP chain (denoise -> parametric EQ -> delay -> reverb).
- * Denoise is RNNoise (default) or GTCRN; RNNoise always gives the VAD.
+ * source with a fixed DSP chain (rnnoise or GTCRN -> parametric EQ -> delay -> reverb).
  *
  * IPC: line-based commands on stdin, fixed-size binary audio frames on stdout
  *      (see protocol.h). Frame rate ~60 Hz, mono, 48 kHz.
@@ -91,7 +90,7 @@ static struct
      * the parameter. */
     _Atomic int eq_gain_centidb;
 
-    /* Denoise-stage aggressiveness, per-mille (0..1000). Controls a soft
+    /* RNNoise-stage aggressiveness, per-mille (0..1000). Controls a soft
      * gate applied after the model output when its VAD is below the
      * close threshold. 0 = no extra suppression (raw denoiser output);
      * 1000 = up to -24 dB of residual attenuation during silence. The
@@ -216,7 +215,7 @@ static void params_init(void)
      * unchanged until the user drags the response line. */
     atomic_store(&g_params.eq_gain_centidb, 0);
 
-    /* Denoise aggressiveness defaults to 700 per-mille = a noticeable
+    /* RNNoise aggressiveness defaults to 700 per-mille = a noticeable
      * but artefact-free extra suppression over the bare model output. */
     atomic_store(&g_params.rnn_aggressiveness, 700);
 
@@ -1090,7 +1089,7 @@ struct rt_state
     struct vocoder_state vocoder;
     struct pitch_tracker pitch; /* lives across capture callbacks */
 
-    /* Pre-denoise high-pass: kills DC and sub-70 Hz rumble (HVAC, mic
+    /* Pre-RNNoise high-pass: kills DC and sub-70 Hz rumble (HVAC, mic
      * handling, mains hum harmonics) before they enter the model. The
      * RNN was trained on telephony-band speech; removing rumble it can
      * never voice frees model capacity for the actual speech content
@@ -2152,7 +2151,7 @@ static void parse_cmd(char *line)
     }
     else if (!strncmp(line, "AGG ", 4))
     {
-        /* Denoise post-gate aggressiveness, per-mille (0..1000). Higher
+        /* RNNoise post-gate aggressiveness, per-mille (0..1000). Higher
          * values cut more residual hiss between phrases at the cost of
          * a faintly more "gated" character on speech tails. Range is
          * clamped so the gain at full close stays within [-24 dB, 0]. */
@@ -2343,7 +2342,7 @@ static int dsp_init(void)
     for (int i = 0; i < GHA_EQ_BANDS; i++)
         g_rt.eq_seq[i] = -1;
     rt_refresh_eq();
-    /* Pre-denoise rumble filter: 70 Hz high-pass with Butterworth Q. Q
+    /* Pre-RNNoise rumble filter: 70 Hz high-pass with Butterworth Q. Q
      * is intentionally low (0.707) so the slope is gentle and male voice
      * fundamentals (~80-200 Hz) are not coloured. Biquad type 3 in this
      * file is the high-pass design (type 4 is the low-pass - passing 4
