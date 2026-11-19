@@ -35,7 +35,7 @@ public partial class NumberPadWindow : Window
                 break;
             case NumberPad.ProbeStatus.NoHardware:
                 labelStatus.Text = "No compatible touchpad found";
-                labelHint.Text = "Requires an ASUS touchpad with an illuminated NumberPad (ELAN / ASUE / ASUP / ASUF controller).";
+                labelHint.Text = "Requires an ASUS touchpad with an illuminated NumberPad (ELAN / ASUE / ASUP / ASUF / ASCF / ASCP controller).";
                 break;
             case NumberPad.ProbeStatus.I2cUnavailable:
                 labelStatus.Text = $"{probe.Detail} is missing";
@@ -72,11 +72,7 @@ public partial class NumberPadWindow : Window
             Helpers.AppConfig.Set("numberpad_layout", name);
         else
             Helpers.AppConfig.Remove("numberpad_layout");
-        if (NumberPad.IsRunning)
-        {
-            NumberPad.Stop();
-            NumberPad.Start();
-        }
+        NumberPad.ReloadLayout();
         Refresh();
     }
 

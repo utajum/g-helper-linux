@@ -373,14 +373,15 @@ public class LinuxSystemIntegration : ISystemIntegration
 
     // xinput (X11 / XWayland fallback)
 
-    /// <summary>Find touchpad xinput device ID (needs DISPLAY).</summary>
-    private static string? FindTouchpadId()
+    /// <summary>Touchpad xinput device IDs (needs DISPLAY), the NumberPad virtual touchpad included.</summary>
+    private static List<string> FindTouchpadIds()
     {
+        var ids = new List<string>();
         if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")))
-            return null;
+            return ids;
         var fullList = SysfsHelper.RunCommand("xinput", "list");
         if (fullList == null)
-            return null;
+            return ids;
 
         foreach (var line in fullList.Split('\n'))
         {
@@ -388,15 +389,15 @@ public class LinuxSystemIntegration : ISystemIntegration
             {
                 var match = System.Text.RegularExpressions.Regex.Match(line, @"id=(\d+)");
                 if (match.Success)
-                    return match.Groups[1].Value;
+                    ids.Add(match.Groups[1].Value);
             }
         }
-        return null;
+        return ids;
     }
 
     private static bool? IsTouchpadEnabledXinput()
     {
-        var id = FindTouchpadId();
+        var id = FindTouchpadIds().FirstOrDefault();
         if (id == null)
             return null;
 
@@ -414,16 +415,19 @@ public class LinuxSystemIntegration : ISystemIntegration
 
     private static void SetTouchpadEnabledXinput(bool enabled)
     {
-        var id = FindTouchpadId();
-        if (id == null)
+        var ids = FindTouchpadIds();
+        if (ids.Count == 0)
         {
             Helpers.Logger.WriteLine("Touchpad not found in xinput");
             return;
         }
 
         string action = enabled ? "enable" : "disable";
-        SysfsHelper.RunCommand("xinput", $"{action} {id}");
-        Helpers.Logger.WriteLine($"Touchpad {action}d (xinput id={id})");
+        foreach (var id in ids)
+        {
+            SysfsHelper.RunCommand("xinput", $"{action} {id}");
+            Helpers.Logger.WriteLine($"Touchpad {action}d (xinput id={id})");
+        }
     }
 
     // KDE Wayland: KWin InputDevice D-Bus (session bus, busctl --user)

@@ -208,6 +208,8 @@ internal static class EvdevInterop
     public static readonly uint UI_DEV_SETUP = IOW('U', 3, 92);
     public static readonly uint UI_ABS_SETUP = IOW('U', 4, 28);
     public static uint EVIOCGPROP(uint len) => IOC(_IOC_READ, 'E', 0x09, len);
+    public static uint HIDIOCSFEATURE(uint len) => IOC(_IOC_READ | _IOC_WRITE, 'H', 0x06, len);
+    public static uint HIDIOCGFEATURE(uint len) => IOC(_IOC_READ | _IOC_WRITE, 'H', 0x07, len);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct InputId
