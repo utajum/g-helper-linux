@@ -41,18 +41,18 @@
 
   <!-- Avalonia UI framework -->
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
-    <PackageReference Include="Avalonia.X11" Version="12.1.4" />
-    <PackageReference Include="Avalonia.Skia" Version="12.1.4" />
-    <PackageReference Include="Avalonia.HarfBuzz" Version="12.1.4" />
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+    <PackageReference Include="Avalonia.X11" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.HarfBuzz" Version="12.1.6" />
 
     <!-- HID communication (cross-platform, used by G-Helper) -->
     <PackageReference Include="HidSharpCore" Version="1.3.0" />
 
     <!-- Real-time monitoring charts -->
-    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.2.0" />
     <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.17" />
   </ItemGroup>
 
