@@ -8,8 +8,7 @@
  * reader. The RT process callback runs in a separate RT thread. Parameters
  * are exchanged via C11 _Atomic primitives (lock-free, wait-free).
  *
- * Latency: ~10 ms (fixed, from rnnoise's 480-sample frame size at 48 kHz),
- * plus ~35 ms with GTCRN (GTCRN_DELAY).
+ * Latency: ~10 ms (fixed, from rnnoise's 480-sample frame size at 48 kHz), plus ~35 ms with GTCRN.
  *
  * License: GPL-3.0 (same as parent project). rnnoise sources bundled under
  * vendor/rnnoise/ are BSD-3-Clause (compatible). GTCRN under gtcrn/ is MIT.

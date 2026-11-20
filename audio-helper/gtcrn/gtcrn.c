@@ -1,5 +1,4 @@
-/* GTCRN streaming inference, after stream/gtcrn_stream.py of
- * https://github.com/Xiaobin-Rong/gtcrn (MIT, see LICENSE). */
+/* Port of stream/gtcrn_stream.py from https://github.com/Xiaobin-Rong/gtcrn (MIT, see LICENSE). */
 #include "gtcrn.h"
 
 #include <math.h>
@@ -140,6 +139,18 @@ static void erb_init(float erb[ERB2][NB - ERB1])
             erb[j][k] = fabsf(full[j][ERB1 + k]);
 }
 
+/* Subband feature extraction: each frequency with its two neighbours, zero padded. */
+static void subband_unfold(const float *x, int ch, int w, float *y)
+{
+    for (int c = 0; c < ch; c++)
+        for (int j = 0; j < 3; j++)
+            for (int f = 0; f < w; f++)
+            {
+                int ff = f + j - 1;
+                y[(c * 3 + j) * w + f] = ff >= 0 && ff < w ? x[c * w + ff] : 0.0f;
+            }
+}
+
 /* PyTorch GRU cell, gates r, z, n. nh <= 16. */
 static void gru_cell(const struct gru_w *w, int ni, int nh, const float *x, float *h)
 {
@@ -225,13 +236,7 @@ static void gt_block(const struct gt_w *w, float cache[2 * MAXDIL][CH * W], floa
     int d = w->dil;
     float sfe[24 * W], h[CH * W], hd[CH * W], h2[8 * W], z[8], at[8];
 
-    for (int c = 0; c < 8; c++)
-        for (int j = 0; j < 3; j++)
-            for (int f = 0; f < W; f++)
-            {
-                int ff = f + j - 1;
-                sfe[(c * 3 + j) * W + f] = ff >= 0 && ff < W ? x[c * W + ff] : 0.0f;
-            }
+    subband_unfold(x, 8, W, sfe);
     for (int o = 0; o < CH; o++)
         for (int f = 0; f < W; f++)
         {
@@ -368,7 +373,7 @@ static void dp_block(const struct dp_w *w, float *inter_h, float *x)
 /* One 16 kHz STFT frame (257 bins, re/im interleaved) through the network. */
 static void gtcrn_frame(gtcrn *st, const float *spec, float *out)
 {
-    float feat[3][NB], e[3][NE], s9[9 * NE];
+    float feat[3][NB], e[3][NE], sfe[9 * NE];
     float en0[CH * W1], en1[CH * W], en[3][CH * W], x[CH * W], t[CH * W];
     float d0[CH * W1], d1[2 * NE], m[2][NB];
 
@@ -390,15 +395,9 @@ static void gtcrn_frame(gtcrn *st, const float *spec, float *out)
             e[c][ERB1 + j] = acc;
         }
     }
-    for (int c = 0; c < 3; c++)
-        for (int j = 0; j < 3; j++)
-            for (int f = 0; f < NE; f++)
-            {
-                int ff = f + j - 1;
-                s9[(c * 3 + j) * NE + f] = ff >= 0 && ff < NE ? e[c][ff] : 0.0f;
-            }
+    subband_unfold(&e[0][0], 3, NE, sfe);
 
-    conv_down(en0_w, en0_b, en0_a[0], 9, CH, 1, NE, s9, en0);
+    conv_down(en0_w, en0_b, en0_a[0], 9, CH, 1, NE, sfe, en0);
     conv_down(en1_w, en1_b, en1_a[0], CH, CH, 2, W1, en0, en1);
     gt_block(&GTW[0], st->cache[0], st->tra_h[0], en1, en[0]);
     gt_block(&GTW[1], st->cache[1], st->tra_h[1], en[0], en[1]);

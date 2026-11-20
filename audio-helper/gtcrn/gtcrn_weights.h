@@ -1,6 +1,4 @@
-/* GTCRN stream/onnx_models/model_trained_on_dns3.tar (sha256 250fa2820ea9947704a62dda8e642ba773a067719c5e4294ad95aeab23f06442),
- * the source of the official gtcrn_simple.onnx, as the streaming model with BatchNorm folded into the conv before it.
- * MIT license, see LICENSE. */
+/* GTCRN stream/onnx_models/model_trained_on_dns3.tar (source of gtcrn_simple.onnx, sha256 250fa2820ea9947704a62dda8e642ba773a067719c5e4294ad95aeab23f06442), BatchNorm folded. */
 /* clang-format off */
 static const float en0_w[720] = {
     -0.000981836463f, 0.00329734571f, -0.00939512718f, 0.0350758024f, -0.00514933979f, -0.00378527748f, 0.00159805722f, -0.130858824f,

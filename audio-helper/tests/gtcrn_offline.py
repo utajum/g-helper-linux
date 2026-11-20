@@ -1,15 +1,5 @@
 #!/usr/bin/env python3
-"""Offline checks for the denoise model choice.
-
-Runs the real DSP (audio-helper/render, built from main.c) and checks:
-
-  - RNNoise is the default, "NSE gtcrn" switches to GTCRN
-  - GTCRN removes steady noise, "NSE rnnoise" switches back to RNNoise
-
-GTCRN removes synthetic voices as noise, so speech is not checked here.
-
-Usage: gtcrn_offline.py <path-to-render>
-"""
+"""Offline checks for the denoise model choice. Usage: gtcrn_offline.py <path-to-render>"""
 import subprocess
 import sys
 
@@ -40,6 +30,7 @@ spec = np.fft.rfft(rng.standard_normal(FS * 4))
 pink = np.fft.irfft(spec / np.sqrt(np.maximum(np.fft.rfftfreq(FS * 4, 1 / FS), 20)), FS * 4)
 noise = pink / np.sqrt(np.mean(pink**2)) * 10 ** (-35 / 20)
 
+# GTCRN removes synthetic voices as noise, so only steady noise is checked.
 y = render(noise)
 g = render(noise, "NSE gtcrn")
 check("GTCRN removes steady noise", db(g[-2 * FS:]) < -55, "%.1f dBFS from -35 dBFS" % db(g[-2 * FS:]))

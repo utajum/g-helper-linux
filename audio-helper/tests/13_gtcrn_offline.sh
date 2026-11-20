@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Phase 13: denoise model choice (RNNoise default, GTCRN), checked offline on
-# the real DSP code (no PipeWire session needed).
+# Phase 13: denoise model choice, checked offline on the real DSP code (no PipeWire needed).
 set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
