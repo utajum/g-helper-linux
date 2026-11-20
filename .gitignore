@@ -9,6 +9,7 @@ build/
 # Audio helper (C build artifacts; sources are tracked, objects/binary are not)
 audio-helper/*.o
 audio-helper/rnnoise/*.o
+audio-helper/gtcrn/*.o
 audio-helper/ghelper-audio
 audio-helper/render
 audio-helper/tests/cs/bin/

@@ -237,7 +237,7 @@ public static class Malay
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: Togol mod pengawal",
         ["action_audio_toggle"] = "Audio: Togol Audio Helper",
-        ["action_audio_rnnoise"] = "Audio: Togol penyahbisingan (RNNoise)",
+        ["action_audio_rnnoise"] = "Audio: Togol penyahbisingan",
         ["action_audio_vocoder"] = "Audio: Togol Vocoder",
         ["action_audio_eq"] = "Audio: Togol EQ parametrik",
         ["action_audio_delay"] = "Audio: Togol lengah",
@@ -269,7 +269,6 @@ public static class Malay
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Lengah",
         ["audio_effect_reverb"] = "Gema",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robot",
         ["audio_effect_eq_sub"] = "9 jalur",
         ["audio_effect_delay_sub"] = "Talian gema",
@@ -307,7 +306,6 @@ public static class Malay
 
         // Noise mini-window
         ["audio_noise_title"] = "Penyahbisingan",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Pembezaan suara/bising rangkaian neural.",
         ["audio_noise_vad"] = "Aktiviti suara langsung",
         ["audio_noise_reduction"] = "Pengurangan bising",

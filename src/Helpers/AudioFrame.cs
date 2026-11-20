@@ -8,7 +8,7 @@ namespace GHelper.Linux.Helpers;
 ///
 /// Protocol v2 (WIP, not shipped):
 ///   - VAD always meaningful (RNNoise model runs even when bypassed).
-///   - NoiseReductionDb is real reduction from RNNoise (positive scale,
+///   - NoiseReductionDb is real reduction from the denoiser (positive scale,
 ///     0 = nothing removed); replaces the old "rms_in - rms_out" delta.
 ///   - TrackedPitchHz exposes the pitch tracker output for UI hints.
 /// </summary>
@@ -36,8 +36,8 @@ public sealed class AudioFrame
     public float RmsInDb;
     public float RmsOutDb;
     /// <summary>
-    /// Real noise reduction performed by RNNoise this window. Positive
-    /// dB-above-silence scale: 0 = nothing removed (RNNoise bypassed or
+    /// Real noise reduction performed by the denoiser this window. Positive
+    /// dB-above-silence scale: 0 = nothing removed (denoise bypassed or
     /// quiet mic), ~30-40 = aggressive denoise on a noisy mic. Replaces
     /// the previous whole-chain rms_in - rms_out delta which was
     /// misleadingly affected by every other DSP stage.

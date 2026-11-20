@@ -429,6 +429,7 @@ g-helper-linux/
   audio-helper/                           # Native C PipeWire DSP helper
     main.c                                #   Real-time audio frame I/O
     protocol.h                            #   Shared frame protocol with C#
+    gtcrn/                                #   GTCRN noise suppression model
     rnnoise/                              #   RNNoise noise suppression lib
   scripts/
     i18n-check.sh                         # Translation key validation
@@ -556,7 +557,7 @@ g-helper-linux/
         ExtraWindow.axaml / .cs           # Display, power, system info
         AudioWindow.axaml / .cs           # Audio device routing
         EqWindow.axaml / .cs              # Parametric equalizer
-        NoiseWindow.axaml / .cs           # RNNoise suppression
+        NoiseWindow.axaml / .cs           # Noise suppression (GTCRN / RNNoise)
         ReverbWindow.axaml / .cs          # Reverb effect
         VocoderWindow.axaml / .cs         # Vocoder effect
         MonitorWindow.axaml / .cs         # System monitor dashboard
@@ -598,6 +599,7 @@ g-helper-linux/
 - [asus-wmi kernel driver](https://github.com/torvalds/linux/tree/master/drivers/platform/x86)
 - [ryzen_smu](https://github.com/amkillam/ryzen_smu) by Leonardo Gates / amkillam
 - [RyzenAdj](https://github.com/FlyGoat/RyzenAdj) by FlyGoat (bundled CLI binary for AMD SMU power tuning)
+- [GTCRN](https://github.com/Xiaobin-Rong/gtcrn) by Xiaobin Rong (noise suppression model)
 - [RNNoise](https://github.com/xiph/rnnoise) by Jean-Marc Valin / Xiph.Org (noise suppression)
 - [PipeWire](https://pipewire.org/) (native audio DSP pipeline)
 

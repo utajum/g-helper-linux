@@ -237,7 +237,7 @@ public static class Slovenian
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: Preklopi način krmilnika",
         ["action_audio_toggle"] = "Zvok: Preklopi Audio Helper",
-        ["action_audio_rnnoise"] = "Zvok: Preklopi odpravljanje šuma (RNNoise)",
+        ["action_audio_rnnoise"] = "Zvok: Preklopi odpravljanje šuma",
         ["action_audio_vocoder"] = "Zvok: Preklopi Vocoder",
         ["action_audio_eq"] = "Zvok: Preklopi parametrični EQ",
         ["action_audio_delay"] = "Zvok: Preklopi zakasnitev",
@@ -269,7 +269,6 @@ public static class Slovenian
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Zakasnitev",
         ["audio_effect_reverb"] = "Odmev",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robot",
         ["audio_effect_eq_sub"] = "9-pasovni",
         ["audio_effect_delay_sub"] = "Odmevna linija",
@@ -307,7 +306,6 @@ public static class Slovenian
 
         // Noise mini-window
         ["audio_noise_title"] = "Odpravljanje šuma",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Razločevanje glasu/šuma z nevronsko mrežo.",
         ["audio_noise_vad"] = "Glasovna aktivnost v živo",
         ["audio_noise_reduction"] = "Zmanjšanje šuma",

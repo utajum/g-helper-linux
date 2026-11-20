@@ -237,7 +237,7 @@ public static class Nepali
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: कन्ट्रोलर मोड टगल गर्नुहोस्",
         ["action_audio_toggle"] = "अडियो: Audio Helper टगल गर्नुहोस्",
-        ["action_audio_rnnoise"] = "अडियो: डिनोइज (RNNoise) टगल गर्नुहोस्",
+        ["action_audio_rnnoise"] = "अडियो: डिनोइज टगल गर्नुहोस्",
         ["action_audio_vocoder"] = "अडियो: Vocoder टगल गर्नुहोस्",
         ["action_audio_eq"] = "अडियो: प्यारामेट्रिक EQ टगल गर्नुहोस्",
         ["action_audio_delay"] = "अडियो: डिले टगल गर्नुहोस्",
@@ -269,7 +269,6 @@ public static class Nepali
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "डिले",
         ["audio_effect_reverb"] = "रिभर्ब",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "रोबोट",
         ["audio_effect_eq_sub"] = "9-ब्यान्ड",
         ["audio_effect_delay_sub"] = "इको लाइन",
@@ -307,7 +306,6 @@ public static class Nepali
 
         // Noise mini-window
         ["audio_noise_title"] = "नोइज सप्रेसन",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "न्युरल-नेटवर्क आवाज/नोइज छुट्याउने।",
         ["audio_noise_vad"] = "लाइभ आवाज गतिविधि",
         ["audio_noise_reduction"] = "नोइज न्यूनीकरण",

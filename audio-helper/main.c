@@ -1,5 +1,5 @@
 /* G-Helper audio helper: PipeWire filter exposing a virtual "G-Helper Microphone"
- * source with a fixed DSP chain (rnnoise -> parametric EQ -> delay -> reverb).
+ * source with a fixed DSP chain (rnnoise or GTCRN -> parametric EQ -> delay -> reverb).
  *
  * IPC: line-based commands on stdin, fixed-size binary audio frames on stdout
  *      (see protocol.h). Frame rate ~60 Hz, mono, 48 kHz.
@@ -8,10 +8,10 @@
  * reader. The RT process callback runs in a separate RT thread. Parameters
  * are exchanged via C11 _Atomic primitives (lock-free, wait-free).
  *
- * Latency: ~10 ms (fixed, from rnnoise's 480-sample frame size at 48 kHz).
+ * Latency: ~10 ms (fixed, from rnnoise's 480-sample frame size at 48 kHz), plus ~35 ms with GTCRN.
  *
  * License: GPL-3.0 (same as parent project). rnnoise sources bundled under
- * vendor/rnnoise/ are BSD-3-Clause (compatible).
+ * vendor/rnnoise/ are BSD-3-Clause (compatible). GTCRN under gtcrn/ is MIT.
  */
 
 #define _GNU_SOURCE
@@ -30,6 +30,7 @@
 #include <spa/param/audio/format-utils.h>
 #include <spa/param/latency-utils.h>
 
+#include "gtcrn/gtcrn.h"
 #include "protocol.h"
 #include "rnnoise/rnnoise.h"
 
@@ -58,6 +59,7 @@ struct eq_band
 static struct
 {
     _Atomic int rnnoise_on;
+    _Atomic int denoise_model; /* 0 = RNNoise, 1 = GTCRN */
     _Atomic int eq_on;
     _Atomic int delay_on;
     _Atomic int reverb_on;
@@ -89,7 +91,7 @@ static struct
 
     /* RNNoise-stage aggressiveness, per-mille (0..1000). Controls a soft
      * gate applied after the model output when its VAD is below the
-     * close threshold. 0 = no extra suppression (raw RNNoise output);
+     * close threshold. 0 = no extra suppression (raw denoiser output);
      * 1000 = up to -24 dB of residual attenuation during silence. The
      * gate ramps in/out smoothly with a 250 ms hangover so trailing
      * consonants are preserved. Default 700 is a good "Zoom-like" feel:
@@ -458,7 +460,7 @@ struct voc_band
 /* ---------------------------------------------------------------------------
  *   Pitch tracker (autocorrelation, voice band 60..400 Hz)
  *
- *   Runs on the same signal the vocoder consumes (post-rnnoise-or-bypass
+ *   Runs on the same signal the vocoder consumes (post-denoise-or-bypass
  *   so it benefits from denoise when active but works on raw mic when not).
  *   The input is low-passed at 900 Hz and decimated 4x to 12 kHz first:
  *   pitch needs no content above ~1 kHz, the low-pass keeps formants from
@@ -1041,7 +1043,7 @@ struct snapshot
     int window_len[2];
     float rms_in_sum[2];
     float rms_out_sum[2];
-    /* Energy removed by RNNoise per emit window. RMS of (rn_in - rn_out)
+    /* Energy removed by the denoiser per emit window. RMS of (rn_in - rn_out)
      * summed over the rnnoise frames that fell inside the emit window. */
     float rnn_diff_sum[2];
     int rnn_diff_n[2];
@@ -1114,6 +1116,9 @@ struct rt_state
      * smoothed to avoid edge clicks. */
     float stutter_phase;
     float stutter_gain; /* one-pole smoothed gate gain (0..1) */
+
+    gtcrn *gt;
+    int gt_on; /* GTCRN ran for the last frame */
 
     /* rnnoise 480-sample input buffer */
     float rn_in[RNN_FRAME];
@@ -1255,7 +1260,7 @@ static inline uint32_t ring_push(struct post_ring *r, uint32_t head, float v)
 /* Capture stream RT callback (always-on producer).
  *
  * For each input sample: tap-in, run the full DSP chain
- * (rnnoise -> EQ -> delay -> reverb), tap-out, push to post-DSP ring.
+ * (denoise -> EQ -> delay -> reverb), tap-out, push to post-DSP ring.
  * The post-DSP ring is what cb_out_process drains when an app is recording.
  * Visualization snapshots are published from here so the UI keeps updating
  * even when no app is consuming the virtual mic. */
@@ -1429,6 +1434,27 @@ static void dsp_process_block(const float *in, uint32_t n_samples)
             float denoised[RNN_FRAME];
             float vad = rnnoise_process_frame(g_rt.rn, denoised, g_rt.rn_in);
 
+            /* GTCRN replaces the RNNoise output; ref is its input, delayed to match. */
+            float aligned[RNN_FRAME];
+            const float *ref = g_rt.rn_in;
+            int gt_on = rnn_on && atomic_load(&g_params.denoise_model) == 1;
+            if (gt_on)
+            {
+                if (!g_rt.gt_on)
+                    gtcrn_reset(g_rt.gt);
+                float gt_in[RNN_FRAME];
+                for (int k = 0; k < RNN_FRAME; k++)
+                    gt_in[k] = g_rt.rn_in[k] * (1.0f / 32768.0f);
+                gtcrn_process(g_rt.gt, gt_in, denoised, aligned, RNN_FRAME);
+                for (int k = 0; k < RNN_FRAME; k++)
+                {
+                    denoised[k] *= 32768.0f;
+                    aligned[k] *= 32768.0f;
+                }
+                ref = aligned;
+            }
+            g_rt.gt_on = gt_on;
+
             /* Asymmetric EMA on VAD: snap up so onsets are not chopped,
              * decay slowly so brief gaps between syllables do not trip
              * the gate closed. alpha_up ~= 0.6 corresponds to one-frame
@@ -1445,13 +1471,13 @@ static void dsp_process_block(const float *in, uint32_t n_samples)
             /* Real noise-reduction metric: energy of (input - denoised).
              * When the denoiser is doing nothing, the diff is ~0; when it
              * cuts a steady fan, the diff sums to many dB. Only meaningful
-             * if RNNoise is actually in the path - bypass forces 0. */
+             * if the denoiser is actually in the path - bypass forces 0. */
             if (rnn_on)
             {
                 float diff_sum = 0.0f;
                 for (int k = 0; k < RNN_FRAME; k++)
                 {
-                    float d = g_rt.rn_in[k] - denoised[k];
+                    float d = ref[k] - denoised[k];
                     diff_sum += d * d;
                 }
                 g_rt.rnn_diff_sum += diff_sum;
@@ -1460,7 +1486,7 @@ static void dsp_process_block(const float *in, uint32_t n_samples)
 
             const float *src = rnn_on ? denoised : g_rt.rn_in;
 
-            /* Soft post-RNNoise gate. Aggressiveness picks how deep the
+            /* Soft post-denoise gate. Aggressiveness picks how deep the
              * attenuation goes during sustained silence (target gain at
              * full close = 1 - 0.94 * aggro -> aggro 1.0 yields -24 dB).
              * Two thresholds form hysteresis so the gate does not chatter
@@ -1530,7 +1556,7 @@ static void dsp_process_block(const float *in, uint32_t n_samples)
             g_rt.rn_out_tail = (g_rt.rn_out_tail + 1) % RING_CAP;
         }
 
-        /* Pitch tracker reads the unprocessed (post-rnnoise) signal so the
+        /* Pitch tracker reads the unprocessed (post-denoise) signal so the
          * autotune and follow-mode estimates reflect the speaker's actual
          * pitch, not a pitch-shifted version of it. */
         pitch_tracker_push(&g_rt.pitch, y);
@@ -1941,7 +1967,7 @@ static void on_timer(void *userdata, uint64_t expirations)
      * domain (rnnoise's input scale), normalised to dBFS, then mapped to
      * a positive "dB above silence" scale so the meter reads 0 = nothing
      * removed, ~40 = aggressive denoise on a noisy mic. Reads 0 when
-     * rnnoise was bypassed (RT thread skipped accumulation). */
+     * denoise was bypassed (RT thread skipped accumulation). */
     int dn = g_snap.rnn_diff_n[slot];
     if (dn > 0)
     {
@@ -1992,6 +2018,10 @@ static void parse_cmd(char *line)
     if (!strncmp(line, "RNN ", 4))
     {
         atomic_store(&g_params.rnnoise_on, atoi(line + 4) ? 1 : 0);
+    }
+    else if (!strncmp(line, "NSE ", 4))
+    {
+        atomic_store(&g_params.denoise_model, strcmp(line + 4, "gtcrn") ? 0 : 1);
     }
     else if (!strncmp(line, "EQ ", 3))
     {
@@ -2301,6 +2331,12 @@ static int dsp_init(void)
         fprintf(stderr, "rnnoise_create failed\n");
         return -1;
     }
+    g_rt.gt = gtcrn_create();
+    if (!g_rt.gt)
+    {
+        fprintf(stderr, "gtcrn_create failed\n");
+        return -1;
+    }
     /* Pre-design EQ defaults */
     for (int i = 0; i < GHA_EQ_BANDS; i++)
         g_rt.eq_seq[i] = -1;
@@ -2451,6 +2487,7 @@ int main(int argc, char *argv[])
     pw_stream_destroy(app->in_stream);
     pw_main_loop_destroy(app->loop);
     rnnoise_destroy(g_rt.rn);
+    gtcrn_destroy(g_rt.gt);
     pw_deinit();
     return 0;
 }

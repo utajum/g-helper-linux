@@ -6,7 +6,7 @@ namespace GHelper.Linux.Helpers;
 /// <summary>
 /// Manages the lifecycle of the bundled ghelper-audio native helper.
 ///
-/// The helper is a small PipeWire client that runs the rnnoise -> EQ ->
+/// The helper is a small PipeWire client that runs the denoise -> EQ ->
 /// delay -> reverb chain and exposes a virtual "G-Helper Microphone" audio
 /// source. It receives line-based commands on stdin and emits fixed-size
 /// binary audio frames on stdout (see audio-helper/protocol.h).
@@ -142,6 +142,11 @@ public sealed class AudioHelper : IDisposable
     {
         AudioState.Instance.RnnoiseOn = on;
         Send($"RNN {(on ? 1 : 0)}");
+    }
+    public void SetNoiseModel(int model)
+    {
+        AudioState.Instance.NoiseModel = model;
+        Send($"NSE {(model == 1 ? "gtcrn" : "rnnoise")}");
     }
     public void SetEq(bool on)
     {
@@ -401,6 +406,7 @@ public sealed class AudioHelper : IDisposable
         var s = AudioState.Instance;
         // Chain on/off toggles.
         SetRnnoise(s.RnnoiseOn);
+        SetNoiseModel(s.NoiseModel);
         SetVocoder(s.VocoderOn);
         SetEq(s.EqOn);
         SetDelay(s.DelayOn);
