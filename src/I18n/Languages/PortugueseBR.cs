@@ -827,7 +827,7 @@ public static class PortugueseBR
         ["confirm_yes"] = "Sim",
         ["confirm_no"] = "Não",
         ["action_audio_toggle"] = "Áudio: Alternar assistente de áudio",
-        ["action_audio_rnnoise"] = "Áudio: Alternar supressão de ruído",
+        ["action_audio_rnnoise"] = "Áudio: Alternar redução",
         ["action_audio_vocoder"] = "Áudio: Alternar vocoder",
         ["action_audio_eq"] = "Áudio: Alternar EQ paramétrico",
         ["action_audio_delay"] = "Áudio: Alternar delay",

@@ -830,7 +830,7 @@ public static class Macedonian
         ["confirm_yes"] = "Да",
         ["confirm_no"] = "Не",
         ["action_audio_toggle"] = "Аудио: Вклучи/исклучи аудио помошник",
-        ["action_audio_rnnoise"] = "Аудио: Вклучи/исклучи намалување на бучава",
+        ["action_audio_rnnoise"] = "Аудио: Вклучи/исклучи намалување шум",
         ["action_audio_vocoder"] = "Аудио: Вклучи/исклучи вокодер",
         ["action_audio_eq"] = "Аудио: Вклучи/исклучи параметарски еквилајзер",
         ["action_audio_delay"] = "Аудио: Вклучи/исклучи делеј",

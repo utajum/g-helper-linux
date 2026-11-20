@@ -827,7 +827,7 @@ public static class French
         ["confirm_yes"] = "Oui",
         ["confirm_no"] = "Non",
         ["action_audio_toggle"] = "Audio : Activer/désactiver l'assistant audio",
-        ["action_audio_rnnoise"] = "Audio : Activer/désactiver la réduction de bruit",
+        ["action_audio_rnnoise"] = "Audio : Activer/désactiver l'anti-bruit",
         ["action_audio_vocoder"] = "Audio : Activer/désactiver le vocodeur",
         ["action_audio_eq"] = "Audio : Activer/désactiver l'égaliseur paramétrique",
         ["action_audio_delay"] = "Audio : Activer/désactiver le délai",

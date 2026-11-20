@@ -827,7 +827,7 @@ public static class Italian
         ["confirm_yes"] = "Sì",
         ["confirm_no"] = "No",
         ["action_audio_toggle"] = "Audio: Attiva/disattiva helper audio",
-        ["action_audio_rnnoise"] = "Audio: Attiva/disattiva riduzione rumore",
+        ["action_audio_rnnoise"] = "Audio: Attiva/disattiva denoise",
         ["action_audio_vocoder"] = "Audio: Attiva/disattiva vocoder",
         ["action_audio_eq"] = "Audio: Attiva/disattiva equalizzatore parametrico",
         ["action_audio_delay"] = "Audio: Attiva/disattiva delay",

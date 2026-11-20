@@ -827,7 +827,7 @@ public static class Ukrainian
         ["confirm_yes"] = "Так",
         ["confirm_no"] = "Ні",
         ["action_audio_toggle"] = "Аудіо: Увімк/вимк помічник",
-        ["action_audio_rnnoise"] = "Аудіо: Увімк/вимк придушення шуму",
+        ["action_audio_rnnoise"] = "Аудіо: Увімк/вимк шумоподавлення",
         ["action_audio_vocoder"] = "Аудіо: Увімк/вимк вокодер",
         ["action_audio_eq"] = "Аудіо: Увімк/вимк параметричний еквалайзер",
         ["action_audio_delay"] = "Аудіо: Увімк/вимк затримку",

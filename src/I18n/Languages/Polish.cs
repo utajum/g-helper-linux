@@ -827,7 +827,7 @@ public static class Polish
         ["confirm_yes"] = "Tak",
         ["confirm_no"] = "Nie",
         ["action_audio_toggle"] = "Audio: Przełącz pomocnika audio",
-        ["action_audio_rnnoise"] = "Audio: Przełącz redukcję szumów",
+        ["action_audio_rnnoise"] = "Audio: Przełącz odszumianie",
         ["action_audio_vocoder"] = "Audio: Przełącz vocoder",
         ["action_audio_eq"] = "Audio: Przełącz korektor parametryczny",
         ["action_audio_delay"] = "Audio: Przełącz delay",

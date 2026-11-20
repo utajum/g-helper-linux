@@ -830,7 +830,7 @@ public static class Arabic
         ["confirm_yes"] = "نعم",
         ["confirm_no"] = "لا",
         ["action_audio_toggle"] = "صوت: تشغيل/إيقاف مساعد الصوت",
-        ["action_audio_rnnoise"] = "صوت: تشغيل/إيقاف إزالة الضوضاء",
+        ["action_audio_rnnoise"] = "صوت: تشغيل/إيقاف كتم الضوضاء",
         ["action_audio_vocoder"] = "صوت: تشغيل/إيقاف الفوكودر",
         ["action_audio_eq"] = "صوت: تشغيل/إيقاف المعادل",
         ["action_audio_delay"] = "صوت: تشغيل/إيقاف التأخير",

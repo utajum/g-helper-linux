@@ -830,7 +830,7 @@ public static class Serbian
         ["confirm_yes"] = "Da",
         ["confirm_no"] = "Ne",
         ["action_audio_toggle"] = "Аудио: Укључи/искључи аудио помоћника",
-        ["action_audio_rnnoise"] = "Аудио: Укључи/искључи смањење шума",
+        ["action_audio_rnnoise"] = "Аудио: Укључи/искључи уклањање шума",
         ["action_audio_vocoder"] = "Аудио: Укључи/искључи вокодер",
         ["action_audio_eq"] = "Аудио: Укључи/искључи параметарски еквилајзер",
         ["action_audio_delay"] = "Аудио: Укључи/искључи делеј",

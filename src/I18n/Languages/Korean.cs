@@ -830,7 +830,7 @@ public static class Korean
         ["confirm_yes"] = "예",
         ["confirm_no"] = "아니오",
         ["action_audio_toggle"] = "오디오: 오디오 도우미 전환",
-        ["action_audio_rnnoise"] = "오디오: 노이즈 제거 전환",
+        ["action_audio_rnnoise"] = "오디오: 노이즈 억제 전환",
         ["action_audio_vocoder"] = "오디오: 보코더 전환",
         ["action_audio_eq"] = "오디오: 파라메트릭 EQ 전환",
         ["action_audio_delay"] = "오디오: 딜레이 전환",

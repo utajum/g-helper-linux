@@ -827,7 +827,7 @@ public static class German
         ["confirm_yes"] = "Ja",
         ["confirm_no"] = "Nein",
         ["action_audio_toggle"] = "Audio: Audio-Hilfsprogramm umschalten",
-        ["action_audio_rnnoise"] = "Audio: Rauschunterdrückung umschalten",
+        ["action_audio_rnnoise"] = "Audio: Entrauschung umschalten",
         ["action_audio_vocoder"] = "Audio: Vocoder umschalten",
         ["action_audio_eq"] = "Audio: Parametrischer EQ umschalten",
         ["action_audio_delay"] = "Audio: Delay umschalten",

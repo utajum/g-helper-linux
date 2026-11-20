@@ -830,7 +830,7 @@ public static class Norwegian
         ["confirm_yes"] = "Ja",
         ["confirm_no"] = "Nei",
         ["action_audio_toggle"] = "Lyd: Slå lydhjelper på/av",
-        ["action_audio_rnnoise"] = "Lyd: Slå støydempning på/av",
+        ["action_audio_rnnoise"] = "Lyd: Slå støyreduksjon på/av",
         ["action_audio_vocoder"] = "Lyd: Slå vocoder på/av",
         ["action_audio_eq"] = "Lyd: Slå parametrisk EQ på/av",
         ["action_audio_delay"] = "Lyd: Slå delay på/av",
