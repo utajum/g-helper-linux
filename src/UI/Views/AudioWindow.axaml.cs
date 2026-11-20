@@ -82,6 +82,7 @@ public partial class AudioWindow : Window
         _suppressEvents = false;
 
         UpdateTileStyles(s.RnnoiseOn, s.VocoderOn, s.EqOn, s.DelayOn, s.ReverbOn);
+        s.NoiseModelChanged += OnNoiseModelChanged;
         SetControlsEnabled(AudioHelper.Instance.IsRunning);
 
         _redraw = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
@@ -94,6 +95,7 @@ public partial class AudioWindow : Window
             AudioHelper.Instance.FrameReceived -= OnFrame;
             AudioHelper.Instance.ErrorReported -= OnError;
             Labels.LanguageChanged -= OnLanguageChanged;
+            AudioState.Instance.NoiseModelChanged -= OnNoiseModelChanged;
         };
 
         RefreshStatus();
@@ -123,6 +125,7 @@ public partial class AudioWindow : Window
         checkDelay.Content = Labels.Get("audio_effect_delay");
         checkReverb.Content = Labels.Get("audio_effect_reverb");
 
+        ShowNoiseModel();
         labelVocoderSubtitle.Text = Labels.Get("audio_effect_vocoder_sub");
         labelEqSubtitle.Text = Labels.Get("audio_effect_eq_sub");
         labelDelaySubtitle.Text = Labels.Get("audio_effect_delay_sub");
@@ -167,6 +170,10 @@ public partial class AudioWindow : Window
     }
 
     private void OnFrame(AudioFrame f) => _latest = f;
+
+    private void OnNoiseModelChanged() => Dispatcher.UIThread.Post(ShowNoiseModel);
+
+    private void ShowNoiseModel() => labelRnnSubtitle.Text = AudioState.NoiseModelNames[AudioState.Instance.NoiseModel];
 
     private void OnError(string msg)
     {
@@ -245,7 +252,6 @@ public partial class AudioWindow : Window
     private void UpdateTileStyles(bool rn, bool voc, bool eq, bool dl, bool rv)
     {
         SetTileOn(tileRnn, rn);
-        labelRnnSubtitle.Text = AudioState.NoiseModelNames[AudioState.Instance.NoiseModel];
         SetTileOn(tileVocoder, voc);
         SetTileOn(tileEq, eq);
         SetTileOn(tileDelay, dl);

@@ -142,12 +142,14 @@ public sealed class AudioState
     /// <summary>Denoise model names, by <see cref="NoiseModel"/> index.</summary>
     public static readonly string[] NoiseModelNames = { "RNNoise", "GTCRN" };
 
+    public event Action? NoiseModelChanged;
+
     private int _noiseModel;
     /// <summary>Denoise model: 0 = RNNoise (default), 1 = GTCRN.</summary>
     public int NoiseModel
     {
         get => _noiseModel;
-        set { _noiseModel = value; AppConfig.Set("audio_noise_model", value); }
+        set { _noiseModel = value; AppConfig.Set("audio_noise_model", value); NoiseModelChanged?.Invoke(); }
     }
 
     private bool _eqOn;
