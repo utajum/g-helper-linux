@@ -239,7 +239,7 @@ public static class English
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: Toggle Controller Mode",
         ["action_audio_toggle"] = "Audio: Toggle Audio Helper",
-        ["action_audio_rnnoise"] = "Audio: Toggle Denoise (RNNoise)",
+        ["action_audio_rnnoise"] = "Audio: Toggle Denoise",
         ["action_audio_vocoder"] = "Audio: Toggle Vocoder",
         ["action_audio_eq"] = "Audio: Toggle Parametric EQ",
         ["action_audio_delay"] = "Audio: Toggle Delay",
@@ -271,7 +271,6 @@ public static class English
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Delay",
         ["audio_effect_reverb"] = "Reverb",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robot",
         ["audio_effect_eq_sub"] = "9-band",
         ["audio_effect_delay_sub"] = "Echo line",
@@ -309,7 +308,6 @@ public static class English
 
         // Noise mini-window
         ["audio_noise_title"] = "Noise Suppression",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Neural-network voice/noise discrimination.",
         ["audio_noise_vad"] = "Live voice activity",
         ["audio_noise_reduction"] = "Noise reduction",

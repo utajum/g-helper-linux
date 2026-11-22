@@ -49,7 +49,7 @@ public static class InputDispatcher
         // "Audio: ..." so they cluster together at the bottom of the
         // dropdown (Dictionary preserves insertion order in .NET 5+).
         { "audio_toggle",   "Audio: Toggle Audio Helper" },
-        { "audio_rnnoise",  "Audio: Toggle Denoise (RNNoise)" },
+        { "audio_rnnoise",  "Audio: Toggle Denoise" },
         { "audio_vocoder",  "Audio: Toggle Vocoder" },
         { "audio_eq",       "Audio: Toggle Parametric EQ" },
         { "audio_delay",    "Audio: Toggle Delay" },

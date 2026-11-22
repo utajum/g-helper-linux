@@ -15,10 +15,9 @@
                         VerticalAlignment="Center">
                 <ctrl:Icon IconName="brain" Width="18" Height="18"
                            VerticalAlignment="Center" />
-                <TextBlock x:Name="labelHeader"
-                           Text="RNNoise" FontSize="16"
-                           FontWeight="SemiBold" Foreground="White"
-                           VerticalAlignment="Center" />
+                <ComboBox x:Name="comboModel" MinWidth="140"
+                          VerticalAlignment="Center"
+                          SelectionChanged="ComboModel_Changed" />
             </StackPanel>
             <TextBlock x:Name="labelDescription"
                        Text="Neural-network voice/noise discrimination. The model is bundled and runs in the helper RT thread."

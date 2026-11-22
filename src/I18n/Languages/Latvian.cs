@@ -237,7 +237,7 @@ public static class Latvian
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: Pārslēgt kontrollera režīmu",
         ["action_audio_toggle"] = "Audio: Pārslēgt Audio Helper",
-        ["action_audio_rnnoise"] = "Audio: Pārslēgt trokšņu samazināšanu (RNNoise)",
+        ["action_audio_rnnoise"] = "Audio: Pārslēgt trokšņu samazināšanu",
         ["action_audio_vocoder"] = "Audio: Pārslēgt Vocoder",
         ["action_audio_eq"] = "Audio: Pārslēgt parametrisko EQ",
         ["action_audio_delay"] = "Audio: Pārslēgt aizturi",
@@ -269,7 +269,6 @@ public static class Latvian
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Aizture",
         ["audio_effect_reverb"] = "Atbalss",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robots",
         ["audio_effect_eq_sub"] = "9 joslu",
         ["audio_effect_delay_sub"] = "Atbalss līnija",
@@ -307,7 +306,6 @@ public static class Latvian
 
         // Noise mini-window
         ["audio_noise_title"] = "Trokšņu samazināšana",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Neironu tīkla balss/trokšņa atšķiršana.",
         ["audio_noise_vad"] = "Balss aktivitāte tiešraidē",
         ["audio_noise_reduction"] = "Trokšņu samazināšana",

@@ -9,9 +9,9 @@
  * Protocol v2 (WIP, not shipped):
  *   - VAD always runs (RNNoise model invoked regardless of bypass flag),
  *     so vad_prob is meaningful even when rnnoise is bypassed.
- *   - noise_reduction_db is the *actual* energy removed by RNNoise
+ *   - noise_reduction_db is the *actual* energy removed by the denoiser
  *     (RMS of input minus RMS of denoised output), not whole-chain Δ.
- *     Reads 0 when RNNoise is bypassed.
+ *     Reads 0 when denoise is bypassed.
  *   - VOP command takes 7 args including pitch-follow + transpose.
  */
 #ifndef GHELPER_AUDIO_PROTOCOL_H
@@ -38,7 +38,7 @@ struct gha_frame
     float vad_prob;           /* 0..1 voice-activity prob from rnnoise; ALWAYS computed */
     float rms_in_db;          /* -inf..0 dBFS RMS of raw input */
     float rms_out_db;         /* -inf..0 dBFS RMS post-chain */
-    float noise_reduction_db; /* dB RMS of (rnn_in - rnn_out); 0 when rnnoise bypassed */
+    float noise_reduction_db; /* dB RMS of (denoise in - out); 0 when denoise bypassed */
     float tracked_pitch_hz;   /* detected voice pitch (0 when silence/no track) */
 
     float waveform_in[GHA_WAVEFORM_SAMPLES]; /* downsampled mono, -1..1 */
@@ -61,7 +61,8 @@ struct gha_frame
  *                       default sink so the user can hear what their
  *                       virtual mic sounds like.
  *
- *   RNN <0|1>           enable/disable rnnoise
+ *   RNN <0|1>           enable/disable denoise
+ *   NSE <rnnoise|gtcrn> denoise model (default rnnoise); RNNoise always gives the VAD
  *   VOC <0|1>           enable/disable vocoder
  *   EQ  <0|1>           enable/disable parametric EQ
  *   DLY <0|1>           enable/disable delay

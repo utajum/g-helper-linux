@@ -237,7 +237,7 @@ public static class Bengali
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: কন্ট্রোলার মোড টগল করুন",
         ["action_audio_toggle"] = "অডিও: Audio Helper টগল করুন",
-        ["action_audio_rnnoise"] = "অডিও: ডিনয়েজ (RNNoise) টগল করুন",
+        ["action_audio_rnnoise"] = "অডিও: ডিনয়েজ টগল করুন",
         ["action_audio_vocoder"] = "অডিও: Vocoder টগল করুন",
         ["action_audio_eq"] = "অডিও: প্যারামেট্রিক EQ টগল করুন",
         ["action_audio_delay"] = "অডিও: ডিলে টগল করুন",
@@ -269,7 +269,6 @@ public static class Bengali
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "ডিলে",
         ["audio_effect_reverb"] = "রিভার্ব",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "রোবট",
         ["audio_effect_eq_sub"] = "9-ব্যান্ড",
         ["audio_effect_delay_sub"] = "ইকো লাইন",
@@ -307,7 +306,6 @@ public static class Bengali
 
         // Noise mini-window
         ["audio_noise_title"] = "নয়েজ সাপ্রেশন",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "নিউরাল-নেটওয়ার্ক কণ্ঠ/নয়েজ পৃথকীকরণ।",
         ["audio_noise_vad"] = "লাইভ কণ্ঠ কার্যকলাপ",
         ["audio_noise_reduction"] = "নয়েজ হ্রাস",

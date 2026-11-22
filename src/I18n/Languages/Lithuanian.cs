@@ -237,7 +237,7 @@ public static class Lithuanian
         ["mkey_screen_off"] = "Screen Off",
         ["action_ally_toggle_mode"] = "Ally: Perjungti valdiklio režimą",
         ["action_audio_toggle"] = "Garsas: Perjungti Audio Helper",
-        ["action_audio_rnnoise"] = "Garsas: Perjungti triukšmo slopinimą (RNNoise)",
+        ["action_audio_rnnoise"] = "Garsas: Perjungti triukšmo slopinimą",
         ["action_audio_vocoder"] = "Garsas: Perjungti Vocoder",
         ["action_audio_eq"] = "Garsas: Perjungti parametrinį EQ",
         ["action_audio_delay"] = "Garsas: Perjungti vėlinimą",
@@ -269,7 +269,6 @@ public static class Lithuanian
         ["audio_effect_eq"] = "EQ",
         ["audio_effect_delay"] = "Vėlinimas",
         ["audio_effect_reverb"] = "Aidas",
-        ["audio_effect_denoise_sub"] = "RNNoise",
         ["audio_effect_vocoder_sub"] = "Robotas",
         ["audio_effect_eq_sub"] = "9 juostų",
         ["audio_effect_delay_sub"] = "Aido linija",
@@ -307,7 +306,6 @@ public static class Lithuanian
 
         // Noise mini-window
         ["audio_noise_title"] = "Triukšmo slopinimas",
-        ["audio_noise_header"] = "RNNoise",
         ["audio_noise_description"] = "Neuroninio tinklo balso/triukšmo atskyrimas.",
         ["audio_noise_vad"] = "Balso aktyvumas tiesiogiai",
         ["audio_noise_reduction"] = "Triukšmo sumažinimas",
