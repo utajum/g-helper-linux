@@ -32,9 +32,12 @@ public partial class ReportWindow : Window
     {
         InitializeComponent();
         _latestVersion = latestVersion;
-        _reportId = AppConfig.GetString("report_draft_id") is { Length: 36 } id ? id : Guid.NewGuid().ToString();
-        textTitle.Text = AppConfig.GetString("report_draft_title") ?? "";
-        textDescription.Text = AppConfig.GetString("report_draft_description") ?? "";
+        var draft = BugReport.LoadDraft();
+        _reportId = draft.Id;
+        textTitle.MaxLength = BugReport.TitleMax;
+        textDescription.MaxLength = BugReport.DescriptionMax;
+        textTitle.Text = draft.Title;
+        textDescription.Text = draft.Description;
 
         Labels.LanguageChanged += ApplyLabels;
         ApplyLabels();
@@ -44,7 +47,7 @@ public partial class ReportWindow : Window
         Closed += (_, _) =>
         {
             Labels.LanguageChanged -= ApplyLabels;
-            SaveDraft();
+            BugReport.SaveDraft(_sent ? null : Current);
         };
     }
 
@@ -71,9 +74,7 @@ public partial class ReportWindow : Window
         labelStatus.Text = Labels.Get("collecting");
         try
         {
-            (_info, _diagnostics) = await Task.Run(() => (BugReport.CollectInfo(),
-                BugReport.Scrub(Diagnostics.GenerateReport(), Environment.GetEnvironmentVariable("HOME") ?? "",
-                    Environment.UserName, Environment.MachineName)));
+            (_info, _diagnostics) = await Task.Run(() => BugReport.Collect(Diagnostics.GenerateReport()));
         }
         catch (Exception ex)
         {
@@ -90,7 +91,8 @@ public partial class ReportWindow : Window
 
     private string TitleText => (textTitle.Text ?? "").Trim();
     private string DescriptionText => (textDescription.Text ?? "").Trim();
-    private bool Valid => TitleText.Length is >= 10 and <= 120 && DescriptionText.Length >= 20;
+    private BugReport.Draft Current => new(_reportId, TitleText, DescriptionText);
+    private bool Valid => BugReport.IsValid(Current);
 
     private void UpdateState()
     {
@@ -132,8 +134,7 @@ public partial class ReportWindow : Window
         labelStatus.Text = Labels.Get("report_sending");
         labelStatus.Foreground = ColorText;
 
-        string json = BugReport.BuildJson(_reportId, TitleText, DescriptionText, _info, _diagnostics);
-        var r = await BugReport.SendAsync(json);
+        var r = await BugReport.SendAsync(Current, _info, _diagnostics);
 
         _sending = false;
         textTitle.IsEnabled = textDescription.IsEnabled = true;
@@ -141,8 +142,7 @@ public partial class ReportWindow : Window
         {
             _sent = true;
             Logger.WriteLine($"Report: sent #{r.Number}");
-            AppConfig.Set("report_links", BugReport.AddLink(AppConfig.GetString("report_links"),
-                new BugReport.Link(r.Number, r.Url, TitleText, DateTime.Now.ToString("yyyy-MM-dd"))));
+            BugReport.Remember(r, TitleText);
             labelStatus.Text = Labels.Format("report_sent", r.Number);
             RenderLinks();
             await ShowSentDialog(r);
@@ -152,23 +152,9 @@ public partial class ReportWindow : Window
 
         Logger.WriteLine($"Report: failed {r.Status}");
         _error = r.Message;
-        _retry = r.Status != 400;
+        _retry = r.Retry;
         buttonSend.Content = Labels.Get(_retry ? "report_retry" : "report_send");
         UpdateState();
-    }
-
-    private void SaveDraft()
-    {
-        if (_sent || TitleText.Length + DescriptionText.Length == 0)
-        {
-            AppConfig.Remove("report_draft_id");
-            AppConfig.Remove("report_draft_title");
-            AppConfig.Remove("report_draft_description");
-            return;
-        }
-        AppConfig.Set("report_draft_id", _reportId);
-        AppConfig.Set("report_draft_title", TitleText);
-        AppConfig.Set("report_draft_description", DescriptionText);
     }
 
     private static void OpenUrl(string url)
@@ -200,7 +186,7 @@ public partial class ReportWindow : Window
 
     private void RenderLinks()
     {
-        var links = BugReport.ReadLinks(AppConfig.GetString("report_links"));
+        var links = BugReport.Links;
         panelReports.Children.Clear();
         foreach (var l in links)
             panelReports.Children.Add(LinkButton($"#{l.Number}  {l.Title}  {l.Date}", l.Url));

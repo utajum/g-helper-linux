@@ -6,16 +6,22 @@ using GHelper.Linux.Platform.Linux;
 
 namespace GHelper.Linux.Helpers;
 
-/// <summary>In-app bug report: builds the request, sends it to the report endpoint, keeps the issue links.</summary>
+/// <summary>In-app bug report: collects system info, sends the draft to the report endpoint, keeps the draft and the issue links.</summary>
 public static class BugReport
 {
-    public const string DefaultEndpoint = "https://g-helper-linux.elevatech.xyz/api/report";
-    public const int MaxDiagnostics = 1_000_000;
-    public const int MaxLinks = 10;
+    public const int TitleMin = 10, TitleMax = 120, DescriptionMin = 20, DescriptionMax = 8000;
+    private const string DefaultEndpoint = "https://g-helper-linux.elevatech.xyz/api/report";
+    private const int MaxDiagnostics = 1_000_000;
+    private const int MaxLinks = 10;
     private const string Truncated = "\n[truncated]";
+    private const string LinksKey = "report_links";
+    private const string DraftIdKey = "report_draft_id", DraftTitleKey = "report_draft_title", DraftDescriptionKey = "report_draft_description";
 
-    public static string Endpoint =>
+    private static string Endpoint =>
         Environment.GetEnvironmentVariable("GHELPER_REPORT_URL") is { Length: > 0 } url ? url : DefaultEndpoint;
+
+    /// <summary>What the user writes; Id is the report_id that makes Retry safe.</summary>
+    public sealed record Draft(string Id, string Title, string Description);
 
     public sealed record Info(string Version, string InstallMode, string Model, string Bios,
         string Kernel, string Os, string Desktop);
@@ -23,11 +29,23 @@ public static class BugReport
     public readonly record struct Result(int Status, int Number, string Url, string Message, string Field)
     {
         public bool Ok => Status is 200 or 201 && Number > 0 && Url.Length > 0;
+
+        // 400 means fix the text; any other failure can be sent again
+        public bool Retry => !Ok && Status != 400;
     }
 
     public sealed record Link(int Number, string Url, string Title, string Date);
 
-    public static Info CollectInfo()
+    /// <summary>System info and the diagnostics with home, user and host replaced.</summary>
+    public static (Info Info, string Diagnostics) Collect(string diagnostics) =>
+        (CollectInfo(), Scrub(diagnostics, Environment.GetEnvironmentVariable("HOME") ?? "",
+            Environment.UserName, Environment.MachineName));
+
+    public static bool IsValid(Draft d) =>
+        d.Title.Trim().Length is >= TitleMin and <= TitleMax
+        && d.Description.Trim().Length is >= DescriptionMin and <= DescriptionMax;
+
+    private static Info CollectInfo()
     {
         static string Dmi(string name) =>
             SysfsHelper.ReadAttribute(Path.Combine(SysfsHelper.DmiId, name)) ?? "";
@@ -55,7 +73,7 @@ public static class BugReport
     }
 
     /// <summary>Replace home path, host and user name; cut at MaxDiagnostics.</summary>
-    public static string Scrub(string text, string home, string user, string host)
+    internal static string Scrub(string text, string home, string user, string host)
     {
         if (home.Length > 1)
             text = text.Replace(home, "~");
@@ -71,15 +89,15 @@ public static class BugReport
         return text[..cut] + Truncated;
     }
 
-    public static string BuildJson(string reportId, string title, string description, Info info, string diagnostics)
+    internal static string BuildJson(Draft d, Info info, string diagnostics)
     {
         using var ms = new MemoryStream();
         using (var w = new Utf8JsonWriter(ms))
         {
             w.WriteStartObject();
-            w.WriteString("report_id", reportId);
-            w.WriteString("title", title.Trim());
-            w.WriteString("description", description.Trim());
+            w.WriteString("report_id", d.Id);
+            w.WriteString("title", d.Title.Trim());
+            w.WriteString("description", d.Description.Trim());
             w.WriteString("app_version", info.Version);
             w.WriteString("install_mode", info.InstallMode);
             w.WriteString("model", info.Model);
@@ -108,7 +126,7 @@ public static class BugReport
         e.TryGetProperty("number", out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int n) ? n : 0;
 
     /// <summary>Endpoint reply; error messages are English and shown as is.</summary>
-    public static Result Parse(int status, string body)
+    internal static Result Parse(int status, string body)
     {
         try
         {
@@ -132,16 +150,16 @@ public static class BugReport
         }
     }
 
-    public static Result NetworkError(string reason) =>
+    private static Result NetworkError(string reason) =>
         new(0, 0, "", $"Could not reach the report server ({reason}). Check your internet connection and press Retry, or try again later from Updates > Report a Bug.", "");
 
-    public static async Task<Result> SendAsync(string json, CancellationToken ct = default)
+    public static async Task<Result> SendAsync(Draft d, Info info, string diagnostics, CancellationToken ct = default)
     {
         try
         {
             using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60), MaxResponseContentBufferSize = 65_536 };
             http.DefaultRequestHeaders.Add("User-Agent", "G-Helper-Linux/" + AppConfig.AppVersion);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var content = new StringContent(BuildJson(d, info, diagnostics), Encoding.UTF8, "application/json");
             using var res = await http.PostAsync(Endpoint, content, ct);
             return Parse((int)res.StatusCode, await res.Content.ReadAsStringAsync(ct));
         }
@@ -151,7 +169,34 @@ public static class BugReport
         }
     }
 
-    public static List<Link> ReadLinks(string? json)
+    /// <summary>Saved draft, or a new one with a fresh report id.</summary>
+    public static Draft LoadDraft() =>
+        new(AppConfig.GetString(DraftIdKey) is { } id && Guid.TryParseExact(id, "D", out _) ? id : Guid.NewGuid().ToString(),
+            AppConfig.GetString(DraftTitleKey) ?? "", AppConfig.GetString(DraftDescriptionKey) ?? "");
+
+    /// <summary>Keep the draft for the next window; null or empty text drops it.</summary>
+    public static void SaveDraft(Draft? d)
+    {
+        if (d == null || d.Title.Trim().Length + d.Description.Trim().Length == 0)
+        {
+            AppConfig.Remove(DraftIdKey);
+            AppConfig.Remove(DraftTitleKey);
+            AppConfig.Remove(DraftDescriptionKey);
+            return;
+        }
+        AppConfig.Set(DraftIdKey, d.Id);
+        AppConfig.Set(DraftTitleKey, d.Title);
+        AppConfig.Set(DraftDescriptionKey, d.Description);
+    }
+
+    /// <summary>Issues sent from this machine, newest first.</summary>
+    public static List<Link> Links => ReadLinks(AppConfig.GetString(LinksKey));
+
+    public static void Remember(Result r, string title) =>
+        AppConfig.Set(LinksKey, AddLink(AppConfig.GetString(LinksKey),
+            new Link(r.Number, r.Url, title, DateTime.Now.ToString("yyyy-MM-dd"))));
+
+    private static List<Link> ReadLinks(string? json)
     {
         var links = new List<Link>();
         if (string.IsNullOrEmpty(json))
@@ -178,7 +223,7 @@ public static class BugReport
     }
 
     /// <summary>Links JSON with this link first, at most MaxLinks.</summary>
-    public static string AddLink(string? json, Link link)
+    private static string AddLink(string? json, Link link)
     {
         var links = ReadLinks(json);
         links.Insert(0, link);

@@ -21,10 +21,10 @@
                        Foreground="#FF2020" FontSize="12" FontWeight="Bold" TextWrapping="Wrap" />
 
             <TextBlock x:Name="labelReportTitle" Text="Title" Foreground="#CCCCCC" FontSize="12" />
-            <TextBox x:Name="textTitle" MaxLength="120" TextChanged="Input_TextChanged" />
+            <TextBox x:Name="textTitle" TextChanged="Input_TextChanged" />
 
             <TextBlock x:Name="labelDescription" Text="Description" Foreground="#CCCCCC" FontSize="12" />
-            <TextBox x:Name="textDescription" MaxLength="8000" Height="160"
+            <TextBox x:Name="textDescription" Height="160"
                      AcceptsReturn="True" TextWrapping="Wrap"
                      TextChanged="Input_TextChanged" />
 
