@@ -21,6 +21,7 @@ public partial class ReportWindow : Window
     private BugReport.Info? _info;
     private string _diagnostics = "";
     private string _error = "";
+    private bool _retry;
     private bool _sending;
     private bool _sent;
 
@@ -58,7 +59,7 @@ public partial class ReportWindow : Window
         buttonPreview.Content = Labels.Get("report_preview");
         labelPublicNote.Text = Labels.Get("report_public_note");
         labelYourReports.Text = Labels.Get("report_your_reports");
-        buttonSend.Content = Labels.Get(_error.Length > 0 ? "report_retry" : "report_send");
+        buttonSend.Content = Labels.Get(_retry ? "report_retry" : "report_send");
         labelOldVersion.IsVisible = _latestVersion != null;
         if (_latestVersion != null)
             labelOldVersion.Text = Labels.Format("report_old_version", AppConfig.AppVersion, _latestVersion);
@@ -151,7 +152,8 @@ public partial class ReportWindow : Window
 
         Logger.WriteLine($"Report: failed {r.Status}");
         _error = r.Message;
-        buttonSend.Content = Labels.Get(r.Status == 400 ? "report_send" : "report_retry");
+        _retry = r.Status != 400;
+        buttonSend.Content = Labels.Get(_retry ? "report_retry" : "report_send");
         UpdateState();
     }
 

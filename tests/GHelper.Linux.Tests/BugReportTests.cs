@@ -98,6 +98,25 @@ public static class BugReportTests
                 r.Message, "message");
         });
 
+        Harness.Scenario("BugReport_Send_BadEndpointIsANetworkError", _ =>
+        {
+            string? old = Environment.GetEnvironmentVariable("GHELPER_REPORT_URL");
+            try
+            {
+                foreach (string url in new[] { "ftp://example.invalid/x", "http://[::1" })
+                {
+                    Environment.SetEnvironmentVariable("GHELPER_REPORT_URL", url);
+                    var r = BugReport.SendAsync("{}").GetAwaiter().GetResult();
+                    Harness.AssertEqual(0, r.Status, url + " status");
+                    Harness.Assert(r.Message.StartsWith("Could not reach the report server"), url + " message");
+                }
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("GHELPER_REPORT_URL", old);
+            }
+        });
+
         Harness.Scenario("BugReport_Links_NewestFirstMax10", _ =>
         {
             Harness.AssertEqual(0, BugReport.ReadLinks(null).Count, "null");

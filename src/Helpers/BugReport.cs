@@ -145,7 +145,7 @@ public static class BugReport
             using var res = await http.PostAsync(Endpoint, content, ct);
             return Parse((int)res.StatusCode, await res.Content.ReadAsStringAsync(ct));
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
+        catch (Exception ex)
         {
             return NetworkError(ex.Message);
         }
