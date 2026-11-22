@@ -515,6 +515,7 @@ public static class Turkish
         ["updates_header"] = "BIOS ve Sürücü Güncellemeleri",
         ["copy_diagnostics"] = "Tanılamayı Kopyala",
         ["export_diagnostics"] = "Tanılamayı dışa aktar",
+        ["diagnostics"] = "Tanılama",
         ["saved"] = "Kaydedildi!",
         ["update_prompt_title"] = "Güncelleme mevcut",
         ["update_prompt_message"] = "Sürüm {0} mevcut (sizde v{1} var). Güncelleme penceresini açmak ister misiniz?",

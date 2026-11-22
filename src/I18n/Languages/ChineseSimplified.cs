@@ -518,6 +518,7 @@ public static class ChineseSimplified
         ["updates_header"] = "BIOS 和驱动更新",
         ["copy_diagnostics"] = "复制诊断信息",
         ["export_diagnostics"] = "导出诊断信息",
+        ["diagnostics"] = "诊断信息",
         ["saved"] = "已保存!",
         ["update_prompt_title"] = "有可用更新",
         ["update_prompt_message"] = "版本 {0} 可用（当前 v{1}）。是否打开更新窗口？",

@@ -518,6 +518,7 @@ public static class Swedish
         ["updates_header"] = "BIOS- och drivrutinsuppdateringar",
         ["copy_diagnostics"] = "Kopiera diagnostik",
         ["export_diagnostics"] = "Exportera diagnostik",
+        ["diagnostics"] = "Diagnostik",
         ["saved"] = "Sparat!",
         ["update_prompt_title"] = "Uppdatering tillgänglig",
         ["update_prompt_message"] = "Version {0} är tillgänglig (du har v{1}). Vill du öppna uppdateringsfönstret?",

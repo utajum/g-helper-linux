@@ -662,6 +662,7 @@ public static class Malay
         ["updates_header"] = "Kemas kini BIOS & Pemacu",
         ["copy_diagnostics"] = "Salin diagnostik",
         ["export_diagnostics"] = "Eksport Diagnostik",
+        ["diagnostics"] = "Diagnostik",
         ["saved"] = "Disimpan!",
         ["update_prompt_title"] = "Kemas kini tersedia",
         ["update_prompt_message"] = "Versi {0} tersedia (anda mempunyai v{1}). Adakah anda ingin membuka tetingkap Kemas Kini?",

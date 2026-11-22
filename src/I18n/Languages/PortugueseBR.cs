@@ -515,6 +515,7 @@ public static class PortugueseBR
         ["updates_header"] = "Atualizações de BIOS e drivers",
         ["copy_diagnostics"] = "Copiar diagnóstico",
         ["export_diagnostics"] = "Exportar diagnóstico",
+        ["diagnostics"] = "Diagnóstico",
         ["saved"] = "Salvo!",
         ["update_prompt_title"] = "Atualização disponível",
         ["update_prompt_message"] = "A versão {0} está disponível (você tem a v{1}). Deseja abrir a janela de atualizações?",

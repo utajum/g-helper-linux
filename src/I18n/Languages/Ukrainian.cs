@@ -515,6 +515,7 @@ public static class Ukrainian
         ["updates_header"] = "Оновлення BIOS та драйверів",
         ["copy_diagnostics"] = "Копіювати діагностику",
         ["export_diagnostics"] = "Експорт діагностики",
+        ["diagnostics"] = "Діагностика",
         ["saved"] = "Збережено!",
         ["update_prompt_title"] = "Доступне оновлення",
         ["update_prompt_message"] = "Доступна версія {0} (у вас v{1}). Відкрити вікно оновлень?",

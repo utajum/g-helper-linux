@@ -665,6 +665,7 @@ public static class English
         ["updates_header"] = "BIOS & Driver Updates",
         ["copy_diagnostics"] = "Copy Diagnostics",
         ["export_diagnostics"] = "Export Diagnostics",
+        ["diagnostics"] = "Diagnostics",
         ["saved"] = "Saved!",
         ["update_prompt_title"] = "Update Available",
         ["update_prompt_message"] = "Version {0} is available (you have v{1}). Would you like to update now?",

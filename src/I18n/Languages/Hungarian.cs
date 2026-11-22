@@ -515,6 +515,7 @@ public static class Hungarian
         ["updates_header"] = "BIOS és illesztőprogram frissítések",
         ["copy_diagnostics"] = "Diagnosztika másolása",
         ["export_diagnostics"] = "Diagnosztika exportálása",
+        ["diagnostics"] = "Diagnosztika",
         ["saved"] = "Mentve!",
         ["update_prompt_title"] = "Frissítés elérhető",
         ["update_prompt_message"] = "A(z) {0} verzió elérhető (jelenlegi: v{1}). Meg szeretné nyitni a frissítések ablakot?",

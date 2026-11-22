@@ -80,8 +80,9 @@ public partial class UpdatesWindow : Window
     {
         Title = Labels.Get("updates_title");
         labelTitle.Text = Labels.Get("updates_header");
-        buttonDiagnostics.Content = Labels.Get("copy_diagnostics");
-        buttonExportDiag.Content = Labels.Get("export_diagnostics");
+        buttonDiagnostics.Content = Labels.Get("diagnostics");
+        menuCopyDiag.Header = Labels.Get("copy_diagnostics");
+        menuExportDiag.Header = Labels.Get("export_diagnostics");
         buttonRefresh.Content = Labels.Get("refresh");
         buttonReport.Content = Labels.Get("report_bug");
         buttonChangelog.Content = Labels.Get("changelog_title");
@@ -464,7 +465,7 @@ public partial class UpdatesWindow : Window
         _ = Task.Delay(2000).ContinueWith(_ =>
             Dispatcher.UIThread.Post(() =>
             {
-                buttonDiagnostics.Content = Labels.Get("copy_diagnostics");
+                buttonDiagnostics.Content = Labels.Get("diagnostics");
                 buttonDiagnostics.IsEnabled = true;
             }));
     }
@@ -473,8 +474,8 @@ public partial class UpdatesWindow : Window
     {
         try
         {
-            buttonExportDiag.IsEnabled = false;
-            buttonExportDiag.Content = Labels.Get("collecting");
+            buttonDiagnostics.IsEnabled = false;
+            buttonDiagnostics.Content = Labels.Get("collecting");
 
             var report = await Task.Run(() => Helpers.Diagnostics.GenerateReport());
 
@@ -484,7 +485,7 @@ public partial class UpdatesWindow : Window
             var topLevel = TopLevel.GetTopLevel(this);
             if (topLevel?.StorageProvider is not { } storage)
             {
-                buttonExportDiag.Content = Labels.Get("failed");
+                buttonDiagnostics.Content = Labels.Get("failed");
                 return;
             }
 
@@ -505,27 +506,27 @@ public partial class UpdatesWindow : Window
                 await using var stream = await file.OpenWriteAsync();
                 await using var writer = new System.IO.StreamWriter(stream);
                 await writer.WriteAsync(report);
-                buttonExportDiag.Content = Labels.Get("saved");
+                buttonDiagnostics.Content = Labels.Get("saved");
                 Helpers.Logger.WriteLine($"Diagnostics: exported {report.Length} chars to {file.Name}");
             }
             else
             {
-                buttonExportDiag.Content = Labels.Get("export_diagnostics");
-                buttonExportDiag.IsEnabled = true;
+                buttonDiagnostics.Content = Labels.Get("diagnostics");
+                buttonDiagnostics.IsEnabled = true;
                 return;
             }
         }
         catch (Exception ex)
         {
             Helpers.Logger.WriteLine($"Diagnostics export failed: {ex.Message}");
-            buttonExportDiag.Content = Labels.Get("failed");
+            buttonDiagnostics.Content = Labels.Get("failed");
         }
 
         _ = Task.Delay(2000).ContinueWith(_ =>
             Dispatcher.UIThread.Post(() =>
             {
-                buttonExportDiag.Content = Labels.Get("export_diagnostics");
-                buttonExportDiag.IsEnabled = true;
+                buttonDiagnostics.Content = Labels.Get("diagnostics");
+                buttonDiagnostics.IsEnabled = true;
             }));
     }
 

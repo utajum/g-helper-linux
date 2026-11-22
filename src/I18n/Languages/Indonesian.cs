@@ -518,6 +518,7 @@ public static class Indonesian
         ["updates_header"] = "Pembaruan BIOS & Driver",
         ["copy_diagnostics"] = "Salin Diagnostik",
         ["export_diagnostics"] = "Ekspor Diagnostik",
+        ["diagnostics"] = "Diagnostik",
         ["saved"] = "Tersimpan!",
         ["update_prompt_title"] = "Pembaruan tersedia",
         ["update_prompt_message"] = "Versi {0} tersedia (Anda memiliki v{1}). Ingin membuka jendela Pembaruan?",

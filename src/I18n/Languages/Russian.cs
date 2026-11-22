@@ -515,6 +515,7 @@ public static class Russian
         ["updates_header"] = "Обновления BIOS и драйверов",
         ["copy_diagnostics"] = "Копировать диагностику",
         ["export_diagnostics"] = "Экспорт диагностики",
+        ["diagnostics"] = "Диагностика",
         ["saved"] = "Сохранено!",
         ["update_prompt_title"] = "Доступно обновление",
         ["update_prompt_message"] = "Доступна версия {0} (у вас v{1}). Открыть окно обновлений?",

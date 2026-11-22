@@ -515,6 +515,7 @@ public static class French
         ["updates_header"] = "Mises à jour BIOS & pilotes",
         ["copy_diagnostics"] = "Copier le diagnostic",
         ["export_diagnostics"] = "Exporter les diagnostics",
+        ["diagnostics"] = "Diagnostics",
         ["saved"] = "Enregistré !",
         ["update_prompt_title"] = "Mise à jour disponible",
         ["update_prompt_message"] = "La version {0} est disponible (vous avez v{1}). Voulez-vous ouvrir la fenêtre de mises à jour ?",

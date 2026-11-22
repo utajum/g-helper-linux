@@ -515,6 +515,7 @@ public static class Czech
         ["updates_header"] = "Aktualizace BIOS a ovladačů",
         ["copy_diagnostics"] = "Kopírovat diagnostiku",
         ["export_diagnostics"] = "Exportovat diagnostiku",
+        ["diagnostics"] = "Diagnostika",
         ["saved"] = "Uloženo!",
         ["update_prompt_title"] = "Dostupná aktualizace",
         ["update_prompt_message"] = "Verze {0} je k dispozici (máte v{1}). Chcete otevřít okno aktualizací?",

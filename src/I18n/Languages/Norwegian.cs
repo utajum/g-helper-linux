@@ -518,6 +518,7 @@ public static class Norwegian
         ["updates_header"] = "BIOS- og driveroppdateringer",
         ["copy_diagnostics"] = "Kopier diagnostikk",
         ["export_diagnostics"] = "Eksporter diagnostikk",
+        ["diagnostics"] = "Diagnostikk",
         ["saved"] = "Lagret!",
         ["update_prompt_title"] = "Oppdatering tilgjengelig",
         ["update_prompt_message"] = "Versjon {0} er tilgjengelig (du har v{1}). Vil du åpne oppdateringsvinduet?",

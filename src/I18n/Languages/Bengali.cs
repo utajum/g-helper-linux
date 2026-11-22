@@ -662,6 +662,7 @@ public static class Bengali
         ["updates_header"] = "BIOS ও ড্রাইভার আপডেট",
         ["copy_diagnostics"] = "ডায়াগনস্টিক্স কপি করুন",
         ["export_diagnostics"] = "ডায়াগনস্টিকস রপ্তানি",
+        ["diagnostics"] = "ডায়াগনস্টিকস",
         ["saved"] = "সংরক্ষিত!",
         ["update_prompt_title"] = "আপডেট উপলব্ধ",
         ["update_prompt_message"] = "সংস্করণ {0} উপলব্ধ (আপনার v{1} আছে)। আপডেট উইন্ডো খুলতে চান?",

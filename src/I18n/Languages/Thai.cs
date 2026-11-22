@@ -518,6 +518,7 @@ public static class Thai
         ["updates_header"] = "อัปเดต BIOS และไดรเวอร์",
         ["copy_diagnostics"] = "คัดลอกข้อมูลวินิจฉัย",
         ["export_diagnostics"] = "ส่งออกการวินิจฉัย",
+        ["diagnostics"] = "การวินิจฉัย",
         ["saved"] = "บันทึกแล้ว!",
         ["update_prompt_title"] = "มีการอัปเดต",
         ["update_prompt_message"] = "เวอร์ชัน {0} พร้อมใช้งาน (คุณมี v{1}) ต้องการเปิดหน้าต่างอัปเดตหรือไม่?",

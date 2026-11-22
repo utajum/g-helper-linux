@@ -518,6 +518,7 @@ public static class Arabic
         ["updates_header"] = "تحديثات BIOS والتعريفات",
         ["copy_diagnostics"] = "نسخ التشخيصات",
         ["export_diagnostics"] = "تصدير التشخيصات",
+        ["diagnostics"] = "التشخيصات",
         ["saved"] = "تم الحفظ!",
         ["update_prompt_title"] = "تحديث متاح",
         ["update_prompt_message"] = "الإصدار {0} متاح (لديك الإصدار v{1}). هل تريد فتح نافذة التحديثات؟",

@@ -515,6 +515,7 @@ public static class Vietnamese
         ["updates_header"] = "Cập nhật BIOS & Trình điều khiển",
         ["copy_diagnostics"] = "Sao chép chẩn đoán",
         ["export_diagnostics"] = "Xuất chẩn đoán",
+        ["diagnostics"] = "Chẩn đoán",
         ["saved"] = "Đã lưu!",
         ["update_prompt_title"] = "Có bản cập nhật",
         ["update_prompt_message"] = "Phiên bản {0} đã có sẵn (bạn đang dùng v{1}). Bạn có muốn mở cửa sổ Cập nhật không?",

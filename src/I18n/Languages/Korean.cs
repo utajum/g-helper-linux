@@ -518,6 +518,7 @@ public static class Korean
         ["updates_header"] = "BIOS & 드라이버 업데이트",
         ["copy_diagnostics"] = "진단 정보 복사",
         ["export_diagnostics"] = "진단 내보내기",
+        ["diagnostics"] = "진단 정보",
         ["saved"] = "저장됨!",
         ["update_prompt_title"] = "업데이트 가능",
         ["update_prompt_message"] = "버전 {0}을 사용할 수 있습니다 (현재 v{1}). 업데이트 창을 여시겠습니까?",

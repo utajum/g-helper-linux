@@ -518,6 +518,7 @@ public static class Finnish
         ["updates_header"] = "BIOS- ja ajuripäivitykset",
         ["copy_diagnostics"] = "Kopioi diagnostiikka",
         ["export_diagnostics"] = "Vie diagnostiikka",
+        ["diagnostics"] = "Diagnostiikka",
         ["saved"] = "Tallennettu!",
         ["update_prompt_title"] = "Päivitys saatavilla",
         ["update_prompt_message"] = "Versio {0} on saatavilla (sinulla on v{1}). Haluatko avata päivitysikkunan?",

@@ -518,6 +518,7 @@ public static class Japanese
         ["updates_header"] = "BIOS & ドライバー更新",
         ["copy_diagnostics"] = "診断情報をコピー",
         ["export_diagnostics"] = "診断情報をエクスポート",
+        ["diagnostics"] = "診断情報",
         ["saved"] = "保存しました!",
         ["update_prompt_title"] = "アップデートがあります",
         ["update_prompt_message"] = "バージョン {0} が利用可能です（現在 v{1}）。アップデートウィンドウを開きますか？",

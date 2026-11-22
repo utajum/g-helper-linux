@@ -518,6 +518,7 @@ public static class Macedonian
         ["updates_header"] = "BIOS и ажурирања на драјвери",
         ["copy_diagnostics"] = "Копирај дијагностика",
         ["export_diagnostics"] = "Извези дијагностика",
+        ["diagnostics"] = "Дијагностика",
         ["saved"] = "Зачувано!",
         ["update_prompt_title"] = "Достапно ажурирање",
         ["update_prompt_message"] = "Верзија {0} е достапна (имате v{1}). Дали сакате да го отворите прозорецот за ажурирања?",

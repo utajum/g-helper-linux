@@ -515,6 +515,7 @@ public static class Romanian
         ["updates_header"] = "Actualizări BIOS și drivere",
         ["copy_diagnostics"] = "Copiază diagnosticul",
         ["export_diagnostics"] = "Exportă diagnosticul",
+        ["diagnostics"] = "Diagnostic",
         ["saved"] = "Salvat!",
         ["update_prompt_title"] = "Actualizare disponibilă",
         ["update_prompt_message"] = "Versiunea {0} este disponibilă (aveți v{1}). Doriți să deschideți fereastra de actualizări?",

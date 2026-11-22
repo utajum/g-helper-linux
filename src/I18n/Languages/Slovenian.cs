@@ -662,6 +662,7 @@ public static class Slovenian
         ["updates_header"] = "Posodobitve BIOS in gonilnikov",
         ["copy_diagnostics"] = "Kopiraj diagnostiko",
         ["export_diagnostics"] = "Izvozi diagnostiko",
+        ["diagnostics"] = "Diagnostika",
         ["saved"] = "Shranjeno!",
         ["update_prompt_title"] = "Na voljo posodobitev",
         ["update_prompt_message"] = "Na voljo je različica {0} (imate v{1}). Ali želite odpreti okno za posodobitve?",

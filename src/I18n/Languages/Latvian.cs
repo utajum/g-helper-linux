@@ -662,6 +662,7 @@ public static class Latvian
         ["updates_header"] = "BIOS un draiveru atjauninājumi",
         ["copy_diagnostics"] = "Kopēt diagnostiku",
         ["export_diagnostics"] = "Eksportēt diagnostiku",
+        ["diagnostics"] = "Diagnostika",
         ["saved"] = "Saglabāts!",
         ["update_prompt_title"] = "Pieejams atjauninājums",
         ["update_prompt_message"] = "Versija {0} ir pieejama (jums ir v{1}). Vai vēlaties atvērt atjauninājumu logu?",

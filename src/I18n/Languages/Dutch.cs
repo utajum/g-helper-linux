@@ -515,6 +515,7 @@ public static class Dutch
         ["updates_header"] = "BIOS- & driver-updates",
         ["copy_diagnostics"] = "Diagnostiek kopiëren",
         ["export_diagnostics"] = "Diagnostiek exporteren",
+        ["diagnostics"] = "Diagnostiek",
         ["saved"] = "Opgeslagen!",
         ["update_prompt_title"] = "Update beschikbaar",
         ["update_prompt_message"] = "Versie {0} is beschikbaar (u hebt v{1}). Wilt u het updatevenster openen?",

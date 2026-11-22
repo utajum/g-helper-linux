@@ -662,6 +662,7 @@ public static class Hindi
         ["updates_header"] = "BIOS और ड्राइवर अपडेट",
         ["copy_diagnostics"] = "डायग्नोस्टिक्स कॉपी करें",
         ["export_diagnostics"] = "डायग्नोस्टिक्स निर्यात करें",
+        ["diagnostics"] = "डायग्नोस्टिक्स",
         ["saved"] = "सहेजा गया!",
         ["update_prompt_title"] = "अपडेट उपलब्ध",
         ["update_prompt_message"] = "संस्करण {0} उपलब्ध है (आपके पास v{1} है)। क्या आप अपडेट विंडो खोलना चाहते हैं?",

@@ -518,6 +518,7 @@ public static class Serbian
         ["updates_header"] = "BIOS и ажурирања драјвера",
         ["copy_diagnostics"] = "Копирај дијагностику",
         ["export_diagnostics"] = "Извези дијагностику",
+        ["diagnostics"] = "Дијагностика",
         ["saved"] = "Сачувано!",
         ["update_prompt_title"] = "Ажурирање доступно",
         ["update_prompt_message"] = "Верзија {0} је доступна (имате v{1}). Желите ли да отворите прозор за ажурирања?",

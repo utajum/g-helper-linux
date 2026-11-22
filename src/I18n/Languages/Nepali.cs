@@ -662,6 +662,7 @@ public static class Nepali
         ["updates_header"] = "BIOS र ड्राइभर अपडेटहरू",
         ["copy_diagnostics"] = "डायग्नोस्टिक्स प्रतिलिपि गर्नुहोस्",
         ["export_diagnostics"] = "डायग्नोस्टिक्स निर्यात गर्नुहोस्",
+        ["diagnostics"] = "डायग्नोस्टिक्स",
         ["saved"] = "सुरक्षित गरियो!",
         ["update_prompt_title"] = "अपडेट उपलब्ध छ",
         ["update_prompt_message"] = "संस्करण {0} उपलब्ध छ (तपाईंसँग v{1} छ)। अपडेट विन्डो खोल्न चाहनुहुन्छ?",

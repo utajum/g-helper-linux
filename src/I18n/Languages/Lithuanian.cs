@@ -662,6 +662,7 @@ public static class Lithuanian
         ["updates_header"] = "BIOS ir tvarkyklių atnaujinimai",
         ["copy_diagnostics"] = "Kopijuoti diagnostiką",
         ["export_diagnostics"] = "Eksportuoti diagnostiką",
+        ["diagnostics"] = "Diagnostika",
         ["saved"] = "Išsaugota!",
         ["update_prompt_title"] = "Pasiekiamas atnaujinimas",
         ["update_prompt_message"] = "Versija {0} pasiekiama (turite v{1}). Ar norite atidaryti atnaujinimų langą?",

@@ -518,6 +518,7 @@ public static class Greek
         ["updates_header"] = "Ενημερώσεις BIOS και προγραμμάτων οδήγησης",
         ["copy_diagnostics"] = "Αντιγραφή διαγνωστικών",
         ["export_diagnostics"] = "Εξαγωγή διαγνωστικών",
+        ["diagnostics"] = "Διαγνωστικά",
         ["saved"] = "Αποθηκεύτηκε!",
         ["update_prompt_title"] = "Διαθέσιμη ενημέρωση",
         ["update_prompt_message"] = "Η έκδοση {0} είναι διαθέσιμη (έχετε v{1}). Θέλετε να ανοίξετε το παράθυρο ενημερώσεων;",

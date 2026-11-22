@@ -518,6 +518,7 @@ public static class ChineseTraditional
         ["updates_header"] = "BIOS 與驅動程式更新",
         ["copy_diagnostics"] = "複製診斷資訊",
         ["export_diagnostics"] = "匯出診斷資訊",
+        ["diagnostics"] = "診斷資訊",
         ["saved"] = "已儲存!",
         ["update_prompt_title"] = "有可用更新",
         ["update_prompt_message"] = "版本 {0} 可用（目前 v{1}）。是否開啟更新視窗？",

@@ -518,6 +518,7 @@ public static class Danish
         ["updates_header"] = "BIOS- og driveropdateringer",
         ["copy_diagnostics"] = "Kopiér diagnostik",
         ["export_diagnostics"] = "Eksportér diagnostik",
+        ["diagnostics"] = "Diagnostik",
         ["saved"] = "Gemt!",
         ["update_prompt_title"] = "Opdatering tilgængelig",
         ["update_prompt_message"] = "Version {0} er tilgængelig (du har v{1}). Vil du åbne opdateringsvinduet?",

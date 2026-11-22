@@ -515,6 +515,7 @@ public static class German
         ["updates_header"] = "BIOS- & Treiber-Updates",
         ["copy_diagnostics"] = "Diagnose kopieren",
         ["export_diagnostics"] = "Diagnose exportieren",
+        ["diagnostics"] = "Diagnose",
         ["saved"] = "Gespeichert!",
         ["update_prompt_title"] = "Update verfügbar",
         ["update_prompt_message"] = "Version {0} ist verfügbar (Sie haben v{1}). Möchten Sie das Update-Fenster öffnen?",

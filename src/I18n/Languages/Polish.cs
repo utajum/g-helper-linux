@@ -515,6 +515,7 @@ public static class Polish
         ["updates_header"] = "Aktualizacje BIOS i sterowników",
         ["copy_diagnostics"] = "Kopiuj diagnostykę",
         ["export_diagnostics"] = "Eksportuj diagnostykę",
+        ["diagnostics"] = "Diagnostyka",
         ["saved"] = "Zapisano!",
         ["update_prompt_title"] = "Dostępna aktualizacja",
         ["update_prompt_message"] = "Wersja {0} jest dostępna (masz v{1}). Czy chcesz otworzyć okno aktualizacji?",

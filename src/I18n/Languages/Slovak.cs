@@ -662,6 +662,7 @@ public static class Slovak
         ["updates_header"] = "Aktualizácie BIOS a ovládačov",
         ["copy_diagnostics"] = "Kopírovať diagnostiku",
         ["export_diagnostics"] = "Exportovať diagnostiku",
+        ["diagnostics"] = "Diagnostika",
         ["saved"] = "Uložené!",
         ["update_prompt_title"] = "Dostupná aktualizácia",
         ["update_prompt_message"] = "Verzia {0} je k dispozícii (máte v{1}). Chcete otvoriť okno aktualizácií?",

@@ -662,6 +662,7 @@ public static class Filipino
         ["updates_header"] = "Mga Update sa BIOS & Driver",
         ["copy_diagnostics"] = "Kopyahin ang Diagnostics",
         ["export_diagnostics"] = "I-export ang Diagnostics",
+        ["diagnostics"] = "Diagnostics",
         ["saved"] = "Na-save!",
         ["update_prompt_title"] = "May available na update",
         ["update_prompt_message"] = "Available ang version {0} (mayroon kang v{1}). Gusto mo bang buksan ang Updates window?",
