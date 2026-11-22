@@ -625,7 +625,7 @@ static void pitch_tracker_push(struct pitch_tracker *p, float x)
 
     float score[PITCH_MAX_LAG + 2];
     float best_score = -1.0f;
-    for (int k = min_lag; k <= max_lag + 1; k++)
+    for (int k = min_lag; k <= max_lag; k++)
     {
         float num = 0.0f;
         float r0_b = 0.0f;
@@ -635,7 +635,7 @@ static void pitch_tracker_push(struct pitch_tracker *p, float x)
             r0_b += lin[i + k] * lin[i + k];
         }
         score[k] = (r0_b < 1e-9f) ? -1.0f : num / sqrtf(r0_a * r0_b);
-        if (k <= max_lag && score[k] > best_score)
+        if (score[k] > best_score)
             best_score = score[k];
     }
 
