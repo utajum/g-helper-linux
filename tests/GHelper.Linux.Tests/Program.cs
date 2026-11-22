@@ -32,6 +32,7 @@ public static class Program
             HidPPDecodeTests.RunAll();
             AppProfilesTests.RunAll();
             NumberPadLayoutTests.RunAll();
+            BugReportTests.RunAll();
         }
         finally
         {

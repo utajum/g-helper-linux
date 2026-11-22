@@ -98,6 +98,14 @@ jobs:
           sed -i "s/VERSION_PLACEHOLDER/${VERSION}/" install/90-ghelper.rules
           echo "Set version to: ${VERSION}"
 
+      - name: Stamp report endpoint
+        if: github.repository == 'utajum/g-helper-linux'
+        env:
+          REPORT_URL: https://g-helper-linux.elevatech.xyz/api/report
+        run: |
+          sed -i "s|DefaultEndpoint = \"\";|DefaultEndpoint = \"$REPORT_URL\";|" src/Helpers/BugReport.cs
+          grep -qF "DefaultEndpoint = \"$REPORT_URL\";" src/Helpers/BugReport.cs
+
       - name: Setup .NET 10
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:

@@ -105,6 +105,7 @@
     <Compile Include="../../src/Input/NumberPad.cs" />
     <Compile Include="../../src/Input/EvdevInterop.cs" />
     <Compile Include="../../src/Helpers/AppConfig.cs" />
+    <Compile Include="../../src/Helpers/BugReport.cs" />
     <Compile Include="../../src/Helpers/Logger.cs" />
     <Compile Include="../../src/Helpers/MemoryHelper.cs" />
     <!-- Labels.Get() in LinuxNvidiaGpuControl; pulls all language tables -->
