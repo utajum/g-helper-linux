@@ -83,6 +83,7 @@ public partial class UpdatesWindow : Window
         buttonDiagnostics.Content = Labels.Get("copy_diagnostics");
         buttonExportDiag.Content = Labels.Get("export_diagnostics");
         buttonRefresh.Content = Labels.Get("refresh");
+        buttonReport.Content = Labels.Get("report_bug");
         buttonChangelog.Content = Labels.Get("changelog_title");
         labelLegendUpToDate.Text = Labels.Get("up_to_date");
         labelLegendUpdateAvailable.Text = Labels.Get("update_available");
@@ -403,6 +404,21 @@ public partial class UpdatesWindow : Window
         }
     }
 
+    private ReportWindow? _reportWindow;
+    private string? _newerVersion;
+
+    private void ButtonReport_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_reportWindow is { IsVisible: true })
+        {
+            _reportWindow.Activate();
+            return;
+        }
+        _reportWindow = new ReportWindow(_newerVersion);
+        _reportWindow.Closed += (_, _) => _reportWindow = null;
+        _reportWindow.Show(this);
+    }
+
     private ChangelogWindow? _changelogWindow;
 
     private void ButtonChangelog_Click(object? sender, RoutedEventArgs e)
@@ -634,6 +650,7 @@ public partial class UpdatesWindow : Window
             }
 
             var isNewer = CompareVersions(latestVersion, Helpers.AppConfig.AppVersion) > 0;
+            _newerVersion = isNewer ? latestVersion : null;
 
             Dispatcher.UIThread.Post(() =>
             {

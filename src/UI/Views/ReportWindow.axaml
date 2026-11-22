@@ -1,0 +1,59 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GHelper.Linux.UI.Views.ReportWindow"
+        Title="Report a Bug"
+        Width="640"
+        Height="720"
+        MinWidth="480"
+        MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="#1C1C1C"
+        Icon="avares://ghelper/UI/Assets/standard.ico">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="14,10,14,12" Spacing="8">
+
+            <TextBlock x:Name="labelHeader" Text="Report a Bug"
+                       Foreground="#F0F0F0" FontSize="16" FontWeight="Bold" />
+
+            <TextBlock x:Name="labelOldVersion" IsVisible="False"
+                       Foreground="#FF2020" FontSize="12" FontWeight="Bold" TextWrapping="Wrap" />
+
+            <TextBlock x:Name="labelReportTitle" Text="Title" Foreground="#CCCCCC" FontSize="12" />
+            <TextBox x:Name="textTitle" MaxLength="120" TextChanged="Input_TextChanged" />
+
+            <TextBlock x:Name="labelDescription" Text="Description" Foreground="#CCCCCC" FontSize="12" />
+            <TextBox x:Name="textDescription" MaxLength="8000" Height="160"
+                     AcceptsReturn="True" TextWrapping="Wrap"
+                     TextChanged="Input_TextChanged" />
+
+            <TextBlock x:Name="labelSystem" Text="Sent automatically" Foreground="#CCCCCC" FontSize="12" />
+            <Border Background="#262626" CornerRadius="6" Padding="10,6">
+                <TextBlock x:Name="textSystem" FontFamily="monospace" FontSize="11"
+                           Foreground="#CCCCCC" TextWrapping="Wrap" />
+            </Border>
+
+            <Button x:Name="buttonPreview" Content="Preview" Click="ButtonPreview_Click"
+                    HorizontalAlignment="Left" MinWidth="100" />
+            <TextBox x:Name="textPreview" IsVisible="False" IsReadOnly="True" Height="260"
+                     AcceptsReturn="True" TextWrapping="NoWrap"
+                     FontFamily="monospace" FontSize="11" />
+
+            <TextBlock x:Name="labelPublicNote" Foreground="#999999" FontSize="11" TextWrapping="Wrap"
+                       Text="This creates a public GitHub issue. You do not need a GitHub account." />
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="labelStatus" Grid.Column="0" Foreground="#CCCCCC" FontSize="12"
+                           TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <Button x:Name="buttonSend" Grid.Column="1" Content="Send" Click="ButtonSend_Click"
+                        MinWidth="100" IsEnabled="False" />
+            </Grid>
+
+            <TextBlock x:Name="labelYourReports" Text="Your reports" IsVisible="False"
+                       Foreground="#F0F0F0" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <StackPanel x:Name="panelReports" Spacing="2" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

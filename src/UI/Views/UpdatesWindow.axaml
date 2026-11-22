@@ -17,7 +17,7 @@
         <StackPanel Margin="12,8,12,8" Spacing="8">
 
             <!-- Header -->
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto">
                 <TextBlock x:Name="labelTitle" Grid.Column="0"
                            Text="BIOS &amp; Driver Updates"
                            Foreground="#F0F0F0" FontSize="16" FontWeight="Bold"
@@ -35,6 +35,9 @@
                 <Button x:Name="buttonRefresh" Grid.Column="4"
                         Content="Refresh" Click="ButtonRefresh_Click"
                         MinWidth="80" />
+                <Button x:Name="buttonReport" Grid.Column="5"
+                        Content="Report a Bug" Click="ButtonReport_Click"
+                        MinWidth="100" Margin="6,0,0,0" />
             </Grid>
 
             <!-- G-Helper version -->
