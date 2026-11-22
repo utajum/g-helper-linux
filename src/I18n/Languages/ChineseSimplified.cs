@@ -538,7 +538,7 @@ public static class ChineseSimplified
         ["report_send"] = "发送",
         ["report_retry"] = "重试",
         ["report_sending"] = "正在发送...",
-        ["report_need_text"] = "标题：10-120 个字符。描述：至少 20 个字符。",
+        ["report_need_text"] = "标题：4-120 个字符。描述：至少 20 个字符。",
         ["report_old_version"] = "你使用的是 v{0}，最新版本是 v{1}。请先更新，问题可能已经修复。",
         ["report_sent"] = "已发送为议题 #{0}",
         ["report_sent_note"] = "任何人无需账号即可阅读此议题。回复需要 GitHub 账号。",

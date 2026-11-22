@@ -682,7 +682,7 @@ public static class Lithuanian
         ["report_send"] = "Siųsti",
         ["report_retry"] = "Bandyti dar kartą",
         ["report_sending"] = "Siunčiama...",
-        ["report_need_text"] = "Pavadinimas: 10-120 simbolių. Aprašymas: bent 20 simbolių.",
+        ["report_need_text"] = "Pavadinimas: 4-120 simbolių. Aprašymas: bent 20 simbolių.",
         ["report_old_version"] = "Naudojate v{0}, naujausia yra v{1}. Pirmiausia atnaujinkite, klaida gali būti jau ištaisyta.",
         ["report_sent"] = "Išsiųsta kaip pranešimas #{0}",
         ["report_sent_note"] = "Šį pranešimą bet kas gali skaityti be paskyros. Norint atsakyti, reikia GitHub paskyros.",

@@ -685,7 +685,7 @@ public static class English
         ["report_send"] = "Send",
         ["report_retry"] = "Retry",
         ["report_sending"] = "Sending...",
-        ["report_need_text"] = "Title: 10-120 characters. Description: at least 20 characters.",
+        ["report_need_text"] = "Title: 4-120 characters. Description: at least 20 characters.",
         ["report_old_version"] = "You use v{0}, latest is v{1}. Update first, the bug may be fixed.",
         ["report_sent"] = "Sent as issue #{0}",
         ["report_sent_note"] = "Anyone can read this issue without an account. You need a GitHub account to reply.",

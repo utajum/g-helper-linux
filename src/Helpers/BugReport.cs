@@ -9,8 +9,9 @@ namespace GHelper.Linux.Helpers;
 /// <summary>In-app bug report: collects system info, sends the draft to the report endpoint, keeps the draft and the issue links.</summary>
 public static class BugReport
 {
-    public const int TitleMin = 10, TitleMax = 120, DescriptionMin = 20, DescriptionMax = 8000;
-    private const string DefaultEndpoint = "https://g-helper-linux.elevatech.xyz/api/report";
+    public const int TitleMin = 4, TitleMax = 120, DescriptionMin = 20, DescriptionMax = 8000;
+    // Empty in source; release and PR CI write the live URL here.
+    private const string DefaultEndpoint = "";
     private const int MaxDiagnostics = 1_000_000;
     private const int MaxLinks = 10;
     private const string Truncated = "\n[truncated]";
@@ -19,6 +20,8 @@ public static class BugReport
 
     private static string Endpoint =>
         Environment.GetEnvironmentVariable("GHELPER_REPORT_URL") is { Length: > 0 } url ? url : DefaultEndpoint;
+
+    public static bool Enabled => DefaultEndpoint.Length > 0;
 
     /// <summary>What the user writes; Id is the report_id that makes Retry safe.</summary>
     public sealed record Draft(string Id, string Title, string Description);

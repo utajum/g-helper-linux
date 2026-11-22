@@ -535,7 +535,7 @@ public static class Czech
         ["report_send"] = "Odeslat",
         ["report_retry"] = "Zkusit znovu",
         ["report_sending"] = "Odesílání...",
-        ["report_need_text"] = "Název: 10-120 znaků. Popis: alespoň 20 znaků.",
+        ["report_need_text"] = "Název: 4-120 znaků. Popis: alespoň 20 znaků.",
         ["report_old_version"] = "Používáte v{0}, nejnovější je v{1}. Nejprve aktualizujte, chyba už může být opravená.",
         ["report_sent"] = "Odesláno jako hlášení #{0}",
         ["report_sent_note"] = "Hlášení si může přečíst kdokoli bez účtu. K odpovědi potřebujete účet GitHub.",

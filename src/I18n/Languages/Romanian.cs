@@ -535,7 +535,7 @@ public static class Romanian
         ["report_send"] = "Trimite",
         ["report_retry"] = "Reîncearcă",
         ["report_sending"] = "Se trimite...",
-        ["report_need_text"] = "Titlu: 10-120 caractere. Descriere: cel puțin 20 de caractere.",
+        ["report_need_text"] = "Titlu: 4-120 caractere. Descriere: cel puțin 20 de caractere.",
         ["report_old_version"] = "Folosești v{0}, cea mai nouă este v{1}. Actualizează întâi, eroarea poate fi deja reparată.",
         ["report_sent"] = "Trimis ca tichet #{0}",
         ["report_sent_note"] = "Oricine poate citi acest tichet fără cont. Pentru a răspunde ai nevoie de un cont GitHub.",

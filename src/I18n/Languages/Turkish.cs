@@ -535,7 +535,7 @@ public static class Turkish
         ["report_send"] = "Gönder",
         ["report_retry"] = "Yeniden Dene",
         ["report_sending"] = "Gönderiliyor...",
-        ["report_need_text"] = "Başlık: 10-120 karakter. Açıklama: en az 20 karakter.",
+        ["report_need_text"] = "Başlık: 4-120 karakter. Açıklama: en az 20 karakter.",
         ["report_old_version"] = "v{0} kullanıyorsunuz, en yenisi v{1}. Önce güncelleyin, hata düzeltilmiş olabilir.",
         ["report_sent"] = "#{0} numaralı kayıt olarak gönderildi",
         ["report_sent_note"] = "Bu kaydı herkes hesap olmadan okuyabilir. Yanıt vermek için GitHub hesabı gerekir.",

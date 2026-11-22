@@ -535,7 +535,7 @@ public static class Dutch
         ["report_send"] = "Verzenden",
         ["report_retry"] = "Opnieuw proberen",
         ["report_sending"] = "Verzenden...",
-        ["report_need_text"] = "Titel: 10-120 tekens. Beschrijving: minstens 20 tekens.",
+        ["report_need_text"] = "Titel: 4-120 tekens. Beschrijving: minstens 20 tekens.",
         ["report_old_version"] = "U gebruikt v{0}, de nieuwste is v{1}. Werk eerst bij, de bug is misschien al opgelost.",
         ["report_sent"] = "Verzonden als issue #{0}",
         ["report_sent_note"] = "Iedereen kan dit issue lezen zonder account. Om te reageren hebt u een GitHub-account nodig.",

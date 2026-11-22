@@ -85,6 +85,7 @@ public partial class UpdatesWindow : Window
         menuExportDiag.Header = Labels.Get("export_diagnostics");
         buttonRefresh.Content = Labels.Get("refresh");
         buttonReport.Content = Labels.Get("report_bug");
+        buttonReport.IsVisible = Helpers.BugReport.Enabled;
         buttonChangelog.Content = Labels.Get("changelog_title");
         labelLegendUpToDate.Text = Labels.Get("up_to_date");
         labelLegendUpdateAvailable.Text = Labels.Get("update_available");

@@ -538,7 +538,7 @@ public static class Indonesian
         ["report_send"] = "Kirim",
         ["report_retry"] = "Coba Lagi",
         ["report_sending"] = "Mengirim...",
-        ["report_need_text"] = "Judul: 10-120 karakter. Deskripsi: minimal 20 karakter.",
+        ["report_need_text"] = "Judul: 4-120 karakter. Deskripsi: minimal 20 karakter.",
         ["report_old_version"] = "Anda memakai v{0}, terbaru v{1}. Perbarui dulu, bug mungkin sudah diperbaiki.",
         ["report_sent"] = "Terkirim sebagai issue #{0}",
         ["report_sent_note"] = "Siapa pun dapat membaca issue ini tanpa akun. Untuk membalas, Anda perlu akun GitHub.",

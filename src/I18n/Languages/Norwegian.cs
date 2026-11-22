@@ -538,7 +538,7 @@ public static class Norwegian
         ["report_send"] = "Send",
         ["report_retry"] = "Prøv igjen",
         ["report_sending"] = "Sender...",
-        ["report_need_text"] = "Tittel: 10-120 tegn. Beskrivelse: minst 20 tegn.",
+        ["report_need_text"] = "Tittel: 4-120 tegn. Beskrivelse: minst 20 tegn.",
         ["report_old_version"] = "Du bruker v{0}, nyeste er v{1}. Oppdater først, feilen kan være rettet.",
         ["report_sent"] = "Sendt som sak #{0}",
         ["report_sent_note"] = "Alle kan lese saken uten konto. Du trenger en GitHub-konto for å svare.",

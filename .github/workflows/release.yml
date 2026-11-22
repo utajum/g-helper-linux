@@ -58,6 +58,12 @@ jobs:
           grep "<Version>" src/GHelper.Linux.csproj
           grep "# Version:" install/90-ghelper.rules
 
+      - name: Stamp report endpoint
+        if: github.repository == 'utajum/g-helper-linux'
+        run: |
+          sed -i 's|DefaultEndpoint = "";|DefaultEndpoint = "https://g-helper-linux.elevatech.xyz/api/report";|' src/Helpers/BugReport.cs
+          grep -q 'DefaultEndpoint = "https://' src/Helpers/BugReport.cs
+
       - name: Setup .NET 10
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:

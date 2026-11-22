@@ -535,7 +535,7 @@ public static class French
         ["report_send"] = "Envoyer",
         ["report_retry"] = "Réessayer",
         ["report_sending"] = "Envoi...",
-        ["report_need_text"] = "Titre : 10-120 caractères. Description : au moins 20 caractères.",
+        ["report_need_text"] = "Titre : 4-120 caractères. Description : au moins 20 caractères.",
         ["report_old_version"] = "Vous utilisez v{0}, la dernière est v{1}. Mettez à jour d'abord, le bug est peut-être corrigé.",
         ["report_sent"] = "Envoyé comme ticket #{0}",
         ["report_sent_note"] = "Tout le monde peut lire ce ticket sans compte. Il faut un compte GitHub pour répondre.",

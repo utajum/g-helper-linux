@@ -682,7 +682,7 @@ public static class Latvian
         ["report_send"] = "Sūtīt",
         ["report_retry"] = "Mēģināt vēlreiz",
         ["report_sending"] = "Sūta...",
-        ["report_need_text"] = "Nosaukums: 10-120 rakstzīmes. Apraksts: vismaz 20 rakstzīmes.",
+        ["report_need_text"] = "Nosaukums: 4-120 rakstzīmes. Apraksts: vismaz 20 rakstzīmes.",
         ["report_old_version"] = "Jūs lietojat v{0}, jaunākā ir v{1}. Vispirms atjauniniet, kļūda var būt jau labota.",
         ["report_sent"] = "Nosūtīts kā pieteikums #{0}",
         ["report_sent_note"] = "Ikviens var lasīt šo pieteikumu bez konta. Lai atbildētu, vajag GitHub kontu.",

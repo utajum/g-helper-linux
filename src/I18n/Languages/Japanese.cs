@@ -538,7 +538,7 @@ public static class Japanese
         ["report_send"] = "送信",
         ["report_retry"] = "再試行",
         ["report_sending"] = "送信中...",
-        ["report_need_text"] = "タイトル: 10-120 文字。説明: 20 文字以上。",
+        ["report_need_text"] = "タイトル: 4-120 文字。説明: 20 文字以上。",
         ["report_old_version"] = "v{0} を使用中です。最新は v{1} です。先に更新してください。バグは修正済みかもしれません。",
         ["report_sent"] = "Issue #{0} として送信しました",
         ["report_sent_note"] = "この Issue はアカウントなしで誰でも読めます。返信には GitHub アカウントが必要です。",

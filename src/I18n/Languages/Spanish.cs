@@ -535,7 +535,7 @@ public static class Spanish
         ["report_send"] = "Enviar",
         ["report_retry"] = "Reintentar",
         ["report_sending"] = "Enviando...",
-        ["report_need_text"] = "Título: 10-120 caracteres. Descripción: al menos 20 caracteres.",
+        ["report_need_text"] = "Título: 4-120 caracteres. Descripción: al menos 20 caracteres.",
         ["report_old_version"] = "Usa la v{0}, la más reciente es la v{1}. Actualice primero, el error puede estar ya corregido.",
         ["report_sent"] = "Enviado como incidencia #{0}",
         ["report_sent_note"] = "Cualquiera puede leer esta incidencia sin cuenta. Para responder necesita una cuenta de GitHub.",

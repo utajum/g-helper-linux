@@ -682,7 +682,7 @@ public static class Slovenian
         ["report_send"] = "Pošlji",
         ["report_retry"] = "Poskusi znova",
         ["report_sending"] = "Pošiljanje...",
-        ["report_need_text"] = "Naslov: 10-120 znakov. Opis: vsaj 20 znakov.",
+        ["report_need_text"] = "Naslov: 4-120 znakov. Opis: vsaj 20 znakov.",
         ["report_old_version"] = "Uporabljate v{0}, najnovejša je v{1}. Najprej posodobite, napaka je morda že odpravljena.",
         ["report_sent"] = "Poslano kot prijava #{0}",
         ["report_sent_note"] = "To prijavo lahko vsak prebere brez računa. Za odgovor potrebujete račun GitHub.",

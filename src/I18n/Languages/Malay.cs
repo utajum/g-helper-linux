@@ -682,7 +682,7 @@ public static class Malay
         ["report_send"] = "Hantar",
         ["report_retry"] = "Cuba Lagi",
         ["report_sending"] = "Menghantar...",
-        ["report_need_text"] = "Tajuk: 10-120 aksara. Penerangan: sekurang-kurangnya 20 aksara.",
+        ["report_need_text"] = "Tajuk: 4-120 aksara. Penerangan: sekurang-kurangnya 20 aksara.",
         ["report_old_version"] = "Anda menggunakan v{0}, terkini ialah v{1}. Kemas kini dahulu, pepijat mungkin sudah dibaiki.",
         ["report_sent"] = "Dihantar sebagai isu #{0}",
         ["report_sent_note"] = "Sesiapa boleh membaca isu ini tanpa akaun. Anda perlukan akaun GitHub untuk membalas.",

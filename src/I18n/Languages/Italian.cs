@@ -535,7 +535,7 @@ public static class Italian
         ["report_send"] = "Invia",
         ["report_retry"] = "Riprova",
         ["report_sending"] = "Invio...",
-        ["report_need_text"] = "Titolo: 10-120 caratteri. Descrizione: almeno 20 caratteri.",
+        ["report_need_text"] = "Titolo: 4-120 caratteri. Descrizione: almeno 20 caratteri.",
         ["report_old_version"] = "Usi la v{0}, l'ultima è la v{1}. Aggiorna prima, il bug potrebbe essere già risolto.",
         ["report_sent"] = "Inviato come issue #{0}",
         ["report_sent_note"] = "Chiunque può leggere questa issue senza account. Per rispondere serve un account GitHub.",

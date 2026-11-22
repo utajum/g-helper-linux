@@ -682,7 +682,7 @@ public static class Filipino
         ["report_send"] = "Ipadala",
         ["report_retry"] = "Subukan muli",
         ["report_sending"] = "Ipinapadala...",
-        ["report_need_text"] = "Pamagat: 10-120 character. Paglalarawan: hindi bababa sa 20 character.",
+        ["report_need_text"] = "Pamagat: 4-120 character. Paglalarawan: hindi bababa sa 20 character.",
         ["report_old_version"] = "Gumagamit ka ng v{0}, ang pinakabago ay v{1}. Mag-update muna, baka naayos na ang bug.",
         ["report_sent"] = "Naipadala bilang issue #{0}",
         ["report_sent_note"] = "Mababasa ng kahit sino ang issue na ito kahit walang account. Kailangan mo ng GitHub account para sumagot.",

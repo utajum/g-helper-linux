@@ -535,7 +535,7 @@ public static class Hungarian
         ["report_send"] = "Küldés",
         ["report_retry"] = "Újra",
         ["report_sending"] = "Küldés...",
-        ["report_need_text"] = "Cím: 10-120 karakter. Leírás: legalább 20 karakter.",
+        ["report_need_text"] = "Cím: 4-120 karakter. Leírás: legalább 20 karakter.",
         ["report_old_version"] = "A v{0} verziót használja, a legújabb v{1}. Előbb frissítsen, lehet, hogy a hiba már javítva van.",
         ["report_sent"] = "Elküldve, hibajegy: #{0}",
         ["report_sent_note"] = "Bárki elolvashatja a hibajegyet fiók nélkül. A válaszhoz GitHub-fiók kell.",

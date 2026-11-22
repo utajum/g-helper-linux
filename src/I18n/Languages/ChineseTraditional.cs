@@ -538,7 +538,7 @@ public static class ChineseTraditional
         ["report_send"] = "傳送",
         ["report_retry"] = "重試",
         ["report_sending"] = "正在傳送...",
-        ["report_need_text"] = "標題：10-120 個字元。描述：至少 20 個字元。",
+        ["report_need_text"] = "標題：4-120 個字元。描述：至少 20 個字元。",
         ["report_old_version"] = "你使用的是 v{0}，最新版本是 v{1}。請先更新，問題可能已經修復。",
         ["report_sent"] = "已傳送為議題 #{0}",
         ["report_sent_note"] = "任何人無需帳號即可閱讀此議題。回覆需要 GitHub 帳號。",

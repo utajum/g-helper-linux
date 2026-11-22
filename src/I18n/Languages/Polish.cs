@@ -535,7 +535,7 @@ public static class Polish
         ["report_send"] = "Wyślij",
         ["report_retry"] = "Ponów",
         ["report_sending"] = "Wysyłanie...",
-        ["report_need_text"] = "Tytuł: 10-120 znaków. Opis: co najmniej 20 znaków.",
+        ["report_need_text"] = "Tytuł: 4-120 znaków. Opis: co najmniej 20 znaków.",
         ["report_old_version"] = "Używasz v{0}, najnowsza to v{1}. Najpierw zaktualizuj, błąd mógł zostać naprawiony.",
         ["report_sent"] = "Wysłano jako zgłoszenie #{0}",
         ["report_sent_note"] = "Każdy może przeczytać to zgłoszenie bez konta. Aby odpowiedzieć, potrzebujesz konta GitHub.",

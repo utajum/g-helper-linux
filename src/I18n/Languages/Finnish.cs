@@ -538,7 +538,7 @@ public static class Finnish
         ["report_send"] = "Lähetä",
         ["report_retry"] = "Yritä uudelleen",
         ["report_sending"] = "Lähetetään...",
-        ["report_need_text"] = "Otsikko: 10-120 merkkiä. Kuvaus: vähintään 20 merkkiä.",
+        ["report_need_text"] = "Otsikko: 4-120 merkkiä. Kuvaus: vähintään 20 merkkiä.",
         ["report_old_version"] = "Käytät versiota v{0}, uusin on v{1}. Päivitä ensin, virhe voi olla jo korjattu.",
         ["report_sent"] = "Lähetetty ilmoituksena #{0}",
         ["report_sent_note"] = "Kuka tahansa voi lukea ilmoituksen ilman tiliä. Vastaamiseen tarvitset GitHub-tilin.",

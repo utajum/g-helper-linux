@@ -535,7 +535,7 @@ public static class Vietnamese
         ["report_send"] = "Gửi",
         ["report_retry"] = "Thử lại",
         ["report_sending"] = "Đang gửi...",
-        ["report_need_text"] = "Tiêu đề: 10-120 ký tự. Mô tả: ít nhất 20 ký tự.",
+        ["report_need_text"] = "Tiêu đề: 4-120 ký tự. Mô tả: ít nhất 20 ký tự.",
         ["report_old_version"] = "Bạn đang dùng v{0}, bản mới nhất là v{1}. Hãy cập nhật trước, lỗi có thể đã được sửa.",
         ["report_sent"] = "Đã gửi thành issue #{0}",
         ["report_sent_note"] = "Ai cũng có thể đọc issue này mà không cần tài khoản. Cần tài khoản GitHub để trả lời.",

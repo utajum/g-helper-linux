@@ -538,7 +538,7 @@ public static class Swedish
         ["report_send"] = "Skicka",
         ["report_retry"] = "Försök igen",
         ["report_sending"] = "Skickar...",
-        ["report_need_text"] = "Titel: 10-120 tecken. Beskrivning: minst 20 tecken.",
+        ["report_need_text"] = "Titel: 4-120 tecken. Beskrivning: minst 20 tecken.",
         ["report_old_version"] = "Du använder v{0}, senaste är v{1}. Uppdatera först, felet kan redan vara åtgärdat.",
         ["report_sent"] = "Skickat som ärende #{0}",
         ["report_sent_note"] = "Vem som helst kan läsa ärendet utan konto. Du behöver ett GitHub-konto för att svara.",

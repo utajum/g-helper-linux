@@ -682,7 +682,7 @@ public static class Slovak
         ["report_send"] = "Odoslať",
         ["report_retry"] = "Skúsiť znova",
         ["report_sending"] = "Odosiela sa...",
-        ["report_need_text"] = "Názov: 10-120 znakov. Popis: aspoň 20 znakov.",
+        ["report_need_text"] = "Názov: 4-120 znakov. Popis: aspoň 20 znakov.",
         ["report_old_version"] = "Používate v{0}, najnovšia je v{1}. Najprv aktualizujte, chyba už môže byť opravená.",
         ["report_sent"] = "Odoslané ako hlásenie #{0}",
         ["report_sent_note"] = "Hlásenie si môže prečítať ktokoľvek bez účtu. Na odpoveď potrebujete účet GitHub.",

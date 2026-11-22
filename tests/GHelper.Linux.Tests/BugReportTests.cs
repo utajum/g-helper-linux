@@ -73,7 +73,8 @@ public static class BugReportTests
         Harness.Scenario("BugReport_IsValid_TitleAndDescriptionLimits", _ =>
         {
             Harness.Assert(BugReport.IsValid(Draft), "ok");
-            Harness.Assert(!BugReport.IsValid(Draft with { Title = "Fan bug" }), "short title");
+            Harness.Assert(!BugReport.IsValid(Draft with { Title = "Fan" }), "short title");
+            Harness.Assert(BugReport.IsValid(Draft with { Title = "Fans" }), "4-char title");
             Harness.Assert(!BugReport.IsValid(Draft with { Title = new string('x', 121) }), "long title");
             Harness.Assert(BugReport.IsValid(Draft with { Title = "  " + new string('x', 120) + "  " }), "trimmed title");
             Harness.Assert(!BugReport.IsValid(Draft with { Description = "it broke" }), "short description");

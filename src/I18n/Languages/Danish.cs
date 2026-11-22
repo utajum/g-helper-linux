@@ -538,7 +538,7 @@ public static class Danish
         ["report_send"] = "Send",
         ["report_retry"] = "Prøv igen",
         ["report_sending"] = "Sender...",
-        ["report_need_text"] = "Titel: 10-120 tegn. Beskrivelse: mindst 20 tegn.",
+        ["report_need_text"] = "Titel: 4-120 tegn. Beskrivelse: mindst 20 tegn.",
         ["report_old_version"] = "Du bruger v{0}, nyeste er v{1}. Opdater først, fejlen kan være rettet.",
         ["report_sent"] = "Sendt som sag #{0}",
         ["report_sent_note"] = "Alle kan læse sagen uden en konto. Du skal have en GitHub-konto for at svare.",

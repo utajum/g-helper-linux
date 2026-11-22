@@ -535,7 +535,7 @@ public static class German
         ["report_send"] = "Senden",
         ["report_retry"] = "Erneut versuchen",
         ["report_sending"] = "Wird gesendet...",
-        ["report_need_text"] = "Titel: 10-120 Zeichen. Beschreibung: mindestens 20 Zeichen.",
+        ["report_need_text"] = "Titel: 4-120 Zeichen. Beschreibung: mindestens 20 Zeichen.",
         ["report_old_version"] = "Sie nutzen v{0}, die neueste ist v{1}. Aktualisieren Sie zuerst, der Fehler ist vielleicht behoben.",
         ["report_sent"] = "Gesendet als Issue #{0}",
         ["report_sent_note"] = "Jeder kann dieses Issue ohne Konto lesen. Zum Antworten brauchen Sie ein GitHub-Konto.",

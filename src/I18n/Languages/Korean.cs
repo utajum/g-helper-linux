@@ -538,7 +538,7 @@ public static class Korean
         ["report_send"] = "보내기",
         ["report_retry"] = "다시 시도",
         ["report_sending"] = "보내는 중...",
-        ["report_need_text"] = "제목: 10-120자. 설명: 20자 이상.",
+        ["report_need_text"] = "제목: 4-120자. 설명: 20자 이상.",
         ["report_old_version"] = "v{0}을(를) 사용 중이며 최신 버전은 v{1}입니다. 먼저 업데이트하세요. 버그가 이미 고쳐졌을 수 있습니다.",
         ["report_sent"] = "이슈 #{0}(으)로 전송됨",
         ["report_sent_note"] = "누구나 계정 없이 이 이슈를 읽을 수 있습니다. 답글을 달려면 GitHub 계정이 필요합니다.",
