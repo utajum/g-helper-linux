@@ -69,6 +69,9 @@ public sealed class HidPPDevice : IDisposable
     /// <summary>Discovered feature-ID to feature-index mapping.</summary>
     public IReadOnlyDictionary<ushort, byte> Features => _featureIndex;
 
+    /// <summary>Gets HID++ reports that are not replies (receiver notifications); null drops them.</summary>
+    public Action<byte[]>? Unsolicited { get; set; }
+
     /// <summary>Creates a wrapper for a HidSharp-enumerated device (USB).</summary>
     public HidPPDevice(HidDevice device, byte deviceIndex = 0xFF)
     {
@@ -190,7 +193,10 @@ public sealed class HidPPDevice : IDisposable
 
                     // BT devices may respond with devnumber XOR 0xFF.
                     if (devIdx != DeviceIndex && devIdx != (byte)(DeviceIndex ^ 0xFF))
+                    {
+                        Unsolicited?.Invoke(buf[..bytesRead]);
                         continue;
+                    }
 
                     byte subId = buf[2];
                     byte addr = buf[3];
@@ -224,6 +230,7 @@ public sealed class HidPPDevice : IDisposable
                     }
 
                     // Unrelated HID++ message (notification).
+                    Unsolicited?.Invoke(buf[..bytesRead]);
                     deadline = Environment.TickCount64 + timeoutMs;
                 }
             }
@@ -268,11 +275,39 @@ public sealed class HidPPDevice : IDisposable
                 catch { break; }
                 if (n == 0)
                     break;
+                if (IsHidppReport(buf[0], n))
+                    Unsolicited?.Invoke(buf[..n]);
             }
         }
         finally
         {
             _stream.ReadTimeout = saved;
+        }
+    }
+
+    /// <summary>Reads the next HID++ report (whole report), or null if none comes within the timeout.</summary>
+    public byte[]? ReadReport(int timeoutMs)
+    {
+        lock (_ioLock)
+        {
+            if (_stream is null)
+                return null;
+            int saved = _stream.ReadTimeout;
+            _stream.ReadTimeout = timeoutMs;
+            try
+            {
+                var buf = new byte[MAX_READ_SIZE];
+                int n;
+                try
+                { n = _stream.Read(buf, 0, buf.Length); }
+                catch (TimeoutException) { return null; }
+                catch (IOException) { _dead = true; return null; }
+                return n > 0 && IsHidppReport(buf[0], n) ? buf[..n] : null;
+            }
+            finally
+            {
+                _stream.ReadTimeout = saved;
+            }
         }
     }
 

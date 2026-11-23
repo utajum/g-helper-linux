@@ -311,6 +311,7 @@ public partial class ExtraWindow : Window
         headerPeripherals.Text = Labels.Get("peripherals_header");
         checkDisableLogitech.Content = Labels.Get("peripherals_disable_logitech");
         labelDisableLogitechHint.Text = Labels.Get("peripherals_disable_logitech_hint");
+        labelLogitechReceivers.Text = Labels.Get("receivers_open");
         checkDisableAsusPeripherals.Content = Labels.Get("peripherals_disable_asus");
         labelDisableAsusPeripheralsHint.Text = Labels.Get("peripherals_disable_asus_hint");
 
@@ -2411,6 +2412,7 @@ public partial class ExtraWindow : Window
         => OnEppComboChanged(1, comboEppTurbo);
 
     private BatteryInfoWindow? _batteryInfoWindow;
+    private ReceiverWindow? _receiverWindow;
     private SystemInfoWindow? _systemInfoWindow;
 
     private void ButtonBatteryInfo_Click(object? sender, RoutedEventArgs e)
@@ -2426,6 +2428,22 @@ public partial class ExtraWindow : Window
         else
         {
             _batteryInfoWindow.Activate();
+        }
+    }
+
+    private void ButtonLogitechReceivers_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_receiverWindow == null || !_receiverWindow.IsVisible)
+        {
+            _receiverWindow = new ReceiverWindow();
+            if (Helpers.AppConfig.Is("topmost"))
+                _receiverWindow.Topmost = true;
+            Helpers.WindowPositioner.CenterOfMainWindowOrPrimaryMonitor(_receiverWindow);
+            _receiverWindow.Show();
+        }
+        else
+        {
+            _receiverWindow.Activate();
         }
     }
 

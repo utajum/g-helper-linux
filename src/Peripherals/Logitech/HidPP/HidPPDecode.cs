@@ -2,7 +2,7 @@ namespace GHelper.Linux.Peripherals.Logitech.HidPP;
 
 /// <summary>
 /// Pure HID++ payload decoders and encoders. No device I/O, so they are unit-tested.
-/// All offsets are into the feature payload (reply byte 2 onward).
+/// Offsets are into the feature payload (reply byte 2 onward); receiver notification decoders take the whole report.
 /// </summary>
 public static class HidPPDecode
 {
@@ -145,6 +145,68 @@ public static class HidPPDecode
     public static bool IsPairedDeviceConnected(IEnumerable<(string name, (byte index, ushort wpid)? slot)> connected,
         string name, (byte index, ushort wpid) slot) =>
         connected.Any(c => c.name == name || c.slot == slot);
+
+    /// <summary>Product id from a hidraw sysfs uevent ("HID_ID=0003:0000046D:0000C52B"), or null.</summary>
+    public static ushort? HidIdProduct(string uevent)
+    {
+        foreach (var line in uevent.Split('\n'))
+        {
+            if (line.StartsWith("HID_ID=") && line.Split(':') is [_, _, var pid] && pid.Trim().Length >= 4
+                && ushort.TryParse(pid.Trim()[^4..], System.Globalization.NumberStyles.HexNumber, null, out ushort p))
+                return p;
+        }
+        return null;
+    }
+
+    // Receiver notifications: [report id, device index, sub id, address, data...].
+
+    /// <summary>0x41 device connection: slot, wpid (LE @5), kind (low nibble @4), link up (bit 6 @4 clear).</summary>
+    public static (byte index, ushort wpid, int kind, bool linkUp)? DecodeDeviceConnection(ReadOnlySpan<byte> r) =>
+        r.Length >= 7 && r[2] == 0x41 && r[1] is >= 1 and <= 6
+            ? (r[1], (ushort)(r[5] | (r[6] << 8)), r[4] & 0x0F, (r[4] & 0x40) == 0)
+            : null;
+
+    /// <summary>0x4A pairing lock: open (bit 0 @3) and error @4 (1 timeout, 2 not supported, 3 too many, 6 sequence timeout).</summary>
+    public static (bool open, byte error)? DecodeLockChange(ReadOnlySpan<byte> r) =>
+        r.Length >= 5 && r[2] == 0x4A ? ((r[3] & 0x01) != 0, r[4]) : null;
+
+    /// <summary>Bolt 0x53 discovery status: discovering when @3 is 0, error @4 (1 timeout, 2 failed).</summary>
+    public static (bool discovering, byte error)? DecodeDiscoveryStatus(ReadOnlySpan<byte> r) =>
+        r.Length >= 5 && r[2] == 0x53 ? (r[3] == 0, r[4]) : null;
+
+    /// <summary>One part of a Bolt 0x4F discovery: part 0 has kind, address and auth flags, part 1 the name.</summary>
+    public record BoltDiscovery(int Counter, int Kind, byte[]? Address, byte Auth, string? Name);
+
+    /// <summary>
+    /// Bolt 0x4F: counter @3 (low) @4 (high), part @5. Part 0: kind @7, address @10..15, auth @18.
+    /// Part 1: name length @6, name @7.
+    /// </summary>
+    public static BoltDiscovery? DecodeBoltDiscovery(ReadOnlySpan<byte> r)
+    {
+        if (r.Length < 19 || r[2] != 0x4F)
+            return null;
+        int counter = r[3] | (r[4] << 8);
+        if (r[5] == 0)
+            return new(counter, r[7], r.Slice(10, 6).ToArray(), r[18], null);
+        if (r[5] != 1)
+            return null;
+        int len = Math.Min(r[6], r.Length - 7);
+        return new(counter, 0, null, 0, System.Text.Encoding.ASCII.GetString(r.Slice(7, Math.Max(len, 0))));
+    }
+
+    /// <summary>Bolt 0x4D passkey request: six ASCII digits @4.</summary>
+    public static string? DecodePasskey(ReadOnlySpan<byte> r) =>
+        r.Length >= 10 && r[2] == 0x4D ? System.Text.Encoding.ASCII.GetString(r.Slice(4, 6)) : null;
+
+    /// <summary>Bolt 0x54 pairing status: state @3 (0 lock open, 2 done), error @4, new slot @11.</summary>
+    public static (byte state, byte error, byte slot)? DecodePairingStatus(ReadOnlySpan<byte> r) =>
+        r.Length >= 12 && r[2] == 0x54 ? (r[3], r[4], r[11]) : null;
+
+    /// <summary>Mouse passkey entry: the passkey in binary, at least 10 digits; true is the right button.</summary>
+    public static bool[] PasskeyClicks(string passkey) =>
+        int.TryParse(passkey, out int value) && value >= 0
+            ? Convert.ToString(value, 2).PadLeft(10, '0').Select(c => c == '1').ToArray()
+            : [];
 
     /// <summary>KEYBOARD_DISABLE_KEYS (0x4521) bitmask: Caps Lock, Num Lock, Scroll Lock, Insert, Win.</summary>
     public static string DisabledKeysSummary(byte mask)

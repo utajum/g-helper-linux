@@ -334,6 +334,25 @@ public static class PeripheralsProvider
         }
     }
 
+    /// <summary>Drops the devices connected through receivers and scans the receivers again (after a pair or unpair).</summary>
+    public static void RescanReceivers()
+    {
+        lock (_lock)
+        {
+            for (int i = ConnectedMice.Count - 1; i >= 0; i--)
+            {
+                if (ConnectedMice[i] is not LogitechReceiverMouse m)
+                    continue;
+                try
+                { m.Disconnect(); }
+                catch { }
+                ConnectedMice.RemoveAt(i);
+            }
+        }
+        DeviceChanged?.Invoke();
+        DetectLogitechReceivers();
+    }
+
     /// <summary>Detects all supported mice (ASUS + Logitech).</summary>
     public static void DetectAllMice()
     {
