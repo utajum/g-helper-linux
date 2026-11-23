@@ -1007,7 +1007,7 @@ public static class Vietnamese
         ["receivers_unpair"] = "Hủy ghép nối",
         ["receivers_unpair_confirm"] = "Hủy ghép nối {0}? Thiết bị sẽ không hoạt động với bộ thu này cho đến khi bạn ghép nối lại.",
         ["receivers_unpair_failed"] = "Hủy ghép nối thất bại.",
-        ["receivers_hint_unifying"] = "Bật thiết bị, hoặc tắt rồi bật lại. Với thiết bị có nút kênh, giữ một nút kênh trong 3 giây đến khi đèn nhấp nháy nhanh.",
+        ["receivers_hint_unifying"] = "Bật thiết bị, hoặc tắt rồi bật lại. Với thiết bị có nhiều kênh, chọn một kênh, rồi nhấn nút Connect hoặc giữ nút kênh trong 3 giây đến khi đèn nhấp nháy nhanh.",
         ["receivers_hint_bolt"] = "Nhấn nút ghép nối, hoặc giữ một nút kênh trong 3 giây đến khi đèn nhấp nháy nhanh.",
         ["receivers_pairing_with"] = "Đã tìm thấy {0}, đang ghép nối...",
         ["receivers_passkey_type"] = "Trên {1}, nhập {0} rồi nhấn Enter.",

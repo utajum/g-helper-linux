@@ -2413,7 +2413,6 @@ public partial class ExtraWindow : Window
         => OnEppComboChanged(1, comboEppTurbo);
 
     private BatteryInfoWindow? _batteryInfoWindow;
-    private ReceiverWindow? _receiverWindow;
     private SystemInfoWindow? _systemInfoWindow;
 
     private void ButtonBatteryInfo_Click(object? sender, RoutedEventArgs e)
@@ -2433,20 +2432,7 @@ public partial class ExtraWindow : Window
     }
 
     private void ButtonLogitechReceivers_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_receiverWindow == null || !_receiverWindow.IsVisible)
-        {
-            _receiverWindow = new ReceiverWindow();
-            if (Helpers.AppConfig.Is("topmost"))
-                _receiverWindow.Topmost = true;
-            Helpers.WindowPositioner.CenterOfMainWindowOrPrimaryMonitor(_receiverWindow);
-            _receiverWindow.Show();
-        }
-        else
-        {
-            _receiverWindow.Activate();
-        }
-    }
+        => ReceiverWindow.ShowOrActivate();
 
     private void ButtonSystemInfo_Click(object? sender, RoutedEventArgs e)
     {
@@ -2761,7 +2747,7 @@ public partial class ExtraWindow : Window
         bool enabled = checkDisableLogitech.IsChecked ?? false;
         buttonLogitechReceivers.IsVisible = !enabled;
         if (enabled)
-            _receiverWindow?.Close();
+            ReceiverWindow.CloseIfOpen();
         RunPeripheralsConfigChange(checkDisableLogitech, "Logitech", enabled,
             () => Peripherals.PeripheralsProvider.LogitechDisabled = enabled);
     }

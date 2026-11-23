@@ -289,14 +289,18 @@ public static class PeripheralsProvider
         DetectMouse(new ProXHeadset());
     }
 
+    /// <summary>True when the last receiver scan found a plugged-in Logitech receiver.</summary>
+    public static bool ReceiverPlugged { get; private set; }
+
     /// <summary>
     /// Scans for known Logitech wireless receivers and enumerates paired devices.
     /// Devices discovered through receivers are added to ConnectedMice.
     /// </summary>
     public static void DetectLogitechReceivers()
     {
-        if (LogitechDisabled)
+        if (LogitechDisabled || LogitechReceiver.PairingActive)
             return;
+        bool plugged = false;
         foreach (var entry in ReceiverInfo.KnownReceivers)
         {
             try
@@ -304,6 +308,7 @@ public static class PeripheralsProvider
                 using var receiver = new LogitechReceiver(entry);
                 if (!receiver.IsConnected())
                     continue;
+                plugged = true;
 
                 Logger.WriteLine($"Peripherals: found {entry.Name} (0x{entry.ProductId:X4})");
 
@@ -342,6 +347,11 @@ public static class PeripheralsProvider
             {
                 Logger.WriteLine($"Peripherals: receiver scan failed for 0x{entry.ProductId:X4}: {ex.Message}");
             }
+        }
+        if (plugged != ReceiverPlugged)
+        {
+            ReceiverPlugged = plugged;
+            DeviceChanged?.Invoke();
         }
     }
 

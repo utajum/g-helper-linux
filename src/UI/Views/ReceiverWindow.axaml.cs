@@ -17,8 +17,27 @@ public partial class ReceiverWindow : Window
     private const int PairSeconds = 30;
     private static readonly IBrush Dim = new SolidColorBrush(Color.Parse("#9A9A9A"));
 
+    private static ReceiverWindow? _open;
+
     private CancellationTokenSource? _pairing;
     private bool _busy;
+
+    /// <summary>Shows the one receivers window, or brings it to the front.</summary>
+    public static void ShowOrActivate()
+    {
+        if (_open is { IsVisible: true })
+        {
+            _open.Activate();
+            return;
+        }
+        _open = new ReceiverWindow();
+        if (Helpers.AppConfig.Is("topmost"))
+            _open.Topmost = true;
+        Helpers.WindowPositioner.CenterOfMainWindowOrPrimaryMonitor(_open);
+        _open.Show();
+    }
+
+    public static void CloseIfOpen() => _open?.Close();
 
     public ReceiverWindow()
     {

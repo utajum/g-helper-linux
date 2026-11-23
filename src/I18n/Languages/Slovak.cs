@@ -1062,7 +1062,7 @@ public static class Slovak
         ["receivers_unpair"] = "Zrušiť spárovanie",
         ["receivers_unpair_confirm"] = "Zrušiť spárovanie {0}? Zariadenie prestane s týmto prijímačom fungovať, kým ho znova nespárujete.",
         ["receivers_unpair_failed"] = "Zrušenie spárovania zlyhalo.",
-        ["receivers_hint_unifying"] = "Zapnite zariadenie, alebo ho vypnite a znova zapnite. Pri zariadení s tlačidlami kanálov podržte tlačidlo kanála 3 sekundy, kým kontrolka rýchlo nebliká.",
+        ["receivers_hint_unifying"] = "Zapnite zariadenie, alebo ho vypnite a znova zapnite. Pri zariadení s kanálmi vyberte kanál a potom stlačte tlačidlo Connect alebo podržte tlačidlo kanála 3 sekundy, kým kontrolka rýchlo nebliká.",
         ["receivers_hint_bolt"] = "Stlačte párovacie tlačidlo, alebo podržte tlačidlo kanála 3 sekundy, kým kontrolka rýchlo nebliká.",
         ["receivers_pairing_with"] = "Nájdené {0}, párovanie...",
         ["receivers_passkey_type"] = "Na {1} zadajte {0} a stlačte Enter.",

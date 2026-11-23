@@ -1007,7 +1007,7 @@ public static class Czech
         ["receivers_unpair"] = "Zrušit spárování",
         ["receivers_unpair_confirm"] = "Zrušit spárování {0}? Zařízení přestane s tímto přijímačem fungovat, dokud ho znovu nespárujete.",
         ["receivers_unpair_failed"] = "Zrušení spárování selhalo.",
-        ["receivers_hint_unifying"] = "Zapněte zařízení, nebo ho vypněte a znovu zapněte. U zařízení s tlačítky kanálů podržte tlačítko kanálu 3 sekundy, dokud kontrolka rychle nebliká.",
+        ["receivers_hint_unifying"] = "Zapněte zařízení, nebo ho vypněte a znovu zapněte. U zařízení s kanály vyberte kanál a pak stiskněte tlačítko Connect nebo podržte tlačítko kanálu 3 sekundy, dokud kontrolka rychle nebliká.",
         ["receivers_hint_bolt"] = "Stiskněte párovací tlačítko, nebo podržte tlačítko kanálu 3 sekundy, dokud kontrolka rychle nebliká.",
         ["receivers_pairing_with"] = "Nalezeno {0}, párování...",
         ["receivers_passkey_type"] = "Na {1} zadejte {0} a stiskněte Enter.",

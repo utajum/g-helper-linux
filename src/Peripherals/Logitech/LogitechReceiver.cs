@@ -20,9 +20,14 @@ public class LogitechReceiver : IDisposable
     private const byte REG_BOLT_DISCOVERY = 0xC0;
     private const byte REG_BOLT_PAIRING = 0xC1;
 
+    private static int _pairing;
+
     private readonly ReceiverEntry _info;
     private HidDevice? _hidDevice;
     private HidPPDevice? _device;
+
+    /// <summary>True while a pairing runs; background receiver scans wait, so no other register I/O reaches the receiver.</summary>
+    public static bool PairingActive => Volatile.Read(ref _pairing) > 0;
 
     /// <summary>A paired device as the receiver lists it; Kind uses the receiver vocabulary (1 keyboard, 2 mouse).</summary>
     public record Slot(byte Index, string Name, ushort Wpid, int Kind);
@@ -135,14 +140,16 @@ public class LogitechReceiver : IDisposable
         if (_device is null)
             return new PairResult(PairError.Failed);
 
-        int? oldFlags = EnableNotifications();
-        // Register 0x02 byte 2: pairings left plus 5; below 5 means no limit.
-        if (_device.ReadRegister(REG_CONNECTION) is { Length: >= 5 } conn)
-            Logger.WriteLine($"LogitechReceiver({_info.Name}): pair start, {conn[3]} paired, pairings left {(conn[4] >= 5 ? conn[4] - 5 : -1)}");
+        Interlocked.Increment(ref _pairing);
+        int? oldFlags = null;
         var queue = new ConcurrentQueue<byte[]>();
-        _device.Unsolicited = queue.Enqueue;
         try
         {
+            oldFlags = EnableNotifications();
+            // Register 0x02 byte 2: pairings left plus 5; below 5 means no limit.
+            if (_device.ReadRegister(REG_CONNECTION) is { Length: >= 5 } conn)
+                Logger.WriteLine($"LogitechReceiver({_info.Name}): pair start, {conn[3]} paired, pairings left {(conn[4] >= 5 ? conn[4] - 5 : -1)}");
+            _device.Unsolicited = queue.Enqueue;
             var result = _info.Kind == ReceiverKind.Bolt
                 ? PairBolt(seconds, queue, progress, ct)
                 : PairUnifying(seconds, queue, ct);
@@ -154,6 +161,7 @@ public class LogitechReceiver : IDisposable
             _device.Unsolicited = null;
             if (oldFlags is { } flags)
                 WriteNotificationFlags(flags);
+            Interlocked.Decrement(ref _pairing);
         }
     }
 

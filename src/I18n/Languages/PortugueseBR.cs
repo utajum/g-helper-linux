@@ -1007,7 +1007,7 @@ public static class PortugueseBR
         ["receivers_unpair"] = "Desparear",
         ["receivers_unpair_confirm"] = "Desparear {0}? Ele para de funcionar com este receptor até ser pareado de novo.",
         ["receivers_unpair_failed"] = "Falha ao desparear.",
-        ["receivers_hint_unifying"] = "Ligue o dispositivo, ou desligue e ligue de novo. Em um dispositivo com botões de canal, segure um botão de canal por 3 segundos até a luz piscar rápido.",
+        ["receivers_hint_unifying"] = "Ligue o dispositivo, ou desligue e ligue de novo. Em um dispositivo com canais, escolha um canal e depois pressione o botão Connect ou segure o botão do canal por 3 segundos até a luz piscar rápido.",
         ["receivers_hint_bolt"] = "Pressione o botão de pareamento, ou segure um botão de canal por 3 segundos até a luz piscar rápido.",
         ["receivers_pairing_with"] = "{0} encontrado, pareando...",
         ["receivers_passkey_type"] = "Em {1}, digite {0} e pressione Enter.",

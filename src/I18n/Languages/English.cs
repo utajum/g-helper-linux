@@ -1066,7 +1066,7 @@ public static class English
         ["receivers_unpair"] = "Unpair",
         ["receivers_unpair_confirm"] = "Unpair {0}? It stops working with this receiver until you pair it again.",
         ["receivers_unpair_failed"] = "Unpair failed.",
-        ["receivers_hint_unifying"] = "Turn on the device, or turn it off and on again. On a device with channel buttons, hold a channel button for 3 seconds until the light blinks fast.",
+        ["receivers_hint_unifying"] = "Turn on the device, or turn it off and on again. On a device with channels, pick a channel, then press the Connect button or hold the channel button for 3 seconds until the light blinks fast.",
         ["receivers_hint_bolt"] = "Press the pairing button, or hold a channel button for 3 seconds until the light blinks fast.",
         ["receivers_pairing_with"] = "Found {0}, pairing...",
         ["receivers_passkey_type"] = "On {1}, type {0} and press Enter.",

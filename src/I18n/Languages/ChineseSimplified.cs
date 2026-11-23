@@ -1010,7 +1010,7 @@ public static class ChineseSimplified
         ["receivers_unpair"] = "取消配对",
         ["receivers_unpair_confirm"] = "取消配对 {0}？重新配对之前，它将无法与此接收器配合使用。",
         ["receivers_unpair_failed"] = "取消配对失败。",
-        ["receivers_hint_unifying"] = "打开设备，或关闭后重新打开。对于有通道按钮的设备，按住通道按钮 3 秒，直到指示灯快速闪烁。",
+        ["receivers_hint_unifying"] = "打开设备，或关闭后重新打开。对于有通道的设备，先选择通道，然后按 Connect 按钮，或按住通道按钮 3 秒，直到指示灯快速闪烁。",
         ["receivers_hint_bolt"] = "按下配对按钮，或按住通道按钮 3 秒，直到指示灯快速闪烁。",
         ["receivers_pairing_with"] = "找到 {0}，正在配对...",
         ["receivers_passkey_type"] = "在 {1} 上输入 {0} 并按 Enter。",

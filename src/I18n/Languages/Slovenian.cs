@@ -1062,7 +1062,7 @@ public static class Slovenian
         ["receivers_unpair"] = "Prekliči seznanitev",
         ["receivers_unpair_confirm"] = "Preklic seznanitve za {0}? Naprava s tem sprejemnikom ne bo delovala, dokler je znova ne seznanite.",
         ["receivers_unpair_failed"] = "Preklic seznanitve ni uspel.",
-        ["receivers_hint_unifying"] = "Vklopite napravo ali jo izklopite in znova vklopite. Pri napravi z gumbi za kanale držite gumb kanala 3 sekunde, da lučka hitro utripa.",
+        ["receivers_hint_unifying"] = "Vklopite napravo ali jo izklopite in znova vklopite. Pri napravi s kanali izberite kanal, nato pritisnite gumb Connect ali držite gumb kanala 3 sekunde, da lučka hitro utripa.",
         ["receivers_hint_bolt"] = "Pritisnite gumb za seznanjanje ali držite gumb kanala 3 sekunde, da lučka hitro utripa.",
         ["receivers_pairing_with"] = "Najdeno {0}, seznanjanje...",
         ["receivers_passkey_type"] = "Na {1} vnesite {0} in pritisnite Enter.",
