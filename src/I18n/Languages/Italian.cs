@@ -995,7 +995,7 @@ public static class Italian
         // PERIPHERALS
         ["peripherals_header"] = "Periferiche",
         ["peripherals_disable_logitech"] = "Disabilita supporto mouse/tastiera Logitech",
-        ["peripherals_disable_logitech_hint"] = "Interrompe scansioni HID++ e nasconde i pannelli Logitech. Richiede riavvio.",
+        ["peripherals_disable_logitech_hint"] = "Interrompe scansioni HID++ e nasconde i pannelli Logitech.",
         ["peripherals_disable_asus"] = "Disabilita supporto mouse/tastiera ASUS",
         ["peripherals_disable_asus_hint"] = "Interrompe scansioni USB ASUS e nasconde i loro pannelli. Richiede riavvio.",
         ["receivers_open"] = "Ricevitori Logitech...",

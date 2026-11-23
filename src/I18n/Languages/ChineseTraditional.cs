@@ -998,7 +998,7 @@ public static class ChineseTraditional
         // PERIPHERALS
         ["peripherals_header"] = "周邊裝置",
         ["peripherals_disable_logitech"] = "停用 Logitech 滑鼠/鍵盤支援",
-        ["peripherals_disable_logitech_hint"] = "停止 HID++ 掃描並隱藏 Logitech 裝置面板。需要重新啟動。",
+        ["peripherals_disable_logitech_hint"] = "停止 HID++ 掃描並隱藏 Logitech 裝置面板。",
         ["peripherals_disable_asus"] = "停用 ASUS 滑鼠/鍵盤支援",
         ["peripherals_disable_asus_hint"] = "停止 ASUS USB 掃描並隱藏其裝置面板。需要重新啟動。",
         ["receivers_open"] = "Logitech 接收器...",

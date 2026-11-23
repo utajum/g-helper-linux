@@ -1050,7 +1050,7 @@ public static class Lithuanian
         // PERIPHERALS
         ["peripherals_header"] = "Periferiniai įrenginiai",
         ["peripherals_disable_logitech"] = "Išjungti Logitech pelės/klaviatūros palaikymą",
-        ["peripherals_disable_logitech_hint"] = "Sustabdo HID++ nuskaitymą ir paslepia Logitech įrenginių skydus. Reikia paleisti iš naujo.",
+        ["peripherals_disable_logitech_hint"] = "Sustabdo HID++ nuskaitymą ir paslepia Logitech įrenginių skydus.",
         ["peripherals_disable_asus"] = "Išjungti ASUS pelės/klaviatūros palaikymą",
         ["peripherals_disable_asus_hint"] = "Sustabdo ASUS USB nuskaitymą ir paslepia jo įrenginių skydus. Reikia paleisti iš naujo.",
         ["receivers_open"] = "Logitech imtuvai...",

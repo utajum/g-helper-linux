@@ -1050,7 +1050,7 @@ public static class Malay
         // PERIPHERALS
         ["peripherals_header"] = "Periferal",
         ["peripherals_disable_logitech"] = "Lumpuhkan sokongan tetikus/papan kekunci Logitech",
-        ["peripherals_disable_logitech_hint"] = "Menghentikan imbasan HID++ dan menyembunyikan panel peranti Logitech. Perlu mulakan semula.",
+        ["peripherals_disable_logitech_hint"] = "Menghentikan imbasan HID++ dan menyembunyikan panel peranti Logitech.",
         ["peripherals_disable_asus"] = "Lumpuhkan sokongan tetikus/papan kekunci ASUS",
         ["peripherals_disable_asus_hint"] = "Menghentikan imbasan USB ASUS dan menyembunyikan panel perantinya. Perlu mulakan semula.",
         ["receivers_open"] = "Penerima Logitech...",

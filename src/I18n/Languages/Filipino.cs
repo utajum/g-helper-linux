@@ -1050,7 +1050,7 @@ public static class Filipino
         // PERIPHERALS
         ["peripherals_header"] = "Mga Peripheral",
         ["peripherals_disable_logitech"] = "I-disable ang suporta sa Logitech mouse/keyboard",
-        ["peripherals_disable_logitech_hint"] = "Itinitigil ang pag-scan ng HID++ at itinatago ang mga panel ng Logitech device. Kailangang i-restart.",
+        ["peripherals_disable_logitech_hint"] = "Itinitigil ang pag-scan ng HID++ at itinatago ang mga panel ng Logitech device.",
         ["peripherals_disable_asus"] = "I-disable ang suporta sa ASUS mouse/keyboard",
         ["peripherals_disable_asus_hint"] = "Itinitigil ang pag-scan ng ASUS USB at itinatago ang mga device panel nito. Kailangang i-restart.",
         ["receivers_open"] = "Mga Logitech receiver...",

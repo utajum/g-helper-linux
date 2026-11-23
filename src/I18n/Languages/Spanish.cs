@@ -995,7 +995,7 @@ public static class Spanish
         // PERIPHERALS
         ["peripherals_header"] = "Periféricos",
         ["peripherals_disable_logitech"] = "Desactivar soporte de ratón/teclado Logitech",
-        ["peripherals_disable_logitech_hint"] = "Detiene los escaneos HID++ y oculta los paneles Logitech. Requiere reinicio.",
+        ["peripherals_disable_logitech_hint"] = "Detiene los escaneos HID++ y oculta los paneles Logitech.",
         ["peripherals_disable_asus"] = "Desactivar soporte de ratón/teclado ASUS",
         ["peripherals_disable_asus_hint"] = "Detiene los escaneos USB ASUS y oculta sus paneles. Requiere reinicio.",
         ["receivers_open"] = "Receptores Logitech...",

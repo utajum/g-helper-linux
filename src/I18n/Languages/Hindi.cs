@@ -1050,7 +1050,7 @@ public static class Hindi
         // PERIPHERALS
         ["peripherals_header"] = "पेरिफेरल्स",
         ["peripherals_disable_logitech"] = "Logitech माउस/कीबोर्ड समर्थन अक्षम करें",
-        ["peripherals_disable_logitech_hint"] = "HID++ स्कैनिंग रोकता है और Logitech डिवाइस पैनल छिपाता है। पुनरारंभ आवश्यक है।",
+        ["peripherals_disable_logitech_hint"] = "HID++ स्कैनिंग रोकता है और Logitech डिवाइस पैनल छिपाता है।",
         ["peripherals_disable_asus"] = "ASUS माउस/कीबोर्ड समर्थन अक्षम करें",
         ["peripherals_disable_asus_hint"] = "ASUS USB स्कैनिंग रोकता है और इसके डिवाइस पैनल छिपाता है। पुनरारंभ आवश्यक है।",
         ["receivers_open"] = "Logitech रिसीवर...",

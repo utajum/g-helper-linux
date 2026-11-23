@@ -995,7 +995,7 @@ public static class Polish
         // PERIPHERALS
         ["peripherals_header"] = "Peryferia",
         ["peripherals_disable_logitech"] = "Wyłącz obsługę myszy/klawiatury Logitech",
-        ["peripherals_disable_logitech_hint"] = "Zatrzymuje skanowanie HID++ i ukrywa panele Logitech. Wymaga restartu.",
+        ["peripherals_disable_logitech_hint"] = "Zatrzymuje skanowanie HID++ i ukrywa panele Logitech.",
         ["peripherals_disable_asus"] = "Wyłącz obsługę myszy/klawiatury ASUS",
         ["peripherals_disable_asus_hint"] = "Zatrzymuje skanowanie USB ASUS i ukrywa ich panele. Wymaga restartu.",
         ["receivers_open"] = "Odbiorniki Logitech...",

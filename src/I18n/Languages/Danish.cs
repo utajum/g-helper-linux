@@ -998,7 +998,7 @@ public static class Danish
         // PERIPHERALS
         ["peripherals_header"] = "Eksterne enheder",
         ["peripherals_disable_logitech"] = "Deaktivér support for Logitech-mus/tastaturer",
-        ["peripherals_disable_logitech_hint"] = "Stopper HID++ scanning og skjuler Logitech enhedspaneler. Kræver genstart.",
+        ["peripherals_disable_logitech_hint"] = "Stopper HID++ scanning og skjuler Logitech enhedspaneler.",
         ["peripherals_disable_asus"] = "Deaktivér support for ASUS-mus/tastaturer",
         ["peripherals_disable_asus_hint"] = "Stopper ASUS USB scanning og skjuler dets enhedspaneler. Kræver genstart.",
         ["receivers_open"] = "Logitech-modtagere...",

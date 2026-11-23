@@ -1144,7 +1144,7 @@
                                           Margin="0,4"
                                           IsCheckedChanged="CheckDisableLogitech_Changed" />
                                 <TextBlock x:Name="labelDisableLogitechHint" Classes="label-dim" FontSize="11"
-                                           Text="Stops HID++ scans and hides Logitech device panels. Requires app restart."
+                                           Text="Stops HID++ scans and hides Logitech device panels."
                                            TextWrapping="Wrap" Margin="22,0,0,4" />
                                 <Button x:Name="buttonLogitechReceivers" Classes="ghelper" Height="28"
                                         HorizontalAlignment="Left" Margin="22,2,0,4"

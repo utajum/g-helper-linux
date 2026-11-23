@@ -998,7 +998,7 @@ public static class Thai
         // PERIPHERALS
         ["peripherals_header"] = "อุปกรณ์ต่อพ่วง",
         ["peripherals_disable_logitech"] = "ปิดการใช้งานเมาส์/คีย์บอร์ด Logitech",
-        ["peripherals_disable_logitech_hint"] = "หยุดการสแกน HID++ และซ่อนแผงอุปกรณ์ Logitech ต้องรีสตาร์ท",
+        ["peripherals_disable_logitech_hint"] = "หยุดการสแกน HID++ และซ่อนแผงอุปกรณ์ Logitech",
         ["peripherals_disable_asus"] = "ปิดการใช้งานเมาส์/คีย์บอร์ด ASUS",
         ["peripherals_disable_asus_hint"] = "หยุดการสแกน USB ของ ASUS และซ่อนแผงอุปกรณ์ ต้องรีสตาร์ท",
         ["receivers_open"] = "ตัวรับสัญญาณ Logitech...",

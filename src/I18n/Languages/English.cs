@@ -1054,7 +1054,7 @@ public static class English
         // PERIPHERALS section in Extra window
         ["peripherals_header"] = "Peripherals",
         ["peripherals_disable_logitech"] = "Disable Logitech mouse/keyboard support",
-        ["peripherals_disable_logitech_hint"] = "Stops HID++ scans and hides Logitech device panels. Requires app restart.",
+        ["peripherals_disable_logitech_hint"] = "Stops HID++ scans and hides Logitech device panels.",
         ["peripherals_disable_asus"] = "Disable ASUS mouse/keyboard support",
         ["peripherals_disable_asus_hint"] = "Stops ASUS USB peripheral scans and hides their device panels. Requires app restart.",
         ["receivers_open"] = "Logitech receivers...",

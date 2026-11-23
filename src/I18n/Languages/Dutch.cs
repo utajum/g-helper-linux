@@ -995,7 +995,7 @@ public static class Dutch
         // PERIPHERALS
         ["peripherals_header"] = "Randapparatuur",
         ["peripherals_disable_logitech"] = "Logitech muis/toetsenbord-ondersteuning uitschakelen",
-        ["peripherals_disable_logitech_hint"] = "Stopt HID++ scannen en verbergt Logitech apparaatpanelen. Herstart nodig.",
+        ["peripherals_disable_logitech_hint"] = "Stopt HID++ scannen en verbergt Logitech apparaatpanelen.",
         ["peripherals_disable_asus"] = "ASUS muis/toetsenbord-ondersteuning uitschakelen",
         ["peripherals_disable_asus_hint"] = "Stopt ASUS USB-scannen en verbergt zijn apparaatpanelen. Herstart nodig.",
         ["receivers_open"] = "Logitech-ontvangers...",

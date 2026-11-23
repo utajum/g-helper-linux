@@ -995,7 +995,7 @@ public static class Hungarian
         // PERIPHERALS
         ["peripherals_header"] = "Perifériák",
         ["peripherals_disable_logitech"] = "Logitech egér/billentyűzet támogatás letiltása",
-        ["peripherals_disable_logitech_hint"] = "Leállítja a HID++ keresést és elrejti a Logitech eszközpaneleket. Újraindítás szükséges.",
+        ["peripherals_disable_logitech_hint"] = "Leállítja a HID++ keresést és elrejti a Logitech eszközpaneleket.",
         ["peripherals_disable_asus"] = "ASUS egér/billentyűzet támogatás letiltása",
         ["peripherals_disable_asus_hint"] = "Leállítja az ASUS USB keresést és elrejti annak eszközpaneleit. Újraindítás szükséges.",
         ["receivers_open"] = "Logitech vevők...",

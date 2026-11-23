@@ -995,7 +995,7 @@ public static class Vietnamese
         // PERIPHERALS
         ["peripherals_header"] = "Thiết bị ngoại vi",
         ["peripherals_disable_logitech"] = "Tắt hỗ trợ chuột/bàn phím Logitech",
-        ["peripherals_disable_logitech_hint"] = "Dừng quét HID++ và ẩn các bảng thiết bị Logitech. Cần khởi động lại.",
+        ["peripherals_disable_logitech_hint"] = "Dừng quét HID++ và ẩn các bảng thiết bị Logitech.",
         ["peripherals_disable_asus"] = "Tắt hỗ trợ chuột/bàn phím ASUS",
         ["peripherals_disable_asus_hint"] = "Dừng quét USB ASUS và ẩn các bảng thiết bị của hãng. Cần khởi động lại.",
         ["receivers_open"] = "Bộ thu Logitech...",

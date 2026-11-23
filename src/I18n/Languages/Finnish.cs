@@ -998,7 +998,7 @@ public static class Finnish
         // PERIPHERALS
         ["peripherals_header"] = "Oheislaitteet",
         ["peripherals_disable_logitech"] = "Poista Logitech-hiiri/-näppäimistötuki käytöstä",
-        ["peripherals_disable_logitech_hint"] = "Pysäyttää HID++-skannauksen ja piilottaa Logitech-laitepaneelit. Vaatii uudelleenkäynnistyksen.",
+        ["peripherals_disable_logitech_hint"] = "Pysäyttää HID++-skannauksen ja piilottaa Logitech-laitepaneelit.",
         ["peripherals_disable_asus"] = "Poista ASUS-hiiri/-näppäimistötuki käytöstä",
         ["peripherals_disable_asus_hint"] = "Pysäyttää ASUS USB -skannauksen ja piilottaa sen laitepaneelit. Vaatii uudelleenkäynnistyksen.",
         ["receivers_open"] = "Logitech-vastaanottimet...",

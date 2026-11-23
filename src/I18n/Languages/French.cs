@@ -995,7 +995,7 @@ public static class French
         // PERIPHERALS
         ["peripherals_header"] = "Périphériques",
         ["peripherals_disable_logitech"] = "Désactiver la prise en charge souris/clavier Logitech",
-        ["peripherals_disable_logitech_hint"] = "Arrête les analyses HID++ et masque les panneaux Logitech. Redémarrage requis.",
+        ["peripherals_disable_logitech_hint"] = "Arrête les analyses HID++ et masque les panneaux Logitech.",
         ["peripherals_disable_asus"] = "Désactiver la prise en charge souris/clavier ASUS",
         ["peripherals_disable_asus_hint"] = "Arrête les analyses USB ASUS et masque leurs panneaux. Redémarrage requis.",
         ["receivers_open"] = "Récepteurs Logitech...",

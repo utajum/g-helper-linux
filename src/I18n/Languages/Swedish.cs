@@ -998,7 +998,7 @@ public static class Swedish
         // PERIPHERALS
         ["peripherals_header"] = "Kringutrustning",
         ["peripherals_disable_logitech"] = "Inaktivera stöd för Logitech-mus/-tangentbord",
-        ["peripherals_disable_logitech_hint"] = "Stoppar HID++-skanning och döljer Logitech-enhetspaneler. Omstart krävs.",
+        ["peripherals_disable_logitech_hint"] = "Stoppar HID++-skanning och döljer Logitech-enhetspaneler.",
         ["peripherals_disable_asus"] = "Inaktivera stöd för ASUS-mus/-tangentbord",
         ["peripherals_disable_asus_hint"] = "Stoppar ASUS USB-skanning och döljer dess enhetspaneler. Omstart krävs.",
         ["receivers_open"] = "Logitech-mottagare...",

@@ -998,7 +998,7 @@ public static class Serbian
         // PERIPHERALS
         ["peripherals_header"] = "Периферије",
         ["peripherals_disable_logitech"] = "Онемогући подршку за Logitech миш/тастатуру",
-        ["peripherals_disable_logitech_hint"] = "Зауставља HID++ скенирање и сакрива панеле Logitech уређаја. Потребно поновно покретање.",
+        ["peripherals_disable_logitech_hint"] = "Зауставља HID++ скенирање и сакрива панеле Logitech уређаја.",
         ["peripherals_disable_asus"] = "Онемогући подршку за ASUS миш/тастатуру",
         ["peripherals_disable_asus_hint"] = "Зауставља ASUS USB скенирање и сакрива његове панеле уређаја. Потребно поновно покретање.",
         ["receivers_open"] = "Logitech пријемници...",

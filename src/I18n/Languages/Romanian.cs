@@ -995,7 +995,7 @@ public static class Romanian
         // PERIPHERALS
         ["peripherals_header"] = "Periferice",
         ["peripherals_disable_logitech"] = "Dezactivează suportul pentru mouse/tastatură Logitech",
-        ["peripherals_disable_logitech_hint"] = "Oprește scanarea HID++ și ascunde panourile dispozitivelor Logitech. Necesită repornire.",
+        ["peripherals_disable_logitech_hint"] = "Oprește scanarea HID++ și ascunde panourile dispozitivelor Logitech.",
         ["peripherals_disable_asus"] = "Dezactivează suportul pentru mouse/tastatură ASUS",
         ["peripherals_disable_asus_hint"] = "Oprește scanarea USB ASUS și ascunde panourile dispozitivelor sale. Necesită repornire.",
         ["receivers_open"] = "Receptoare Logitech...",

@@ -998,7 +998,7 @@ public static class Indonesian
         // PERIPHERALS
         ["peripherals_header"] = "Periferal",
         ["peripherals_disable_logitech"] = "Nonaktifkan dukungan mouse/keyboard Logitech",
-        ["peripherals_disable_logitech_hint"] = "Menghentikan pemindaian HID++ dan menyembunyikan panel perangkat Logitech. Perlu restart.",
+        ["peripherals_disable_logitech_hint"] = "Menghentikan pemindaian HID++ dan menyembunyikan panel perangkat Logitech.",
         ["peripherals_disable_asus"] = "Nonaktifkan dukungan mouse/keyboard ASUS",
         ["peripherals_disable_asus_hint"] = "Menghentikan pemindaian USB ASUS dan menyembunyikan panel perangkatnya. Perlu restart.",
         ["receivers_open"] = "Penerima Logitech...",

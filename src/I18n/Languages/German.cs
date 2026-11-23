@@ -995,7 +995,7 @@ public static class German
         // PERIPHERALS
         ["peripherals_header"] = "Peripheriegeräte",
         ["peripherals_disable_logitech"] = "Logitech-Maus-/Tastaturunterstützung deaktivieren",
-        ["peripherals_disable_logitech_hint"] = "Stoppt HID++-Scans und blendet Logitech-Geräteseiten aus. Neustart erforderlich.",
+        ["peripherals_disable_logitech_hint"] = "Stoppt HID++-Scans und blendet Logitech-Geräteseiten aus.",
         ["peripherals_disable_asus"] = "ASUS-Maus-/Tastaturunterstützung deaktivieren",
         ["peripherals_disable_asus_hint"] = "Stoppt ASUS-USB-Scans und blendet deren Geräteseiten aus. Neustart erforderlich.",
         ["receivers_open"] = "Logitech-Empfänger...",

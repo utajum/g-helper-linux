@@ -998,7 +998,7 @@ public static class Japanese
         // PERIPHERALS
         ["peripherals_header"] = "周辺機器",
         ["peripherals_disable_logitech"] = "Logitechマウス/キーボードのサポートを無効化",
-        ["peripherals_disable_logitech_hint"] = "HID++スキャンを停止しLogitechデバイスパネルを非表示にします。再起動が必要です。",
+        ["peripherals_disable_logitech_hint"] = "HID++スキャンを停止しLogitechデバイスパネルを非表示にします。",
         ["peripherals_disable_asus"] = "ASUSマウス/キーボードのサポートを無効化",
         ["peripherals_disable_asus_hint"] = "ASUS USBスキャンを停止しデバイスパネルを非表示にします。再起動が必要です。",
         ["receivers_open"] = "Logitech レシーバー...",

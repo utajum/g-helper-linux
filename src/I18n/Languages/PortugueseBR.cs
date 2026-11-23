@@ -995,7 +995,7 @@ public static class PortugueseBR
         // PERIPHERALS
         ["peripherals_header"] = "Periféricos",
         ["peripherals_disable_logitech"] = "Desativar suporte a mouse/teclado Logitech",
-        ["peripherals_disable_logitech_hint"] = "Interrompe varreduras HID++ e oculta painéis Logitech. Requer reinício.",
+        ["peripherals_disable_logitech_hint"] = "Interrompe varreduras HID++ e oculta painéis Logitech.",
         ["peripherals_disable_asus"] = "Desativar suporte a mouse/teclado ASUS",
         ["peripherals_disable_asus_hint"] = "Interrompe varreduras USB ASUS e oculta seus painéis. Requer reinício.",
         ["receivers_open"] = "Receptores Logitech...",

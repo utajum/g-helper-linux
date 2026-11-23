@@ -998,7 +998,7 @@ public static class Greek
         // PERIPHERALS
         ["peripherals_header"] = "Περιφερειακά",
         ["peripherals_disable_logitech"] = "Απενεργοποίηση υποστήριξης ποντικιών/πληκτρολογίων Logitech",
-        ["peripherals_disable_logitech_hint"] = "Σταματά τη σάρωση HID++ και αποκρύπτει τα πάνελ συσκευών Logitech. Απαιτείται επανεκκίνηση.",
+        ["peripherals_disable_logitech_hint"] = "Σταματά τη σάρωση HID++ και αποκρύπτει τα πάνελ συσκευών Logitech.",
         ["peripherals_disable_asus"] = "Απενεργοποίηση υποστήριξης ποντικιών/πληκτρολογίων ASUS",
         ["peripherals_disable_asus_hint"] = "Σταματά τη σάρωση USB της ASUS και αποκρύπτει τα πάνελ συσκευών της. Απαιτείται επανεκκίνηση.",
         ["receivers_open"] = "Δέκτες Logitech...",

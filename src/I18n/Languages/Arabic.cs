@@ -998,7 +998,7 @@ public static class Arabic
         // PERIPHERALS
         ["peripherals_header"] = "الأجهزة الطرفية",
         ["peripherals_disable_logitech"] = "تعطيل دعم فأرة/لوحة مفاتيح Logitech",
-        ["peripherals_disable_logitech_hint"] = "إيقاف فحص HID++ وإخفاء لوحات أجهزة Logitech. يتطلب إعادة التشغيل.",
+        ["peripherals_disable_logitech_hint"] = "إيقاف فحص HID++ وإخفاء لوحات أجهزة Logitech.",
         ["peripherals_disable_asus"] = "تعطيل دعم فأرة/لوحة مفاتيح ASUS",
         ["peripherals_disable_asus_hint"] = "إيقاف فحص USB لـ ASUS وإخفاء لوحات أجهزته. يتطلب إعادة التشغيل.",
         ["receivers_open"] = "مستقبلات Logitech...",

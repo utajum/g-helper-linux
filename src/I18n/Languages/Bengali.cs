@@ -1050,7 +1050,7 @@ public static class Bengali
         // PERIPHERALS
         ["peripherals_header"] = "পেরিফেরাল",
         ["peripherals_disable_logitech"] = "Logitech মাউস/কীবোর্ড সমর্থন নিষ্ক্রিয় করুন",
-        ["peripherals_disable_logitech_hint"] = "HID++ স্ক্যান বন্ধ করে এবং Logitech ডিভাইস প্যানেল লুকায়। পুনরায় চালু করতে হবে।",
+        ["peripherals_disable_logitech_hint"] = "HID++ স্ক্যান বন্ধ করে এবং Logitech ডিভাইস প্যানেল লুকায়।",
         ["peripherals_disable_asus"] = "ASUS মাউস/কীবোর্ড সমর্থন নিষ্ক্রিয় করুন",
         ["peripherals_disable_asus_hint"] = "ASUS USB স্ক্যান বন্ধ করে এবং তার ডিভাইস প্যানেল লুকায়। পুনরায় চালু করতে হবে।",
         ["receivers_open"] = "Logitech রিসিভার...",

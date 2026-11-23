@@ -1050,7 +1050,7 @@ public static class Slovak
         // PERIPHERALS
         ["peripherals_header"] = "Periférie",
         ["peripherals_disable_logitech"] = "Vypnúť podporu pre myš/klávesnicu Logitech",
-        ["peripherals_disable_logitech_hint"] = "Zastaví HID++ skenovanie a skryje panely zariadení Logitech. Vyžaduje reštart.",
+        ["peripherals_disable_logitech_hint"] = "Zastaví HID++ skenovanie a skryje panely zariadení Logitech.",
         ["peripherals_disable_asus"] = "Vypnúť podporu pre myš/klávesnicu ASUS",
         ["peripherals_disable_asus_hint"] = "Zastaví ASUS USB skenovanie a skryje panely jeho zariadení. Vyžaduje reštart.",
         ["receivers_open"] = "Prijímače Logitech...",

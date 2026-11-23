@@ -995,7 +995,7 @@ public static class Turkish
         // PERIPHERALS
         ["peripherals_header"] = "Çevre Birimleri",
         ["peripherals_disable_logitech"] = "Logitech fare/klavye desteğini devre dışı bırak",
-        ["peripherals_disable_logitech_hint"] = "HID++ taramasını durdurur ve Logitech cihaz panellerini gizler. Yeniden başlatma gerekir.",
+        ["peripherals_disable_logitech_hint"] = "HID++ taramasını durdurur ve Logitech cihaz panellerini gizler.",
         ["peripherals_disable_asus"] = "ASUS fare/klavye desteğini devre dışı bırak",
         ["peripherals_disable_asus_hint"] = "ASUS USB taramasını durdurur ve cihaz panellerini gizler. Yeniden başlatma gerekir.",
         ["receivers_open"] = "Logitech alıcıları...",

@@ -998,7 +998,7 @@ public static class Norwegian
         // PERIPHERALS
         ["peripherals_header"] = "Periferiutstyr",
         ["peripherals_disable_logitech"] = "Deaktiver støtte for Logitech-mus/-tastaturer",
-        ["peripherals_disable_logitech_hint"] = "Stopper HID++-skanning og skjuler Logitech-enhetspaneler. Krever omstart.",
+        ["peripherals_disable_logitech_hint"] = "Stopper HID++-skanning og skjuler Logitech-enhetspaneler.",
         ["peripherals_disable_asus"] = "Deaktiver støtte for ASUS-mus/-tastaturer",
         ["peripherals_disable_asus_hint"] = "Stopper ASUS USB-skanning og skjuler dets enhetspaneler. Krever omstart.",
         ["receivers_open"] = "Logitech-mottakere...",

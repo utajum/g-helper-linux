@@ -1050,7 +1050,7 @@ public static class Slovenian
         // PERIPHERALS
         ["peripherals_header"] = "Periferne naprave",
         ["peripherals_disable_logitech"] = "Onemogoči podporo za miške/tipkovnice Logitech",
-        ["peripherals_disable_logitech_hint"] = "Ustavi HID++ pregledovanje in skrije plošče naprav Logitech. Potreben je ponovni zagon.",
+        ["peripherals_disable_logitech_hint"] = "Ustavi HID++ pregledovanje in skrije plošče naprav Logitech.",
         ["peripherals_disable_asus"] = "Onemogoči podporo za miške/tipkovnice ASUS",
         ["peripherals_disable_asus_hint"] = "Ustavi ASUS USB pregledovanje in skrije njegove plošče naprav. Potreben je ponovni zagon.",
         ["receivers_open"] = "Sprejemniki Logitech...",

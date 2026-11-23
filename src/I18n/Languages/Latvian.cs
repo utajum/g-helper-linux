@@ -1050,7 +1050,7 @@ public static class Latvian
         // PERIPHERALS
         ["peripherals_header"] = "Perifērijas ierīces",
         ["peripherals_disable_logitech"] = "Atspējot Logitech peles/tastatūras atbalstu",
-        ["peripherals_disable_logitech_hint"] = "Aptur HID++ skenēšanu un slēpj Logitech ierīču paneļus. Nepieciešama restartēšana.",
+        ["peripherals_disable_logitech_hint"] = "Aptur HID++ skenēšanu un slēpj Logitech ierīču paneļus.",
         ["peripherals_disable_asus"] = "Atspējot ASUS peles/tastatūras atbalstu",
         ["peripherals_disable_asus_hint"] = "Aptur ASUS USB skenēšanu un slēpj tās ierīču paneļus. Nepieciešama restartēšana.",
         ["receivers_open"] = "Logitech uztvērēji...",

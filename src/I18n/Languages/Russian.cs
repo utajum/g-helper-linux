@@ -995,7 +995,7 @@ public static class Russian
         // PERIPHERALS
         ["peripherals_header"] = "Периферия",
         ["peripherals_disable_logitech"] = "Отключить поддержку мыши/клавиатуры Logitech",
-        ["peripherals_disable_logitech_hint"] = "Останавливает сканирование HID++ и скрывает панели Logitech. Требуется перезапуск.",
+        ["peripherals_disable_logitech_hint"] = "Останавливает сканирование HID++ и скрывает панели Logitech.",
         ["peripherals_disable_asus"] = "Отключить поддержку мыши/клавиатуры ASUS",
         ["peripherals_disable_asus_hint"] = "Останавливает сканирование USB-устройств ASUS и скрывает их панели. Требуется перезапуск.",
         ["receivers_open"] = "Приёмники Logitech...",

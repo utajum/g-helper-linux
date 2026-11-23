@@ -1050,7 +1050,7 @@ public static class Nepali
         // PERIPHERALS
         ["peripherals_header"] = "परिधीय उपकरणहरू",
         ["peripherals_disable_logitech"] = "Logitech माउस/किबोर्ड समर्थन निष्क्रिय गर्नुहोस्",
-        ["peripherals_disable_logitech_hint"] = "HID++ स्क्यानिङ रोक्छ र Logitech उपकरण प्यानल लुकाउँछ। पुनः सुरु आवश्यक छ।",
+        ["peripherals_disable_logitech_hint"] = "HID++ स्क्यानिङ रोक्छ र Logitech उपकरण प्यानल लुकाउँछ।",
         ["peripherals_disable_asus"] = "ASUS माउस/किबोर्ड समर्थन निष्क्रिय गर्नुहोस्",
         ["peripherals_disable_asus_hint"] = "ASUS USB स्क्यानिङ रोक्छ र यसका उपकरण प्यानलहरू लुकाउँछ। पुनः सुरु आवश्यक छ।",
         ["receivers_open"] = "Logitech रिसिभरहरू...",

@@ -998,7 +998,7 @@ public static class Korean
         // PERIPHERALS
         ["peripherals_header"] = "주변 기기",
         ["peripherals_disable_logitech"] = "Logitech 마우스/키보드 지원 비활성화",
-        ["peripherals_disable_logitech_hint"] = "HID++ 스캔을 중지하고 Logitech 장치 패널을 숨깁니다. 다시 시작이 필요합니다.",
+        ["peripherals_disable_logitech_hint"] = "HID++ 스캔을 중지하고 Logitech 장치 패널을 숨깁니다.",
         ["peripherals_disable_asus"] = "ASUS 마우스/키보드 지원 비활성화",
         ["peripherals_disable_asus_hint"] = "ASUS USB 스캔을 중지하고 장치 패널을 숨깁니다. 다시 시작이 필요합니다.",
         ["receivers_open"] = "Logitech 수신기...",
