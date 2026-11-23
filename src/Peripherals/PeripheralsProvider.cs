@@ -115,6 +115,9 @@ public static class PeripheralsProvider
         {
             lock (_lock)
             {
+                // Checked again here: the box can be ticked while a scan runs.
+                if (mouse is LogitechMouse && LogitechDisabled)
+                    return;
                 if (ConnectedMice.Any(m => m.GetDisplayName() == mouse.GetDisplayName()))
                     return;
 
@@ -303,6 +306,8 @@ public static class PeripheralsProvider
                 {
                     lock (_lock)
                     {
+                        if (LogitechDisabled)
+                            return;
                         var connected = ConnectedMice.Select(m => (m.GetDisplayName(), (m as LogitechReceiverMouse)?.Slot));
                         if (HidPPDecode.IsPairedDeviceConnected(connected, mouse.GetDisplayName(), mouse.Slot))
                             continue;

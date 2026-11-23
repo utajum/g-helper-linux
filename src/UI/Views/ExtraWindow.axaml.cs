@@ -1430,6 +1430,7 @@ public partial class ExtraWindow : Window
         RefreshStatusLed();
 
         checkDisableLogitech.IsChecked = Peripherals.PeripheralsProvider.LogitechDisabled;
+        buttonLogitechReceivers.IsVisible = !Peripherals.PeripheralsProvider.LogitechDisabled;
         checkDisableAsusPeripherals.IsChecked = Peripherals.PeripheralsProvider.AsusPeripheralsDisabled;
 
         // NumberPad button: visible when the touchpad hardware exists, even
@@ -2758,6 +2759,9 @@ public partial class ExtraWindow : Window
         if (_suppressEvents)
             return;
         bool enabled = checkDisableLogitech.IsChecked ?? false;
+        buttonLogitechReceivers.IsVisible = !enabled;
+        if (enabled)
+            _receiverWindow?.Close();
         RunPeripheralsConfigChange(checkDisableLogitech, "Logitech", enabled,
             () => Peripherals.PeripheralsProvider.LogitechDisabled = enabled);
     }
