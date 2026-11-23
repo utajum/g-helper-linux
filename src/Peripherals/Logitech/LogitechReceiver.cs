@@ -39,9 +39,9 @@ public class LogitechReceiver : IDisposable
     /// Opens the receiver and enumerates all paired devices.
     /// For each paired mouse, creates a <see cref="LogitechReceiverMouse"/>.
     /// </summary>
-    public List<LogitechMouse> DiscoverDevices()
+    public List<LogitechReceiverMouse> DiscoverDevices()
     {
-        var mice = new List<LogitechMouse>();
+        var mice = new List<LogitechReceiverMouse>();
 
         var hidDevice = FindReceiverHidDevice();
         if (hidDevice is null)
@@ -203,6 +203,9 @@ public class LogitechReceiverMouse : LogitechMouse
     }
 
     public override string GetDisplayName() => _discoveredName;
+
+    /// <summary>Place on the receiver; unlike the name, it does not change on connect.</summary>
+    public (byte index, ushort wpid) Slot => (_deviceIndex, _productId);
 
     /// <summary>
     /// The receiver-attached device is always "connected" if the receiver is present.

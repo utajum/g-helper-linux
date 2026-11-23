@@ -138,6 +138,14 @@ public static class HidPPDecode
         return len <= 0 ? null : System.Text.Encoding.ASCII.GetString(reply.Slice(lenAt + 1, len));
     }
 
+    /// <summary>
+    /// True if a device the receiver lists is already connected: same name, or same slot (index, wpid).
+    /// The slot is needed because connect renames the receiver codename to the full 0x0005 name.
+    /// </summary>
+    public static bool IsPairedDeviceConnected(IEnumerable<(string name, (byte index, ushort wpid)? slot)> connected,
+        string name, (byte index, ushort wpid) slot) =>
+        connected.Any(c => c.name == name || c.slot == slot);
+
     /// <summary>KEYBOARD_DISABLE_KEYS (0x4521) bitmask: Caps Lock, Num Lock, Scroll Lock, Insert, Win.</summary>
     public static string DisabledKeysSummary(byte mask)
     {

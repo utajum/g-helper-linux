@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using GHelper.Linux.Helpers;
 using GHelper.Linux.Peripherals.Logitech;
+using GHelper.Linux.Peripherals.Logitech.HidPP;
 using GHelper.Linux.Peripherals.Logitech.Models;
 using HidSharp;
 
@@ -130,6 +131,9 @@ public static class PeripheralsProvider
                 catch (Exception ex)
                 {
                     Logger.WriteLine($"Peripherals: failed to connect {mouse.GetDisplayName()}: {ex.Message}");
+                    try
+                    { mouse.Disconnect(); }
+                    catch { }
                 }
             }
         }
@@ -299,7 +303,8 @@ public static class PeripheralsProvider
                 {
                     lock (_lock)
                     {
-                        if (ConnectedMice.Any(m => m.GetDisplayName() == mouse.GetDisplayName()))
+                        var connected = ConnectedMice.Select(m => (m.GetDisplayName(), (m as LogitechReceiverMouse)?.Slot));
+                        if (HidPPDecode.IsPairedDeviceConnected(connected, mouse.GetDisplayName(), mouse.Slot))
                             continue;
 
                         try
@@ -315,6 +320,9 @@ public static class PeripheralsProvider
                         catch (Exception ex)
                         {
                             Logger.WriteLine($"Peripherals: failed to connect {mouse.GetDisplayName()} via receiver: {ex.Message}");
+                            try
+                            { mouse.Disconnect(); }
+                            catch { }
                         }
                     }
                 }

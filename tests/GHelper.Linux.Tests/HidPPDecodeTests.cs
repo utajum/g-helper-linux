@@ -106,6 +106,15 @@ public static class HidPPDecodeTests
             Harness.Assert(HidPPDecode.DecodeCodename([0x40, 0x00], bolt: false) is null, "empty");
         });
 
+        Harness.Scenario("Receiver_RenamedDevice_IsConnected", _ =>
+        {
+            // Bolt lists "MX MCHNCL M"; connect renames it to the 0x0005 name "MX Mechanical Mini".
+            (string, (byte, ushort)?)[] connected = [("G502 HERO", null), ("MX Mechanical Mini", (1, 0xB367))];
+            Harness.Assert(HidPPDecode.IsPairedDeviceConnected(connected, "MX MCHNCL M", (1, 0xB367)), "renamed, same slot");
+            Harness.Assert(!HidPPDecode.IsPairedDeviceConnected(connected, "MX Master 3S", (2, 0xB034)), "new slot");
+            Harness.Assert(HidPPDecode.IsPairedDeviceConnected([("MX Master 3S", null)], "MX Master 3S", (2, 0xB034)), "same name");
+        });
+
         Harness.Scenario("DisabledKeys_Summary", _ =>
         {
             Harness.AssertEqual("-", HidPPDecode.DisabledKeysSummary(0), "none");
