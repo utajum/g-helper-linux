@@ -13,8 +13,8 @@ namespace GHelper.Linux.Helpers;
 /// <list type="number">
 ///   <item><b>Main tray icon tooltip</b> - hover text on the existing
 ///         performance-mode icon, via <c>TrayIcon.ToolTipText</c> (the SNI
-///         <c>Title</c>; Avalonia leaves the SNI <c>ToolTip</c> property
-///         empty).</item>
+///         <c>Title</c> and, since Avalonia 12.2, the SNI <c>ToolTip</c>
+///         that KDE Plasma shows on hover).</item>
 ///   <item><b>CPU temp tray icon</b> - optional second SNI service that
 ///         renders the live CPU temp as text on a colored background
 ///         (default blue), or transparent with auto-contrast outline.</item>

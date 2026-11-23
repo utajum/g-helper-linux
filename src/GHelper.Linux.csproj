@@ -41,12 +41,12 @@
 
   <!-- Avalonia UI framework -->
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="12.1.6" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
-    <PackageReference Include="Avalonia.X11" Version="12.1.6" />
-    <PackageReference Include="Avalonia.Skia" Version="12.1.6" />
-    <PackageReference Include="Avalonia.HarfBuzz" Version="12.1.6" />
+    <PackageReference Include="Avalonia" Version="12.2.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.2.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.2.0" />
+    <PackageReference Include="Avalonia.X11" Version="12.2.0" />
+    <PackageReference Include="Avalonia.Skia" Version="12.2.0" />
+    <PackageReference Include="Avalonia.HarfBuzz" Version="12.2.0" />
 
     <!-- HID communication (cross-platform, used by G-Helper) -->
     <PackageReference Include="HidSharpCore" Version="1.3.0" />
