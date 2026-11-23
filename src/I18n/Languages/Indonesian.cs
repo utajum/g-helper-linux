@@ -1010,7 +1010,7 @@ public static class Indonesian
         ["receivers_unpair"] = "Lepaskan pasangan",
         ["receivers_unpair_confirm"] = "Lepaskan pasangan {0}? Perangkat tidak akan bekerja dengan penerima ini sampai Anda memasangkannya lagi.",
         ["receivers_unpair_failed"] = "Gagal melepaskan pasangan.",
-        ["receivers_hint_unifying"] = "Pada perangkat dengan saluran, pilih salurannya. Lalu matikan dan nyalakan lagi perangkat selagi jendela ini menunggu. Perangkat meminta pemasangan saat menyala; lampu berkedip saja tidak memasangkan.",
+        ["receivers_hint_unifying"] = "Jika perangkat Anda punya tombol saluran, pilih saluran terlebih dahulu. Lalu matikan perangkat dan nyalakan lagi.",
         ["receivers_hint_bolt"] = "Tekan tombol pemasangan, atau tahan tombol saluran selama 3 detik sampai lampu berkedip cepat.",
         ["receivers_pairing_with"] = "{0} ditemukan, memasangkan...",
         ["receivers_passkey_type"] = "Di {1}, ketik {0} lalu tekan Enter.",

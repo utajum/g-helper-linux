@@ -1010,7 +1010,7 @@ public static class Norwegian
         ["receivers_unpair"] = "Fjern sammenkobling",
         ["receivers_unpair_confirm"] = "Fjerne sammenkoblingen for {0}? Den virker ikke med mottakeren før du kobler den til igjen.",
         ["receivers_unpair_failed"] = "Kunne ikke fjerne sammenkoblingen.",
-        ["receivers_hint_unifying"] = "På en enhet med kanaler velger du kanalen. Slå deretter enheten av og på igjen mens dette vinduet venter. Den ber om tilkobling når den slås på; et blinkende lys alene kobler ikke til.",
+        ["receivers_hint_unifying"] = "Hvis enheten har kanalknapper, velger du først en kanal. Slå deretter enheten av og på igjen.",
         ["receivers_hint_bolt"] = "Trykk på tilkoblingsknappen, eller hold en kanalknapp i 3 sekunder til lyset blinker raskt.",
         ["receivers_pairing_with"] = "Fant {0}, kobler til...",
         ["receivers_passkey_type"] = "Skriv {0} på {1} og trykk Enter.",

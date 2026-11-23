@@ -1062,7 +1062,7 @@ public static class Malay
         ["receivers_unpair"] = "Nyahpasang",
         ["receivers_unpair_confirm"] = "Nyahpasang {0}? Peranti tidak akan berfungsi dengan penerima ini sehingga anda memasangkannya semula.",
         ["receivers_unpair_failed"] = "Gagal menyahpasang.",
-        ["receivers_hint_unifying"] = "Pada peranti dengan saluran, pilih salurannya. Kemudian matikan dan hidupkan semula peranti semasa tetingkap ini menunggu. Peranti meminta pemasangan semasa dihidupkan; lampu berkelip sahaja tidak memasangkan.",
+        ["receivers_hint_unifying"] = "Jika peranti anda mempunyai butang saluran, pilih saluran dahulu. Kemudian matikan peranti dan hidupkan semula.",
         ["receivers_hint_bolt"] = "Tekan butang pemasangan, atau tahan butang saluran selama 3 saat sehingga lampu berkelip pantas.",
         ["receivers_pairing_with"] = "{0} ditemui, sedang memasangkan...",
         ["receivers_passkey_type"] = "Pada {1}, taip {0} dan tekan Enter.",

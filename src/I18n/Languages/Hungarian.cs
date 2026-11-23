@@ -1007,7 +1007,7 @@ public static class Hungarian
         ["receivers_unpair"] = "Párosítás törlése",
         ["receivers_unpair_confirm"] = "Törli a(z) {0} párosítását? Az eszköz nem működik ezzel a vevővel, amíg újra nem párosítja.",
         ["receivers_unpair_failed"] = "A párosítás törlése nem sikerült.",
-        ["receivers_hint_unifying"] = "Csatornás eszköznél válassza ki a csatornát. Ezután kapcsolja ki, majd újra be az eszközt, amíg ez az ablak vár. Bekapcsoláskor kéri a párosítást; a villogó fény önmagában nem párosít.",
+        ["receivers_hint_unifying"] = "Ha az eszköznek vannak csatornagombjai, először válasszon csatornát. Ezután kapcsolja ki, majd újra be az eszközt.",
         ["receivers_hint_bolt"] = "Nyomja meg a párosítás gombot, vagy tartson nyomva egy csatornagombot 3 másodpercig, amíg a fény gyorsan villog.",
         ["receivers_pairing_with"] = "{0} megtalálva, párosítás...",
         ["receivers_passkey_type"] = "A(z) {1} eszközön írja be: {0}, majd nyomja meg az Enter billentyűt.",

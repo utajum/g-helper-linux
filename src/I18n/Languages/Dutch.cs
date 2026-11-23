@@ -1007,7 +1007,7 @@ public static class Dutch
         ["receivers_unpair"] = "Ontkoppelen",
         ["receivers_unpair_confirm"] = "{0} ontkoppelen? Het werkt pas weer met deze ontvanger als je het opnieuw koppelt.",
         ["receivers_unpair_failed"] = "Ontkoppelen mislukt.",
-        ["receivers_hint_unifying"] = "Kies op een apparaat met kanalen eerst het kanaal. Zet het apparaat daarna uit en weer aan terwijl dit venster wacht. Het vraagt om koppelen bij het aanzetten; alleen een knipperend lampje koppelt niet.",
+        ["receivers_hint_unifying"] = "Heeft je apparaat kanaalknoppen, kies dan eerst een kanaal. Zet het apparaat daarna uit en weer aan.",
         ["receivers_hint_bolt"] = "Druk op de koppelknop, of houd een kanaalknop 3 seconden ingedrukt tot het lampje snel knippert.",
         ["receivers_pairing_with"] = "{0} gevonden, koppelen...",
         ["receivers_passkey_type"] = "Typ op {1} {0} en druk op Enter.",

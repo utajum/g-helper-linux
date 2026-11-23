@@ -1007,7 +1007,7 @@ public static class Spanish
         ["receivers_unpair"] = "Desemparejar",
         ["receivers_unpair_confirm"] = "¿Desemparejar {0}? Dejará de funcionar con este receptor hasta que lo vuelva a emparejar.",
         ["receivers_unpair_failed"] = "No se pudo desemparejar.",
-        ["receivers_hint_unifying"] = "En un dispositivo con canales, elija el canal. Luego apague y vuelva a encender el dispositivo mientras esta ventana espera. Pide emparejarse al encenderse; una luz que parpadea no basta.",
+        ["receivers_hint_unifying"] = "Si su dispositivo tiene botones de canal, elija primero un canal. Luego apague el dispositivo y vuelva a encenderlo.",
         ["receivers_hint_bolt"] = "Pulse el botón de emparejamiento o mantenga pulsado un botón de canal 3 segundos hasta que la luz parpadee rápido.",
         ["receivers_pairing_with"] = "{0} encontrado, emparejando...",
         ["receivers_passkey_type"] = "En {1}, escriba {0} y pulse Intro.",

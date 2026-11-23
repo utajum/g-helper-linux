@@ -1010,7 +1010,7 @@ public static class ChineseTraditional
         ["receivers_unpair"] = "取消配對",
         ["receivers_unpair_confirm"] = "取消配對 {0}？重新配對之前，它將無法搭配此接收器使用。",
         ["receivers_unpair_failed"] = "取消配對失敗。",
-        ["receivers_hint_unifying"] = "對於有頻道的裝置，先選擇頻道。然後在此視窗等待時關閉並重新開啟裝置。裝置在開機時要求配對；僅指示燈閃爍不會配對。",
+        ["receivers_hint_unifying"] = "如果裝置有頻道按鈕，請先選擇頻道。然後關閉裝置再重新開啟。",
         ["receivers_hint_bolt"] = "按下配對按鈕，或按住頻道按鈕 3 秒，直到指示燈快速閃爍。",
         ["receivers_pairing_with"] = "找到 {0}，正在配對...",
         ["receivers_passkey_type"] = "在 {1} 上輸入 {0} 並按 Enter。",

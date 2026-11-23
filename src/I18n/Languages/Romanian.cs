@@ -1007,7 +1007,7 @@ public static class Romanian
         ["receivers_unpair"] = "Dezasociază",
         ["receivers_unpair_confirm"] = "Dezasociați {0}? Nu va mai funcționa cu acest receptor până nu îl asociați din nou.",
         ["receivers_unpair_failed"] = "Dezasocierea a eșuat.",
-        ["receivers_hint_unifying"] = "Pe un dispozitiv cu canale, alegeți canalul. Apoi opriți și porniți din nou dispozitivul cât timp această fereastră așteaptă. Cere asocierea la pornire; o lumină care clipește nu asociază singură.",
+        ["receivers_hint_unifying"] = "Dacă dispozitivul are butoane de canal, alegeți mai întâi un canal. Apoi opriți dispozitivul și porniți-l din nou.",
         ["receivers_hint_bolt"] = "Apăsați butonul de asociere, sau țineți apăsat un buton de canal 3 secunde până când lumina clipește rapid.",
         ["receivers_pairing_with"] = "S-a găsit {0}, asociere...",
         ["receivers_passkey_type"] = "Pe {1}, tastați {0} și apăsați Enter.",

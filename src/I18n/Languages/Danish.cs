@@ -1010,7 +1010,7 @@ public static class Danish
         ["receivers_unpair"] = "Fjern parring",
         ["receivers_unpair_confirm"] = "Fjern parringen af {0}? Den virker ikke med modtageren, før du parrer den igen.",
         ["receivers_unpair_failed"] = "Kunne ikke fjerne parringen.",
-        ["receivers_hint_unifying"] = "På en enhed med kanaler skal du vælge kanalen. Sluk derefter enheden, og tænd den igen, mens dette vindue venter. Den beder om parring, når den tændes; et blinkende lys alene parrer ikke.",
+        ["receivers_hint_unifying"] = "Hvis enheden har kanalknapper, skal du først vælge en kanal. Sluk derefter enheden og tænd den igen.",
         ["receivers_hint_bolt"] = "Tryk på parringsknappen, eller hold en kanalknap i 3 sekunder, til lyset blinker hurtigt.",
         ["receivers_pairing_with"] = "Fandt {0}, parrer...",
         ["receivers_passkey_type"] = "Skriv {0} på {1}, og tryk Enter.",

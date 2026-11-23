@@ -1007,7 +1007,7 @@ public static class Italian
         ["receivers_unpair"] = "Dissocia",
         ["receivers_unpair_confirm"] = "Dissociare {0}? Non funzionerà con questo ricevitore finché non lo associ di nuovo.",
         ["receivers_unpair_failed"] = "Dissociazione non riuscita.",
-        ["receivers_hint_unifying"] = "Su un dispositivo con canali, scegli il canale. Poi spegni e riaccendi il dispositivo mentre questa finestra attende. Chiede l'associazione all'accensione; una luce che lampeggia da sola non basta.",
+        ["receivers_hint_unifying"] = "Se il dispositivo ha pulsanti di canale, scegli prima un canale. Poi spegni il dispositivo e riaccendilo.",
         ["receivers_hint_bolt"] = "Premi il pulsante di associazione, oppure tieni premuto un pulsante di canale per 3 secondi finché la luce lampeggia velocemente.",
         ["receivers_pairing_with"] = "{0} trovato, associazione...",
         ["receivers_passkey_type"] = "Su {1}, digita {0} e premi Invio.",

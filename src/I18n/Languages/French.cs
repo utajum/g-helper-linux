@@ -1007,7 +1007,7 @@ public static class French
         ["receivers_unpair"] = "Dissocier",
         ["receivers_unpair_confirm"] = "Dissocier {0} ? Il ne fonctionnera plus avec ce récepteur jusqu'à une nouvelle association.",
         ["receivers_unpair_failed"] = "La dissociation a échoué.",
-        ["receivers_hint_unifying"] = "Sur un appareil à canaux, choisissez le canal. Puis éteignez et rallumez l'appareil pendant que cette fenêtre attend. Il demande l'association à l'allumage ; un voyant qui clignote ne suffit pas.",
+        ["receivers_hint_unifying"] = "Si votre appareil a des boutons de canal, choisissez d'abord un canal. Puis éteignez l'appareil et rallumez-le.",
         ["receivers_hint_bolt"] = "Appuyez sur le bouton d'association, ou maintenez un bouton de canal 3 secondes jusqu'à ce que le voyant clignote rapidement.",
         ["receivers_pairing_with"] = "{0} trouvé, association...",
         ["receivers_passkey_type"] = "Sur {1}, tapez {0} puis appuyez sur Entrée.",
