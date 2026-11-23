@@ -1007,7 +1007,7 @@ public static class German
         ["receivers_unpair"] = "Entkoppeln",
         ["receivers_unpair_confirm"] = "{0} entkoppeln? Das Gerät funktioniert mit diesem Empfänger erst nach erneutem Koppeln wieder.",
         ["receivers_unpair_failed"] = "Entkoppeln fehlgeschlagen.",
-        ["receivers_hint_unifying"] = "Schalten Sie das Gerät ein oder aus und wieder ein. Bei Geräten mit Kanälen wählen Sie einen Kanal und drücken dann die Connect-Taste oder halten die Kanaltaste 3 Sekunden, bis das Licht schnell blinkt.",
+        ["receivers_hint_unifying"] = "Wählen Sie bei Geräten mit Kanälen zuerst den Kanal. Schalten Sie das Gerät dann aus und wieder ein, während dieses Fenster wartet. Es fragt beim Einschalten nach der Kopplung; ein blinkendes Licht allein koppelt nicht.",
         ["receivers_hint_bolt"] = "Drücken Sie die Kopplungstaste oder halten Sie eine Kanaltaste 3 Sekunden, bis das Licht schnell blinkt.",
         ["receivers_pairing_with"] = "{0} gefunden, wird gekoppelt...",
         ["receivers_passkey_type"] = "Geben Sie auf {1} {0} ein und drücken Sie Enter.",

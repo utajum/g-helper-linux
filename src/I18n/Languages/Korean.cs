@@ -1010,7 +1010,7 @@ public static class Korean
         ["receivers_unpair"] = "페어링 해제",
         ["receivers_unpair_confirm"] = "{0}의 페어링을 해제할까요? 다시 페어링할 때까지 이 수신기에서 작동하지 않습니다.",
         ["receivers_unpair_failed"] = "페어링 해제에 실패했습니다.",
-        ["receivers_hint_unifying"] = "장치를 켜거나, 껐다가 다시 켜세요. 채널이 있는 장치는 채널을 고른 다음 Connect 버튼을 누르거나, 표시등이 빠르게 깜박일 때까지 채널 버튼을 3초간 누르세요.",
+        ["receivers_hint_unifying"] = "채널이 있는 장치는 먼저 채널을 고르세요. 그다음 이 창이 기다리는 동안 장치를 껐다가 다시 켜세요. 장치는 켜질 때 페어링을 요청하며, 표시등이 깜박이는 것만으로는 페어링되지 않습니다.",
         ["receivers_hint_bolt"] = "페어링 버튼을 누르거나, 표시등이 빠르게 깜박일 때까지 채널 버튼을 3초간 누르세요.",
         ["receivers_pairing_with"] = "{0} 발견, 페어링 중...",
         ["receivers_passkey_type"] = "{1}에서 {0}을(를) 입력하고 Enter를 누르세요.",

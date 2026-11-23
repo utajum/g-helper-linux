@@ -1062,7 +1062,7 @@ public static class Lithuanian
         ["receivers_unpair"] = "Atsieti",
         ["receivers_unpair_confirm"] = "Atsieti {0}? Įrenginys neveiks su šiuo imtuvu, kol vėl jo nesusiesite.",
         ["receivers_unpair_failed"] = "Atsieti nepavyko.",
-        ["receivers_hint_unifying"] = "Įjunkite įrenginį arba išjunkite ir vėl įjunkite. Įrenginyje su kanalais pasirinkite kanalą, tada paspauskite mygtuką Connect arba palaikykite kanalo mygtuką 3 sekundes, kol lemputė ims greitai mirksėti.",
+        ["receivers_hint_unifying"] = "Įrenginyje su kanalais pasirinkite kanalą. Tada išjunkite ir vėl įjunkite įrenginį, kol šis langas laukia. Susieti jis prašo įsijungdamas; vien mirksinti lemputė nesusieja.",
         ["receivers_hint_bolt"] = "Paspauskite susiejimo mygtuką arba palaikykite kanalo mygtuką 3 sekundes, kol lemputė ims greitai mirksėti.",
         ["receivers_pairing_with"] = "Rastas {0}, susiejama...",
         ["receivers_passkey_type"] = "Įrenginyje {1} įveskite {0} ir paspauskite Enter.",

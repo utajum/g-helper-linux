@@ -1010,7 +1010,7 @@ public static class Swedish
         ["receivers_unpair"] = "Ta bort parkoppling",
         ["receivers_unpair_confirm"] = "Ta bort parkopplingen för {0}? Den fungerar inte med mottagaren förrän du parkopplar den igen.",
         ["receivers_unpair_failed"] = "Det gick inte att ta bort parkopplingen.",
-        ["receivers_hint_unifying"] = "Slå på enheten, eller stäng av den och slå på den igen. På en enhet med kanaler väljer du en kanal och trycker sedan på Connect-knappen eller håller kanalknappen i 3 sekunder tills lampan blinkar snabbt.",
+        ["receivers_hint_unifying"] = "På en enhet med kanaler väljer du kanalen. Stäng sedan av enheten och slå på den igen medan det här fönstret väntar. Den ber om parkoppling när den startar; en blinkande lampa räcker inte.",
         ["receivers_hint_bolt"] = "Tryck på parkopplingsknappen, eller håll en kanalknapp i 3 sekunder tills lampan blinkar snabbt.",
         ["receivers_pairing_with"] = "Hittade {0}, parkopplar...",
         ["receivers_passkey_type"] = "Skriv {0} på {1} och tryck Enter.",

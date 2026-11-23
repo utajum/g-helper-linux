@@ -1010,7 +1010,7 @@ public static class Finnish
         ["receivers_unpair"] = "Poista paritus",
         ["receivers_unpair_confirm"] = "Poistetaanko laitteen {0} paritus? Se ei toimi tämän vastaanottimen kanssa ennen kuin paritat sen uudelleen.",
         ["receivers_unpair_failed"] = "Parituksen poisto epäonnistui.",
-        ["receivers_hint_unifying"] = "Kytke laite päälle, tai sammuta ja käynnistä se uudelleen. Jos laitteessa on kanavia, valitse kanava ja paina sitten Connect-painiketta tai pidä kanavapainiketta painettuna 3 sekuntia, kunnes valo vilkkuu nopeasti.",
+        ["receivers_hint_unifying"] = "Jos laitteessa on kanavia, valitse kanava. Sammuta sitten laite ja käynnistä se uudelleen, kun tämä ikkuna odottaa. Laite pyytää paritusta käynnistyessään; pelkkä vilkkuva valo ei parita.",
         ["receivers_hint_bolt"] = "Paina parituspainiketta, tai pidä kanavapainiketta painettuna 3 sekuntia, kunnes valo vilkkuu nopeasti.",
         ["receivers_pairing_with"] = "Löytyi {0}, paritetaan...",
         ["receivers_passkey_type"] = "Kirjoita laitteella {1} {0} ja paina Enter.",

@@ -1062,7 +1062,7 @@ public static class Filipino
         ["receivers_unpair"] = "I-unpair",
         ["receivers_unpair_confirm"] = "I-unpair ang {0}? Hindi na ito gagana sa receiver na ito hanggang i-pair mo ulit.",
         ["receivers_unpair_failed"] = "Hindi na-unpair.",
-        ["receivers_hint_unifying"] = "I-on ang device, o i-off at i-on ulit. Sa device na may mga channel, pumili ng channel, pagkatapos ay pindutin ang Connect button o pindutin nang matagal ang channel button nang 3 segundo hanggang mabilis na kumurap ang ilaw.",
+        ["receivers_hint_unifying"] = "Sa device na may mga channel, piliin ang channel. Pagkatapos ay i-off at i-on ulit ang device habang naghihintay ang window na ito. Humihingi ito ng pairing kapag nag-on; hindi nagpa-pair ang kumukurap na ilaw lang.",
         ["receivers_hint_bolt"] = "Pindutin ang pairing button, o pindutin nang matagal ang isang channel button nang 3 segundo hanggang mabilis na kumurap ang ilaw.",
         ["receivers_pairing_with"] = "Nakita ang {0}, nagpa-pair...",
         ["receivers_passkey_type"] = "Sa {1}, i-type ang {0} at pindutin ang Enter.",

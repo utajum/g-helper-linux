@@ -1062,7 +1062,7 @@ public static class Latvian
         ["receivers_unpair"] = "Atvienot",
         ["receivers_unpair_confirm"] = "Atvienot {0}? Ierīce nedarbosies ar šo uztvērēju, kamēr to atkal nesavienosiet.",
         ["receivers_unpair_failed"] = "Atvienot neizdevās.",
-        ["receivers_hint_unifying"] = "Ieslēdziet ierīci vai izslēdziet un atkal ieslēdziet to. Ierīcei ar kanāliem izvēlieties kanālu, tad nospiediet pogu Connect vai turiet kanāla pogu 3 sekundes, līdz gaisma ātri mirgo.",
+        ["receivers_hint_unifying"] = "Ierīcei ar kanāliem izvēlieties kanālu. Tad izslēdziet un atkal ieslēdziet ierīci, kamēr šis logs gaida. Savienošanu tā pieprasa ieslēdzoties; mirgojoša gaisma viena pati nesavieno.",
         ["receivers_hint_bolt"] = "Nospiediet savienošanas pogu vai turiet kanāla pogu 3 sekundes, līdz gaisma ātri mirgo.",
         ["receivers_pairing_with"] = "Atrasts {0}, savieno...",
         ["receivers_passkey_type"] = "Ierīcē {1} ievadiet {0} un nospiediet Enter.",

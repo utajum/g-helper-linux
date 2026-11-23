@@ -1007,7 +1007,7 @@ public static class Turkish
         ["receivers_unpair"] = "Eşleştirmeyi kaldır",
         ["receivers_unpair_confirm"] = "{0} eşleştirmesi kaldırılsın mı? Yeniden eşleştirene kadar bu alıcıyla çalışmaz.",
         ["receivers_unpair_failed"] = "Eşleştirme kaldırılamadı.",
-        ["receivers_hint_unifying"] = "Cihazı açın veya kapatıp yeniden açın. Kanallı bir cihazda bir kanal seçin, ardından Connect düğmesine basın veya ışık hızlı yanıp sönene kadar kanal düğmesini 3 saniye basılı tutun.",
+        ["receivers_hint_unifying"] = "Kanallı bir cihazda kanalı seçin. Ardından bu pencere beklerken cihazı kapatıp yeniden açın. Cihaz açılırken eşleştirme ister; yalnızca yanıp sönen ışık eşleştirmez.",
         ["receivers_hint_bolt"] = "Eşleştirme düğmesine basın veya ışık hızlı yanıp sönene kadar bir kanal düğmesini 3 saniye basılı tutun.",
         ["receivers_pairing_with"] = "{0} bulundu, eşleştiriliyor...",
         ["receivers_passkey_type"] = "{1} üzerinde {0} yazın ve Enter tuşuna basın.",

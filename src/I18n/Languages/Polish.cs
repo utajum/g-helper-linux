@@ -1007,7 +1007,7 @@ public static class Polish
         ["receivers_unpair"] = "Rozparuj",
         ["receivers_unpair_confirm"] = "Rozparować {0}? Przestanie działać z tym odbiornikiem, dopóki nie sparujesz go ponownie.",
         ["receivers_unpair_failed"] = "Rozparowanie nie powiodło się.",
-        ["receivers_hint_unifying"] = "Włącz urządzenie albo wyłącz je i włącz ponownie. W urządzeniu z kanałami wybierz kanał, a potem naciśnij przycisk Connect albo przytrzymaj przycisk kanału przez 3 sekundy, aż dioda zacznie szybko migać.",
+        ["receivers_hint_unifying"] = "W urządzeniu z kanałami wybierz kanał. Potem wyłącz i włącz urządzenie, gdy to okno czeka. Urządzenie prosi o parowanie przy włączeniu; samo miganie diody nie paruje.",
         ["receivers_hint_bolt"] = "Naciśnij przycisk parowania albo przytrzymaj przycisk kanału przez 3 sekundy, aż dioda zacznie szybko migać.",
         ["receivers_pairing_with"] = "Znaleziono {0}, parowanie...",
         ["receivers_passkey_type"] = "Na {1} wpisz {0} i naciśnij Enter.",
