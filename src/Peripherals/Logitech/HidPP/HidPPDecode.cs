@@ -160,15 +160,58 @@ public static class HidPPDecode
 
     // Receiver notifications: [report id, device index, sub id, address, data...].
 
-    /// <summary>0x41 device connection: slot, wpid (LE @5), kind (low nibble @4), link up (bit 6 @4 clear).</summary>
+    /// <summary>
+    /// HID++ 0x41 device connection: slot, wpid (LE @5), kind (low nibble @4), link up (bit 6 @4 clear).
+    /// DJ reports (0x20) use the same sub id with another layout, so they are not taken.
+    /// </summary>
     public static (byte index, ushort wpid, int kind, bool linkUp)? DecodeDeviceConnection(ReadOnlySpan<byte> r) =>
-        r.Length >= 7 && r[2] == 0x41 && r[1] is >= 1 and <= 6
+        r.Length >= 7 && r[0] is 0x10 or 0x11 && r[2] == 0x41 && r[1] is >= 1 and <= 6
             ? (r[1], (ushort)(r[5] | (r[6] << 8)), r[4] & 0x0F, (r[4] & 0x40) == 0)
             : null;
 
     /// <summary>0x4A pairing lock: open (bit 0 @3) and error @4 (1 timeout, 2 not supported, 3 too many, 6 sequence timeout).</summary>
     public static (bool open, byte error)? DecodeLockChange(ReadOnlySpan<byte> r) =>
         r.Length >= 5 && r[2] == 0x4A ? ((r[3] & 0x01) != 0, r[4]) : null;
+
+    /// <summary>
+    /// Unifying pairing session, fed with receiver reports. The lock is open only after a 0x4A open notice;
+    /// the write reply alone does not mean it. A new slot seen while open is the paired device. A known slot
+    /// counts only when the lock then closes without error, as a re-paired device keeps its slot.
+    /// </summary>
+    public sealed class UnifyingPairing(IReadOnlySet<byte> known)
+    {
+        private byte _newSlot, _knownSlot;
+
+        public bool Open { get; private set; }
+        public bool Closed { get; private set; }
+        public byte Error { get; private set; }
+
+        /// <summary>The paired slot, or 0.</summary>
+        public byte Slot => _newSlot != 0 ? _newSlot : Closed && Error == 0 ? _knownSlot : (byte)0;
+
+        /// <summary>True when nothing more can change the result: paired, failed, or closed before it opened.</summary>
+        public bool Done => _newSlot != 0 || Error != 0 || (Closed && !Open);
+
+        public void Feed(ReadOnlySpan<byte> r)
+        {
+            if (DecodeLockChange(r) is { } lockState)
+            {
+                if (lockState.error != 0)
+                    Error = lockState.error;
+                else if (lockState.open)
+                    Open = true;
+                else
+                    Closed = true;
+            }
+            else if (Open && DecodeDeviceConnection(r) is { } c)
+            {
+                if (!known.Contains(c.index))
+                    _newSlot = c.index;
+                else if (c.linkUp)
+                    _knownSlot = c.index;
+            }
+        }
+    }
 
     /// <summary>Bolt 0x53 discovery status: discovering when @3 is 0, error @4 (1 timeout, 2 failed).</summary>
     public static (bool discovering, byte error)? DecodeDiscoveryStatus(ReadOnlySpan<byte> r) =>
@@ -194,9 +237,9 @@ public static class HidPPDecode
         return new(counter, 0, null, 0, System.Text.Encoding.ASCII.GetString(r.Slice(7, Math.Max(len, 0))));
     }
 
-    /// <summary>Bolt 0x4D passkey request: six ASCII digits @4.</summary>
+    /// <summary>Bolt 0x4D passkey request: up to six ASCII digits @4, NUL-padded.</summary>
     public static string? DecodePasskey(ReadOnlySpan<byte> r) =>
-        r.Length >= 10 && r[2] == 0x4D ? System.Text.Encoding.ASCII.GetString(r.Slice(4, 6)) : null;
+        r.Length >= 10 && r[2] == 0x4D ? System.Text.Encoding.ASCII.GetString(r.Slice(4, 6)).TrimEnd('\0') : null;
 
     /// <summary>Bolt 0x54 pairing status: state @3 (0 lock open, 2 done), error @4, new slot @11.</summary>
     public static (byte state, byte error, byte slot)? DecodePairingStatus(ReadOnlySpan<byte> r) =>

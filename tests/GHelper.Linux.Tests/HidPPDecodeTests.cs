@@ -129,6 +129,7 @@ public static class HidPPDecodeTests
                 HidPPDecode.DecodeDeviceConnection([0x10, 0x01, 0x41, 0x04, 0x02, 0x71, 0x40])!.Value, "0x41 new mouse");
             Harness.AssertEqual(false, HidPPDecode.DecodeDeviceConnection([0x10, 0x02, 0x41, 0x04, 0x42, 0x71, 0x40])!.Value.linkUp, "0x41 link down");
             Harness.Assert(HidPPDecode.DecodeDeviceConnection([0x10, 0xFF, 0x41, 0x04, 0x02, 0x71, 0x40]) is null, "0x41 from receiver");
+            Harness.Assert(HidPPDecode.DecodeDeviceConnection([0x20, 0x01, 0x41, 0x02, 0x71, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0]) is null, "DJ paired report");
             Harness.AssertEqual((true, (byte)0), HidPPDecode.DecodeLockChange([0x10, 0xFF, 0x4A, 0x01, 0x00, 0, 0])!.Value, "lock open");
             Harness.AssertEqual((false, (byte)3), HidPPDecode.DecodeLockChange([0x10, 0xFF, 0x4A, 0x00, 0x03, 0, 0])!.Value, "too many devices");
             Harness.Assert(HidPPDecode.DecodeLockChange([0x10, 0xFF, 0x41, 0x01, 0x00, 0, 0]) is null, "other sub id");
@@ -145,8 +146,46 @@ public static class HidPPDecodeTests
             Harness.AssertEqual((false, (byte)1), HidPPDecode.DecodeDiscoveryStatus([0x10, 0xFF, 0x53, 0x01, 0x01, 0, 0])!.Value, "discovery timeout");
             byte[] passkey = [0x11, 0xFF, 0x4D, 0x00, .. "000613"u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
             Harness.AssertEqual("000613", HidPPDecode.DecodePasskey(passkey), "passkey");
+            byte[] shortKey = [0x11, 0xFF, 0x4D, 0x00, .. "613"u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            Harness.AssertEqual("613", HidPPDecode.DecodePasskey(shortKey), "NUL-padded passkey");
             byte[] done = [0x11, 0xFF, 0x54, 0x02, 0x00, 0, 0, 0, 0, 0, 0, 0x03, 0, 0, 0, 0, 0, 0, 0, 0];
             Harness.AssertEqual(((byte)2, (byte)0, (byte)3), HidPPDecode.DecodePairingStatus(done)!.Value, "paired in slot 3");
+        });
+
+        Harness.Scenario("Receiver_UnifyingPairing", _ =>
+        {
+            byte[] open = [0x10, 0xFF, 0x4A, 0x01, 0x00, 0, 0];
+            byte[] closed = [0x10, 0xFF, 0x4A, 0x00, 0x00, 0, 0];
+            byte[] slot2 = [0x10, 0x02, 0x41, 0x04, 0x02, 0x71, 0x40];
+            byte[] slot1 = [0x10, 0x01, 0x41, 0x04, 0x01, 0x34, 0x40];
+
+            var p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(slot2);
+            Harness.AssertEqual((byte)0, p.Slot, "0x41 before the lock opens is not a pairing");
+            p.Feed(open);
+            p.Feed(slot2);
+            Harness.AssertEqual((true, true, (byte)2), (p.Open, p.Done, p.Slot), "new slot while open");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(open);
+            p.Feed(closed);
+            Harness.AssertEqual((false, (byte)0), (p.Done, p.Slot), "closed without a device is not a pairing");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte> { 1 });
+            p.Feed(open);
+            p.Feed(slot1);
+            Harness.AssertEqual((byte)0, p.Slot, "known slot alone");
+            p.Feed(closed);
+            Harness.AssertEqual((byte)1, p.Slot, "known slot, then closed: re-paired");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(open);
+            p.Feed([0x10, 0xFF, 0x4A, 0x00, 0x03, 0, 0]);
+            Harness.AssertEqual((true, (byte)3, (byte)0), (p.Done, p.Error, p.Slot), "too many devices");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(closed);
+            Harness.AssertEqual((true, false), (p.Done, p.Open), "closed before it opened");
         });
 
         Harness.Scenario("Receiver_PasskeyClicks", _ =>

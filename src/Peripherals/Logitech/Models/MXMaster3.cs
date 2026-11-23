@@ -47,3 +47,17 @@ public class MXMaster3SBT : MXMaster3S
     public MXMaster3SBT() : base(0xB034, "", true) { }
     public override string GetDisplayName() => "MX Master 3S (BT)";
 }
+
+/// <summary>MX Master 3S second hardware revision (Bluetooth, PID 0xB043).</summary>
+public class MXMaster3SBTv2 : MXMaster3S
+{
+    public MXMaster3SBTv2() : base(0xB043, "", true) { }
+    public override string GetDisplayName() => "MX Master 3S (BT)";
+}
+
+/// <summary>MX Master 3S for Business (Bluetooth, PID 0xB035 or 0xB044).</summary>
+public class MXMaster3SBusinessBT : MXMaster3S
+{
+    public MXMaster3SBusinessBT(ushort pid) : base(pid, "", true) { }
+    public override string GetDisplayName() => "MX Master 3S for Business (BT)";
+}

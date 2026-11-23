@@ -108,6 +108,9 @@ public partial class ReceiverWindow : Window
         text.Children.Add(new TextBlock { Text = $"{slot.Index}. {slot.Name}", TextTrimming = TextTrimming.CharacterEllipsis });
         text.Children.Add(new TextBlock { Text = $"0x{slot.Wpid:X4}", Foreground = Dim, FontSize = 11, VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(text);
+        // Nano receivers do not unpair; pairing a new device replaces the old one.
+        if (entry.Kind == ReceiverKind.Nano)
+            return row;
         var unpair = SmallButton(Labels.Get("receivers_unpair"), () => UnpairAsync(entry, slot));
         Grid.SetColumn(unpair, 1);
         row.Children.Add(unpair);

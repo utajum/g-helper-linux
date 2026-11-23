@@ -14,6 +14,7 @@ namespace GHelper.Linux.Peripherals.Logitech;
 public class LogitechReceiver : IDisposable
 {
     private const byte REG_NOTIFICATIONS = 0x00;
+    private const byte REG_CONNECTION = 0x02;
     private const byte REG_PAIRING = 0xB2;
     private const byte REG_PAIRING_INFO = 0xB5;
     private const byte REG_BOLT_DISCOVERY = 0xC0;
@@ -134,7 +135,10 @@ public class LogitechReceiver : IDisposable
         if (_device is null)
             return new PairResult(PairError.Failed);
 
-        EnableNotifications();
+        int? oldFlags = EnableNotifications();
+        // Register 0x02 byte 2: pairings left plus 5; below 5 means no limit.
+        if (_device.ReadRegister(REG_CONNECTION) is { Length: >= 5 } conn)
+            Logger.WriteLine($"LogitechReceiver({_info.Name}): pair start, {conn[3]} paired, pairings left {(conn[4] >= 5 ? conn[4] - 5 : -1)}");
         var queue = new ConcurrentQueue<byte[]>();
         _device.Unsolicited = queue.Enqueue;
         try
@@ -148,6 +152,8 @@ public class LogitechReceiver : IDisposable
         finally
         {
             _device.Unsolicited = null;
+            if (oldFlags is { } flags)
+                WriteNotificationFlags(flags);
         }
     }
 
@@ -165,33 +171,28 @@ public class LogitechReceiver : IDisposable
 
     private PairResult PairUnifying(int seconds, ConcurrentQueue<byte[]> queue, CancellationToken ct)
     {
-        var known = ReadSlots().Select(s => s.Index).ToHashSet();
+        var session = new HidPPDecode.UnifyingPairing(ReadSlots().Select(s => s.Index).ToHashSet());
         if (!_device!.WriteRegister(REG_PAIRING, 0x01, 0x00, (byte)seconds))
             return new PairResult(PairError.Failed);
 
-        byte found = 0, seen = 0;
-        bool closedOk = false;
         try
         {
-            long deadline = Environment.TickCount64 + (seconds + 5) * 1000L;
-            while (found == 0 && Environment.TickCount64 < deadline && !ct.IsCancellationRequested)
+            // The 0x4A open notice must come within 2 s; then the lock stays open for the given time.
+            long deadline = Environment.TickCount64 + 2000;
+            bool open = false, closed = false;
+            while (!session.Done && Environment.TickCount64 < deadline && !ct.IsCancellationRequested)
             {
-                var r = NextReport(queue);
-                if (r is null)
-                    continue;
-                if (HidPPDecode.DecodeDeviceConnection(r) is { } c)
+                if (NextReport(queue) is { } r)
+                    session.Feed(r);
+                if (session.Open && !open)
                 {
-                    if (known.Contains(c.index))
-                        seen = c.index;
-                    else
-                        found = c.index;
+                    open = true;
+                    deadline = Environment.TickCount64 + (seconds + 5) * 1000L;
                 }
-                else if (HidPPDecode.DecodeLockChange(r) is { open: false } lockState)
+                if (session.Closed && !closed)
                 {
-                    if (lockState.error != 0)
-                        return new PairResult(LockError(lockState.error));
-                    // Closed without error means paired; a re-paired device keeps its slot. Wait briefly for its notice.
-                    closedOk = true;
+                    // The new device notice can come just after the lock closes.
+                    closed = true;
                     deadline = Math.Min(deadline, Environment.TickCount64 + 1500);
                 }
             }
@@ -201,8 +202,15 @@ public class LogitechReceiver : IDisposable
             _device.WriteRegister(REG_PAIRING, 0x02, 0x00, 0x00);
         }
 
-        byte index = found != 0 ? found : closedOk ? seen : (byte)0;
-        if (found == 0 && !closedOk)
+        if (session.Error != 0)
+            return new PairResult(LockError(session.Error));
+        if (!session.Open)
+        {
+            Logger.WriteLine($"LogitechReceiver({_info.Name}): the pairing lock did not open");
+            return new PairResult(ct.IsCancellationRequested ? PairError.Cancelled : PairError.Failed);
+        }
+        byte index = session.Slot;
+        if (index == 0)
             return new PairResult(ct.IsCancellationRequested ? PairError.Cancelled : PairError.Timeout);
         return new PairResult(PairError.None, index, ReadSlots().FirstOrDefault(s => s.Index == index)?.Name);
     }
@@ -271,20 +279,31 @@ public class LogitechReceiver : IDisposable
         }
     }
 
-    /// <summary>Turns on the wireless and software-present notification bits, so the receiver reports pairing.</summary>
-    private void EnableNotifications()
+    /// <summary>
+    /// Turns on the wireless and software-present notification bits, so the receiver reports pairing.
+    /// Returns the old flags when it changed them, so they can be put back.
+    /// </summary>
+    private int? EnableNotifications()
     {
         var reply = _device!.ReadRegister(REG_NOTIFICATIONS);
         if (reply is null || reply.Length < 5)
-            return;
+            return null;
         int flags = (reply[2] << 16) | (reply[3] << 8) | reply[4];
         int wanted = flags | 0x000900;
-        if (wanted != flags)
-            _device.WriteRegister(REG_NOTIFICATIONS, (byte)(wanted >> 16), (byte)(wanted >> 8), (byte)wanted);
+        return wanted != flags && WriteNotificationFlags(wanted) ? flags : null;
     }
 
-    private byte[]? NextReport(ConcurrentQueue<byte[]> queue) =>
-        queue.TryDequeue(out var queued) ? queued : _device!.ReadReport(250);
+    private bool WriteNotificationFlags(int flags) =>
+        _device!.WriteRegister(REG_NOTIFICATIONS, (byte)(flags >> 16), (byte)(flags >> 8), (byte)flags);
+
+    private byte[]? NextReport(ConcurrentQueue<byte[]> queue)
+    {
+        var r = queue.TryDequeue(out var queued) ? queued : _device!.ReadReport(250);
+        // Receiver notices only (sub id 0x40 and up); device input reports are below.
+        if (r is { Length: > 2 } && r[2] >= 0x40)
+            Logger.WriteLine($"LogitechReceiver({_info.Name}): notice {Convert.ToHexString(r)}");
+        return r;
+    }
 
     private static PairError LockError(byte error) => error switch
     {
