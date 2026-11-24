@@ -53,17 +53,17 @@ ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="pcie_aspm", \
   RUN+="/bin/sh -c '[ ! -f /sys/module/pcie_aspm/parameters/policy ] || chmod 0666 /sys/module/pcie_aspm/parameters/policy'"
 
 # ── ryzen_smu (Curve Optimizer undervolting) ──
-# Only rsmu_cmd and smu_args need write access for sending CO commands.
+# Only rsmu_cmd, mp1_smu_cmd and smu_args need write access for sending CO commands.
 # Other attributes (codename, version, pm_table, …) remain read-only.
 ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="ryzen_smu", \
-  RUN+="/bin/sh -c 'chmod 0666 /sys/kernel/ryzen_smu_drv/rsmu_cmd /sys/kernel/ryzen_smu_drv/smu_args 2>/dev/null || true'"
+  RUN+="/bin/sh -c 'chmod 0666 /sys/kernel/ryzen_smu_drv/rsmu_cmd /sys/kernel/ryzen_smu_drv/mp1_smu_cmd /sys/kernel/ryzen_smu_drv/smu_args 2>/dev/null || true'"
 
 # Fallback via CPU device tree — module events don't re-fire on `udevadm trigger`
 # (installer path), so the rule above can miss on fresh install if ryzen_smu was
 # loaded at boot. CPU events fire on trigger (unlike module events); add|change
 # covers both boot-time add and the default `change` action trigger sends.
 SUBSYSTEM=="cpu", KERNEL=="cpu0", ACTION=="add|change", \
-  RUN+="/bin/sh -c '[ ! -f /sys/kernel/ryzen_smu_drv/rsmu_cmd ] || chmod 0666 /sys/kernel/ryzen_smu_drv/rsmu_cmd /sys/kernel/ryzen_smu_drv/smu_args'"
+  RUN+="/bin/sh -c '[ ! -f /sys/kernel/ryzen_smu_drv/smu_args ] || chmod 0666 /sys/kernel/ryzen_smu_drv/rsmu_cmd /sys/kernel/ryzen_smu_drv/mp1_smu_cmd /sys/kernel/ryzen_smu_drv/smu_args 2>/dev/null || true'"
 
 # ── CPU online/offline (core toggling) ──
 SUBSYSTEM=="cpu", ACTION=="add", \

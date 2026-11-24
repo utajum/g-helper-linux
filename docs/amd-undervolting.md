@@ -19,17 +19,20 @@ CO values **reset on every reboot** for safety.
 | Codename | Generation | Status |
 |----------|-----------|--------|
 | Raphael / Dragon Range | Zen 4 (Ryzen 7000 desktop / 7045HX mobile) | Tested |
-| Phoenix | Zen 4 APU (Ryzen 7040) | Enabled (validated at startup) |
-| Hawk Point | Zen 4 refresh (Ryzen 8000 mobile) | Enabled (validated at startup) |
+| Phoenix | Zen 4 APU (Ryzen 7040) | Enabled (MP1, not validated) |
+| Hawk Point | Zen 4 refresh (Ryzen 8000 mobile) | Enabled (MP1, not validated) |
 | Vermeer | Zen 3 (Ryzen 5000 desktop) | Enabled (validated at startup) |
-| Cezanne | Zen 3 APU (Ryzen 5000G) | Enabled (validated at startup) |
-| Rembrandt | Zen 3+ APU (Ryzen 6000 mobile) | Enabled (validated at startup) |
+| Cezanne | Zen 3 APU (Ryzen 5000G) | Enabled (MP1, not validated) |
+| Rembrandt | Zen 3+ APU (Ryzen 6000 mobile) | Enabled (MP1, not validated) |
 | Granite Ridge | Zen 5 (Ryzen 9000 desktop) | Enabled (validated at startup) |
-| Strix Point | Zen 5 mobile (Ryzen AI 300) | Enabled (validated at startup) |
-| Strix Halo | Zen 5 (Ryzen AI 300 HX) | Enabled (validated at startup) |
+| Strix Point | Zen 5 mobile (Ryzen AI 300) | Enabled (MP1, not validated) |
+| Strix Halo | Zen 5 (Ryzen AI 300 HX) | Enabled (MP1, not validated) |
 
-All codenames are protected by a startup validation probe - if the SMU rejects
+Vermeer, Raphael and Granite Ridge are protected by a startup validation probe - if the SMU rejects
 the read-only test command, CO disables itself before any writes happen.
+APUs (Cezanne, Rembrandt, Phoenix, Hawk Point, Strix Point, Strix Halo)
+use the MP1 mailbox like Windows G-Helper and ryzenadj. MP1 has no read command,
+so these have no probe and no read-back.
 
 ## How it works
 
@@ -40,7 +43,8 @@ thermal/power budget.
 
 G-Helper sends SMU mailbox commands via the driver's sysfs interface:
 - `smu_args` - 24 bytes (6x uint32 LE) command arguments
-- `rsmu_cmd` - 4 bytes, triggers the command and blocks until SMU responds
+- `rsmu_cmd`, or `mp1_smu_cmd` on APUs - 4 bytes, triggers the command and
+  blocks until SMU responds
 
 ## Safety
 
