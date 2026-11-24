@@ -133,9 +133,11 @@ G-Helper manages the ASUS dGPU (discrete GPU) power state and MUX switch through
 
 | Backend | Eco does | Back to Standard |
 |---------|----------|------------------|
-| ASUS firmware (default) | `dgpu_disable=1` in the EC | Usually no reboot |
+| ASUS firmware (MUX mode) | `dgpu_disable=1` in the EC | Usually no reboot |
 | PCI disable | Unloads the driver, removes the card from the PCI bus | Rescan, usually no reboot |
-| eBPF block | Driver stays loaded, a kernel filter hides the dGPU from apps | Instant, no reboot |
+| eBPF block (default on new installs) | Driver stays loaded, a kernel filter hides the dGPU from apps | Instant, no reboot |
+
+New installs use eBPF when it can run at the first start, otherwise MUX mode on ASUS and PCI elsewhere. Existing installs keep their backend.
 
 The reboot rules below are for the ASUS firmware backend. PCI and eBPF release Eco live.
 
@@ -159,7 +161,7 @@ Switching to Eco while the dGPU driver is active shows a dialog with three optio
 
 ### `╠══[ eBPF dGPU BLOCK ]══╣`
 
-Extra > GPU: tick "Use eBPF dGPU block", next to "Use PCI dGPU disable".
+Extra > GPU: eBPF is used when neither "Use MUX mode (ASUS firmware)" nor "Use PCI dGPU disable" is ticked.
 
 A kernel eBPF filter hides the dGPU PCI, DRM, hwmon and NVIDIA files from new processes. The driver stays loaded, so Standard is instant with no reboot. The hidden card can power off (D3cold), so Eco saves power without unloading anything.
 

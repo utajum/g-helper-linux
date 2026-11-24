@@ -330,7 +330,9 @@ public partial class ExtraWindow : Window
         labelGpuBackendIntro.Text = Labels.Get("gpu_backend_intro");
         checkPciGpuBackend.Content = Labels.Get("gpu_backend_pci_label");
         labelPciGpuBackendHint.Text = Labels.Get("gpu_backend_pci_hint");
-        checkBpfGpuBackend.Content = Labels.Get("gpu_backend_bpf_label");
+        labelBpfGpuBackend.Text = Labels.Get("gpu_backend_bpf_label");
+        checkMuxGpuBackend.Content = Labels.Get("gpu_backend_mux_label");
+        labelMuxGpuBackendHint.Text = Labels.Get("gpu_backend_mux_hint");
         labelBpfGpuBackendHint.Text = Labels.Get("gpu_backend_bpf_hint");
         checkBpfOptimized.Content = Labels.Get("gpu_backend_bpf_optimized");
         labelBpfOptimizedHint.Text = Labels.Get("gpu_tip_optimized");
@@ -2884,6 +2886,8 @@ public partial class ExtraWindow : Window
         try
         {
             checkPciGpuBackend.IsChecked = Helpers.AppConfig.IsPciGpuBackend();
+            checkMuxGpuBackend.IsChecked = Helpers.AppConfig.GetGpuBackend() == "asus-wmi";
+            panelMuxGpuBackend.IsVisible = Helpers.AppConfig.HasAsusPlatformDevice();
             checkRawWmi.IsChecked = Helpers.AppConfig.Is("raw_wmi");
             RefreshBpfGpuBackend();
         }
@@ -2897,7 +2901,6 @@ public partial class ExtraWindow : Window
     private void RefreshBpfGpuBackend()
     {
         bool selected = Helpers.AppConfig.IsBpfGpuBackend();
-        checkBpfGpuBackend.IsChecked = selected;
         checkBpfOptimized.IsChecked = Helpers.AppConfig.Is("gpu_bpf_optimized");
         checkBpfOptimized.IsEnabled = selected;
         buttonGpuApps.IsEnabled = selected;
@@ -2905,9 +2908,6 @@ public partial class ExtraWindow : Window
 
         string reason = Gpu.Block.GpuBlockCapability.UnavailableKey();
         bool available = reason.Length == 0;
-
-        // Missing pieces are set up in Updates; a selected box can always be cleared.
-        checkBpfGpuBackend.IsEnabled = available || selected || !Gpu.Block.GpuBlockCapability.IsHardBlock(reason);
 
         if (!available)
         {
@@ -2965,17 +2965,27 @@ public partial class ExtraWindow : Window
         });
     }
 
-    private void CheckBpfGpuBackend_Changed(object? sender, RoutedEventArgs e)
+    /// <summary>No box ticked means eBPF, unless this kernel or build can never run it.</summary>
+    private static string UntickedGpuBackend()
+        => Gpu.Block.GpuBlockCapability.IsHardBlock(Gpu.Block.GpuBlockCapability.UnavailableKey())
+            ? Helpers.AppConfig.DefaultGpuBackend() : "ebpf";
+
+    private void CheckMuxGpuBackend_Changed(object? sender, RoutedEventArgs e)
     {
         if (_suppressEvents)
             return;
-        bool enabled = checkBpfGpuBackend.IsChecked ?? false;
-        string newBackend = enabled ? "ebpf" : Helpers.AppConfig.DefaultGpuBackend();
+        bool enabled = checkMuxGpuBackend.IsChecked ?? false;
+        string newBackend = enabled ? "asus-wmi" : UntickedGpuBackend();
         string oldBackend = Helpers.AppConfig.GetGpuBackend();
         if (newBackend == oldBackend)
+        {
+            // eBPF can never run here, so MUX stays ticked.
+            if (!enabled)
+                RefreshGpuBackend();
             return;
+        }
 
-        // One config value: selecting eBPF clears PCI.
+        // One config value: selecting MUX clears PCI.
         if (enabled && (checkPciGpuBackend.IsChecked ?? false))
         {
             bool prev = _suppressEvents;
@@ -3015,7 +3025,7 @@ public partial class ExtraWindow : Window
 
         // Something is missing: show the Updates rows that add it.
         string reason = Gpu.Block.GpuBlockCapability.UnavailableKey();
-        if (enabled && reason.Length > 0 && reason != "gpu_block_unavail_reboot")
+        if (newBackend == "ebpf" && reason.Length > 0 && reason != "gpu_block_unavail_reboot")
             App.MainWindowInstance?.ShowUpdatesEbpfRows();
     }
 
@@ -3032,7 +3042,7 @@ public partial class ExtraWindow : Window
             App.SyncUdevMonitor();
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                RefreshBpfGpuBackend();
+                RefreshGpuBackend();
                 App.MainWindowInstance?.RefreshGpuModePublic();
             });
             // Tray GPU items are backend dependent too.
@@ -3045,8 +3055,8 @@ public partial class ExtraWindow : Window
         if (_suppressEvents)
             return;
         bool enabled = checkPciGpuBackend.IsChecked ?? false;
-        // Without asus-wmi, unticking pci stays on pci and re-ticks the box.
-        string newBackend = enabled ? "pci" : Helpers.AppConfig.DefaultGpuBackend();
+        // Unticking goes to eBPF; without eBPF and asus-wmi it stays on pci and re-ticks the box.
+        string newBackend = enabled ? "pci" : UntickedGpuBackend();
         string oldBackend = Helpers.AppConfig.GetGpuBackend();
         if (newBackend == oldBackend)
         {
@@ -3061,13 +3071,13 @@ public partial class ExtraWindow : Window
             return;
         }
 
-        // One config value: selecting PCI clears eBPF.
-        if (enabled && (checkBpfGpuBackend.IsChecked ?? false))
+        // One config value: selecting PCI clears MUX.
+        if (enabled && (checkMuxGpuBackend.IsChecked ?? false))
         {
             bool prevSuppress = _suppressEvents;
             _suppressEvents = true;
             try
-            { checkBpfGpuBackend.IsChecked = false; }
+            { checkMuxGpuBackend.IsChecked = false; }
             finally { _suppressEvents = prevSuppress; }
         }
 

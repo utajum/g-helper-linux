@@ -758,7 +758,7 @@ public static class AppConfig
     /// has not yet set one. Non-ASUS systems (no asus-nb-wmi / asus-armoury
     /// platform device) cannot use the WMI flow at all, so we silently
     /// default them to "pci". ASUS systems keep the historical default of
-    /// "asus-wmi" unless the user explicitly opts in.
+    /// "asus-wmi" unless the user opts in or a new install got eBPF at startup.
     /// </summary>
     public static void AutoDetectGpuBackendIfUnset()
     {
@@ -893,8 +893,12 @@ public static class AppConfig
                 .Replace("\t", "\\t");
     }
 
+    /// <summary>True on the first start, when there was no config file yet.</summary>
+    public static bool IsNewInstall { get; private set; }
+
     private static void Init()
     {
+        IsNewInstall = true;
         _config = new Dictionary<string, JsonElement>();
         // Set default performance mode
         Set("performance_mode", 0);
