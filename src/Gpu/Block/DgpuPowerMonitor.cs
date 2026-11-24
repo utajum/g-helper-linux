@@ -38,7 +38,7 @@ public static class DgpuPowerMonitor
         _rescanUtc = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         try
         {
-            foreach (var dev in Directory.EnumerateDirectories("/sys/bus/pci/devices"))
+            foreach (var dev in Directory.EnumerateDirectories(GPUModeControl.TestPathPrefix + "/sys/bus/pci/devices"))
             {
                 string cls = SysfsHelper.ReadAttribute(Path.Combine(dev, "class")) ?? "";
                 if (!cls.StartsWith("0x0300", StringComparison.Ordinal)
@@ -53,6 +53,9 @@ public static class DgpuPowerMonitor
         catch { }
         return _bdf;
     }
+
+    /// <summary>Drop the cached address; the tests swap the PCI topology.</summary>
+    internal static void ForgetBdf() => (_bdf, _rescanUtc) = (null, default);
 
     /// <summary>Map the sysfs power_state string onto the enum.</summary>
     public static PowerState Parse(string? raw) => (raw ?? "").Trim() switch

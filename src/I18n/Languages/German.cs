@@ -395,7 +395,7 @@ public static class German
         ["gpu_backend_mux_label"] = "MUX-Modus verwenden (ASUS-Firmware)",
         ["gpu_backend_mux_hint"] = "Schaltet die dGPU in der ASUS-Firmware ab (dgpu_disable) und ermöglicht den Ultimate-Modus über den MUX-Schalter. Manche Moduswechsel brauchen einen Neustart.",
         ["gpu_backend_pci_label"] = "PCI dGPU-Deaktivierung verwenden",
-        ["gpu_backend_pci_hint"] = "Deaktiviert die dGPU über eine modprobe Blacklist plus eine udev Hot-Remove Regel. Erforderlich auf Nicht-ASUS-Laptops, wo keine ASUS-Firmware zum Ansprechen vorhanden ist, optional auf ASUS, wenn Sie den reinen Kernel-Pfad bevorzugen. Jede Modusänderung erfordert einen Neustart, da die Regeln nur beim nächsten Start angewendet werden.",
+        ["gpu_backend_pci_hint"] = "Deaktiviert die dGPU über eine modprobe Blacklist plus eine udev Hot-Remove Regel. Verwenden Sie dies, wo eBPF nicht laufen kann. Jede Modusänderung erfordert einen Neustart, da die Regeln nur beim nächsten Start angewendet werden.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU-Blockierung (Standard)",
         ["gpu_backend_bpf_hint"] = "Blendet die dGPU mit einem eBPF-Kernelfilter vor Anwendungen aus, anstatt den Treiber zu entladen. Die Karte geht dadurch in D3cold und das Zurückschalten erfolgt sofort ohne Neustart. Anwendungen, die die GPU bereits nutzen, behalten sie, bis sie beendet werden; G-Helper bietet an, sie zu schließen. Erfordert einen Kernel, der mit bpf in der LSM-Liste gestartet wurde; unter Updates einrichten.",
         ["gpu_backend_bpf_optimized"] = "Modus \"Optimiert\" aktivieren",

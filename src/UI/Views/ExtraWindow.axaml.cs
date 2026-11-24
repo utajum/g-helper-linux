@@ -2965,61 +2965,22 @@ public partial class ExtraWindow : Window
         });
     }
 
-    /// <summary>No box ticked means eBPF, unless this kernel or build can never run it.</summary>
-    private static string UntickedGpuBackend()
-        => Gpu.Block.GpuBlockCapability.IsHardBlock(Gpu.Block.GpuBlockCapability.UnavailableKey())
-            ? Helpers.AppConfig.DefaultGpuBackend() : "ebpf";
-
     private void CheckMuxGpuBackend_Changed(object? sender, RoutedEventArgs e)
     {
-        if (_suppressEvents)
-            return;
-        bool enabled = checkMuxGpuBackend.IsChecked ?? false;
-        string newBackend = enabled ? "asus-wmi" : UntickedGpuBackend();
+        if (!_suppressEvents)
+            SelectGpuBackend((checkMuxGpuBackend.IsChecked ?? false) ? "asus-wmi" : Gpu.GpuBackendChoice.WhenUnticked());
+    }
+
+    /// <summary>Apply a backend box change; afterwards the boxes show the saved backend.</summary>
+    private void SelectGpuBackend(string newBackend)
+    {
         string oldBackend = Helpers.AppConfig.GetGpuBackend();
-        if (newBackend == oldBackend)
-        {
-            // eBPF can never run here, so MUX stays ticked.
-            if (!enabled)
-                RefreshGpuBackend();
+        // Same backend (eBPF can never run here) or a failed marker save puts the boxes back.
+        bool changed = newBackend != oldBackend && Gpu.GpuBackendChoice.Select(newBackend);
+        RefreshGpuBackend();
+        if (!changed)
             return;
-        }
 
-        // One config value: selecting MUX clears PCI.
-        if (enabled && (checkPciGpuBackend.IsChecked ?? false))
-        {
-            bool prev = _suppressEvents;
-            _suppressEvents = true;
-            try
-            { checkPciGpuBackend.IsChecked = false; }
-            finally { _suppressEvents = prev; }
-        }
-
-        Helpers.AppConfig.Set("gpu_backend", newBackend);
-        Helpers.AppConfig.Flush();
-        Helpers.Logger.WriteLine($"GPU backend → {newBackend}");
-
-        bool pushed = false;
-        try
-        {
-            pushed = App.GpuModeCtrl?.PushBackendMarker(newBackend) ?? false;
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"GpuBackend toggle: marker push failed: {ex.Message}");
-        }
-
-        // The boot service follows the marker, so the config must not differ from it.
-        if (!pushed)
-        {
-            Helpers.Logger.WriteLine($"GpuBackend toggle: marker not saved, staying on {oldBackend}");
-            Helpers.AppConfig.Set("gpu_backend", oldBackend);
-            Helpers.AppConfig.Flush();
-            RefreshGpuBackend();
-            return;
-        }
-
-        RefreshBpfGpuBackend();
         App.MainWindowInstance?.RefreshGpuModePublic();
         RunBackendCleanup(oldBackend, newBackend);
 
@@ -3052,57 +3013,8 @@ public partial class ExtraWindow : Window
 
     private void CheckPciGpuBackend_Changed(object? sender, RoutedEventArgs e)
     {
-        if (_suppressEvents)
-            return;
-        bool enabled = checkPciGpuBackend.IsChecked ?? false;
-        // Unticking goes to eBPF; without eBPF and asus-wmi it stays on pci and re-ticks the box.
-        string newBackend = enabled ? "pci" : UntickedGpuBackend();
-        string oldBackend = Helpers.AppConfig.GetGpuBackend();
-        if (newBackend == oldBackend)
-        {
-            if (!enabled && newBackend == "pci")
-            {
-                bool prev = _suppressEvents;
-                _suppressEvents = true;
-                try
-                { checkPciGpuBackend.IsChecked = true; }
-                finally { _suppressEvents = prev; }
-            }
-            return;
-        }
-
-        // One config value: selecting PCI clears MUX.
-        if (enabled && (checkMuxGpuBackend.IsChecked ?? false))
-        {
-            bool prevSuppress = _suppressEvents;
-            _suppressEvents = true;
-            try
-            { checkMuxGpuBackend.IsChecked = false; }
-            finally { _suppressEvents = prevSuppress; }
-        }
-
-        Helpers.AppConfig.Set("gpu_backend", newBackend);
-        Helpers.AppConfig.Flush();
-        Helpers.Logger.WriteLine($"GPU backend → {newBackend}");
-
-        // Push the backend marker file so the boot service knows which flow
-        // to run on the next boot, even before the user requests a mode
-        // change. Best-effort: failure here just delays the marker write
-        // until the next eco/standard switch.
-        try
-        {
-            App.GpuModeCtrl?.PushBackendMarker(newBackend);
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"GpuBackend toggle: marker push failed: {ex.Message}");
-        }
-
-        // Refresh main window so the GPU panel re-evaluates which buttons
-        // to show (Ultimate/Optimized are hidden in PCI mode).
-        App.MainWindowInstance?.RefreshGpuModePublic();
-        // The mutual exclusion above can silently leave the ebpf backend.
-        RunBackendCleanup(oldBackend, newBackend);
+        if (!_suppressEvents)
+            SelectGpuBackend((checkPciGpuBackend.IsChecked ?? false) ? "pci" : Gpu.GpuBackendChoice.WhenUnticked());
     }
 
     private void SliderCpuCores_ValueChanged(object? sender,

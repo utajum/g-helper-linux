@@ -395,7 +395,7 @@ public static class Turkish
         ["gpu_backend_mux_label"] = "MUX modunu kullan (ASUS bellenimi)",
         ["gpu_backend_mux_hint"] = "dGPU'yu ASUS belleniminde (dgpu_disable) kapatır ve MUX anahtarıyla Ultimate modunu sağlar. Bazı mod değişiklikleri yeniden başlatma gerektirir.",
         ["gpu_backend_pci_label"] = "PCI dGPU devre dışı bırakmayı kullan",
-        ["gpu_backend_pci_hint"] = "dGPU'yu modprobe kara listesi artı udev hot-remove kuralı ile devre dışı bırakır. Konuşacak ASUS bellenimi olmayan ASUS olmayan laptoplarda gereklidir, yalnızca çekirdek yolunu tercih ettiğiniz ASUS'ta isteğe bağlıdır. Her mod değişikliği yeniden başlatma gerektirir çünkü kurallar yalnızca bir sonraki açılışta uygulanır.",
+        ["gpu_backend_pci_hint"] = "dGPU'yu modprobe kara listesi artı udev hot-remove kuralı ile devre dışı bırakır. eBPF'nin çalışamadığı yerlerde kullanın. Her mod değişikliği yeniden başlatma gerektirir çünkü kurallar yalnızca bir sonraki açılışta uygulanır.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU engellemesi (varsayılan)",
         ["gpu_backend_bpf_hint"] = "Sürücüyü kaldırmak yerine çekirdek eBPF filtresiyle dGPU'yu uygulamalardan gizler, böylece kart D3cold durumuna geçer ve geri dönüş yeniden başlatmadan anında olur. GPU'yu zaten kullanan uygulamalar kapanana kadar onu tutar ve G-Helper bunları kapatmayı önerir. LSM listesinde bpf ile başlatılmış bir çekirdek gerekir; Güncellemeler bölümünden ayarlayın.",
         ["gpu_backend_bpf_optimized"] = "Optimize modu etkinleştir",

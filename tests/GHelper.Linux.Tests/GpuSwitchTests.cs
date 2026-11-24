@@ -989,11 +989,11 @@ public static class GpuSwitchTests
             }
         });
 
-        Harness.Scenario("PushBackendMarker_KeepsBlocksAndTrigger", sb =>
+        Harness.Scenario("SelectBackend_KeepsBlocksAndTrigger", sb =>
         {
             sb.WriteBlockArtifacts();
             sb.WriteTrigger("eco");
-            sb.Controller.PushBackendMarker("pci");
+            GpuBackendChoice.Select("pci");
             Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks kept");
             Harness.AssertEqual("eco", sb.TriggerContent(), "trigger kept");
         });
@@ -1086,12 +1086,12 @@ public static class GpuSwitchTests
         Harness.Scenario("Backend_Unset_AsusWmi", _ =>
             Harness.AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "default"));
 
-        Harness.Scenario("Backend_AutoDetectKeepsUserChoice", _ =>
+        Harness.Scenario("Backend_StartupKeepsUserChoice", sb =>
         {
             foreach (var choice in new[] { "asus-wmi", "pci" })
             {
                 AppConfig.Set("gpu_backend", choice);
-                AppConfig.AutoDetectGpuBackendIfUnset();
+                GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => true);
                 Harness.AssertEqual(choice, AppConfig.GetGpuBackend(), "user choice kept");
             }
         });

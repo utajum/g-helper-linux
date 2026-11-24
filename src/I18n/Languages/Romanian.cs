@@ -395,7 +395,7 @@ public static class Romanian
         ["gpu_backend_mux_label"] = "Folosește modul MUX (firmware ASUS)",
         ["gpu_backend_mux_hint"] = "Oprește dGPU în firmware-ul ASUS (dgpu_disable) și permite modul Ultimate prin comutatorul MUX. Unele schimbări de mod necesită repornire.",
         ["gpu_backend_pci_label"] = "Folosește dezactivarea PCI dGPU",
-        ["gpu_backend_pci_hint"] = "Dezactivează dGPU printr-o blacklist modprobe plus o regulă udev hot-remove. Necesar pe laptopurile non-ASUS unde nu există firmware ASUS cu care să comunice, opțional pe ASUS unde preferați calea doar-kernel. Fiecare schimbare de mod necesită o repornire deoarece regulile se aplică doar la următoarea pornire.",
+        ["gpu_backend_pci_hint"] = "Dezactivează dGPU printr-o blacklist modprobe plus o regulă udev hot-remove. Folosiți-l acolo unde eBPF nu poate rula. Fiecare schimbare de mod necesită o repornire deoarece regulile se aplică doar la următoarea pornire.",
         ["gpu_backend_bpf_label"] = "Blocarea eBPF a dGPU (implicit)",
         ["gpu_backend_bpf_hint"] = "Ascunde dGPU de aplicații cu un filtru eBPF în nucleu în loc să descarce driverul, astfel placa intră în D3cold și revenirea este instantanee fără repornire. Aplicațiile care folosesc deja GPU îl păstrează până se închid, iar G-Helper se oferă să le închidă. Necesită un nucleu pornit cu bpf în lista LSM; configurează asta din Actualizări.",
         ["gpu_backend_bpf_optimized"] = "Activează modul Optimizat",

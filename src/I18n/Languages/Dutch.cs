@@ -395,7 +395,7 @@ public static class Dutch
         ["gpu_backend_mux_label"] = "MUX-modus gebruiken (ASUS-firmware)",
         ["gpu_backend_mux_hint"] = "Schakelt de dGPU uit in de ASUS-firmware (dgpu_disable) en maakt de Ultimate-modus mogelijk via de MUX-schakelaar. Sommige moduswissels vereisen een herstart.",
         ["gpu_backend_pci_label"] = "Gebruik PCI dGPU uitschakelen",
-        ["gpu_backend_pci_hint"] = "Schakelt de dGPU uit via een modprobe blacklist plus een udev hot-remove regel. Vereist op niet-ASUS laptops waar geen ASUS firmware is om mee te praten, optioneel op ASUS waar u het alleen-kernel pad verkiest. Elke moduswijziging vereist een herstart omdat de regels alleen bij de volgende start van toepassing zijn.",
+        ["gpu_backend_pci_hint"] = "Schakelt de dGPU uit via een modprobe blacklist plus een udev hot-remove regel. Gebruik dit waar eBPF niet kan draaien. Elke moduswijziging vereist een herstart omdat de regels alleen bij de volgende start van toepassing zijn.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU-blokkering (standaard)",
         ["gpu_backend_bpf_hint"] = "Verbergt de dGPU voor toepassingen met een eBPF-kernelfilter in plaats van de driver te ontladen, zodat de kaart naar D3cold gaat en terugschakelen direct gebeurt zonder herstart. Toepassingen die de GPU al gebruiken houden hem vast tot ze sluiten; G-Helper biedt aan ze te sluiten. Vereist een kernel die is opgestart met bpf in de LSM-lijst; stel dit in via Updates.",
         ["gpu_backend_bpf_optimized"] = "Modus \"Geoptimaliseerd\" inschakelen",

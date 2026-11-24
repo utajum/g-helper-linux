@@ -399,27 +399,6 @@ public class GPUModeControl
         return false;
     }
 
-    /// <summary>New installs default to eBPF when it can run now; existing installs keep their backend.</summary>
-    internal static bool DefaultNewInstallToBpf(IHardwareControl? wmi, Func<bool> bpfAvailable)
-    {
-        if (!AppConfig.IsNewInstall || !string.IsNullOrWhiteSpace(AppConfig.GetString("gpu_backend")))
-            return false;
-        // Firmware Eco or Ultimate set by another OS needs the MUX backend to undo.
-        if (wmi == null || !wmi.CanToggleGpuBackend() || wmi.GetGpuEco() || wmi.GetGpuMuxMode() == 0)
-            return false;
-        // Some iGPU-only firmwares expose dgpu_disable; the filter needs a real dGPU.
-        if (DgpuPci.Find() == null)
-            return false;
-        if (GpuBootFiles.ReadBackend() is not ("" or "ebpf") || !bpfAvailable())
-            return false;
-        // The boot service follows the marker, so set it before the config.
-        if (!GpuBootFiles.SetBackend("ebpf"))
-            return false;
-        AppConfig.Set("gpu_backend", "ebpf");
-        Logger.WriteLine("Startup: new install - gpu_backend=ebpf");
-        return true;
-    }
-
     /// <summary>Alias kept for the installer gate (ghelper-gpu-boot.service
     /// applicability): identical semantics to <see cref="HasSecondGpu"/>.</summary>
     public static bool HasDiscreteGpu() => HasSecondGpu();
@@ -449,34 +428,6 @@ public class GPUModeControl
 
     /// <summary>Drop the boot recovery marker once shown; true when it is gone. See <see cref="GpuBootFiles.ClearRecovery"/>.</summary>
     public static bool ClearRecoveryMarker() => GpuBootFiles.ClearRecovery();
-
-    /// <summary>
-    /// Push the backend selector marker (/etc/ghelper/backend) without
-    /// touching any block artifacts. Called when the user toggles the
-    /// "Use PCI dGPU disable" checkbox so the boot service sees the new
-    /// backend on the next boot even if the user never schedules a mode
-    /// change. Idempotent - no-op if the marker already matches.
-    /// </summary>
-    public bool PushBackendMarker(string backend)
-    {
-        if (backend != "pci" && backend != "asus-wmi" && backend != "ebpf")
-        {
-            Logger.WriteLine($"GPUModeControl: PushBackendMarker rejected invalid backend '{backend}'");
-            return false;
-        }
-
-        // The MUX=0 latch flag and in-memory pending latch encode REAL
-        // firmware state (gpu_mux_mode=0 is pending an actual reboot). The
-        // backend selector is a UI preference - toggling it does not change
-        // firmware state. Clearing the latch here would re-introduce the
-        // exact impossible-state chain this guard is designed to prevent:
-        // user clicks Ultimate -> toggles PCI -> clicks Eco -> blocks
-        // written -> reboot -> MUX=0 settles + udev removes dGPU = black
-        // screen. Keep the latch; rely on WouldCreateImpossibleState to
-        // refuse the subsequent Eco click and surface the new toast.
-
-        return GpuBootFiles.SetBackend(backend);
-    }
 
     internal void SetEcoPersistent(bool persistent) => GpuBootFiles.SetEcoPersistent(persistent);
 

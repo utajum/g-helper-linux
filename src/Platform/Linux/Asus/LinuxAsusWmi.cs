@@ -626,13 +626,16 @@ public class LinuxAsusWmi : IHardwareControl
     ///   4. The nvidia or nouveau kernel module is installed on disk
     ///      (a dGPU once was - or will be - present even if hot-removed now)
     /// </summary>
-    public bool CanToggleGpuBackend()
+    public bool CanToggleGpuBackend() => CanToggleGpuBackend(IsFeatureSupported(AsusAttributes.DgpuDisable));
+
+    /// <summary>The rule behind <see cref="CanToggleGpuBackend()"/>, given whether dgpu_disable exists.</summary>
+    internal static bool CanToggleGpuBackend(bool dgpuDisable)
     {
         // Backend choice is only meaningful with a second GPU (same gate as
         // the mode-switching UI).
         if (!Gpu.GPUModeControl.HasSecondGpu())
             return false;
-        if (IsFeatureSupported(AsusAttributes.DgpuDisable))
+        if (dgpuDisable)
             return true;
         if (HasDiscreteNvidiaGpu())
             return true;

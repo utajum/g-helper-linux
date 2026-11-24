@@ -131,6 +131,7 @@ public static class AppConfig
         }
         else
         {
+            IsNewInstall = true;
             Init();
         }
 
@@ -728,9 +729,9 @@ public static class AppConfig
     ///                reboots until the user switches to Standard.
     ///   "ebpf"     - an eBPF LSM filter hides the dGPU device nodes.
     /// Default "asus-wmi" so existing ASUS users see no behavioural change.
-    /// Auto-detected on first run: <see cref="AutoDetectGpuBackendIfUnset"/>
-    /// sets "pci" when no asus-nb-wmi / asus-armoury platform device is
-    /// present, since the WMI path cannot work on those systems.
+    /// Picked at startup by <see cref="Gpu.GpuBackendChoice.ResolveAtStartup"/>:
+    /// "ebpf" on a new install where it can run, else "pci" when no
+    /// asus-nb-wmi / asus-armoury platform device is present.
     /// </summary>
     public static string GetGpuBackend()
     {
@@ -754,48 +755,21 @@ public static class AppConfig
     /// <summary>True when the user selected the eBPF filter backend.</summary>
     public static bool IsBpfGpuBackend() => GetGpuBackend() == "ebpf";
 
-    /// <summary>
-    /// On first run, choose a sane default for the GPU backend if the user
-    /// has not yet set one. Non-ASUS systems (no asus-nb-wmi / asus-armoury
-    /// platform device) cannot use the WMI flow at all, so we silently
-    /// default them to "pci". ASUS systems keep the historical default of
-    /// "asus-wmi" unless the user opts in or a new install got eBPF at startup.
-    /// </summary>
-    public static void AutoDetectGpuBackendIfUnset()
-    {
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(GetString("gpu_backend")))
-                return; // user already chose
-            if (!HasAsusPlatformDevice())
-            {
-                Set("gpu_backend", "pci");
-                Logger.WriteLine("AppConfig: no ASUS platform device detected - defaulting gpu_backend=pci");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.WriteLine($"AppConfig: AutoDetectGpuBackendIfUnset failed: {ex.Message}");
-        }
-    }
-
     /// <summary>True when the ASUS WMI platform driver is present.</summary>
     public static bool HasAsusPlatformDevice()
     {
         try
         {
-            return Directory.Exists("/sys/bus/platform/devices/asus-nb-wmi") ||
-                   Directory.Exists("/sys/devices/platform/asus-nb-wmi") ||
-                   Directory.Exists("/sys/class/firmware-attributes/asus-armoury");
+            string p = Gpu.GPUModeControl.TestPathPrefix;
+            return Directory.Exists(p + "/sys/bus/platform/devices/asus-nb-wmi") ||
+                   Directory.Exists(p + "/sys/devices/platform/asus-nb-wmi") ||
+                   Directory.Exists(p + "/sys/class/firmware-attributes/asus-armoury");
         }
         catch
         {
             return false;
         }
     }
-
-    /// <summary>Backend after leaving ebpf or pci: pci when there is no ASUS platform driver.</summary>
-    public static string DefaultGpuBackend() => HasAsusPlatformDevice() ? "asus-wmi" : "pci";
 
     // Keyboard / input
     public static bool IsStrixNumpad() => ContainsModel("G713R");
@@ -899,7 +873,6 @@ public static class AppConfig
 
     private static void Init()
     {
-        IsNewInstall = true;
         _config = new Dictionary<string, JsonElement>();
         // Set default performance mode
         Set("performance_mode", 0);

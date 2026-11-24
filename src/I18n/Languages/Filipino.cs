@@ -540,7 +540,7 @@ public static class Filipino
         ["gpu_backend_mux_label"] = "Gamitin ang MUX mode (ASUS firmware)",
         ["gpu_backend_mux_hint"] = "Pinapatay ang dGPU sa ASUS firmware (dgpu_disable) at pinapagana ang Ultimate mode sa pamamagitan ng MUX switch. Kailangan ng reboot sa ilang pagpapalit ng mode.",
         ["gpu_backend_pci_label"] = "Gamitin ang PCI dGPU disable",
-        ["gpu_backend_pci_hint"] = "Dini-disable ang dGPU sa pamamagitan ng modprobe blacklist at udev hot-remove rule. Kailangan sa mga hindi-ASUS na laptop kung saan walang ASUS firmware na makakausap, opsyonal sa ASUS kung mas gusto mo ang kernel-only path. Bawat pagbabago ng mode ay nangangailangan ng reboot dahil inilalapat lang ang mga rule sa susunod na boot.",
+        ["gpu_backend_pci_hint"] = "Dini-disable ang dGPU sa pamamagitan ng modprobe blacklist at udev hot-remove rule. Gamitin ito kung saan hindi gumagana ang eBPF. Bawat pagbabago ng mode ay nangangailangan ng reboot dahil inilalapat lang ang mga rule sa susunod na boot.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU block (default)",
         ["gpu_backend_bpf_hint"] = "Itinatago ang dGPU sa mga application gamit ang eBPF filter ng kernel kaysa i-unload ang driver, kaya napupunta sa D3cold ang card at agad ang pagbalik nang walang reboot. Hawak pa rin ng mga application na gumagamit na ng GPU ito hanggang sa magsara sila, at nag-aalok ang G-Helper na isara ang mga ito. Kailangan ng kernel na naka-boot nang may bpf sa listahan ng LSM; i-set up ito sa Updates.",
         ["gpu_backend_bpf_optimized"] = "I-enable ang Optimized mode",

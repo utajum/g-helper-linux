@@ -540,7 +540,7 @@ public static class Latvian
         ["gpu_backend_mux_label"] = "Lietot MUX režīmu (ASUS aparātprogrammatūra)",
         ["gpu_backend_mux_hint"] = "Izslēdz dGPU ASUS aparātprogrammatūrā (dgpu_disable) un ļauj Ultimate režīmu ar MUX slēdzi. Dažām režīma maiņām vajag pārstartēšanu.",
         ["gpu_backend_pci_label"] = "Izmantot dGPU atspējošanu caur PCI",
-        ["gpu_backend_pci_hint"] = "Atspējo dGPU, izmantojot modprobe melno sarakstu un udev karstās noņemšanas noteikumu. Nepieciešams uz ne-ASUS klēpjdatoriem, kur nav ASUS aparātprogrammatūras, neobligāti uz ASUS, ja dodat priekšroku tikai kodola ceļam. Katra režīma maiņa prasa restartu, jo noteikumi tiek lietoti tikai nākamajā startēšanā.",
+        ["gpu_backend_pci_hint"] = "Atspējo dGPU, izmantojot modprobe melno sarakstu un udev karstās noņemšanas noteikumu. Izmantojiet to tur, kur eBPF nevar darboties. Katra režīma maiņa prasa restartu, jo noteikumi tiek lietoti tikai nākamajā startēšanā.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU bloķēšana (noklusējums)",
         ["gpu_backend_bpf_hint"] = "Paslēpj dGPU no lietojumprogrammām ar kodola eBPF filtru, nevis izlādē draiveri, tāpēc karte pāriet D3cold stāvoklī un pārslēgšanās atpakaļ notiek uzreiz bez pārstartēšanas. Lietojumprogrammas, kas jau izmanto GPU, to patur līdz aizvēršanai, un G-Helper piedāvā tās aizvērt. Nepieciešams kodols, kas palaists ar bpf LSM sarakstā; iestatiet to sadaļā Atjauninājumi.",
         ["gpu_backend_bpf_optimized"] = "Iespējot režīmu Optimizēts",

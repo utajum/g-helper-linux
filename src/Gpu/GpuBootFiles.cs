@@ -276,14 +276,14 @@ internal static class GpuBootFiles
                 // Match the WriteDriverBlock invocation style - no nested
                 // quoting, no `sh -c`. The helper has a dedicated
                 // `set-backend` subcommand that writes only the marker.
-                Logger.WriteLine($"GPUModeControl: PushBackendMarker via helper: {backend}");
+                Logger.WriteLine($"GpuBootFiles: backend marker via helper: {backend}");
                 SysfsHelper.RunSudoOrPkexec(helper, new[] { "set-backend", backend }, sudoTimeoutMs: 30000, pkexecTimeoutMs: 60000);
             }
             else
             {
                 // pkexec fallback uses RunPkexecBash so the script body is
                 // passed as a single argument (no quoting hazards).
-                Logger.WriteLine($"GPUModeControl: PushBackendMarker via pkexec: {backend}");
+                Logger.WriteLine($"GpuBootFiles: backend marker via pkexec: {backend}");
                 SysfsHelper.RunPkexecBash(
                     $"mkdir -p /etc/ghelper\necho {backend} > {BackendPath}\nchmod 644 {BackendPath}");
             }
@@ -291,7 +291,7 @@ internal static class GpuBootFiles
         }
         catch (Exception ex)
         {
-            Logger.WriteLine($"GPUModeControl: PushBackendMarker failed: {ex.Message}");
+            Logger.WriteLine($"GpuBootFiles: backend marker failed: {ex.Message}");
             return false;
         }
     }

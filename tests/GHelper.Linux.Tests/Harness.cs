@@ -60,13 +60,15 @@ public static class Harness
             string sysModule = Path.Combine(TempRoot, "sys", "module");
             string libModules = Path.Combine(TempRoot, "lib", "modules");
             string procKernel = Path.Combine(TempRoot, "proc", "sys", "kernel");
-            foreach (var d in new[] { sysBusPci, sysBusPciSlots, sysModule, libModules, procKernel })
+            string sysPlatform = Path.Combine(TempRoot, "sys", "devices", "platform");
+            foreach (var d in new[] { sysBusPci, sysBusPciSlots, sysModule, libModules, procKernel, sysPlatform })
             {
                 if (Directory.Exists(d))
                     Directory.Delete(d, recursive: true);
                 Directory.CreateDirectory(d);
             }
             LinuxAsusWmi.InvalidateGpuPresenceCache();
+            Gpu.Block.DgpuPowerMonitor.ForgetBdf();
 
             // Fresh per-scenario config directory.
             ConfigDir = Path.Combine(TempRoot, "config", scenarioName);
@@ -208,24 +210,32 @@ public static class Harness
             LinuxAsusWmi.InvalidateGpuPresenceCache();
         }
 
-        /// <summary>AMD iGPU: boot display, VGA class, vendor 0x1002.
-        /// Without boot_vga only the connected eDP panel marks it as the iGPU.</summary>
-        public void WriteFakeAmdIgpuDevice(bool bootVga = true)
+        /// <summary>AMD iGPU: boot display, VGA class, vendor 0x1002.</summary>
+        public void WriteFakeAmdIgpuDevice()
         {
             string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:e2:00.0");
             Directory.CreateDirectory(dev);
             File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
             File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
-            if (bootVga)
-                File.WriteAllText(Path.Combine(dev, "boot_vga"), "1\n");
-            else
-            {
-                string conn = Path.Combine(dev, "drm", "card0", "card0-eDP-1");
-                Directory.CreateDirectory(conn);
-                File.WriteAllText(Path.Combine(conn, "status"), "connected\n");
-            }
+            File.WriteAllText(Path.Combine(dev, "boot_vga"), "1\n");
             LinuxAsusWmi.InvalidateGpuPresenceCache();
         }
+
+        /// <summary>AMD iGPU without boot_vga (Ally class): only the connected eDP panel marks it.</summary>
+        public void WriteFakeAmdIgpuPanelOnly()
+        {
+            string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:e2:00.0");
+            string conn = Path.Combine(dev, "drm", "card0", "card0-eDP-1");
+            Directory.CreateDirectory(conn);
+            File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
+            File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
+            File.WriteAllText(Path.Combine(conn, "status"), "connected\n");
+            LinuxAsusWmi.InvalidateGpuPresenceCache();
+        }
+
+        /// <summary>asus-nb-wmi platform device: the laptop counts as ASUS.</summary>
+        public void WriteFakeAsusPlatform()
+            => Directory.CreateDirectory(Path.Combine(TempRoot, "sys", "devices", "platform", "asus-nb-wmi"));
 
         /// <summary>Intel iGPU: boot display at 00:02.0, vendor 0x8086.</summary>
         public void WriteFakeIntelIgpuDevice()

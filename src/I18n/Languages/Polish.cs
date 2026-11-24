@@ -395,7 +395,7 @@ public static class Polish
         ["gpu_backend_mux_label"] = "Użyj trybu MUX (firmware ASUS)",
         ["gpu_backend_mux_hint"] = "Wyłącza dGPU w firmware ASUS (dgpu_disable) i pozwala na tryb Ultimate przez przełącznik MUX. Niektóre zmiany trybu wymagają restartu.",
         ["gpu_backend_pci_label"] = "Użyj wyłączania PCI dGPU",
-        ["gpu_backend_pci_hint"] = "Wyłącza dGPU za pomocą czarnej listy modprobe plus reguły udev hot-remove. Wymagane na laptopach innych niż ASUS, gdzie nie ma firmware ASUS do komunikacji, opcjonalne na ASUS, gdzie preferujesz ścieżkę tylko jądra. Każda zmiana trybu wymaga restartu, ponieważ reguły obowiązują tylko przy następnym uruchomieniu.",
+        ["gpu_backend_pci_hint"] = "Wyłącza dGPU za pomocą czarnej listy modprobe plus reguły udev hot-remove. Używaj tam, gdzie eBPF nie może działać. Każda zmiana trybu wymaga restartu, ponieważ reguły obowiązują tylko przy następnym uruchomieniu.",
         ["gpu_backend_bpf_label"] = "Blokada dGPU przez eBPF (domyślnie)",
         ["gpu_backend_bpf_hint"] = "Ukrywa dGPU przed aplikacjami filtrem eBPF w jądrze zamiast wyładowywać sterownik, więc karta przechodzi w D3cold, a powrót jest natychmiastowy bez ponownego uruchamiania. Aplikacje, które już używają GPU, trzymają ją do zamknięcia, a G-Helper proponuje ich zamknięcie. Wymaga jądra uruchomionego z bpf na liście LSM; skonfiguruj to w Aktualizacjach.",
         ["gpu_backend_bpf_optimized"] = "Włącz tryb Zoptymalizowany",

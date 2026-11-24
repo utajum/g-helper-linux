@@ -540,7 +540,7 @@ public static class Malay
         ["gpu_backend_mux_label"] = "Guna mod MUX (perisian tegar ASUS)",
         ["gpu_backend_mux_hint"] = "Mematikan dGPU dalam perisian tegar ASUS (dgpu_disable) dan membenarkan mod Ultimate melalui suis MUX. Sesetengah pertukaran mod perlu but semula.",
         ["gpu_backend_pci_label"] = "Gunakan pelumpuhan dGPU PCI",
-        ["gpu_backend_pci_hint"] = "Melumpuhkan dGPU melalui senarai hitam modprobe dan peraturan alih keluar serta-merta (hot-remove) udev. Diperlukan pada komputer riba bukan ASUS yang tiada perisian tegar ASUS, pilihan pada ASUS jika anda lebih suka laluan kernel sahaja. Setiap perubahan mod memerlukan but semula kerana peraturan hanya digunakan pada but seterusnya.",
+        ["gpu_backend_pci_hint"] = "Melumpuhkan dGPU melalui senarai hitam modprobe dan peraturan alih keluar serta-merta (hot-remove) udev. Gunakannya di mana eBPF tidak dapat berjalan. Setiap perubahan mod memerlukan but semula kerana peraturan hanya digunakan pada but seterusnya.",
         ["gpu_backend_bpf_label"] = "Sekatan dGPU eBPF (lalai)",
         ["gpu_backend_bpf_hint"] = "Menyembunyikan dGPU daripada aplikasi dengan penapis eBPF kernel dan bukannya memunggah pemacu, jadi kad masuk ke D3cold dan bertukar semula berlaku serta-merta tanpa but semula. Aplikasi yang sudah menggunakan GPU terus memegangnya sehingga ditutup, dan G-Helper menawarkan untuk menutupnya. Memerlukan kernel yang dibut dengan bpf dalam senarai LSM; sediakannya melalui Kemas Kini.",
         ["gpu_backend_bpf_optimized"] = "Dayakan mod Dioptimumkan",

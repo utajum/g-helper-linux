@@ -141,7 +141,7 @@ public class App : Application
     {
         // Initialize Linux platform backends
         InitializePlatform();
-        Gpu.GPUModeControl.DefaultNewInstallToBpf(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable);
+        Gpu.GpuBackendChoice.ResolveAtStartup(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable);
 
         // Initialize i18n before any UI
         Labels.Initialize();
@@ -326,7 +326,6 @@ public class App : Application
                 Logger.WriteLine("Startup: gpu_optimized_enabled=0 - clearing stale gpu_auto");
                 AppConfig.Set("gpu_auto", 0);
             }
-            AppConfig.AutoDetectGpuBackendIfUnset();
 
             // Update tray icon to match current mode
             UpdateTrayIcon();
@@ -348,6 +347,17 @@ public class App : Application
             {
 
                 GpuModeCtrl?.CacheDgpuSlotIfPresent();
+
+                // First start: the system files prompt can make eBPF possible.
+                if (AppConfig.IsNewInstall)
+                {
+                    Install.Installer.WaitForStartupDecision();
+                    if (Gpu.GpuBackendChoice.RetryNewInstall(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable))
+                    {
+                        SyncUdevMonitor();
+                        RefreshTrayMenu();
+                    }
+                }
 
                 // Check for boot recovery marker (impossible state was fixed during boot)
                 try
