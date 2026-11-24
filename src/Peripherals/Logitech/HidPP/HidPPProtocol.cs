@@ -1149,10 +1149,15 @@ public static class HidPPProtocol
         [0x0052] = "Middle Click",
         [0x0053] = "Back",
         [0x0056] = "Forward",
+        [0x005B] = "Tilt Left",
+        [0x005D] = "Tilt Right",
         [0x00BD] = "Thumb Wheel",
         [0x00C3] = "Gesture Button",
         [0x00C4] = "SmartShift",
         [0x00D7] = "Top Button",
+        [0x00ED] = "DPI Change",
+        [0x00FD] = "DPI Switch",
+        [0x01A0] = "Haptic Thumb Pad",
     };
 
     /// <summary>

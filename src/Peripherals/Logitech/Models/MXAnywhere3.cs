@@ -62,3 +62,18 @@ public class AnywhereMX2 : LogitechMouse
     public override LightingZone[] SupportedLightingZones() => [];
     public override LightingMode[] SupportedLightingModes() => [LightingMode.Off];
 }
+
+/// <summary>MX Anywhere 2S (Bluetooth, PID 0xB01A).</summary>
+public class MXAnywhere2SBT : LogitechMouse
+{
+    public MXAnywhere2SBT() : base(0xB01A, "", wireless: true) { }
+
+    public override string GetDisplayName() => "MX Anywhere 2S (BT)";
+    public override int DPIProfileCount() => 1;
+    public override uint MaxDPI() => 4000;
+    public override uint MinDPI() => 200;
+    public override uint DPIIncrement() => 50;
+
+    public override LightingZone[] SupportedLightingZones() => [];
+    public override LightingMode[] SupportedLightingModes() => [LightingMode.Off];
+}

@@ -311,6 +311,7 @@ public partial class ExtraWindow : Window
         headerPeripherals.Text = Labels.Get("peripherals_header");
         checkDisableLogitech.Content = Labels.Get("peripherals_disable_logitech");
         labelDisableLogitechHint.Text = Labels.Get("peripherals_disable_logitech_hint");
+        labelLogitechReceivers.Text = Labels.Get("receivers_open");
         checkDisableAsusPeripherals.Content = Labels.Get("peripherals_disable_asus");
         labelDisableAsusPeripheralsHint.Text = Labels.Get("peripherals_disable_asus_hint");
 
@@ -1429,6 +1430,7 @@ public partial class ExtraWindow : Window
         RefreshStatusLed();
 
         checkDisableLogitech.IsChecked = Peripherals.PeripheralsProvider.LogitechDisabled;
+        buttonLogitechReceivers.IsVisible = !Peripherals.PeripheralsProvider.LogitechDisabled;
         checkDisableAsusPeripherals.IsChecked = Peripherals.PeripheralsProvider.AsusPeripheralsDisabled;
 
         // NumberPad button: visible when the touchpad hardware exists, even
@@ -2429,6 +2431,9 @@ public partial class ExtraWindow : Window
         }
     }
 
+    private void ButtonLogitechReceivers_Click(object? sender, RoutedEventArgs e)
+        => ReceiverWindow.ShowOrActivate();
+
     private void ButtonSystemInfo_Click(object? sender, RoutedEventArgs e)
     {
         if (_systemInfoWindow == null || !_systemInfoWindow.IsVisible)
@@ -2740,6 +2745,9 @@ public partial class ExtraWindow : Window
         if (_suppressEvents)
             return;
         bool enabled = checkDisableLogitech.IsChecked ?? false;
+        buttonLogitechReceivers.IsVisible = !enabled;
+        if (enabled)
+            ReceiverWindow.CloseIfOpen();
         RunPeripheralsConfigChange(checkDisableLogitech, "Logitech", enabled,
             () => Peripherals.PeripheralsProvider.LogitechDisabled = enabled);
     }

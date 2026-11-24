@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using GHelper.Linux.Helpers;
 using GHelper.Linux.Peripherals.Logitech;
+using GHelper.Linux.Peripherals.Logitech.HidPP;
 using GHelper.Linux.Peripherals.Logitech.Models;
 using HidSharp;
 
@@ -114,6 +115,9 @@ public static class PeripheralsProvider
         {
             lock (_lock)
             {
+                // Checked again here: the box can be ticked while a scan runs.
+                if (mouse is LogitechMouse && LogitechDisabled)
+                    return;
                 if (ConnectedMice.Any(m => m.GetDisplayName() == mouse.GetDisplayName()))
                     return;
 
@@ -130,6 +134,9 @@ public static class PeripheralsProvider
                 catch (Exception ex)
                 {
                     Logger.WriteLine($"Peripherals: failed to connect {mouse.GetDisplayName()}: {ex.Message}");
+                    try
+                    { mouse.Disconnect(); }
+                    catch { }
                 }
             }
         }
@@ -245,13 +252,19 @@ public static class PeripheralsProvider
         DetectMouse(new MXMaster3BT());
         DetectMouse(new MXMaster3S());
         DetectMouse(new MXMaster3SBT());
+        DetectMouse(new MXMaster3SBTv2());
+        DetectMouse(new MXMaster3SBusinessBT(0xB035));
+        DetectMouse(new MXMaster3SBusinessBT(0xB044));
         DetectMouse(new MXMaster4BT());
         DetectMouse(new MXAnywhere3BT());
         DetectMouse(new MXAnywhere3S());
         DetectMouse(new MXAnywhere3SBT());
+        DetectMouse(new MXAnywhere2SBT());
         DetectMouse(new MXVertical());
         DetectMouse(new MXVerticalBT());
         DetectMouse(new MXErgoBT());
+        DetectMouse(new LiftBT(0xB031, "LIFT (BT)"));
+        DetectMouse(new LiftBT(0xB033, "LIFT for Business (BT)"));
         DetectMouse(new MXRevolution());
         DetectMouse(new MX518());
         DetectMouse(new M500S());
@@ -276,14 +289,18 @@ public static class PeripheralsProvider
         DetectMouse(new ProXHeadset());
     }
 
+    /// <summary>True when the last receiver scan found a plugged-in Logitech receiver.</summary>
+    public static bool ReceiverPlugged { get; private set; }
+
     /// <summary>
     /// Scans for known Logitech wireless receivers and enumerates paired devices.
     /// Devices discovered through receivers are added to ConnectedMice.
     /// </summary>
     public static void DetectLogitechReceivers()
     {
-        if (LogitechDisabled)
+        if (LogitechDisabled || LogitechReceiver.PairingActive)
             return;
+        bool plugged = false;
         foreach (var entry in ReceiverInfo.KnownReceivers)
         {
             try
@@ -291,6 +308,7 @@ public static class PeripheralsProvider
                 using var receiver = new LogitechReceiver(entry);
                 if (!receiver.IsConnected())
                     continue;
+                plugged = true;
 
                 Logger.WriteLine($"Peripherals: found {entry.Name} (0x{entry.ProductId:X4})");
 
@@ -299,7 +317,10 @@ public static class PeripheralsProvider
                 {
                     lock (_lock)
                     {
-                        if (ConnectedMice.Any(m => m.GetDisplayName() == mouse.GetDisplayName()))
+                        if (LogitechDisabled)
+                            return;
+                        var connected = ConnectedMice.Select(m => (m.GetDisplayName(), (m as LogitechReceiverMouse)?.Slot));
+                        if (HidPPDecode.IsPairedDeviceConnected(connected, mouse.GetDisplayName(), mouse.Slot))
                             continue;
 
                         try
@@ -315,6 +336,9 @@ public static class PeripheralsProvider
                         catch (Exception ex)
                         {
                             Logger.WriteLine($"Peripherals: failed to connect {mouse.GetDisplayName()} via receiver: {ex.Message}");
+                            try
+                            { mouse.Disconnect(); }
+                            catch { }
                         }
                     }
                 }
@@ -324,6 +348,30 @@ public static class PeripheralsProvider
                 Logger.WriteLine($"Peripherals: receiver scan failed for 0x{entry.ProductId:X4}: {ex.Message}");
             }
         }
+        if (plugged != ReceiverPlugged)
+        {
+            ReceiverPlugged = plugged;
+            DeviceChanged?.Invoke();
+        }
+    }
+
+    /// <summary>Drops the devices connected through receivers and scans the receivers again (after a pair or unpair).</summary>
+    public static void RescanReceivers()
+    {
+        lock (_lock)
+        {
+            for (int i = ConnectedMice.Count - 1; i >= 0; i--)
+            {
+                if (ConnectedMice[i] is not LogitechReceiverMouse m)
+                    continue;
+                try
+                { m.Disconnect(); }
+                catch { }
+                ConnectedMice.RemoveAt(i);
+            }
+        }
+        DeviceChanged?.Invoke();
+        DetectLogitechReceivers();
     }
 
     /// <summary>Detects all supported mice (ASUS + Logitech).</summary>

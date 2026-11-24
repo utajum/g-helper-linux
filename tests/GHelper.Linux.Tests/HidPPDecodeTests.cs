@@ -106,6 +106,96 @@ public static class HidPPDecodeTests
             Harness.Assert(HidPPDecode.DecodeCodename([0x40, 0x00], bolt: false) is null, "empty");
         });
 
+        Harness.Scenario("Receiver_RenamedDevice_IsConnected", _ =>
+        {
+            // Bolt lists "MX MCHNCL M"; connect renames it to the 0x0005 name "MX Mechanical Mini".
+            (string, (byte, ushort)?)[] connected = [("G502 HERO", null), ("MX Mechanical Mini", (1, 0xB367))];
+            Harness.Assert(HidPPDecode.IsPairedDeviceConnected(connected, "MX MCHNCL M", (1, 0xB367)), "renamed, same slot");
+            Harness.Assert(!HidPPDecode.IsPairedDeviceConnected(connected, "MX Master 3S", (2, 0xB034)), "new slot");
+            Harness.Assert(HidPPDecode.IsPairedDeviceConnected([("MX Master 3S", null)], "MX Master 3S", (2, 0xB034)), "same name");
+        });
+
+        Harness.Scenario("Receiver_HidIdProduct", _ =>
+        {
+            // The kernel node of a paired MX Master: HidSharp lists it with the receiver USB id C52B.
+            Harness.AssertEqual((ushort?)0x4071, HidPPDecode.HidIdProduct("DRIVER=logitech-hidpp-device\nHID_ID=0003:0000046D:00004071\nHID_NAME=Logitech MX Master\n"), "device node");
+            Harness.AssertEqual((ushort?)0xC52B, HidPPDecode.HidIdProduct("HID_ID=0003:0000046D:0000C52B\n"), "receiver node");
+            Harness.Assert(HidPPDecode.HidIdProduct("HID_NAME=x\n") is null, "no HID_ID");
+        });
+
+        Harness.Scenario("Receiver_Notifications_Unifying", _ =>
+        {
+            Harness.AssertEqual(((byte)1, (ushort)0x4071, 2, true),
+                HidPPDecode.DecodeDeviceConnection([0x10, 0x01, 0x41, 0x04, 0x02, 0x71, 0x40])!.Value, "0x41 new mouse");
+            Harness.AssertEqual(false, HidPPDecode.DecodeDeviceConnection([0x10, 0x02, 0x41, 0x04, 0x42, 0x71, 0x40])!.Value.linkUp, "0x41 link down");
+            Harness.Assert(HidPPDecode.DecodeDeviceConnection([0x10, 0xFF, 0x41, 0x04, 0x02, 0x71, 0x40]) is null, "0x41 from receiver");
+            Harness.Assert(HidPPDecode.DecodeDeviceConnection([0x20, 0x01, 0x41, 0x02, 0x71, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0]) is null, "DJ paired report");
+            Harness.AssertEqual((true, (byte)0), HidPPDecode.DecodeLockChange([0x10, 0xFF, 0x4A, 0x01, 0x00, 0, 0])!.Value, "lock open");
+            Harness.AssertEqual((false, (byte)3), HidPPDecode.DecodeLockChange([0x10, 0xFF, 0x4A, 0x00, 0x03, 0, 0])!.Value, "too many devices");
+            Harness.Assert(HidPPDecode.DecodeLockChange([0x10, 0xFF, 0x41, 0x01, 0x00, 0, 0]) is null, "other sub id");
+        });
+
+        Harness.Scenario("Receiver_Notifications_Bolt", _ =>
+        {
+            byte[] info = [0x11, 0xFF, 0x4F, 0x05, 0x00, 0x00, 0x00, 0x02, 0x34, 0xB0, 1, 2, 3, 4, 5, 6, 0x00, 0x00, 0x02, 0x00];
+            var d = HidPPDecode.DecodeBoltDiscovery(info)!;
+            Harness.AssertEqual((5, 2, (byte)0x02), (d.Counter, d.Kind, d.Auth), "discovery info");
+            Harness.AssertEqual("1,2,3,4,5,6", string.Join(",", d.Address!), "address");
+            byte[] name = [0x11, 0xFF, 0x4F, 0x05, 0x00, 0x01, 0x0C, .. "MX Master 3S"u8, 0x00];
+            Harness.AssertEqual("MX Master 3S", HidPPDecode.DecodeBoltDiscovery(name)!.Name, "discovery name");
+            Harness.AssertEqual((false, (byte)1), HidPPDecode.DecodeDiscoveryStatus([0x10, 0xFF, 0x53, 0x01, 0x01, 0, 0])!.Value, "discovery timeout");
+            byte[] passkey = [0x11, 0xFF, 0x4D, 0x00, .. "000613"u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            Harness.AssertEqual("000613", HidPPDecode.DecodePasskey(passkey), "passkey");
+            byte[] shortKey = [0x11, 0xFF, 0x4D, 0x00, .. "613"u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            Harness.AssertEqual("613", HidPPDecode.DecodePasskey(shortKey), "NUL-padded passkey");
+            byte[] done = [0x11, 0xFF, 0x54, 0x02, 0x00, 0, 0, 0, 0, 0, 0, 0x03, 0, 0, 0, 0, 0, 0, 0, 0];
+            Harness.AssertEqual(((byte)2, (byte)0, (byte)3), HidPPDecode.DecodePairingStatus(done)!.Value, "paired in slot 3");
+        });
+
+        Harness.Scenario("Receiver_UnifyingPairing", _ =>
+        {
+            byte[] open = [0x10, 0xFF, 0x4A, 0x01, 0x00, 0, 0];
+            byte[] closed = [0x10, 0xFF, 0x4A, 0x00, 0x00, 0, 0];
+            byte[] slot2 = [0x10, 0x02, 0x41, 0x04, 0x02, 0x71, 0x40];
+            byte[] slot1 = [0x10, 0x01, 0x41, 0x04, 0x01, 0x34, 0x40];
+
+            var p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(slot2);
+            Harness.AssertEqual((byte)0, p.Slot, "0x41 before the lock opens is not a pairing");
+            p.Feed(open);
+            p.Feed(slot2);
+            Harness.AssertEqual((true, true, (byte)2), (p.Open, p.Done, p.Slot), "new slot while open");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(open);
+            p.Feed(closed);
+            Harness.AssertEqual((false, (byte)0), (p.Done, p.Slot), "closed without a device is not a pairing");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte> { 1 });
+            p.Feed(open);
+            p.Feed(slot1);
+            Harness.AssertEqual((byte)0, p.Slot, "known slot alone");
+            p.Feed(closed);
+            Harness.AssertEqual((byte)1, p.Slot, "known slot, then closed: re-paired");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(open);
+            p.Feed([0x10, 0xFF, 0x4A, 0x00, 0x03, 0, 0]);
+            Harness.AssertEqual((true, (byte)3, (byte)0), (p.Done, p.Error, p.Slot), "too many devices");
+
+            p = new HidPPDecode.UnifyingPairing(new HashSet<byte>());
+            p.Feed(closed);
+            Harness.AssertEqual((true, false), (p.Done, p.Open), "closed before it opened");
+        });
+
+        Harness.Scenario("Receiver_PasskeyClicks", _ =>
+        {
+            // 613 = 1001100101: right left left right right left left right left right.
+            Harness.AssertEqual("RLLRRLLRLR", new string(HidPPDecode.PasskeyClicks("000613").Select(b => b ? 'R' : 'L').ToArray()), "613");
+            Harness.AssertEqual(10, HidPPDecode.PasskeyClicks("000000").Length, "pad to 10");
+            Harness.AssertEqual(0, HidPPDecode.PasskeyClicks("abc").Length, "not a number");
+        });
+
         Harness.Scenario("DisabledKeys_Summary", _ =>
         {
             Harness.AssertEqual("-", HidPPDecode.DisabledKeysSummary(0), "none");

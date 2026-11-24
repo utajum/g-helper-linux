@@ -491,6 +491,13 @@
                                        FontSize="11" TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
                         </Button>
+                        <Button x:Name="buttonReceivers" Classes="ghelper" IsVisible="False"
+                                HorizontalAlignment="Left" Margin="4,2,0,2" Padding="10,0" Height="26"
+                                Click="ButtonReceivers_Click">
+                            <TextBlock x:Name="labelReceivers" Text="Logitech receivers..."
+                                       FontSize="11" TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" />
+                        </Button>
                     </WrapPanel>
                 </Grid>
             </Border>

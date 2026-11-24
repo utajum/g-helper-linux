@@ -183,7 +183,13 @@ public partial class MainWindow : Window
         var buttons = new[] { buttonPeripheral1, buttonPeripheral2, buttonPeripheral3 };
         var labels = new[] { labelPeripheral1, labelPeripheral2, labelPeripheral3 };
 
-        bool shouldShow = mice.Count > 0;
+        // A plugged receiver with no device shown here: offer pairing.
+        bool showReceivers = !Peripherals.PeripheralsProvider.LogitechDisabled
+            && Peripherals.PeripheralsProvider.ReceiverPlugged
+            && !mice.Any(m => m is Peripherals.Logitech.LogitechReceiverMouse);
+        buttonReceivers.IsVisible = showReceivers;
+
+        bool shouldShow = mice.Count > 0 || showReceivers;
         bool changed = panelPeripherals.IsVisible != shouldShow;
         panelPeripherals.IsVisible = shouldShow;
 
@@ -219,6 +225,8 @@ public partial class MainWindow : Window
     }
 
     private MouseWindow? _mouseWindow;
+
+    private void ButtonReceivers_Click(object? sender, RoutedEventArgs e) => ReceiverWindow.ShowOrActivate();
 
     private void ButtonPeripheral_Click(object? sender, RoutedEventArgs e)
     {
@@ -310,6 +318,7 @@ public partial class MainWindow : Window
 
         labelKeyboard.Text = Labels.Get("keyboard_header");
         labelPeripherals.Text = Labels.Get("peripherals_header");
+        labelReceivers.Text = Labels.Get("receivers_open");
         checkStartup.Content = Labels.Get("run_on_startup");
 
         // Audio panel localisation.

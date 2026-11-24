@@ -37,6 +37,7 @@ public static class ReceiverInfo
         new(0xC534, ReceiverKind.Nano,       2, 1, "Nano Receiver"),
         new(0xC535, ReceiverKind.Nano,       1, 1, "Nano Receiver (Dell)"),
         new(0xC537, ReceiverKind.Nano,       1, 1, "Nano Receiver"),
+        new(0xC53E, ReceiverKind.Nano,       1, 1, "Spotlight Receiver"),
 
         new(0xC539, ReceiverKind.Lightspeed, 1, 2, "Lightspeed Receiver"),
         new(0xC53A, ReceiverKind.Lightspeed, 1, 2, "Lightspeed Receiver"),
