@@ -208,14 +208,44 @@ public static class Harness
             LinuxAsusWmi.InvalidateGpuPresenceCache();
         }
 
-        /// <summary>AMD iGPU: boot display, VGA class, vendor 0x1002.</summary>
-        public void WriteFakeAmdIgpuDevice()
+        /// <summary>AMD iGPU: boot display, VGA class, vendor 0x1002.
+        /// Without boot_vga only the connected eDP panel marks it as the iGPU.</summary>
+        public void WriteFakeAmdIgpuDevice(bool bootVga = true)
         {
             string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:e2:00.0");
             Directory.CreateDirectory(dev);
             File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
             File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
+            if (bootVga)
+                File.WriteAllText(Path.Combine(dev, "boot_vga"), "1\n");
+            else
+            {
+                string conn = Path.Combine(dev, "drm", "card0", "card0-eDP-1");
+                Directory.CreateDirectory(conn);
+                File.WriteAllText(Path.Combine(conn, "status"), "connected\n");
+            }
+            LinuxAsusWmi.InvalidateGpuPresenceCache();
+        }
+
+        /// <summary>Intel iGPU: boot display at 00:02.0, vendor 0x8086.</summary>
+        public void WriteFakeIntelIgpuDevice()
+        {
+            string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:00:02.0");
+            Directory.CreateDirectory(dev);
+            File.WriteAllText(Path.Combine(dev, "vendor"), "0x8086\n");
+            File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
             File.WriteAllText(Path.Combine(dev, "boot_vga"), "1\n");
+            LinuxAsusWmi.InvalidateGpuPresenceCache();
+        }
+
+        /// <summary>AMD dGPU: non-boot VGA function with a DRM card (RX 6800S class).</summary>
+        public void WriteFakeAmdDgpuDevice()
+        {
+            string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:03:00.0");
+            Directory.CreateDirectory(Path.Combine(dev, "drm", "card1"));
+            File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
+            File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
+            File.WriteAllText(Path.Combine(dev, "boot_vga"), "0\n");
             LinuxAsusWmi.InvalidateGpuPresenceCache();
         }
 

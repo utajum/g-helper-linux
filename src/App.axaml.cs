@@ -141,7 +141,7 @@ public class App : Application
     {
         // Initialize Linux platform backends
         InitializePlatform();
-        DefaultNewInstallToBpf();
+        Gpu.GPUModeControl.DefaultNewInstallToBpf(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable);
 
         // Initialize i18n before any UI
         Labels.Initialize();
@@ -527,23 +527,6 @@ public class App : Application
 
         // Log detected features
         LogFeatureDetection();
-    }
-
-    /// <summary>New installs default to eBPF when it can run now; existing installs keep their backend.</summary>
-    private static void DefaultNewInstallToBpf()
-    {
-        if (!AppConfig.IsNewInstall || !string.IsNullOrWhiteSpace(AppConfig.GetString("gpu_backend")))
-            return;
-        // Firmware Eco or Ultimate set by another OS needs the MUX backend to undo.
-        if (Wmi == null || !Wmi.CanToggleGpuBackend() || Wmi.GetGpuEco() || Wmi.GetGpuMuxMode() == 0)
-            return;
-        if (Gpu.GpuBootFiles.ReadBackend() is not ("" or "ebpf") || !Gpu.Block.GpuBlockCapability.IsAvailable())
-            return;
-        // The boot service follows the marker, so set it before the config.
-        if (!Gpu.GpuBootFiles.SetBackend("ebpf"))
-            return;
-        AppConfig.Set("gpu_backend", "ebpf");
-        Logger.WriteLine("Startup: new install - gpu_backend=ebpf");
     }
 
     private void LogFeatureDetection()

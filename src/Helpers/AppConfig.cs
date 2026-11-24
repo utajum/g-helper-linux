@@ -65,6 +65,7 @@ public static class AppConfig
             ConfigFile = Path.Combine(newConfigDir, "config.json");
             BackupFile = ConfigFile + ".bak";
             Directory.CreateDirectory(ConfigDir);
+            IsNewInstall = !File.Exists(ConfigFile);
 
             if (File.Exists(ConfigFile))
             {

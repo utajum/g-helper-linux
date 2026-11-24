@@ -221,6 +221,19 @@ public static class Scenarios
         Topo_StaleSlotCache_ClearedAfterThreeStarts();
         Topo_NouveauOnDisk_WithValidatedSlot_PciUsable();
 
+        Console.WriteLine("\n New install eBPF default (iGPU-only, AMD dGPU) ");
+        NewInstall_IntelIgpuOnly_NoBpf();
+        NewInstall_AmdIgpuOnly_NoBpf();
+        NewInstall_AmdIgpuNoBootVga_NoBpf();
+        NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf();
+        NewInstall_AmdIgpuAmdDgpu_PicksBpf();
+        NewInstall_IntelIgpuAmdDgpu_PicksBpf();
+        NewInstall_AmdDgpu_FirmwareEco_NoBpf();
+        NewInstall_AmdDgpu_Ultimate_NoBpf();
+        NewInstall_AmdDgpu_BpfUnavailable_NoBpf();
+        NewInstall_AmdDgpu_PciMarker_Kept();
+        ExistingInstall_AmdDgpu_BackendKept();
+
         Console.WriteLine("\n Power limit bounds ");
         PowerLimitBounds_NoFirmwareRange_UsesModelTable();
         PowerLimitBounds_FirmwareRange_WinsOverTable();
@@ -1608,6 +1621,146 @@ public static class Scenarios
                 "validated slot outweighs weak module evidence");
             Assert(LinuxAsusWmi.IsPciBackendUsable(),
                 "PCI backend usable: nouveau on disk + validated slot");
+        });
+
+    //
+    // New installs: eBPF only with a dGPU on the PCI bus. Both platform
+    // classes gate CanToggleGpuBackend on HasSecondGpu, so the fake
+    // follows the fake PCI topology.
+    //
+
+    static bool NewInstallPicksBpf(Harness.Sandbox sb, bool bpfAvailable = true)
+    {
+        sb.Wmi.CanToggleBackendValue = GPUModeControl.HasSecondGpu();
+        return GPUModeControl.DefaultNewInstallToBpf(sb.Wmi, () => bpfAvailable);
+    }
+
+    static void AssertBackendUnset(Harness.Sandbox sb)
+    {
+        Assert(string.IsNullOrEmpty(AppConfig.GetString("gpu_backend")), "gpu_backend stays unset");
+        Assert(!sb.BackendPresent(), "no backend marker written");
+    }
+
+    static void NewInstall_IntelIgpuOnly_NoBpf()
+        => Scenario(nameof(NewInstall_IntelIgpuOnly_NoBpf), sb =>
+        {
+            sb.WriteFakeIntelIgpuDevice();
+            sb.WriteFakeNouveauOnDisk();
+
+            Assert(!NewInstallPicksBpf(sb), "Intel iGPU only: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_AmdIgpuOnly_NoBpf()
+        => Scenario(nameof(NewInstall_AmdIgpuOnly_NoBpf), sb =>
+        {
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeNouveauOnDisk();
+
+            Assert(!NewInstallPicksBpf(sb), "AMD iGPU only: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_AmdIgpuNoBootVga_NoBpf()
+        => Scenario(nameof(NewInstall_AmdIgpuNoBootVga_NoBpf), sb =>
+        {
+            // Some AMD APUs (Ally class) set no boot_vga; the eDP panel marks the iGPU.
+            sb.WriteFakeAmdIgpuDevice(bootVga: false);
+
+            Assert(DgpuPci.Find() == null, "iGPU with the panel is not a dGPU");
+            Assert(!NewInstallPicksBpf(sb), "AMD iGPU without boot_vga: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf()
+        => Scenario(nameof(NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf), sb =>
+        {
+            // ASUS firmware exposes dgpu_disable on some iGPU-only models, so the backend selector shows.
+            sb.WriteFakeIntelIgpuDevice();
+            sb.Wmi.CanToggleBackendValue = true;
+
+            Assert(!GPUModeControl.DefaultNewInstallToBpf(sb.Wmi, () => true), "no dGPU on the bus: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_AmdIgpuAmdDgpu_PicksBpf()
+        => Scenario(nameof(NewInstall_AmdIgpuAmdDgpu_PicksBpf), sb =>
+        {
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+
+            AssertEqual("0000:03:00.0", DgpuPci.Find()?.bdf, "dGPU, not the AMD iGPU");
+            Assert(NewInstallPicksBpf(sb), "AMD iGPU + AMD dGPU: eBPF");
+            AssertEqual("ebpf", AppConfig.GetString("gpu_backend"), "gpu_backend");
+            AssertEqual("ebpf", sb.BackendContent(), "backend marker");
+        });
+
+    static void NewInstall_IntelIgpuAmdDgpu_PicksBpf()
+        => Scenario(nameof(NewInstall_IntelIgpuAmdDgpu_PicksBpf), sb =>
+        {
+            sb.WriteFakeIntelIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+
+            AssertEqual("0000:03:00.0", DgpuPci.Find()?.bdf, "AMD dGPU");
+            Assert(NewInstallPicksBpf(sb), "Intel iGPU + AMD dGPU: eBPF");
+            AssertEqual("ebpf", sb.BackendContent(), "backend marker");
+        });
+
+    static void NewInstall_AmdDgpu_FirmwareEco_NoBpf()
+        => Scenario(nameof(NewInstall_AmdDgpu_FirmwareEco_NoBpf), sb =>
+        {
+            // dgpu_disable=1 from another OS: only the MUX backend can undo it.
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+            sb.Wmi.EcoEnabled = true;
+
+            Assert(!NewInstallPicksBpf(sb), "firmware Eco: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_AmdDgpu_Ultimate_NoBpf()
+        => Scenario(nameof(NewInstall_AmdDgpu_Ultimate_NoBpf), sb =>
+        {
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+            sb.Wmi.MuxMode = 0;
+
+            Assert(!NewInstallPicksBpf(sb), "MUX on the dGPU: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_AmdDgpu_BpfUnavailable_NoBpf()
+        => Scenario(nameof(NewInstall_AmdDgpu_BpfUnavailable_NoBpf), sb =>
+        {
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+
+            Assert(!NewInstallPicksBpf(sb, bpfAvailable: false), "no bpf LSM: no eBPF");
+            AssertBackendUnset(sb);
+        });
+
+    static void NewInstall_AmdDgpu_PciMarker_Kept()
+        => Scenario(nameof(NewInstall_AmdDgpu_PciMarker_Kept), sb =>
+        {
+            // Config reset with a PCI marker left behind: the marker stays.
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+            sb.WriteBackend("pci");
+
+            Assert(!NewInstallPicksBpf(sb), "other backend marker: no eBPF");
+            AssertEqual("pci", sb.BackendContent(), "marker kept");
+        });
+
+    static void ExistingInstall_AmdDgpu_BackendKept()
+        => Scenario(nameof(ExistingInstall_AmdDgpu_BackendKept), sb =>
+        {
+            File.WriteAllText(Path.Combine(sb.ConfigDir, "config.json"), "{}");
+            AppConfig.ResetForTest(sb.ConfigDir);
+            sb.WriteFakeAmdIgpuDevice();
+            sb.WriteFakeAmdDgpuDevice();
+
+            Assert(!NewInstallPicksBpf(sb), "existing install: no eBPF");
+            AssertBackendUnset(sb);
         });
 
     // A dGPU enable can outrun its opening pause, so the recovery ladder

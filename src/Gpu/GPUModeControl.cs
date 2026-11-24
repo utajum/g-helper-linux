@@ -399,6 +399,27 @@ public class GPUModeControl
         return false;
     }
 
+    /// <summary>New installs default to eBPF when it can run now; existing installs keep their backend.</summary>
+    internal static bool DefaultNewInstallToBpf(IHardwareControl? wmi, Func<bool> bpfAvailable)
+    {
+        if (!AppConfig.IsNewInstall || !string.IsNullOrWhiteSpace(AppConfig.GetString("gpu_backend")))
+            return false;
+        // Firmware Eco or Ultimate set by another OS needs the MUX backend to undo.
+        if (wmi == null || !wmi.CanToggleGpuBackend() || wmi.GetGpuEco() || wmi.GetGpuMuxMode() == 0)
+            return false;
+        // Some iGPU-only firmwares expose dgpu_disable; the filter needs a real dGPU.
+        if (DgpuPci.Find() == null)
+            return false;
+        if (GpuBootFiles.ReadBackend() is not ("" or "ebpf") || !bpfAvailable())
+            return false;
+        // The boot service follows the marker, so set it before the config.
+        if (!GpuBootFiles.SetBackend("ebpf"))
+            return false;
+        AppConfig.Set("gpu_backend", "ebpf");
+        Logger.WriteLine("Startup: new install - gpu_backend=ebpf");
+        return true;
+    }
+
     /// <summary>Alias kept for the installer gate (ghelper-gpu-boot.service
     /// applicability): identical semantics to <see cref="HasSecondGpu"/>.</summary>
     public static bool HasDiscreteGpu() => HasSecondGpu();
