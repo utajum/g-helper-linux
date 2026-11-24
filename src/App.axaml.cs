@@ -143,6 +143,7 @@ public class App : Application
         if (!TryAcquireSingleInstanceLock())
         {
             Console.Error.WriteLine("g-helper: another instance is already running - exiting");
+            CommandIpc.TrySend("show");
             Environment.Exit(0);
             return;
         }
@@ -207,6 +208,8 @@ public class App : Application
             {
                 if (cmd == "toggle-osk")
                     Avalonia.Threading.Dispatcher.UIThread.Post(ToggleOskWindow);
+                else if (cmd == "show")
+                    Avalonia.Threading.Dispatcher.UIThread.Post(ShowMainWindow);
             });
             if (oskStart)
                 Avalonia.Threading.Dispatcher.UIThread.Post(ToggleOskWindow);
@@ -1003,6 +1006,15 @@ public class App : Application
         }
 
         // Nothing visible → show main window only
+        ShowMainWindow();
+    }
+
+    /// <summary>Show and focus the main window (tray click, second launch).</summary>
+    public static void ShowMainWindow()
+    {
+        if (Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            return;
+
         if (MainWindowInstance == null || MainWindowInstance.PlatformImpl == null)
         {
             MainWindowInstance = new MainWindow();
@@ -1011,7 +1023,8 @@ public class App : Application
             desktop.MainWindow = MainWindowInstance;
         }
 
-        WindowPositioner.BottomRight(MainWindowInstance);
+        if (!MainWindowInstance.IsVisible)
+            WindowPositioner.BottomRight(MainWindowInstance);
         MainWindowInstance.Show();
         MainWindowInstance.Activate();
     }
