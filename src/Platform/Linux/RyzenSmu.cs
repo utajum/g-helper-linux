@@ -26,13 +26,14 @@ namespace GHelper.Linux.Platform.Linux;
 ///
 /// Command IDs verified from ZenStates-Core (irusanov/ZenStates-Core):
 ///   Zen4Settings.cs + DragonRangeSettings.cs (identical RSMU CO commands)
+///   APU MP1 IDs from Windows G-Helper (app/Pawn/RyzenSmu.cs) and ryzenadj
 ///
 /// CO values are NOT persistent - they reset on every reboot.
 ///
 /// SAFETY:
-///   - Startup validation: sends a read-only GetDldoPsmMargin before allowing writes
+///   - Startup validation (RSMU only): sends a read-only GetDldoPsmMargin before allowing writes
 ///   - Range clamped to [MinCPUUV, MaxCPUUV] (matches Windows CpuInfo.MinCPUUV/MaxCPUUV)
-///   - Read-back verification after every write
+///   - Read-back verification after every write (RSMU only)
 ///   - All SMU interactions logged
 ///   - Application-level lock (defense-in-depth over kernel mutex)
 /// </summary>
@@ -59,8 +60,8 @@ public sealed class RyzenSmu
     public const int MaxCPUUV = 0;
 
     /// <summary>
-    /// RSMU command IDs for Curve Optimizer, per CPU generation.
-    /// Verified from ZenStates-Core source (Zen3Settings.cs, Zen4Settings.cs, DragonRangeSettings.cs).
+    /// Curve Optimizer command IDs, per CPU generation. RSMU IDs from ZenStates-Core
+    /// (Zen3Settings.cs, Zen4Settings.cs, DragonRangeSettings.cs), MP1 IDs from Windows G-Helper and ryzenadj.
     /// </summary>
     private record SmuCommandSet(
         uint SetAllCoreCO,    // SetAllDldoPsmMargin
@@ -70,8 +71,8 @@ public sealed class RyzenSmu
     );
 
     // ryzen_smu codename IDs (from amkillam/ryzen_smu smu.h enum smu_processor_codename)
-    // Command IDs verified from ZenStates-Core source. Startup validation probe
-    // (GetDldoPsmMargin) catches wrong command IDs before any writes happen.
+    // RSMU command IDs verified from ZenStates-Core source. Startup validation probe
+    // (GetDldoPsmMargin) catches wrong RSMU command IDs before any writes happen.
     private const int CODENAME_REMBRANDT = 11;     // Zen 3+ APU (Ryzen 6000 mobile)
     private const int CODENAME_VERMEER = 12;       // Zen 3 desktop (Ryzen 5000)
     private const int CODENAME_CEZANNE = 14;       // Zen 3 APU (Ryzen 5000G)
@@ -82,7 +83,7 @@ public sealed class RyzenSmu
     private const int CODENAME_HAWK_POINT = 24;    // Zen 4 refresh (Ryzen 8000 mobile)
     private const int CODENAME_STRIX_HALO = 26;    // Zen 5 (Ryzen AI 300 HX)
 
-    // Enabled codenames. Startup validation probe ensures safety - if the SMU rejects
+    // Enabled codenames. On RSMU the startup validation probe ensures safety - if the SMU rejects
     // the GetDldoPsmMargin read, CO disables itself before any writes happen.
     private static readonly Dictionary<int, SmuCommandSet> CommandSets = new()
     {
@@ -235,7 +236,7 @@ public sealed class RyzenSmu
     /// Set Curve Optimizer offset for ALL cores. Mirrors Windows RyzenSmuService.SetCoAll.
     /// </summary>
     /// <param name="offset">CO offset, clamped to [MinCPUUV, MaxCPUUV]. Negative = undervolt.</param>
-    /// <returns>True if the SMU accepted the command. Read-back is logged; a mismatch
+    /// <returns>True if the SMU accepted the command. Read-back (RSMU only) is logged; a mismatch
     /// does NOT flip the return to false (the write itself still succeeded).</returns>
     public bool SetCoAll(int offset)
     {

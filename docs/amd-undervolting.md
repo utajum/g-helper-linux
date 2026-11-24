@@ -48,10 +48,10 @@ G-Helper sends SMU mailbox commands via the driver's sysfs interface:
 
 ## Safety
 
-- **Validation on startup**: sends a read-only `GetDldoPsmMargin` probe before
+- **Validation on startup** (RSMU only): sends a read-only `GetDldoPsmMargin` probe before
   allowing any writes. If the SMU rejects it, CO is disabled entirely.
 - **Range clamped**: values limited to [-40, 0] (matches Windows G-Helper)
-- **Read-back verification**: every write is verified by reading the value back
+- **Read-back verification** (RSMU only): every write is verified by reading the value back
 - **Non-persistent**: resets on reboot. If unstable values cause a crash,
   a simple reboot restores stock settings.
 - **Auto-apply**: optional checkbox to re-apply CO when switching performance
