@@ -10,6 +10,8 @@
 
 ## v1.0.101 (2026-11-24)
 
+<img width="1387" height="865" alt="Screenshot_20261124_204435" src="https://github.com/user-attachments/assets/ef9ed017-f013-4595-b783-c19614476ec3" />
+
 ### Added
 
 - Report a Bug button in the Updates window, next to What's new. No GitHub account is needed (#269).
