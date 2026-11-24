@@ -53,11 +53,11 @@ public sealed class RyzenSmu
     private const uint SMU_RETURN_CMD_REJECTED_PREREQ = 0xFD;
     private const uint SMU_RETURN_CMD_REJECTED_BUSY = 0xFC;
 
-    // UV bounds matching Windows PawnIO.CpuInfo.MinCPUUV / MaxCPUUV.
+    // UV bounds matching Windows PawnIO.CpuInfo.MinCPUUV / MaxCPUUV (config min_uv / max_uv).
     // BIOS Curve Optimizer range is [-30, +30] but Windows uses [-40, 0]; SMU firmware
     // will reject or clamp values beyond what the silicon accepts.
-    public const int MinCPUUV = -40;
-    public const int MaxCPUUV = 0;
+    public static int MinCPUUV => Helpers.AppConfig.Get("min_uv", -40);
+    public static int MaxCPUUV => Helpers.AppConfig.Get("max_uv", 0);
 
     /// <summary>
     /// Curve Optimizer command IDs, per CPU generation. RSMU IDs from ZenStates-Core

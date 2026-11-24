@@ -51,6 +51,7 @@ G-Helper sends SMU mailbox commands via the driver's sysfs interface:
 - **Validation on startup** (RSMU only): sends a read-only `GetDldoPsmMargin` probe before
   allowing any writes. If the SMU rejects it, CO is disabled entirely.
 - **Range clamped**: values limited to [-40, 0] (matches Windows G-Helper)
+- **Range config**: `min_uv` / `max_uv` in `~/.config/ghelper/config.json`, for example `"max_uv": 10` allows +10
 - **Read-back verification** (RSMU only): every write is verified by reading the value back
 - **Non-persistent**: resets on reboot. If unstable values cause a crash,
   a simple reboot restores stock settings.

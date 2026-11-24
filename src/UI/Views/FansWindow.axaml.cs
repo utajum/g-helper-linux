@@ -1878,6 +1878,7 @@ public partial class FansWindow : Window
             else
             {
                 // AMD: Curve Optimizer steps.
+                sliderCpuUV.Minimum = -Platform.Linux.RyzenSmu.MaxCPUUV;
                 sliderCpuUV.Maximum = -Platform.Linux.RyzenSmu.MinCPUUV;
                 int cpuUV = Helpers.AppConfig.GetMode("cpu_uv", 0);
                 cpuUV = Math.Clamp(cpuUV, Platform.Linux.RyzenSmu.MinCPUUV, Platform.Linux.RyzenSmu.MaxCPUUV);
@@ -1906,7 +1907,7 @@ public partial class FansWindow : Window
     {
         if (_updatingUV)
             return;
-        // Slider value is positive intensity; config stores the negated offset.
+        // Slider value is intensity; config stores the negated offset.
         if (App.IntelUv?.IsAvailable == true)
         {
             int intensity = Math.Clamp((int)e.NewValue, 0, -Platform.Linux.IntelUndervolt.MinOffsetMv);
@@ -1915,7 +1916,7 @@ public partial class FansWindow : Window
             Helpers.AppConfig.SetMode("cpu_uv_mv", mv);
             return;
         }
-        int coIntensity = Math.Clamp((int)e.NewValue, 0, -Platform.Linux.RyzenSmu.MinCPUUV);
+        int coIntensity = Math.Clamp((int)e.NewValue, -Platform.Linux.RyzenSmu.MaxCPUUV, -Platform.Linux.RyzenSmu.MinCPUUV);
         int cpuUV = -coIntensity;
         labelCpuUV.Text = cpuUV.ToString();
         Helpers.AppConfig.SetMode("cpu_uv", cpuUV);
