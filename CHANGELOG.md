@@ -8,6 +8,47 @@
 
 ### Changed
 
+## v1.0.101 (2026-11-24)
+
+### Added
+
+- Report a Bug button in the Updates window, next to What's new. No GitHub account is needed (#269).
+- Noise Suppression: GTCRN model as an option (#264).
+- NumberPad: layouts and gestures from the ASUS Windows driver, layout picker, more models (#255, #260, #266, thanks @rashidrazak).
+- Logitech receivers window in Extra and the main window. It lists, pairs and unpairs devices (#274).
+- Logitech: Unifying and Bolt pairing (#274).
+- Logitech over Bluetooth: MX Master 3S (also for Business), MX Anywhere 2S and LIFT (#274).
+- Logitech Spotlight receiver (#274).
+- RGB wheel light, on models that have one (#262).
+- ProArt MD301 mouse (#262).
+
+### Fixed
+
+- KDE Plasma: tray icon shows CPU and GPU temps on hover. Avalonia fix: https://github.com/AvaloniaUI/Avalonia/pull/22558 (#263).
+- GPU temp target and power limits are written again after a mode switch (#208, #212).
+- Undervolt: auto-apply off keeps a BIOS undervolt. G-Helper resets only its own offset (#242, #243).
+- iGPU clock sliders are hidden on APUs where ryzenadj can not set them (#191, #199).
+- Starting G-Helper again shows the running window, instead of only exiting (#192, #276).
+- Slash lighting no longer turns off after resume or AC change (#257, #261).
+- NixOS: install no longer fails with missing overlay.nix (#258, #259).
+- Logitech: receiver devices were connected again on every scan, until out of memory (#274).
+- Logitech: receiver commands go to the receiver, not to a paired device (#274).
+- Logitech: Disable Logitech also hides the receivers window and needs no restart (#274).
+- Lightbar options are shown when the keyboard reports only a logo light (#262).
+- 2024+ Strix and Scar: lighting power options are set again when a mode like Heatmap starts (#262).
+- eBPF: Quit and in-app restart stop the udev watcher, so the autostart service can start again (#265).
+- Denoise hotkey and tile text follow the chosen model (#264).
+- Audio helper: pitch tracker read one sample past its buffer (#267).
+
+### Changed
+
+- Avalonia 12.2.0 and LiveCharts 2.2.0. NixOS builds with .NET 10.0.14 (#263).
+- Copy and Export Diagnostics are in one Diagnostics menu button (#269).
+- Report a Bug is only in release and PR builds from this repo (#269).
+- CI: release only by hand from master. Actions are pinned to commit SHA (#251, #252, #253, #256).
+- Tests for the new features (#255, #260, #264, #269, #274).
+- Audio helper tests run under ASan and UBSan (#267).
+
 ## v1.0.100 (2026-11-11)
 
 ### Fixed
