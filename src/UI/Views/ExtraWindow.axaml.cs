@@ -2833,11 +2833,10 @@ public partial class ExtraWindow : Window
             return;
 
         bool enabled = checkEcoPersistent.IsChecked ?? false;
-        var gpu = App.GpuModeCtrl;
-        if (gpu == null)
+        if (App.GpuModeCtrl == null)
             return;
 
-        Task.Run(() => gpu.SetEcoPersistent(enabled));
+        Task.Run(() => Gpu.GpuBootFiles.SetEcoPersistent(enabled));
     }
 
     private void CheckRawWmi_Changed(object? sender, RoutedEventArgs e)
@@ -2862,18 +2861,10 @@ public partial class ExtraWindow : Window
         }
     }
 
-    /// <summary>
-    /// Show the GPU Backend panel whenever the user could plausibly switch
-    /// dGPU modes: ASUS WMI present, NVIDIA dGPU on the PCI bus, PCI mode
-    /// already opted in, block artifacts on disk (PCI eco currently
-    /// active), or NVIDIA modules installed on disk. This covers the case
-    /// where the dGPU was hot-removed by the udev rule (vendor 0x10de
-    /// vanishes from the PCI tree) but is otherwise functional.
-    /// </summary>
+    /// <summary>Show the GPU Backend panel when a second GPU exists, also while our Eco hides it.</summary>
     private void RefreshGpuBackend()
     {
-        var wmi = App.Wmi;
-        bool canToggle = wmi?.CanToggleGpuBackend() ?? false;
+        bool canToggle = Gpu.GPUModeControl.HasSecondGpu();
         panelGpuBackend.IsVisible = canToggle;
         if (!canToggle)
             return;

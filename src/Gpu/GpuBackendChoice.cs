@@ -58,8 +58,18 @@ internal static class GpuBackendChoice
         return true;
     }
 
-    /// <summary>Backend when eBPF cannot run: MUX mode on ASUS, PCI elsewhere.</summary>
-    internal static string Fallback() => AppConfig.HasAsusPlatformDevice() ? "asus-wmi" : "pci";
+    /// <summary>eBPF cannot stay: the config takes the marker's other backend, else the fallback. Returns it.</summary>
+    internal static string LeaveBpf()
+    {
+        string marker = GpuBootFiles.ReadBackend();
+        string backend = marker is "asus-wmi" or "pci" ? marker : Fallback();
+        AppConfig.Set("gpu_backend", backend);
+        Logger.WriteLine($"GpuBackendChoice: leaving ebpf, marker '{marker}' - gpu_backend={backend}");
+        return backend;
+    }
+
+    // Backend when eBPF cannot run: MUX mode on ASUS, PCI elsewhere.
+    private static string Fallback() => AppConfig.HasAsusPlatformDevice() ? "asus-wmi" : "pci";
 
     /// <summary>No backend box ticked means eBPF, unless this kernel or build can never run it.</summary>
     internal static string WhenUnticked()
@@ -68,7 +78,7 @@ internal static class GpuBackendChoice
     private static bool TryBpf(IHardwareControl? wmi, Func<bool> bpfAvailable)
     {
         // Firmware Eco or Ultimate set by another OS needs the MUX backend to undo.
-        if (wmi == null || !wmi.CanToggleGpuBackend() || wmi.GetGpuEco() || wmi.GetGpuMuxMode() == 0)
+        if (wmi == null || wmi.GetGpuEco() || wmi.GetGpuMuxMode() == 0)
             return false;
         // Some iGPU-only firmwares expose dgpu_disable; the filter needs a real dGPU.
         if (DgpuPci.Find() == null)

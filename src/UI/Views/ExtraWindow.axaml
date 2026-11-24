@@ -614,7 +614,7 @@
                            * Raw WMI mode:  ACPI debugfs DSTS/DEVS
                          All ship with explanatory hints so the user can pick the
                          right one for their laptop. Panel visibility is gated by
-                         IAsusWmi.CanToggleGpuBackend(). -->
+                         GPUModeControl.HasSecondGpu(). -->
                     <Border Classes="panel" x:Name="panelGpuBackend" IsVisible="False">
                         <StackPanel>
                             <Border Classes="panel-header" Margin="0,0,0,8">

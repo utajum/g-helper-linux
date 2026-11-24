@@ -228,8 +228,7 @@ public static class Scenarios
         NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf();
         NewInstall_AsusAmdIgpuAmdDgpu_PicksBpf();
         NewInstall_GenericIntelAmdDgpu_PicksBpf();
-        NewInstall_GenericIntelAmdDgpu_NoNouveau_Pci();
-        NewInstall_LenovoAmdIgpuAmdDgpu_PicksBpf();
+        NewInstall_GenericIntelAmdDgpu_NoNouveau_PicksBpf();
         NewInstall_AmdDgpu_FirmwareEco_NoBpf();
         NewInstall_AmdDgpu_Ultimate_NoBpf();
         NewInstall_AmdDgpu_BpfUnavailable_NoBpf();
@@ -239,6 +238,8 @@ public static class Scenarios
         NewInstall_UserPickedBeforeRetry_Kept();
         ExistingInstall_Retry_NoOp();
         Eco_AmdIgpuAmdDgpu_TargetsDgpu();
+        Eco_AmdIgpuPanelOnly_NoTarget();
+        LeaveBpf_StaleEbpfMarker_Fallback();
 
         Console.WriteLine("\n Power limit bounds ");
         PowerLimitBounds_NoFirmwareRange_UsesModelTable();
@@ -1627,17 +1628,11 @@ public static class Scenarios
         });
 
     //
-    // New installs: eBPF only with a dGPU on the PCI bus. ASUS and generic
-    // laptops use the LinuxAsusWmi rule; LinuxLenovoWmi only needs a second GPU.
+    // New installs: eBPF only with a dGPU on the PCI bus, on every vendor.
     //
 
-    static void ResolveNewInstall(Harness.Sandbox sb, bool lenovo = false, bool bpfAvailable = true)
-    {
-        sb.Wmi.CanToggleBackendValue = lenovo
-            ? GPUModeControl.HasSecondGpu()
-            : LinuxAsusWmi.CanToggleGpuBackend(sb.Wmi.DgpuDisableSupported);
-        GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => bpfAvailable);
-    }
+    static void ResolveNewInstall(Harness.Sandbox sb, bool bpfAvailable = true)
+        => GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => bpfAvailable);
 
     static void AssertNoBpf(Harness.Sandbox sb, string backend)
     {
@@ -1662,7 +1657,6 @@ public static class Scenarios
     // Intel iGPU + AMD dGPU on a generic laptop (HP OMEN class).
     static void GenericIntelAmd(Harness.Sandbox sb, bool nouveauOnDisk = true)
     {
-        sb.Wmi.DgpuDisableSupported = false;
         sb.WriteFakeIntelIgpuDevice();
         sb.WriteFakeAmdDgpuDevice();
         if (nouveauOnDisk)
@@ -1672,7 +1666,6 @@ public static class Scenarios
     static void NewInstall_GenericIntelIgpuOnly_Pci()
         => Scenario(nameof(NewInstall_GenericIntelIgpuOnly_Pci), sb =>
         {
-            sb.Wmi.DgpuDisableSupported = false;
             sb.WriteFakeIntelIgpuDevice();
             sb.WriteFakeNouveauOnDisk();
 
@@ -1684,7 +1677,6 @@ public static class Scenarios
         => Scenario(nameof(NewInstall_AsusAmdIgpuOnly_Mux), sb =>
         {
             sb.WriteFakeAsusPlatform();
-            sb.Wmi.DgpuDisableSupported = false;
             sb.WriteFakeAmdIgpuDevice();
             sb.WriteFakeNouveauOnDisk();
 
@@ -1695,7 +1687,6 @@ public static class Scenarios
     static void NewInstall_AmdIgpuNoBootVga_Pci()
         => Scenario(nameof(NewInstall_AmdIgpuNoBootVga_Pci), sb =>
         {
-            sb.Wmi.DgpuDisableSupported = false;
             sb.WriteFakeAmdIgpuPanelOnly();
 
             Assert(DgpuPci.Find() == null, "iGPU with the panel is not a dGPU");
@@ -1706,12 +1697,12 @@ public static class Scenarios
     static void NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf()
         => Scenario(nameof(NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf), sb =>
         {
-            // Some iGPU-only ASUS firmwares expose dgpu_disable, so the backend selector shows.
+            // Some iGPU-only ASUS firmwares expose dgpu_disable; only a dGPU on the bus enables eBPF.
             sb.WriteFakeAsusPlatform();
             sb.WriteFakeIntelIgpuDevice();
-            sb.Wmi.CanToggleBackendValue = true;
+            sb.Wmi.DgpuDisableSupported = true;
 
-            GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => true);
+            ResolveNewInstall(sb);
             AssertNoBpf(sb, "asus-wmi");
         });
 
@@ -1734,24 +1725,14 @@ public static class Scenarios
             AssertBpf(sb);
         });
 
-    static void NewInstall_GenericIntelAmdDgpu_NoNouveau_Pci()
-        => Scenario(nameof(NewInstall_GenericIntelAmdDgpu_NoNouveau_Pci), sb =>
+    static void NewInstall_GenericIntelAmdDgpu_NoNouveau_PicksBpf()
+        => Scenario(nameof(NewInstall_GenericIntelAmdDgpu_NoNouveau_PicksBpf), sb =>
         {
-            // No dgpu_disable and no NVIDIA or nouveau evidence: LinuxAsusWmi offers no backend choice.
+            // No NVIDIA or nouveau module on disk: the AMD dGPU on the bus is enough.
             GenericIntelAmd(sb, nouveauOnDisk: false);
 
+            Assert(GPUModeControl.HasSecondGpu(), "backend selector shows");
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "pci");
-        });
-
-    static void NewInstall_LenovoAmdIgpuAmdDgpu_PicksBpf()
-        => Scenario(nameof(NewInstall_LenovoAmdIgpuAmdDgpu_PicksBpf), sb =>
-        {
-            sb.Wmi.DgpuDisableSupported = false;
-            sb.WriteFakeAmdIgpuDevice();
-            sb.WriteFakeAmdDgpuDevice();
-
-            ResolveNewInstall(sb, lenovo: true);
             AssertBpf(sb);
         });
 
@@ -1852,6 +1833,26 @@ public static class Scenarios
             sb.WriteFakeAmdDgpuDevice();
 
             AssertEqual("0000:03:00.0", Block.DgpuPowerMonitor.DiscreteBdf(rescan: true), "block target");
+        });
+
+    static void Eco_AmdIgpuPanelOnly_NoTarget()
+        => Scenario(nameof(Eco_AmdIgpuPanelOnly_NoTarget), sb =>
+        {
+            // No boot_vga (Ally class): the eDP panel alone must keep the iGPU visible.
+            sb.WriteFakeAmdIgpuPanelOnly();
+
+            AssertEqual(null, Block.DgpuPowerMonitor.DiscreteBdf(rescan: true), "never hide the panel GPU");
+        });
+
+    static void LeaveBpf_StaleEbpfMarker_Fallback()
+        => Scenario(nameof(LeaveBpf_StaleEbpfMarker_Fallback), sb =>
+        {
+            // In-app uninstall removes gpu-helper but leaves the ebpf marker.
+            AppConfig.Set("gpu_backend", "ebpf");
+            sb.WriteBackend("ebpf");
+
+            AssertEqual("pci", GpuBackendChoice.LeaveBpf(), "no ASUS platform: pci");
+            AssertEqual("pci", AppConfig.GetGpuBackend(), "config left ebpf");
         });
 
     // A dGPU enable can outrun its opening pause, so the recovery ladder
@@ -2298,7 +2299,7 @@ public static class Scenarios
             AssertEqual("ebpf", sb.BackendContent(), "backend marker says ebpf");
             Assert(!sb.ModprobePresent(), "no modprobe block for ebpf");
             Assert(!sb.UdevPresent(), "no udev remove rule for ebpf");
-            Assert(File.Exists(GPUModeControl.PersistentTriggerPath),
+            Assert(File.Exists(GpuBootFiles.PersistentTriggerPath),
                 "persistent marker written so eco survives later reboots");
         });
 
@@ -2310,13 +2311,13 @@ public static class Scenarios
             // Leftovers from a previous asus-wmi/pci session.
             sb.WriteBlockArtifacts();
             sb.WriteTrigger("eco");
-            File.WriteAllText(GPUModeControl.PersistentTriggerPath, "eco");
+            File.WriteAllText(GpuBootFiles.PersistentTriggerPath, "eco");
 
             var result = sb.Controller.ScheduleModeForReboot(GpuMode.Standard);
             AssertEqual(GpuSwitchResult.RebootRequired, result, "deferred ebpf standard reported");
             Assert(!sb.ModprobePresent(), "stale modprobe block removed");
             Assert(!sb.UdevPresent(), "stale udev rule removed");
-            Assert(!File.Exists(GPUModeControl.PersistentTriggerPath),
+            Assert(!File.Exists(GpuBootFiles.PersistentTriggerPath),
                 "persistent marker removed when leaving eco");
         });
 
@@ -3000,7 +3001,7 @@ public static class Scenarios
 
             sb.Controller.ApplyPendingOnStartup();
 
-            AssertEqual(GpuBackendChoice.Fallback(), AppConfig.GetGpuBackend(), "no marker, fallback backend");
+            AssertEqual("pci", AppConfig.GetGpuBackend(), "no marker, no ASUS platform: pci");
             Assert(!sb.BlockOps.ActiveState, "filter detached");
         });
 
@@ -3229,17 +3230,17 @@ public static class Scenarios
     static void RecoveryMarker_ClearedWhenWritable()
         => Scenario(nameof(RecoveryMarker_ClearedWhenWritable), sb =>
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(GPUModeControl.RecoveryMarkerPath)!);
-            File.WriteAllText(GPUModeControl.RecoveryMarkerPath, "2026-01-01 recovered to Standard");
+            Directory.CreateDirectory(Path.GetDirectoryName(GpuBootFiles.RecoveryMarkerPath)!);
+            File.WriteAllText(GpuBootFiles.RecoveryMarkerPath, "2026-01-01 recovered to Standard");
 
-            Assert(GPUModeControl.ClearRecoveryMarker(), "reports cleared");
-            Assert(!File.Exists(GPUModeControl.RecoveryMarkerPath), "marker gone");
+            Assert(GpuBootFiles.ClearRecovery(), "reports cleared");
+            Assert(!File.Exists(GpuBootFiles.RecoveryMarkerPath), "marker gone");
         });
 
     static void RecoveryMarker_AbsentIsSuccess()
         => Scenario(nameof(RecoveryMarker_AbsentIsSuccess), sb =>
         {
-            Assert(GPUModeControl.ClearRecoveryMarker(), "no marker is already clear");
+            Assert(GpuBootFiles.ClearRecovery(), "no marker is already clear");
         });
 
     static void Ebpf_EcoPersistentConfig_DoesNotClobberOptimizedMarker()

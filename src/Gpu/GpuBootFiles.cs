@@ -7,7 +7,7 @@ namespace GHelper.Linux.Gpu;
 internal static class GpuBootFiles
 {
     // install/tests/test-gpu-block-helper.sh parses these paths, HelperSearchPaths and the block contents.
-    private static string TestPathPrefix => GPUModeControl.TestPathPrefix;
+    private static string TestPathPrefix => SysfsHelper.TestPathPrefix;
 
     /// <summary>Path to modprobe.d file that blocks dGPU driver loading (NVIDIA + AMD).</summary>
     internal static readonly string ModprobeBlockPath = TestPathPrefix + "/etc/modprobe.d/ghelper-gpu-block.conf";
@@ -99,7 +99,7 @@ internal static class GpuBootFiles
             else
                 Logger.WriteLine($"GPUModeControl: writing trigger={modeStr} (no block artifacts, backend={backend})");
 
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 // Bypass privilege escalation entirely under the test harness.
                 RunHelperInTestMode("write", target, backend);
@@ -175,7 +175,7 @@ internal static class GpuBootFiles
 
             Logger.WriteLine("GPUModeControl: removing driver block artifacts (current + legacy)");
 
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 RunHelperInTestMode("clean");
                 return;
@@ -216,7 +216,7 @@ internal static class GpuBootFiles
             Logger.WriteLine($"GPUModeControl: sync persistent marker to disk: "
                 + (present ? $"persist {modeStr}" : "unpersist"));
 
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 RunHelperInTestMode(present ? "persist" : "unpersist", mode);
                 return;
@@ -264,7 +264,7 @@ internal static class GpuBootFiles
             if (ReadBackend() == backend)
                 return true;
 
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 RunHelperInTestMode("set-backend", backend: backend);
                 return ReadBackend() == backend;
@@ -322,7 +322,7 @@ internal static class GpuBootFiles
                 Logger.WriteLine($"GPUModeControl: recovery marker unlink denied ({ex.GetType().Name}), trying helper");
             }
 
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 RunHelperInTestMode("clear-recovery");
                 return !File.Exists(RecoveryMarkerPath);
@@ -354,7 +354,7 @@ internal static class GpuBootFiles
     {
         try
         {
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 // Honour the test-harness failure switch so the
                 // C# scenario suite can exercise the fall-through path.
@@ -397,7 +397,7 @@ internal static class GpuBootFiles
             if (EcoBlocksPresent())
                 return false;
             // PCI Eco hid the NVIDIA Vulkan and EGL files; the driver is back.
-            if (!GPUModeControl.IsTestMode)
+            if (!SysfsHelper.IsTestMode)
                 DgpuDriver.ApplyVulkanIcd(dgpuAvailable: true);
             return true;
         }

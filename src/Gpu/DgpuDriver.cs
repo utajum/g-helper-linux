@@ -35,7 +35,7 @@ internal static class DgpuDriver
         bool anyModuleLoaded = false;
         foreach (var mod in modules)
         {
-            string modDir = GPUModeControl.TestPathPrefix + "/sys/module/" + mod;
+            string modDir = SysfsHelper.TestPathPrefix + "/sys/module/" + mod;
             if (!Directory.Exists(modDir))
                 continue;
             anyModuleLoaded = true;
@@ -155,7 +155,7 @@ internal static class DgpuDriver
     /// </summary>
     private static void WaitForNvidiaRefcntSettle(int timeoutMs)
     {
-        string path = GPUModeControl.TestPathPrefix + "/sys/module/nvidia/refcnt";
+        string path = SysfsHelper.TestPathPrefix + "/sys/module/nvidia/refcnt";
         int last = SysfsHelper.ReadInt(path, -1);
         if (last < 0)
             return;
@@ -280,8 +280,8 @@ internal static class DgpuDriver
             foreach (var m in NvidiaModules)
                 RmmodOneModule(m);
 
-            bool drmGone = !Directory.Exists(GPUModeControl.TestPathPrefix + "/sys/module/nvidia_drm");
-            bool nvidiaGone = !Directory.Exists(GPUModeControl.TestPathPrefix + "/sys/module/nvidia");
+            bool drmGone = !Directory.Exists(SysfsHelper.TestPathPrefix + "/sys/module/nvidia_drm");
+            bool nvidiaGone = !Directory.Exists(SysfsHelper.TestPathPrefix + "/sys/module/nvidia");
             Logger.WriteLine($"GPUModeControl: attempt {attempt + 1}: nvidia_drm {(drmGone ? "unloaded" : "still loaded")}, nvidia {(nvidiaGone ? "unloaded" : "still loaded")}");
             if (drmGone && nvidiaGone)
             {
@@ -313,7 +313,7 @@ internal static class DgpuDriver
         // the device driverless with no rollback record - poll for the late
         // completion before giving up.
         Logger.WriteLine($"GPUModeControl: unbind {rec.Bdf} timed out - polling for late completion");
-        string driverLink = GPUModeControl.TestPathPrefix + $"/sys/bus/pci/devices/{rec.Bdf}/driver";
+        string driverLink = SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{rec.Bdf}/driver";
         int waited = 0;
         const int stepMs = 500;
         const int maxMs = 30000;
@@ -342,7 +342,7 @@ internal static class DgpuDriver
         for (int i = stack.Count - 1; i >= 0; i--)
         {
             var rec = stack[i];
-            string driverPath = GPUModeControl.TestPathPrefix + $"/sys/bus/pci/drivers/{rec.DriverName}";
+            string driverPath = SysfsHelper.TestPathPrefix + $"/sys/bus/pci/drivers/{rec.DriverName}";
             if (!Directory.Exists(driverPath))
             {
                 Logger.WriteLine($"GPUModeControl: rollback skip {rec.Bdf} - driver {rec.DriverName} no longer registered (reboot to recover)");
@@ -626,7 +626,7 @@ internal static class DgpuDriver
     /// <summary>True if the NVIDIA kernel module is loaded.</summary>
     private static bool IsNvidiaGpu()
     {
-        return Directory.Exists(GPUModeControl.TestPathPrefix + "/sys/module/nvidia");
+        return Directory.Exists(SysfsHelper.TestPathPrefix + "/sys/module/nvidia");
     }
 
     /// <summary>True if an AMD discrete GPU is present (vendor=0x1002, boot_vga=0).</summary>
@@ -637,7 +637,7 @@ internal static class DgpuDriver
 
     /// <summary>True once the nvidia driver actually owns the graphics function.</summary>
     private static bool IsNvidiaBound(string gfxBdf)
-        => Directory.Exists(GPUModeControl.TestPathPrefix + $"/sys/bus/pci/drivers/nvidia/{gfxBdf}");
+        => Directory.Exists(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/drivers/nvidia/{gfxBdf}");
 
     private const int NvidiaLoadAttempts = 3;
 
@@ -765,7 +765,7 @@ internal static class DgpuDriver
         int waited = 0;
         while (waited < timeoutMs)
         {
-            if (Directory.Exists(GPUModeControl.TestPathPrefix + "/sys/module/nvidia"))
+            if (Directory.Exists(SysfsHelper.TestPathPrefix + "/sys/module/nvidia"))
                 return true;
             Thread.Sleep(100);
             waited += 100;

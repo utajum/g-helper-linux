@@ -362,7 +362,7 @@ public class App : Application
                 // Check for boot recovery marker (impossible state was fixed during boot)
                 try
                 {
-                    string markerPath = Gpu.GPUModeControl.RecoveryMarkerPath;
+                    string markerPath = Gpu.GpuBootFiles.RecoveryMarkerPath;
                     if (File.Exists(markerPath))
                     {
                         string reason = File.ReadAllText(markerPath).Trim();
@@ -375,7 +375,7 @@ public class App : Application
                                 "dialog-warning");
                             AppConfig.Set("gpu_recovery_seen", reason);
                         }
-                        if (Gpu.GPUModeControl.ClearRecoveryMarker())
+                        if (Gpu.GpuBootFiles.ClearRecovery())
                             AppConfig.Set("gpu_recovery_seen", "");
                     }
                     else if (!string.IsNullOrEmpty(AppConfig.GetString("gpu_recovery_seen")))

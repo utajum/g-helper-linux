@@ -36,21 +36,7 @@ public static class DgpuPowerMonitor
 
         // Re-scan slowly: a dGPU removed in Eco appears after Standard.
         _rescanUtc = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-        try
-        {
-            foreach (var dev in Directory.EnumerateDirectories(GPUModeControl.TestPathPrefix + "/sys/bus/pci/devices"))
-            {
-                string cls = SysfsHelper.ReadAttribute(Path.Combine(dev, "class")) ?? "";
-                if (!cls.StartsWith("0x0300", StringComparison.Ordinal)
-                    && !cls.StartsWith("0x0302", StringComparison.Ordinal))
-                    continue;
-                if (SysfsHelper.ReadInt(Path.Combine(dev, "boot_vga"), 0) == 1)
-                    continue; // iGPU drives the panel, never the one we block
-                _bdf = Path.GetFileName(dev);
-                break;
-            }
-        }
-        catch { }
+        _bdf = DgpuPci.FindHideable();
         return _bdf;
     }
 

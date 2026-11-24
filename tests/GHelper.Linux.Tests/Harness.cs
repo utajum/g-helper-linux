@@ -29,12 +29,12 @@ public static class Harness
 
         public Sandbox(string scenarioName)
         {
-            // GHELPER_TEST_ROOT is consumed at static-ctor time of
-            // GPUModeControl, so we cannot vary it per scenario. Place
+            // GHELPER_TEST_ROOT is read once by SysfsHelper, so we
+            // cannot vary it per scenario. Place
             // all scenarios under a shared root that was set before the
             // first SUT touch (see Program.Main).
             string root = Environment.GetEnvironmentVariable("GHELPER_TEST_ROOT")
-                ?? throw new InvalidOperationException("GHELPER_TEST_ROOT not set - Program.Main must set it before any GPUModeControl access");
+                ?? throw new InvalidOperationException("GHELPER_TEST_ROOT not set - Program.Main must set it before any SysfsHelper access");
             TempRoot = root;
 
             // Wipe every test path so each scenario starts clean.
@@ -93,12 +93,12 @@ public static class Harness
 
         // Convenience helpers -------------------------------------------------
 
-        public string ModprobePath => GPUModeControl.ModprobeBlockPath;
-        public string UdevPath => GPUModeControl.UdevRemovePath;
-        public string TriggerPath => GPUModeControl.TriggerPath;
-        public string BackendPath => GPUModeControl.BackendPath;
+        public string ModprobePath => GpuBootFiles.ModprobeBlockPath;
+        public string UdevPath => GpuBootFiles.UdevRemovePath;
+        public string TriggerPath => GpuBootFiles.TriggerPath;
+        public string BackendPath => GpuBootFiles.BackendPath;
 
-        public string PersistentPath => GPUModeControl.PersistentTriggerPath;
+        public string PersistentPath => GpuBootFiles.PersistentTriggerPath;
 
         public bool ModprobePresent() => File.Exists(ModprobePath);
         public bool UdevPresent() => File.Exists(UdevPath);

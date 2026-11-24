@@ -11,6 +11,16 @@ namespace GHelper.Linux.Platform.Linux;
 /// </summary>
 public static class SysfsHelper
 {
+    /// <summary>
+    /// Root prefix for the /sys, /etc, /lib and /proc paths the GPU code probes.
+    /// Empty in production; the test harness sets <c>GHELPER_TEST_ROOT</c> to a
+    /// sandbox, read once, so writes stay there and sudo / pkexec are skipped.
+    /// </summary>
+    internal static readonly string TestPathPrefix =
+        Environment.GetEnvironmentVariable("GHELPER_TEST_ROOT") ?? "";
+
+    internal static bool IsTestMode => !string.IsNullOrEmpty(TestPathPrefix);
+
     // Well-known sysfs paths
 
     public const string AsusWmiPlatform = "/sys/devices/platform/asus-nb-wmi";

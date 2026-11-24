@@ -312,15 +312,6 @@ public class LinuxLenovoWmi : IHardwareControl
         return LinuxAsusWmi.IsPciBackendUsable() || LinuxAsusWmi.IsBpfBackendUsable();
     }
 
-    public bool CanToggleGpuBackend()
-    {
-        // The PCI backend is the only Eco mechanism on Lenovo; offer the
-        // selector only when a second GPU exists. The old fallbacks (loaded
-        // nouveau module, any amdgpu hwmon) matched iGPU-only machines like
-        // the Legion Go S, where backend choice is meaningless.
-        return Gpu.GPUModeControl.HasSecondGpu();
-    }
-
     // Display - no mainline Lenovo equivalents
 
     public bool GetPanelOverdrive() => false;

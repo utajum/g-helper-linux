@@ -144,9 +144,7 @@ internal sealed class BpfGpuBackend : IGpuBackend
         string marker = GpuBootFiles.ReadBackend();
         if (marker != "ebpf")
         {
-            string fallback = marker is "pci" or "asus-wmi" ? marker : GpuBackendChoice.Fallback();
-            Logger.WriteLine($"GPUModeControl: backend marker '{marker}' is not ebpf - using {fallback}");
-            AppConfig.Set("gpu_backend", fallback);
+            string fallback = GpuBackendChoice.LeaveBpf();
             OnBackendChanged("ebpf", fallback);
             return GpuSwitchResult.AlreadySet;
         }

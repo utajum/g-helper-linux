@@ -760,7 +760,7 @@ public static class AppConfig
     {
         try
         {
-            string p = Gpu.GPUModeControl.TestPathPrefix;
+            string p = Platform.Linux.SysfsHelper.TestPathPrefix;
             return Directory.Exists(p + "/sys/bus/platform/devices/asus-nb-wmi") ||
                    Directory.Exists(p + "/sys/devices/platform/asus-nb-wmi") ||
                    Directory.Exists(p + "/sys/class/firmware-attributes/asus-armoury");
