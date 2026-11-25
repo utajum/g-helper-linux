@@ -12,13 +12,13 @@ namespace GHelper.Linux.UI;
 /// Hover help: every named control gets a tooltip that explains it, in the app
 /// language (I18n/HelpText). Text keys are "WindowType.x:Name" for XAML controls and
 /// the bare Name for controls built in code. A tip the code sets, also later,
-/// stays first, and the help text goes below it. On by default (config "hover_help").
+/// stays first, and the help text goes below it. Off by default (config "hover_help").
 /// </summary>
 internal static class HoverHelp
 {
     private const string ConfigKey = "hover_help";
     private const string Gap = "\n\n";
-    private static bool _on = true;
+    private static bool _on;
     private static string _lang = "en";
 
     internal static string ToggleLabel => Help.Toggle(Labels.CurrentLanguage);
@@ -38,7 +38,7 @@ internal static class HoverHelp
     /// <summary>Call once at startup, before the first window opens.</summary>
     internal static void Install()
     {
-        _on = AppConfig.IsNotFalse(ConfigKey);
+        _on = AppConfig.Is(ConfigKey);
         _lang = Labels.CurrentLanguage;
         Labels.LanguageChanged += OnLanguageChanged;
         Control.LoadedEvent.AddClassHandler<Control>((control, _) => Apply(control));
