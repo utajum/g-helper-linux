@@ -71,8 +71,8 @@ internal static class Polish
         ["ExtraWindow.checkDisableOsd"] = "Wyłącza wyskakujące powiadomienia o zmianie trybu, klawiszach i innych zdarzeniach.",
         ["ExtraWindow.checkHoverHelp"] = "Pokazuje te objaśnienia, gdy mysz jest nad elementem. Wyłącz, aby ukryć je we wszystkich oknach.",
         ["ExtraWindow.checkSilentStart"] = "Uruchamia G-Helper w zasobniku bez otwierania głównego okna.",
-        ["ExtraWindow.checkSkipUpdatePrompt"] = "Wyłącza sprawdzanie nowej wersji G-Helper przy starcie. Nadal możesz sprawdzić w Aktualizacjach.",
-        ["ExtraWindow.checkSkipSysfilesPopup"] = "Wyłącza pytanie przy starcie, gdy brakuje plików systemowych (reguły udev, reguły sudo, pomocnicy) lub są stare. Nadal możesz je naprawić w Aktualizacjach.",
+        ["ExtraWindow.checkSkipUpdatePrompt"] = "Wyłącza sprawdzanie nowej wersji G-Helper przy starcie. Nadal możesz sprawdzić w oknie Aktualizacje.",
+        ["ExtraWindow.checkSkipSysfilesPopup"] = "Wyłącza pytanie przy starcie, gdy brakuje plików systemowych (reguły udev, reguły sudo, pomocnicy) lub są stare. Nadal możesz je naprawić w oknie Aktualizacje.",
         ["ExtraWindow.checkBWIcon"] = "Używa czarno-białej ikony w zasobniku, pasującej do jednokolorowych paneli.",
         ["ExtraWindow.checkCpuTrayIcon"] = "Dodaje drugą ikonę w zasobniku, która pokazuje temperaturę CPU.",
         ["ExtraWindow.btnCpuTrayBg"] = "Kolor tła ikony temperatury CPU. Kliknij, aby wybrać kolor.",
@@ -494,7 +494,7 @@ internal static class Polish
 
         // Steam offer
         ["SteamOfferWindow.buttonAdd"] = "Dodaje G-Helper do twojej biblioteki Steam jako aplikację spoza Steam, abyś mógł uruchomić go z trybu gry.",
-        ["SteamOfferWindow.buttonNo"] = "Zamyka tę propozycję. Możesz dodać G-Helper do Steam później w Aktualizacjach.",
+        ["SteamOfferWindow.buttonNo"] = "Zamyka tę propozycję. Możesz dodać G-Helper do Steam później w oknie Aktualizacje.",
 
         // System info window
         ["SystemInfoWindow.buttonCopy"] = "Kopiuje informacje o systemie do schowka, na przykład do zgłoszenia błędu.",
@@ -528,7 +528,7 @@ internal static class Polish
         ["buttonColorRandom"] = "Używa nowego losowego koloru przy każdym starcie efektu.",
 
         // Controls built in code: system files
-        ["checkSysfilesDontShow"] = "Nie pokazuje już tego pytania przy starcie. Nadal możesz naprawić pliki w Aktualizacjach.",
+        ["checkSysfilesDontShow"] = "Nie pokazuje już tego pytania przy starcie. Nadal możesz naprawić pliki w oknie Aktualizacje.",
         ["buttonSysfilesConfirm"] = "Instaluje lub aktualizuje teraz pliki systemowe. Pyta o twoje hasło.",
         ["buttonSysfilesCancel"] = "Zamyka to pytanie bez zmian.",
         ["buttonSysfilesCopy"] = "Kopiuje polecenie, które naprawia ten plik. Uruchom je w terminalu.",
@@ -543,7 +543,7 @@ internal static class Polish
         ["buttonSelfUpdate"] = "Pobiera nową wersję G-Helper i ją instaluje.",
         ["buttonViewRelease"] = "Otwiera stronę wydania ze zmianami w przeglądarce.",
         ["buttonDriverVersion"] = "Najnowsza wersja na stronie ASUS. Kliknij, aby ją pobrać.",
-        ["checkUpdateDontShow"] = "Nie sprawdza już nowych wersji przy starcie. Nadal możesz sprawdzić w Aktualizacjach.",
+        ["checkUpdateDontShow"] = "Nie sprawdza już nowych wersji przy starcie. Nadal możesz sprawdzić w oknie Aktualizacje.",
         ["buttonUpdateNow"] = "Pobiera nową wersję i instaluje ją teraz.",
         ["buttonUpdateLater"] = "Zamyka to pytanie. Wróci przy następnym starcie.",
         ["buttonUpdateChangelog"] = "Pokazuje nowości w nowej wersji.",

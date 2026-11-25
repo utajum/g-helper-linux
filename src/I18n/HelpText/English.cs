@@ -97,7 +97,7 @@ internal static class English
         ["ExtraWindow.comboEppTurbo"] = "CPU energy preference in Turbo mode. power saves battery, performance favors speed. Applied to all CPU cores when the mode is activated.",
         ["ExtraWindow.checkAutoApplyPower"] = "Writes your CPU power limits for the current mode each time you switch to it. Off: the firmware defaults of the mode are used.",
         ["ExtraWindow.sliderCpuCores"] = "Number of active CPU threads. Fewer threads save power. The other threads are taken offline through sysfs until you move the slider back.",
-        ["ExtraWindow.checkManualFan"] = "Sets the fan speed every second along your fan curves, through the embedded controller. For TUF models whose firmware has no fan curve support. Works per mode with Auto-apply in Fans.",
+        ["ExtraWindow.checkManualFan"] = "Sets the fan speed every second along your fan curves, through the embedded controller. For TUF models whose firmware has no fan curve support. Works per mode with Auto-apply in Fans + Power.",
         ["ExtraWindow.checkLenovoExtremeTurbo"] = "Turbo uses the firmware Extreme thermal mode (max-power) instead of Performance. Use it on AC power.",
         ["ExtraWindow.buttonLenovoDustClean"] = "Runs all fans at full speed for 30 seconds to blow dust out. Click again to stop.",
         ["ExtraWindow.textAppProfileFilter"] = "Filters the list of programs by name.",
