@@ -139,15 +139,6 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Exit if another ghelper is already running
-        if (!TryAcquireSingleInstanceLock())
-        {
-            Console.Error.WriteLine("g-helper: another instance is already running - exiting");
-            CommandIpc.TrySend("show");
-            Environment.Exit(0);
-            return;
-        }
-
         // Initialize Linux platform backends
         InitializePlatform();
 
@@ -1684,7 +1675,7 @@ public class App : Application
     /// instance is already running. Uses XDG_RUNTIME_DIR (per-user) to avoid
     /// multi-user conflicts. The OS releases the lock automatically on exit/crash.
     /// </summary>
-    private static bool TryAcquireSingleInstanceLock()
+    internal static bool TryAcquireSingleInstanceLock()
     {
         string lockDir = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR") ?? "/tmp";
         string lockPath = Path.Combine(lockDir, "ghelper.lock");
