@@ -51,12 +51,20 @@ internal static class English
         ["MainWindow.buttonDevWindows"] = "Developer tool: opens any window of the app for testing.",
         ["MainWindow.buttonArcade"] = "Opens a small fighting game. Just for fun.",
         ["MainWindow.buttonDonate"] = "Support the project. Each click adds a coin; two seconds after the last click the donation page opens in your browser.",
+        ["MainWindow.borderCoinMute"] = "Turns the coin sound of the Donate button on or off.",
         ["MainWindow.buttonUpdates"] = "Opens BIOS and driver updates, the G-Helper update, the system files check, diagnostics and the bug report.",
         ["MainWindow.buttonQuit"] = "Closes G-Helper completely, including the tray icon. Settings written to the firmware stay; app features such as auto modes and key remaps stop.",
 
         // Extra window: General
         ["ExtraWindow.textSearch"] = "Type to find a setting in all tabs. Ctrl+F jumps here, Esc clears the search.",
         ["ExtraWindow.tabStrip"] = "Setting groups. Click a tab to show its settings.",
+        ["ExtraWindow.tabItemGeneral"] = "General: language, icons, windows, notifications, startup, tray icons, rendering and system info.",
+        ["ExtraWindow.tabItemPower"] = "Power: platform profiles, CPU energy preference, CPU cores, fan options, app profiles, battery and sleep.",
+        ["ExtraWindow.tabItemGpu"] = "GPU: Eco options, dGPU monitoring, GPU backend, dGPU apps, APU memory and XG Mobile.",
+        ["ExtraWindow.tabItemDisplay"] = "Display: backlight device, brightness, overdrive, auto refresh rate, optimal brightness and gamma.",
+        ["ExtraWindow.tabItemLighting"] = "Lighting: keyboard backlight, animation speed, power zones, rear light and Slash lighting.",
+        ["ExtraWindow.tabItemInput"] = "Input: key bindings, function key remap and M-keys.",
+        ["ExtraWindow.tabItemDevices"] = "Devices: camera, touchpad, touchscreen, NumberPad, audio and peripherals.",
         ["ExtraWindow.comboLanguage"] = "Language of the app. Auto follows your system language.",
         ["ExtraWindow.comboIconSet"] = "Icon style used in the app windows and the tray menu.",
         ["ExtraWindow.checkFahrenheit"] = "Shows all temperatures in Fahrenheit instead of Celsius.",
@@ -153,6 +161,7 @@ internal static class English
         ["ExtraWindow.checkShutdownLid"] = "Lights the lid lights while the laptop shuts down.",
         ["ExtraWindow.checkBatteryLid"] = "Lights the lid lights on battery power. Off saves power.",
         ["ExtraWindow.comboRearLight"] = "Effect of the rear light.",
+        ["ExtraWindow.swatchRearColor"] = "Color of the rear light. Click to pick a color.",
         ["ExtraWindow.checkSlashEnabled"] = "Turns the Slash LED strip on the lid on or off.",
         ["ExtraWindow.sliderSlashBrightness"] = "Brightness of the Slash LED strip.",
         ["ExtraWindow.comboSlashMode"] = "Animation of the Slash LED strip.",
@@ -270,9 +279,15 @@ internal static class English
         ["AudioWindow.waveOut"] = "Live waveform of the virtual microphone after the effects.",
         ["AudioWindow.specIn"] = "Live frequency spectrum before the effects.",
         ["AudioWindow.specOut"] = "Live frequency spectrum after the effects.",
+        ["AudioWindow.meterIn"] = "Input level of the microphone before the effects.",
+        ["AudioWindow.meterOut"] = "Output level of the virtual microphone after the effects.",
+        ["AudioWindow.meterRed"] = "How much noise the noise suppression removes now, in dB.",
+        ["AudioWindow.meterVad"] = "Voice activity: how sure the noise suppression is that you speak now.",
 
         // Noise window
         ["NoiseWindow.comboModel"] = "Neural network model for noise suppression. Try another model if your voice sounds cut or noise stays.",
+        ["NoiseWindow.meterVad"] = "Voice activity: how sure the model is that you speak now.",
+        ["NoiseWindow.meterRed"] = "How much noise the model removes now, in dB.",
 
         // Vocoder window
         ["VocoderWindow.checkEnabled"] = "Turns the vocoder on or off.",
@@ -464,6 +479,8 @@ internal static class English
         // On-screen keyboard
         ["OnScreenKeyboardWindow.buttonPin"] = "Docks the keyboard to the screen edge, or lets it float.",
         ["OnScreenKeyboardWindow.buttonHide"] = "Hides the on-screen keyboard.",
+        ["OnScreenKeyboardWindow.dragBar"] = "Drag here to move the keyboard.",
+        ["OnScreenKeyboardWindow.resizeGrip"] = "Drag to resize the keyboard.",
 
         // Logitech receivers window
         ["ReceiverWindow.buttonRefresh"] = "Searches the connected receivers again.",
@@ -493,6 +510,7 @@ internal static class English
         ["UpdatesWindow.buttonRefresh"] = "Checks the ASUS website again for BIOS and driver updates.",
         ["UpdatesWindow.buttonReport"] = "Opens the bug report form.",
         ["UpdatesWindow.buttonChangelog"] = "Shows what is new in this version.",
+        ["UpdatesWindow.panelSysFilesHeader"] = "Click to show or hide the list of system files and their state.",
         ["UpdatesWindow.buttonSysFilesRecheck"] = "Checks the system files again: udev rules, sudo rules, helpers and services.",
         ["UpdatesWindow.buttonSysFilesFix"] = "Installs or repairs the system files that G-Helper needs for battery limit, fans, GPU switching and more. Asks for your password.",
         ["UpdatesWindow.buttonSysFilesUninstall"] = "Removes the system files that G-Helper installed. Asks for your password.",
@@ -531,6 +549,7 @@ internal static class English
         ["buttonUpdateLater"] = "Closes this prompt. You get it again at the next start.",
         ["buttonUpdateChangelog"] = "Shows what is new in the new version.",
         ["buttonChangelogLink"] = "Opens this link in your browser.",
+        ["imageChangelog"] = "Click to open the image in your browser.",
 
         // Controls built in code: GPU dialogs
         ["buttonReenableFailedClose"] = "Closes this message. Reboot to bring the dGPU back.",

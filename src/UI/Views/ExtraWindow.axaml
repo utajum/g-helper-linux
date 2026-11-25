@@ -126,43 +126,43 @@
                         <UniformGrid Rows="1" />
                     </ItemsPanelTemplate>
                 </TabStrip.ItemsPanel>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemGeneral">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="gear" />
                         <TextBlock x:Name="labelTabGeneral" Text="General" />
                     </StackPanel>
                 </TabStripItem>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemPower">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="bolt" />
                         <TextBlock x:Name="labelTabPower" Text="Power" />
                     </StackPanel>
                 </TabStripItem>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemGpu">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="gamepad" />
                         <TextBlock x:Name="labelTabGpu" Text="GPU" />
                     </StackPanel>
                 </TabStripItem>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemDisplay">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="desktop" />
                         <TextBlock x:Name="labelTabDisplay" Text="Display" />
                     </StackPanel>
                 </TabStripItem>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemLighting">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="bulb" />
                         <TextBlock x:Name="labelTabLighting" Text="Lighting" />
                     </StackPanel>
                 </TabStripItem>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemInput">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="keyboard" />
                         <TextBlock x:Name="labelTabInput" Text="Input" />
                     </StackPanel>
                 </TabStripItem>
-                <TabStripItem>
+                <TabStripItem x:Name="tabItemDevices">
                     <StackPanel Spacing="4">
                         <ctrl:Icon IconName="headphones" />
                         <TextBlock x:Name="labelTabDevices" Text="Devices" />

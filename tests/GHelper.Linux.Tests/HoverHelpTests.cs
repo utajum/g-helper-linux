@@ -8,11 +8,20 @@ namespace GHelper.Linux.Tests;
 
 public static class HoverHelpTests
 {
+    // RepeatButton is left out: the on-screen keyboard keys have no help on purpose,
+    // a tooltip would cover the next row while you type.
     private const string Types = "Button|CheckBox|ToggleButton|ToggleSwitch|RadioButton|Slider|ComboBox|TextBox|NumericUpDown|MenuItem";
+    private const string Clicks = "PointerPressed|PointerReleased|Tapped|DoubleTapped";
+
+    // Clickable on purpose without help: a hidden easter egg, and a label inside
+    // borderCoinMute, which has the text.
+    private static readonly HashSet<string> NoHelp = ["MainWindow.labelVersion", "MainWindow.labelCoinMute"];
 
     private static readonly Regex XamlControl = new(
-        $@"<({Types}|TabStrip|\w+:(?:KnobControl|FanCurveChart|EqResponseView|WaveformView|SpectrumView|NumberPadPreview|CartesianChart))(?=[\s/>])([^>]*)>",
+        $@"<({Types}|TabStrip|TabStripItem|ProgressBar|\w+:(?:KnobControl|FanCurveChart|EqResponseView|WaveformView|SpectrumView|NumberPadPreview|CartesianChart))(?=[\s/>])([^>]*)>",
         RegexOptions.Singleline);
+    private static readonly Regex XamlClick = new($@"<([\w:]+)(\s[^>]*\b(?:{Clicks})=""[^>]*)>", RegexOptions.Singleline);
+    private static readonly Regex CodeClick = new($@"\b(\w+)\.(?:{Clicks}) \+=");
     private static readonly Regex CodeControl = new($@"new ({Types})\b\s*(\(\))?\s*");
     private static readonly Regex NameArg = new(@"\bname: ""(\w+)""");
 
@@ -33,13 +42,23 @@ public static class HoverHelpTests
         {
             var missing = new List<string>();
             foreach (var (window, text) in xaml)
-                foreach (Match m in XamlControl.Matches(text))
+            {
+                foreach (Match m in XamlControl.Matches(text).Concat(XamlClick.Matches(text)))
                 {
                     var name = Regex.Match(m.Groups[2].Value, @"x:Name=""(\w+)""");
                     string key = window + "." + (name.Success ? name.Groups[1].Value : $"(unnamed {m.Groups[1].Value} line {Line(text, m.Index)})");
                     if (!English.Tips.ContainsKey(key))
                         missing.Add(key);
                 }
+                // Click handlers set in code-behind on named XAML elements.
+                if (code.TryGetValue(Path.Combine("UI", "Views", window + ".axaml.cs"), out var behind))
+                    foreach (Match m in CodeClick.Matches(behind))
+                    {
+                        string key = window + "." + m.Groups[1].Value;
+                        if (text.Contains($"x:Name=\"{m.Groups[1].Value}\"") && !NoHelp.Contains(key) && !English.Tips.ContainsKey(key))
+                            missing.Add(key);
+                    }
+            }
             Harness.Assert(missing.Count == 0, "no help text: " + string.Join(", ", missing));
         });
 

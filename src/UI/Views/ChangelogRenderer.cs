@@ -206,6 +206,7 @@ internal static class ChangelogRenderer
     {
         var img = new Image
         {
+            Name = "imageChangelog",
             Stretch = Stretch.Uniform,
             MaxHeight = 120,
             Margin = new Avalonia.Thickness(2, 0, 2, 0),
@@ -221,6 +222,7 @@ internal static class ChangelogRenderer
     {
         var img = new Image
         {
+            Name = "imageChangelog",
             Stretch = Stretch.Uniform,
             StretchDirection = StretchDirection.DownOnly,
             MaxWidth = 680,
