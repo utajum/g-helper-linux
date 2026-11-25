@@ -222,35 +222,34 @@ mkdir -p "$MISSING_DIR"
 total_missing=0
 missing_files=()
 
-# Each language is checked twice: its labels and its help text (a missing
-# help file counts as all keys missing). Reports use "HelpText-<Lang>.cs".
+# Help text is checked like a language file, as "HelpText-<Lang>.cs"; a missing
+# help file counts as all keys missing.
+HELP_FILES=()
 for file in "$LANG_DIR"/*.cs; do
-    base=$(basename "$file")
-    if [[ "$base" == "English.cs" ]]; then
+    HELP_FILES+=("$HELP_DIR/$(basename "$file")")
+done
+
+for file in "$LANG_DIR"/*.cs "${HELP_FILES[@]}"; do
+    name=$(basename "$file")
+    if [[ "$name" == "English.cs" ]]; then
         continue
     fi
+    en_keys="$EN_KEYS_FILE"
+    [[ "$file" == "$HELP_DIR"/* ]] && name="HelpText-$name" en_keys="$HELP_EN_KEYS_FILE"
 
-    for kind in labels help; do
-        if [[ "$kind" == "labels" ]]; then
-            name="$base"; src="$file"; en_keys="$EN_KEYS_FILE"
-        else
-            name="HelpText-$base"; src="$HELP_DIR/$base"; en_keys="$HELP_EN_KEYS_FILE"
-        fi
+    lang_keys_file="$WORK_DIR/${name}.keys"
+    extract_keys "$file" > "$lang_keys_file"
 
-        lang_keys_file="$WORK_DIR/${name}.keys"
-        extract_keys "$src" > "$lang_keys_file"
+    out="$MISSING_DIR/$name"
+    comm -23 "$en_keys" "$lang_keys_file" > "$out"
 
-        out="$MISSING_DIR/$name"
-        comm -23 "$en_keys" "$lang_keys_file" > "$out"
-
-        if [[ -s "$out" ]]; then
-            count=$(wc -l < "$out" | tr -d ' ')
-            total_missing=$((total_missing + count))
-            missing_files+=("$name:$count")
-        else
-            rm -f "$out"
-        fi
-    done
+    if [[ -s "$out" ]]; then
+        count=$(wc -l < "$out" | tr -d ' ')
+        total_missing=$((total_missing + count))
+        missing_files+=("$name:$count")
+    else
+        rm -f "$out"
+    fi
 done
 
 # ----- Audit B: dead keys (defined in English, never used in code) -----
@@ -270,27 +269,25 @@ mkdir -p "$DRIFT_DIR"
 total_drift=0
 drift_files=()
 
-for file in "$LANG_DIR"/*.cs; do
-    base=$(basename "$file")
-    if [[ "$base" == "English.cs" ]]; then
+for file in "$LANG_DIR"/*.cs "${HELP_FILES[@]}"; do
+    name=$(basename "$file")
+    if [[ "$name" == "English.cs" ]]; then
         continue
     fi
+    en_keys="$EN_KEYS_FILE"
+    [[ "$file" == "$HELP_DIR"/* ]] && name="HelpText-$name" en_keys="$HELP_EN_KEYS_FILE"
 
-    for name in "$base" "HelpText-$base"; do
-        en_keys="$EN_KEYS_FILE"
-        [[ "$name" == HelpText-* ]] && en_keys="$HELP_EN_KEYS_FILE"
-        lang_keys_file="$WORK_DIR/${name}.keys"
-        out="$DRIFT_DIR/$name"
-        comm -13 "$en_keys" "$lang_keys_file" > "$out"
+    lang_keys_file="$WORK_DIR/${name}.keys"
+    out="$DRIFT_DIR/$name"
+    comm -13 "$en_keys" "$lang_keys_file" > "$out"
 
-        if [[ -s "$out" ]]; then
-            count=$(wc -l < "$out" | tr -d ' ')
-            total_drift=$((total_drift + count))
-            drift_files+=("$name:$count")
-        else
-            rm -f "$out"
-        fi
-    done
+    if [[ -s "$out" ]]; then
+        count=$(wc -l < "$out" | tr -d ' ')
+        total_drift=$((total_drift + count))
+        drift_files+=("$name:$count")
+    else
+        rm -f "$out"
+    fi
 done
 
 # Help files for no label language are drift too.
