@@ -398,7 +398,7 @@ public static class Indonesian
         ["gpu_backend_mux_label"] = "Gunakan mode MUX (firmware ASUS)",
         ["gpu_backend_mux_hint"] = "Mematikan dGPU di firmware ASUS (dgpu_disable) dan memungkinkan mode Ultimate melalui sakelar MUX. Beberapa pergantian mode perlu reboot.",
         ["gpu_backend_pci_label"] = "Gunakan penonaktifan PCI dGPU",
-        ["gpu_backend_pci_hint"] = "Menonaktifkan dGPU melalui modprobe blacklist ditambah aturan udev hot-remove. Gunakan jika eBPF tidak dapat berjalan. Setiap perubahan mode memerlukan mulai ulang karena aturan hanya berlaku pada boot berikutnya.",
+        ["gpu_backend_pci_hint"] = "Menonaktifkan dGPU melalui modprobe blacklist ditambah aturan udev hot-remove. Gunakan jika eBPF tidak dapat berjalan. Perubahan mode langsung berlaku jika memungkinkan, jika tidak pada boot berikutnya.",
         ["gpu_backend_bpf_label"] = "Pemblokiran dGPU eBPF (default)",
         ["gpu_backend_bpf_hint"] = "Menyembunyikan dGPU dari aplikasi dengan filter eBPF kernel alih-alih melepas driver, sehingga kartu masuk ke D3cold dan beralih kembali berlangsung seketika tanpa boot ulang. Aplikasi yang sudah memakai GPU tetap menahannya sampai ditutup, dan G-Helper menawarkan untuk menutupnya. Perlu kernel yang di-boot dengan bpf di daftar LSM; atur lewat Pembaruan.",
         ["gpu_backend_bpf_optimized"] = "Aktifkan mode Dioptimalkan",

@@ -137,7 +137,7 @@ G-Helper manages the ASUS dGPU (discrete GPU) power state and MUX switch through
 | PCI disable | Unloads the driver, removes the card from the PCI bus | Rescan, usually no reboot |
 | eBPF block (default on new installs) | Driver stays loaded, a kernel filter hides the dGPU from apps | Instant, no reboot |
 
-New installs use eBPF when it can run at the first start, also right after the system files prompt; otherwise MUX mode on ASUS and PCI elsewhere. Existing installs keep their backend.
+New installs use eBPF when it can run; otherwise they start on MUX mode on ASUS and PCI elsewhere, and switch to eBPF at a later start in Standard once it can run, until you pick a backend yourself. Existing installs keep their backend.
 
 The reboot rules below are for the ASUS firmware backend. PCI and eBPF release Eco live.
 

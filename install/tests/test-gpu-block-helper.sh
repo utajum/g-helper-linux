@@ -511,8 +511,8 @@ test_boot_mux0_discards_helper_eco() {
 # -- Path contract: helper, boot script, app, installers ------------------------
 # Value of VAR="..." in a shell script, with ${ROOT} / ${ROOT:+$ROOT} removed.
 shell_var() { grep -m1 -E "^$2=" "$1" | sed -E 's/^[^=]+="?//; s/"$//; s/\$\{ROOT(:\+\$ROOT)?\}//'; }
-# Value of a C# string constant: <name> = TestPathPrefix + "..."
-cs_path() { grep -m1 -E "$2 = TestPathPrefix \+ \"" "$1" | sed -E 's/.*\+ "([^"]+)".*/\1/'; }
+# Value of a C# path constant: <name> = SysfsHelper.HostPath("...")
+cs_path() { grep -m1 -E "$2 = SysfsHelper\.HostPath\(\"" "$1" | sed -E 's/.*HostPath\("([^"]+)".*/\1/'; }
 
 GPU_MODE_CS="$REPO_DIR/src/Gpu/GpuBootFiles.cs"
 

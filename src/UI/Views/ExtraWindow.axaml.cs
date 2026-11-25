@@ -2877,7 +2877,7 @@ public partial class ExtraWindow : Window
         try
         {
             checkPciGpuBackend.IsChecked = Helpers.AppConfig.IsPciGpuBackend();
-            checkMuxGpuBackend.IsChecked = Helpers.AppConfig.GetGpuBackend() == "asus-wmi";
+            checkMuxGpuBackend.IsChecked = Helpers.AppConfig.GetGpuBackend() == Gpu.GpuBackendKind.AsusWmi;
             panelMuxGpuBackend.IsVisible = Helpers.AppConfig.HasAsusPlatformDevice();
             checkRawWmi.IsChecked = Helpers.AppConfig.Is("raw_wmi");
             RefreshBpfGpuBackend();
@@ -2959,13 +2959,13 @@ public partial class ExtraWindow : Window
     private void CheckMuxGpuBackend_Changed(object? sender, RoutedEventArgs e)
     {
         if (!_suppressEvents)
-            SelectGpuBackend((checkMuxGpuBackend.IsChecked ?? false) ? "asus-wmi" : Gpu.GpuBackendChoice.WhenUnticked());
+            SelectGpuBackend((checkMuxGpuBackend.IsChecked ?? false) ? Gpu.GpuBackendKind.AsusWmi : Gpu.GpuBackendChoice.WhenUnticked());
     }
 
     /// <summary>Apply a backend box change; afterwards the boxes show the saved backend.</summary>
-    private void SelectGpuBackend(string newBackend)
+    private void SelectGpuBackend(Gpu.GpuBackendKind newBackend)
     {
-        string oldBackend = Helpers.AppConfig.GetGpuBackend();
+        var oldBackend = Helpers.AppConfig.GetGpuBackend();
         // Same backend (eBPF can never run here) or a failed marker save puts the boxes back.
         bool changed = newBackend != oldBackend && Gpu.GpuBackendChoice.Select(newBackend);
         RefreshGpuBackend();
@@ -2977,12 +2977,12 @@ public partial class ExtraWindow : Window
 
         // Something is missing: show the Updates rows that add it.
         string reason = Gpu.Block.GpuBlockCapability.UnavailableKey();
-        if (newBackend == "ebpf" && reason.Length > 0 && reason != "gpu_block_unavail_reboot")
+        if (newBackend == Gpu.GpuBackendKind.Ebpf && reason.Length > 0 && reason != "gpu_block_unavail_reboot")
             App.MainWindowInstance?.ShowUpdatesEbpfRows();
     }
 
     /// <summary>Undo the old backend off the UI thread, then refresh the GPU panel.</summary>
-    private void RunBackendCleanup(string oldBackend, string newBackend)
+    private void RunBackendCleanup(Gpu.GpuBackendKind oldBackend, Gpu.GpuBackendKind newBackend)
     {
         Task.Run(() =>
         {
@@ -3005,7 +3005,7 @@ public partial class ExtraWindow : Window
     private void CheckPciGpuBackend_Changed(object? sender, RoutedEventArgs e)
     {
         if (!_suppressEvents)
-            SelectGpuBackend((checkPciGpuBackend.IsChecked ?? false) ? "pci" : Gpu.GpuBackendChoice.WhenUnticked());
+            SelectGpuBackend((checkPciGpuBackend.IsChecked ?? false) ? Gpu.GpuBackendKind.Pci : Gpu.GpuBackendChoice.WhenUnticked());
     }
 
     private void SliderCpuCores_ValueChanged(object? sender,

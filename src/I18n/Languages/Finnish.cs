@@ -398,7 +398,7 @@ public static class Finnish
         ["gpu_backend_mux_label"] = "Käytä MUX-tilaa (ASUS-laiteohjelmisto)",
         ["gpu_backend_mux_hint"] = "Sammuttaa dGPU:n ASUS-laiteohjelmistossa (dgpu_disable) ja sallii Ultimate-tilan MUX-kytkimen kautta. Jotkin tilanvaihdot vaativat uudelleenkäynnistyksen.",
         ["gpu_backend_pci_label"] = "Käytä PCI dGPU disable -tilaa",
-        ["gpu_backend_pci_hint"] = "Poistaa dGPU:n käytöstä modprobe-mustalistalla ja udev hot-remove -säännöllä. Käytä tätä, kun eBPF ei voi toimia. Jokainen tilan vaihto vaatii uudelleenkäynnistyksen koska säännöt astuvat voimaan vain seuraavalla käynnistyksellä.",
+        ["gpu_backend_pci_hint"] = "Poistaa dGPU:n käytöstä modprobe-mustalistalla ja udev hot-remove -säännöllä. Käytä tätä, kun eBPF ei voi toimia. Tilan vaihdot tulevat voimaan heti, kun se on mahdollista, muuten seuraavalla käynnistyksellä.",
         ["gpu_backend_bpf_label"] = "eBPF-pohjainen dGPU:n esto (oletus)",
         ["gpu_backend_bpf_hint"] = "Piilottaa dGPU:n sovelluksilta ytimen eBPF-suodattimella sen sijaan että ajuri purettaisiin, joten näytönohjain siirtyy D3cold-tilaan ja takaisin vaihtaminen tapahtuu heti ilman uudelleenkäynnistystä. Sovellukset, jotka jo käyttävät GPU:ta, pitävät sen kunnes ne suljetaan, ja G-Helper tarjoaa niiden sulkemista. Vaatii ytimen, joka on käynnistetty bpf mukana LSM-luettelossa; määritä se Päivitykset-kohdassa.",
         ["gpu_backend_bpf_optimized"] = "Ota käyttöön tila Optimoitu",

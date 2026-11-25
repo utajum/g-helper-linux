@@ -398,7 +398,7 @@ public static class Danish
         ["gpu_backend_mux_label"] = "Brug MUX-tilstand (ASUS-firmware)",
         ["gpu_backend_mux_hint"] = "Slukker dGPU i ASUS-firmwaren (dgpu_disable) og giver Ultimate-tilstand via MUX-kontakten. Nogle tilstandsskift kræver genstart.",
         ["gpu_backend_pci_label"] = "Brug PCI dGPU deaktivering",
-        ["gpu_backend_pci_hint"] = "Deaktiverer dGPU via en modprobe blacklist plus en udev hot-remove regel. Brug den, hvor eBPF ikke kan køre. Hver tilstandsændring kræver en genstart fordi reglerne kun gælder ved næste opstart.",
+        ["gpu_backend_pci_hint"] = "Deaktiverer dGPU via en modprobe blacklist plus en udev hot-remove regel. Brug den, hvor eBPF ikke kan køre. Tilstandsændringer gælder med det samme, når det er muligt, ellers ved næste opstart.",
         ["gpu_backend_bpf_label"] = "eBPF-blokering af dGPU (standard)",
         ["gpu_backend_bpf_hint"] = "Skjuler dGPU'en for programmer med et eBPF-filter i kernen i stedet for at aflæsse driveren, så kortet går ned i D3cold og skift tilbage sker med det samme uden genstart. Programmer, der allerede bruger GPU'en, beholder den, til de lukkes, og G-Helper tilbyder at lukke dem. Kræver en kerne startet med bpf i LSM-listen; opsæt det under Opdateringer.",
         ["gpu_backend_bpf_optimized"] = "Aktivér tilstanden Optimeret",

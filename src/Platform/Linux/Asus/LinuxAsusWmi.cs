@@ -556,49 +556,7 @@ public class LinuxAsusWmi : IHardwareControl
     /// </summary>
     private static bool? _hasDiscreteNvidiaCache;
     internal static bool HasDiscreteNvidiaGpu()
-    {
-        if (_hasDiscreteNvidiaCache.HasValue)
-            return _hasDiscreteNvidiaCache.Value;
-        try
-        {
-            string pciDir = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices";
-            if (!Directory.Exists(pciDir))
-            {
-                _hasDiscreteNvidiaCache = false;
-                return false;
-            }
-            foreach (var dev in Directory.EnumerateDirectories(pciDir))
-            {
-                try
-                {
-                    string vendorPath = Path.Combine(dev, "vendor");
-                    string classPath = Path.Combine(dev, "class");
-                    if (!File.Exists(vendorPath) || !File.Exists(classPath))
-                        continue;
-                    string vendor = File.ReadAllText(vendorPath).Trim();
-                    if (vendor != "0x10de")
-                        continue;
-                    string klass = File.ReadAllText(classPath).Trim();
-                    // VGA controller (0x0300xx) or 3D controller (0x0302xx)
-                    if (klass.StartsWith("0x0300") || klass.StartsWith("0x0302"))
-                    {
-                        _hasDiscreteNvidiaCache = true;
-                        return true;
-                    }
-                }
-                catch
-                {
-                    // sysfs read race: ignore this device and continue
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"HasDiscreteNvidiaGpu: PCI scan failed: {ex.Message}");
-        }
-        _hasDiscreteNvidiaCache = false;
-        return false;
-    }
+        => _hasDiscreteNvidiaCache ??= Gpu.DgpuPci.Find("0x10de") != null;
 
     /// <summary>
     /// Shared probe: PCI backend is opted-in by config AND there is
@@ -678,9 +636,8 @@ public class LinuxAsusWmi : IHardwareControl
     {
         if (_nvidiaLoadedCache.HasValue)
             return _nvidiaLoadedCache.Value;
-        string prefix = SysfsHelper.TestPathPrefix;
-        _nvidiaLoadedCache = Directory.Exists(prefix + "/sys/module/nvidia")
-            || Directory.Exists(prefix + "/sys/module/nouveau");
+        _nvidiaLoadedCache = Directory.Exists(SysfsHelper.HostPath("/sys/module/nvidia"))
+            || Directory.Exists(SysfsHelper.HostPath("/sys/module/nouveau"));
         return _nvidiaLoadedCache.Value;
     }
 
@@ -698,14 +655,18 @@ public class LinuxAsusWmi : IHardwareControl
     {
         try
         {
-            string prefix = SysfsHelper.TestPathPrefix;
             string release;
             try
-            { release = File.ReadAllText(prefix + "/proc/sys/kernel/osrelease").Trim(); }
+            { release = File.ReadAllText(SysfsHelper.HostPath("/proc/sys/kernel/osrelease")).Trim(); }
             catch { release = ""; }
             string[] roots = string.IsNullOrEmpty(release)
-                ? new[] { prefix + "/lib/modules" }
-                : new[] { $"{prefix}/lib/modules/{release}/updates", $"{prefix}/lib/modules/{release}/kernel/drivers/gpu/drm/nouveau", prefix + "/lib/modules" };
+                ? new[] { SysfsHelper.HostPath("/lib/modules") }
+                : new[]
+                {
+                    SysfsHelper.HostPath($"/lib/modules/{release}/updates"),
+                    SysfsHelper.HostPath($"/lib/modules/{release}/kernel/drivers/gpu/drm/nouveau"),
+                    SysfsHelper.HostPath("/lib/modules"),
+                };
             foreach (var root in roots)
             {
                 if (!Directory.Exists(root))

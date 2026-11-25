@@ -16,10 +16,13 @@ public static class SysfsHelper
     /// Empty in production; the test harness sets <c>GHELPER_TEST_ROOT</c> to a
     /// sandbox, read once, so writes stay there and sudo / pkexec are skipped.
     /// </summary>
-    internal static readonly string TestPathPrefix =
+    private static readonly string TestPathPrefix =
         Environment.GetEnvironmentVariable("GHELPER_TEST_ROOT") ?? "";
 
     internal static bool IsTestMode => !string.IsNullOrEmpty(TestPathPrefix);
+
+    /// <summary>A host path such as "/sys/bus/pci/devices", under the test root in tests.</summary>
+    internal static string HostPath(string path) => TestPathPrefix + path;
 
     // Well-known sysfs paths
 

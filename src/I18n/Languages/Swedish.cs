@@ -398,7 +398,7 @@ public static class Swedish
         ["gpu_backend_mux_label"] = "Använd MUX-läge (ASUS-firmware)",
         ["gpu_backend_mux_hint"] = "Stänger av dGPU i ASUS-firmware (dgpu_disable) och ger Ultimate-läge via MUX-omkopplaren. Vissa lägesbyten kräver omstart.",
         ["gpu_backend_pci_label"] = "Använd PCI dGPU-inaktivering",
-        ["gpu_backend_pci_hint"] = "Inaktiverar dGPU via en modprobe svartlista plus en udev hot-remove regel. Använd den där eBPF inte kan köras. Varje lägesändring kräver en omstart eftersom reglerna endast gäller vid nästa start.",
+        ["gpu_backend_pci_hint"] = "Inaktiverar dGPU via en modprobe svartlista plus en udev hot-remove regel. Använd den där eBPF inte kan köras. Lägesändringar gäller direkt när det går, annars vid nästa start.",
         ["gpu_backend_bpf_label"] = "eBPF-blockering av dGPU (standard)",
         ["gpu_backend_bpf_hint"] = "Döljer dGPU:n för program med ett eBPF-filter i kärnan istället för att lasta ur drivrutinen, så kortet går ner i D3cold och att växla tillbaka sker direkt utan omstart. Program som redan använder GPU:n behåller den tills de stängs, och G-Helper erbjuder att stänga dem. Kräver en kärna som startats med bpf i LSM-listan; ställ in det under Uppdateringar.",
         ["gpu_backend_bpf_optimized"] = "Aktivera läget Optimerad",

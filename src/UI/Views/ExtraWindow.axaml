@@ -631,7 +631,7 @@
                                           Margin="0,4"
                                           IsCheckedChanged="CheckPciGpuBackend_Changed" />
                                 <TextBlock x:Name="labelPciGpuBackendHint" Classes="label-dim"
-                                           Text="Disables the dGPU via a modprobe blacklist plus a udev hot-remove rule. Use it where eBPF cannot run. Every mode change requires a reboot because the rules only apply on the next boot."
+                                           Text="Disables the dGPU via a modprobe blacklist plus a udev hot-remove rule. Use it where eBPF cannot run. Mode changes apply live when possible, otherwise at the next boot."
                                            FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap" />
                             </StackPanel>
 

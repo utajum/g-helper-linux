@@ -540,7 +540,7 @@ public static class Lithuanian
         ["gpu_backend_mux_label"] = "Naudoti MUX režimą (ASUS programinė aparatinė įranga)",
         ["gpu_backend_mux_hint"] = "Išjungia dGPU ASUS programinėje aparatinėje įrangoje (dgpu_disable) ir leidžia Ultimate režimą per MUX jungiklį. Kai kuriems režimo keitimams reikia paleisti iš naujo.",
         ["gpu_backend_pci_label"] = "Naudoti dGPU išjungimą per PCI",
-        ["gpu_backend_pci_hint"] = "Išjungia dGPU per modprobe juodąjį sąrašą ir udev karšto pašalinimo taisyklę. Naudokite ten, kur eBPF negali veikti. Kiekvienas režimo pakeitimas reikalauja paleidimo iš naujo, nes taisyklės taikomos tik kito paleidimo metu.",
+        ["gpu_backend_pci_hint"] = "Išjungia dGPU per modprobe juodąjį sąrašą ir udev karšto pašalinimo taisyklę. Naudokite ten, kur eBPF negali veikti. Režimo pakeitimai taikomi iš karto, kai įmanoma, kitaip kito paleidimo metu.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU blokavimas (numatytasis)",
         ["gpu_backend_bpf_hint"] = "Paslepia dGPU nuo programų naudojant branduolio eBPF filtrą, o ne iškraunant tvarkyklę, todėl kortelė pereina į D3cold, o grįžimas atgal yra momentinis be perkrovimo. Programos, kurios jau naudoja GPU, ją laiko, kol bus uždarytos, o G-Helper siūlo jas uždaryti. Reikia branduolio, paleisto su bpf LSM sąraše; nustatykite tai skyriuje Atnaujinimai.",
         ["gpu_backend_bpf_optimized"] = "Įjungti režimą Optimizuotas",

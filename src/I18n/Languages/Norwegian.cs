@@ -398,7 +398,7 @@ public static class Norwegian
         ["gpu_backend_mux_label"] = "Bruk MUX-modus (ASUS-fastvare)",
         ["gpu_backend_mux_hint"] = "Slår av dGPU i ASUS-fastvaren (dgpu_disable) og gir Ultimate-modus via MUX-bryteren. Noen modusbytter krever omstart.",
         ["gpu_backend_pci_label"] = "Bruk PCI dGPU deaktivering",
-        ["gpu_backend_pci_hint"] = "Deaktiverer dGPU via en modprobe svarteliste pluss en udev hot-remove regel. Bruk den der eBPF ikke kan kjøre. Hver modusendring krever en omstart fordi reglene bare gjelder ved neste oppstart.",
+        ["gpu_backend_pci_hint"] = "Deaktiverer dGPU via en modprobe svarteliste pluss en udev hot-remove regel. Bruk den der eBPF ikke kan kjøre. Modusendringer gjelder med en gang når det er mulig, ellers ved neste oppstart.",
         ["gpu_backend_bpf_label"] = "eBPF-blokkering av dGPU (standard)",
         ["gpu_backend_bpf_hint"] = "Skjuler dGPU-en for programmer med et eBPF-filter i kjernen i stedet for å laste ut driveren, så kortet går ned i D3cold og å bytte tilbake skjer umiddelbart uten omstart. Programmer som allerede bruker GPU-en, beholder den til de lukkes, og G-Helper tilbyr å lukke dem. Krever en kjerne startet med bpf i LSM-listen; sett det opp under Oppdateringer.",
         ["gpu_backend_bpf_optimized"] = "Aktiver modusen Optimalisert",

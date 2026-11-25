@@ -395,7 +395,7 @@ public static class Hungarian
         ["gpu_backend_mux_label"] = "MUX mód használata (ASUS firmware)",
         ["gpu_backend_mux_hint"] = "Kikapcsolja a dGPU-t az ASUS firmware-ben (dgpu_disable), és a MUX kapcsolóval lehetővé teszi az Ultimate módot. Egyes módváltásokhoz újraindítás kell.",
         ["gpu_backend_pci_label"] = "PCI dGPU letiltás használata",
-        ["gpu_backend_pci_hint"] = "Letiltja a dGPU-t modprobe feketelistával és udev hot-remove szabállyal. Ott használja, ahol az eBPF nem futhat. Minden módváltás újraindítást igényel, mert a szabályok csak a következő indításkor lépnek érvénybe.",
+        ["gpu_backend_pci_hint"] = "Letiltja a dGPU-t modprobe feketelistával és udev hot-remove szabállyal. Ott használja, ahol az eBPF nem futhat. A módváltás lehetőség szerint azonnal érvényes, különben a következő indításkor.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU-blokkolás (alapértelmezett)",
         ["gpu_backend_bpf_hint"] = "Elrejti a dGPU-t az alkalmazások elől egy kernel eBPF-szűrővel a meghajtó eltávolítása helyett, így a kártya D3cold állapotba kerül, a visszaváltás pedig azonnali újraindítás nélkül. A GPU-t már használó alkalmazások a bezárásukig megtartják, és a G-Helper felajánlja a bezárásukat. Olyan kernel kell hozzá, amely bpf-fel indult az LSM-listában; a Frissítések alatt állítható be.",
         ["gpu_backend_bpf_optimized"] = "Optimalizált mód engedélyezése",

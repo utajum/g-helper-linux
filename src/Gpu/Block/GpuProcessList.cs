@@ -50,7 +50,7 @@ public static class GpuProcessList
     private static List<(string Node, string Bdf)> ReadDrmNodes()
     {
         var result = new List<(string, string)>();
-        string drmRoot = SysfsHelper.TestPathPrefix + "/sys/class/drm";
+        string drmRoot = SysfsHelper.HostPath("/sys/class/drm");
         try
         {
             if (!Directory.Exists(drmRoot))

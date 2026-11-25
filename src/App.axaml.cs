@@ -348,15 +348,12 @@ public class App : Application
 
                 GpuModeCtrl?.CacheDgpuSlotIfPresent();
 
-                // First start: the system files prompt can make eBPF possible.
-                if (AppConfig.IsNewInstall)
+                // The system files prompt can make eBPF possible while the app owns the choice.
+                if (Gpu.GpuBackendChoice.RetryAutoDefault(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable,
+                        Install.Installer.WaitForStartupDecision))
                 {
-                    Install.Installer.WaitForStartupDecision();
-                    if (Gpu.GpuBackendChoice.RetryNewInstall(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable))
-                    {
-                        SyncUdevMonitor();
-                        RefreshTrayMenu();
-                    }
+                    SyncUdevMonitor();
+                    RefreshTrayMenu();
                 }
 
                 // Check for boot recovery marker (impossible state was fixed during boot)

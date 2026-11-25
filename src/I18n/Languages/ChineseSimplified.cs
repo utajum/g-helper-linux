@@ -398,7 +398,7 @@ public static class ChineseSimplified
         ["gpu_backend_mux_label"] = "使用 MUX 模式（ASUS 固件）",
         ["gpu_backend_mux_hint"] = "通过 ASUS 固件（dgpu_disable）关闭 dGPU，并可通过 MUX 开关使用 Ultimate 模式。部分模式切换需要重启。",
         ["gpu_backend_pci_label"] = "使用 PCI dGPU 禁用",
-        ["gpu_backend_pci_hint"] = "通过 modprobe 黑名单加 udev 热移除规则禁用 dGPU。在无法运行 eBPF 的设备上使用。每次模式切换都需要重启，因为规则仅在下次启动时生效。",
+        ["gpu_backend_pci_hint"] = "通过 modprobe 黑名单加 udev 热移除规则禁用 dGPU。在无法运行 eBPF 的设备上使用。模式切换尽可能立即生效，否则在下次启动时生效。",
         ["gpu_backend_bpf_label"] = "eBPF dGPU 屏蔽（默认）",
         ["gpu_backend_bpf_hint"] = "使用内核 eBPF 过滤器对应用程序隐藏独立显卡，而不是卸载驱动，因此显卡会进入 D3cold，切换回来时无需重启即可立即生效。已在使用 GPU 的应用程序会一直占用它直到关闭，G-Helper 会提示关闭它们。需要内核在 LSM 列表中带 bpf 启动；请在“更新”中进行设置。",
         ["gpu_backend_bpf_optimized"] = "启用优化模式",

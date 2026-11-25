@@ -398,7 +398,7 @@ public static class Korean
         ["gpu_backend_mux_label"] = "MUX 모드 사용 (ASUS 펌웨어)",
         ["gpu_backend_mux_hint"] = "ASUS 펌웨어(dgpu_disable)에서 dGPU를 끄고 MUX 스위치로 Ultimate 모드를 사용할 수 있게 합니다. 일부 모드 변경은 재부팅이 필요합니다.",
         ["gpu_backend_pci_label"] = "PCI dGPU 비활성화 사용",
-        ["gpu_backend_pci_hint"] = "modprobe 블랙리스트와 udev 핫 리무브 규칙을 통해 dGPU를 비활성화합니다. eBPF를 실행할 수 없는 경우에 사용합니다. 규칙은 다음 부팅 시에만 적용되므로 모드 변경은 항상 재부팅이 필요합니다.",
+        ["gpu_backend_pci_hint"] = "modprobe 블랙리스트와 udev 핫 리무브 규칙을 통해 dGPU를 비활성화합니다. eBPF를 실행할 수 없는 경우에 사용합니다. 모드 변경은 가능하면 즉시 적용되고, 그렇지 않으면 다음 부팅 시 적용됩니다.",
         ["gpu_backend_bpf_label"] = "eBPF dGPU 차단 (기본값)",
         ["gpu_backend_bpf_hint"] = "드라이버를 언로드하는 대신 커널 eBPF 필터로 dGPU를 응용 프로그램에서 숨기므로 카드가 D3cold로 전환되고, 재부팅 없이 즉시 되돌릴 수 있습니다. 이미 GPU를 사용 중인 응용 프로그램은 종료될 때까지 계속 사용하며, G-Helper가 종료를 제안합니다. LSM 목록에 bpf를 포함해 부팅한 커널이 필요하며, 업데이트에서 설정할 수 있습니다.",
         ["gpu_backend_bpf_optimized"] = "최적화 모드 사용",

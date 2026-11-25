@@ -540,7 +540,7 @@ public static class Slovak
         ["gpu_backend_mux_label"] = "Použiť režim MUX (firmvér ASUS)",
         ["gpu_backend_mux_hint"] = "Vypína dGPU vo firmvéri ASUS (dgpu_disable) a umožňuje režim Ultimate cez prepínač MUX. Niektoré zmeny režimu vyžadujú reštart.",
         ["gpu_backend_pci_label"] = "Použiť zakázanie dGPU cez PCI",
-        ["gpu_backend_pci_hint"] = "Zakáže dGPU pomocou blacklistu modprobe a pravidla na okamžité odstránenie udev. Použite ho tam, kde eBPF nemôže bežať. Každá zmena režimu vyžaduje reštart, pretože pravidlá sa uplatnia až pri ďalšom štarte.",
+        ["gpu_backend_pci_hint"] = "Zakáže dGPU pomocou blacklistu modprobe a pravidla na okamžité odstránenie udev. Použite ho tam, kde eBPF nemôže bežať. Zmeny režimu platia hneď, keď je to možné, inak pri ďalšom štarte.",
         ["gpu_backend_bpf_label"] = "Blokovanie dGPU pomocou eBPF (predvolené)",
         ["gpu_backend_bpf_hint"] = "Skryje dGPU pred aplikáciami filtrom eBPF v jadre namiesto uvolnenia ovládača, takže karta prejde do D3cold a prepnutie späť je okamžité bez restartu. Aplikácie, ktoré už GPU používajú, ju držia, kým sa nezatvoria, a G-Helper ponúkne ich zatvorenie. Vyžaduje jadro nabootované s bpf v zozname LSM; nastavte to v Aktualizáciách.",
         ["gpu_backend_bpf_optimized"] = "Povoliť režim Optimalizovaný",

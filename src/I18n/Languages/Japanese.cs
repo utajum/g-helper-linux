@@ -398,7 +398,7 @@ public static class Japanese
         ["gpu_backend_mux_label"] = "MUX モードを使用（ASUS ファームウェア）",
         ["gpu_backend_mux_hint"] = "ASUS ファームウェア（dgpu_disable）で dGPU をオフにし、MUX スイッチで Ultimate モードを使えるようにします。一部のモード変更には再起動が必要です。",
         ["gpu_backend_pci_label"] = "PCI dGPU 無効化を使用",
-        ["gpu_backend_pci_hint"] = "modprobe ブラックリストと udev ホットリムーブルールを使って dGPU を無効化します。eBPF が動作しない環境で使用します。ルールは次回起動時にのみ適用されるため、モード変更は常に再起動が必要です。",
+        ["gpu_backend_pci_hint"] = "modprobe ブラックリストと udev ホットリムーブルールを使って dGPU を無効化します。eBPF が動作しない環境で使用します。モード変更は可能な場合すぐに適用され、できない場合は次回起動時に適用されます。",
         ["gpu_backend_bpf_label"] = "eBPF による dGPU ブロック（デフォルト）",
         ["gpu_backend_bpf_hint"] = "ドライバーをアンロードする代わりにカーネルの eBPF フィルターで dGPU をアプリケーションから隠すため、カードは D3cold に入り、再起動なしで即座に切り戻せます。すでに GPU を使用しているアプリケーションは終了するまで保持し続けるため、G-Helper が終了を提案します。LSM リストに bpf を含めて起動したカーネルが必要です。「更新」から設定できます。",
         ["gpu_backend_bpf_optimized"] = "最適化モードを有効にする",

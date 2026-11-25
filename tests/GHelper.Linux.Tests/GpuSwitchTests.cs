@@ -993,7 +993,7 @@ public static class GpuSwitchTests
         {
             sb.WriteBlockArtifacts();
             sb.WriteTrigger("eco");
-            GpuBackendChoice.Select("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
             Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks kept");
             Harness.AssertEqual("eco", sb.TriggerContent(), "trigger kept");
         });
@@ -1075,16 +1075,16 @@ public static class GpuSwitchTests
 
         Harness.Scenario("Backend_Values", _ =>
         {
-            foreach (var (raw, want) in new[] { ("pci", "pci"), (" PCI ", "pci"), ("asus-wmi", "asus-wmi"), ("ASUS-WMI", "asus-wmi"), ("garbage", "asus-wmi"), ("", "asus-wmi") })
+            foreach (var (raw, want) in new[] { ("pci", GpuBackendKind.Pci), (" PCI ", GpuBackendKind.Pci), ("asus-wmi", GpuBackendKind.AsusWmi), ("ASUS-WMI", GpuBackendKind.AsusWmi), ("garbage", GpuBackendKind.AsusWmi), ("", GpuBackendKind.AsusWmi) })
             {
                 AppConfig.Set("gpu_backend", raw);
                 Harness.AssertEqual(want, AppConfig.GetGpuBackend(), $"gpu_backend '{raw}'");
-                Harness.AssertEqual(want == "pci", AppConfig.IsPciGpuBackend(), $"IsPciGpuBackend '{raw}'");
+                Harness.AssertEqual(want == GpuBackendKind.Pci, AppConfig.IsPciGpuBackend(), $"IsPciGpuBackend '{raw}'");
             }
         });
 
         Harness.Scenario("Backend_Unset_AsusWmi", _ =>
-            Harness.AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "default"));
+            Harness.AssertEqual(GpuBackendKind.AsusWmi, AppConfig.GetGpuBackend(), "default"));
 
         Harness.Scenario("Backend_StartupKeepsUserChoice", sb =>
         {
@@ -1092,7 +1092,7 @@ public static class GpuSwitchTests
             {
                 AppConfig.Set("gpu_backend", choice);
                 GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => true);
-                Harness.AssertEqual(choice, AppConfig.GetGpuBackend(), "user choice kept");
+                Harness.AssertEqual(choice, GpuBackendChoice.Name(AppConfig.GetGpuBackend()), "user choice kept");
             }
         });
 

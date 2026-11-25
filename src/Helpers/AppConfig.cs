@@ -728,42 +728,27 @@ public static class AppConfig
     ///                rule ARE the persistent Eco state and survive across
     ///                reboots until the user switches to Standard.
     ///   "ebpf"     - an eBPF LSM filter hides the dGPU device nodes.
-    /// Default "asus-wmi" so existing ASUS users see no behavioural change.
-    /// Picked at startup by <see cref="Gpu.GpuBackendChoice.ResolveAtStartup"/>:
-    /// "ebpf" on a new install where it can run, else "pci" when no
-    /// asus-nb-wmi / asus-armoury platform device is present.
+    /// Unset or unknown reads as "asus-wmi", so existing ASUS users see no change.
+    /// Only <see cref="Gpu.GpuBackendChoice"/> writes it.
     /// </summary>
-    public static string GetGpuBackend()
-    {
-        string? raw = GetString("gpu_backend");
-        if (string.IsNullOrWhiteSpace(raw))
-            return "asus-wmi";
-        string normalized = raw.Trim().ToLowerInvariant();
-        return normalized switch
-        {
-            "pci" => "pci",
-            "ebpf" => "ebpf",
-            "asus-wmi" => "asus-wmi",
-            _ => "asus-wmi"
-        };
-    }
+    public static Gpu.GpuBackendKind GetGpuBackend()
+        => Gpu.GpuBackendChoice.Parse(GetString("gpu_backend")) ?? Gpu.GpuBackendKind.AsusWmi;
 
     /// <summary>True when the user (or first-run auto-detect) selected the
     /// PCI backend instead of the default ASUS WMI flow.</summary>
-    public static bool IsPciGpuBackend() => GetGpuBackend() == "pci";
+    public static bool IsPciGpuBackend() => GetGpuBackend() == Gpu.GpuBackendKind.Pci;
 
     /// <summary>True when the user selected the eBPF filter backend.</summary>
-    public static bool IsBpfGpuBackend() => GetGpuBackend() == "ebpf";
+    public static bool IsBpfGpuBackend() => GetGpuBackend() == Gpu.GpuBackendKind.Ebpf;
 
     /// <summary>True when the ASUS WMI platform driver is present.</summary>
     public static bool HasAsusPlatformDevice()
     {
         try
         {
-            string p = Platform.Linux.SysfsHelper.TestPathPrefix;
-            return Directory.Exists(p + "/sys/bus/platform/devices/asus-nb-wmi") ||
-                   Directory.Exists(p + "/sys/devices/platform/asus-nb-wmi") ||
-                   Directory.Exists(p + "/sys/class/firmware-attributes/asus-armoury");
+            return Directory.Exists(Platform.Linux.SysfsHelper.HostPath("/sys/bus/platform/devices/asus-nb-wmi")) ||
+                   Directory.Exists(Platform.Linux.SysfsHelper.HostPath("/sys/devices/platform/asus-nb-wmi")) ||
+                   Directory.Exists(Platform.Linux.SysfsHelper.HostPath("/sys/class/firmware-attributes/asus-armoury"));
         }
         catch
         {

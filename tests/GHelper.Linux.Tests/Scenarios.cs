@@ -57,7 +57,7 @@ public static class Scenarios
         SelectBackend_AsusWmi_WritesMarkerFile();
         SelectBackend_Pci_PreservesMuxLatchFlag();
         SelectBackend_AsusWmi_DoesNotTouchLatchFlag();
-        SelectBackend_Invalid_NoOp();
+        SelectBackend_UnknownMarker_ReadsNull();
         SelectBackend_Idempotent_NoRewrite();
         SelectBackend_Ebpf_WritesMarkerFile();
         Ebpf_ScheduleForReboot_NoBlockArtifacts();
@@ -237,6 +237,10 @@ public static class Scenarios
         NewInstall_SystemFilesLater_RetryPicksBpf();
         NewInstall_UserPickedBeforeRetry_Kept();
         ExistingInstall_Retry_NoOp();
+        AutoDefault_BpfLater_NextStartPicksBpf();
+        AutoDefault_InEco_WaitsForStandard();
+        AutoDefault_OwnMarker_NextStartPicksBpf();
+        AutoDefault_UserPick_NeverReplaced();
         Eco_AmdIgpuAmdDgpu_TargetsDgpu();
         Eco_AmdIgpuPanelOnly_NoTarget();
         LeaveBpf_StaleEbpfMarker_Fallback();
@@ -411,7 +415,7 @@ public static class Scenarios
             }
             AppConfig.Set("mux_zero_latched_boot_id", bootId);
 
-            GpuBackendChoice.Select("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
 
             // Latch flag must still be there after the backend toggle.
             AssertEqual(bootId, AppConfig.GetString("mux_zero_latched_boot_id") ?? "",
@@ -460,7 +464,7 @@ public static class Scenarios
         {
             // No backend file on disk, no config flag → fall back to
             // asus-wmi (the historical default).
-            AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "default backend");
+            AssertEqual(GpuBackendKind.AsusWmi, AppConfig.GetGpuBackend(), "default backend");
             Assert(!AppConfig.IsPciGpuBackend(), "PCI not the default");
         });
 
@@ -945,7 +949,7 @@ public static class Scenarios
     static void SelectBackend_Pci_WritesMarkerFile()
         => Scenario(nameof(SelectBackend_Pci_WritesMarkerFile), sb =>
         {
-            GpuBackendChoice.Select("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
             AssertEqual("pci", sb.BackendContent(), "marker file content");
         });
 
@@ -953,7 +957,7 @@ public static class Scenarios
         => Scenario(nameof(SelectBackend_AsusWmi_WritesMarkerFile), sb =>
         {
             sb.WriteBackend("pci");
-            GpuBackendChoice.Select("asus-wmi");
+            GpuBackendChoice.Select(GpuBackendKind.AsusWmi);
             AssertEqual("asus-wmi", sb.BackendContent(), "marker file content");
         });
 
@@ -967,7 +971,7 @@ public static class Scenarios
             // Eco -> blocks written -> reboot lands in MUX=0 with udev
             // removing the dGPU = black screen.
             AppConfig.Set("mux_zero_latched_boot_id", "any-boot-id");
-            GpuBackendChoice.Select("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
             AssertEqual("any-boot-id", AppConfig.GetString("mux_zero_latched_boot_id") ?? "",
                 "latch flag preserved across PCI backend toggle");
         });
@@ -976,17 +980,16 @@ public static class Scenarios
         => Scenario(nameof(SelectBackend_AsusWmi_DoesNotTouchLatchFlag), sb =>
         {
             AppConfig.Set("mux_zero_latched_boot_id", "from-asus-wmi-session");
-            GpuBackendChoice.Select("asus-wmi");
+            GpuBackendChoice.Select(GpuBackendKind.AsusWmi);
             AssertEqual("from-asus-wmi-session", AppConfig.GetString("mux_zero_latched_boot_id") ?? "",
                 "asus-wmi backend preserves its own MUX state");
         });
 
-    static void SelectBackend_Invalid_NoOp()
-        => Scenario(nameof(SelectBackend_Invalid_NoOp), sb =>
+    static void SelectBackend_UnknownMarker_ReadsNull()
+        => Scenario(nameof(SelectBackend_UnknownMarker_ReadsNull), sb =>
         {
-            sb.WriteBackend("pci");
-            GpuBackendChoice.Select("nonsense");
-            AssertEqual("pci", sb.BackendContent(), "invalid backend rejected, no rewrite");
+            sb.WriteBackend("nonsense");
+            AssertEqual(null, GpuBootFiles.ReadBackend(), "unknown marker text is no backend");
         });
 
     static void SelectBackend_Idempotent_NoRewrite()
@@ -996,7 +999,7 @@ public static class Scenarios
             // Tamper the file timestamp to detect rewrite.
             var beforeWrite = File.GetLastWriteTimeUtc(sb.BackendPath);
             Thread.Sleep(20);
-            GpuBackendChoice.Select("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
             var afterWrite = File.GetLastWriteTimeUtc(sb.BackendPath);
             AssertEqual(beforeWrite, afterWrite, "file not rewritten when backend already correct");
         });
@@ -1046,7 +1049,7 @@ public static class Scenarios
             sb.WriteBlockArtifacts();
 
             // User toggles off.
-            GpuBackendChoice.Select("asus-wmi");
+            GpuBackendChoice.Select(GpuBackendKind.AsusWmi);
 
             // dgpu_disable=0 (live state), but blocks present → UI eco.
             sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
@@ -1063,7 +1066,7 @@ public static class Scenarios
             AppConfig.Set("gpu_backend", "asus-wmi");
             sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = true;
 
-            GpuBackendChoice.Select("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
 
             // No blocks present yet → PCI mode reports Standard. (User
             // would click Eco again to commit to PCI-style eco.)
@@ -1634,7 +1637,7 @@ public static class Scenarios
     static void ResolveNewInstall(Harness.Sandbox sb, bool bpfAvailable = true)
         => GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => bpfAvailable);
 
-    static void AssertNoBpf(Harness.Sandbox sb, string backend)
+    static void AssertNoBpf(Harness.Sandbox sb, GpuBackendKind backend)
     {
         AssertEqual(backend, AppConfig.GetGpuBackend(), "backend");
         Assert(!sb.BackendPresent(), "no backend marker written");
@@ -1670,7 +1673,7 @@ public static class Scenarios
             sb.WriteFakeNouveauOnDisk();
 
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "pci");
+            AssertNoBpf(sb, GpuBackendKind.Pci);
         });
 
     static void NewInstall_AsusAmdIgpuOnly_Mux()
@@ -1681,7 +1684,7 @@ public static class Scenarios
             sb.WriteFakeNouveauOnDisk();
 
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "asus-wmi");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
         });
 
     static void NewInstall_AmdIgpuNoBootVga_Pci()
@@ -1691,7 +1694,7 @@ public static class Scenarios
 
             Assert(DgpuPci.Find() == null, "iGPU with the panel is not a dGPU");
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "pci");
+            AssertNoBpf(sb, GpuBackendKind.Pci);
         });
 
     static void NewInstall_IgpuOnlyFirmwareDgpuAttr_NoBpf()
@@ -1703,7 +1706,7 @@ public static class Scenarios
             sb.Wmi.DgpuDisableSupported = true;
 
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "asus-wmi");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
         });
 
     static void NewInstall_AsusAmdIgpuAmdDgpu_PicksBpf()
@@ -1744,7 +1747,7 @@ public static class Scenarios
             sb.Wmi.EcoEnabled = true;
 
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "asus-wmi");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
         });
 
     static void NewInstall_AmdDgpu_Ultimate_NoBpf()
@@ -1754,7 +1757,7 @@ public static class Scenarios
             sb.Wmi.MuxMode = 0;
 
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "asus-wmi");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
         });
 
     static void NewInstall_AmdDgpu_BpfUnavailable_NoBpf()
@@ -1763,7 +1766,7 @@ public static class Scenarios
             AsusAmdAmd(sb);
 
             ResolveNewInstall(sb, bpfAvailable: false);
-            AssertNoBpf(sb, "asus-wmi");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
         });
 
     static void NewInstall_AmdDgpu_PciMarker_Kept()
@@ -1774,7 +1777,7 @@ public static class Scenarios
             sb.WriteBackend("pci");
 
             ResolveNewInstall(sb);
-            AssertEqual("pci", AppConfig.GetGpuBackend(), "backend");
+            AssertEqual(GpuBackendKind.Pci, AppConfig.GetGpuBackend(), "backend");
             AssertEqual("pci", sb.BackendContent(), "marker kept");
         });
 
@@ -1786,7 +1789,7 @@ public static class Scenarios
             AsusAmdAmd(sb);
 
             ResolveNewInstall(sb);
-            AssertNoBpf(sb, "asus-wmi");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
         });
 
     static void NewInstall_SystemFilesLater_RetryPicksBpf()
@@ -1795,9 +1798,9 @@ public static class Scenarios
             // First AppImage start: gpu-helper arrives with the system files prompt.
             GenericIntelAmd(sb);
             ResolveNewInstall(sb, bpfAvailable: false);
-            AssertNoBpf(sb, "pci");
+            AssertNoBpf(sb, GpuBackendKind.Pci);
 
-            Assert(GpuBackendChoice.RetryNewInstall(sb.Wmi, () => true), "retry picks eBPF");
+            Assert(GpuBackendChoice.RetryAutoDefault(sb.Wmi, () => true, () => { }), "retry picks eBPF");
             AssertBpf(sb);
         });
 
@@ -1806,10 +1809,10 @@ public static class Scenarios
         {
             AsusAmdAmd(sb);
             ResolveNewInstall(sb, bpfAvailable: false);
-            Assert(GpuBackendChoice.Select("pci"), "user ticks PCI");
+            Assert(GpuBackendChoice.Select(GpuBackendKind.Pci), "user ticks PCI");
 
-            Assert(!GpuBackendChoice.RetryNewInstall(sb.Wmi, () => true), "retry leaves the user choice");
-            AssertEqual("pci", AppConfig.GetGpuBackend(), "backend");
+            Assert(!GpuBackendChoice.RetryAutoDefault(sb.Wmi, () => true, () => { }), "retry leaves the user choice");
+            AssertEqual(GpuBackendKind.Pci, AppConfig.GetGpuBackend(), "backend");
             AssertEqual("pci", sb.BackendContent(), "marker");
         });
 
@@ -1821,8 +1824,71 @@ public static class Scenarios
             AsusAmdAmd(sb);
             ResolveNewInstall(sb, bpfAvailable: false);
 
-            Assert(!GpuBackendChoice.RetryNewInstall(sb.Wmi, () => true), "existing install: no retry");
-            AssertNoBpf(sb, "asus-wmi");
+            Assert(!GpuBackendChoice.RetryAutoDefault(sb.Wmi, () => true, () => { }), "existing install: no retry");
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
+        });
+
+    // Next app start: the config file exists, so it is no longer a new install.
+    static void Restart(Harness.Sandbox sb)
+    {
+        AppConfig.Flush();
+        AppConfig.ResetForTest(sb.ConfigDir);
+    }
+
+    static void AutoDefault_BpfLater_NextStartPicksBpf()
+        => Scenario(nameof(AutoDefault_BpfLater_NextStartPicksBpf), sb =>
+        {
+            // bpf joins the LSM list after a reboot: the next start still applies the default.
+            GenericIntelAmd(sb);
+            ResolveNewInstall(sb, bpfAvailable: false);
+            AssertNoBpf(sb, GpuBackendKind.Pci);
+
+            Restart(sb);
+            ResolveNewInstall(sb);
+            AssertBpf(sb);
+        });
+
+    static void AutoDefault_InEco_WaitsForStandard()
+        => Scenario(nameof(AutoDefault_InEco_WaitsForStandard), sb =>
+        {
+            // Eco state belongs to the current backend: no switch until Standard.
+            AsusAmdAmd(sb);
+            ResolveNewInstall(sb, bpfAvailable: false);
+            AppConfig.Set("gpu_mode", "eco");
+            Restart(sb);
+            ResolveNewInstall(sb);
+            AssertNoBpf(sb, GpuBackendKind.AsusWmi);
+
+            AppConfig.Set("gpu_mode", "standard");
+            Restart(sb);
+            ResolveNewInstall(sb);
+            AssertBpf(sb);
+        });
+
+    static void AutoDefault_OwnMarker_NextStartPicksBpf()
+        => Scenario(nameof(AutoDefault_OwnMarker_NextStartPicksBpf), sb =>
+        {
+            // A PCI mode switch wrote the marker of the automatic pick: that marker is ours.
+            GenericIntelAmd(sb);
+            ResolveNewInstall(sb, bpfAvailable: false);
+            sb.WriteBackend("pci");
+
+            Restart(sb);
+            ResolveNewInstall(sb);
+            AssertBpf(sb);
+        });
+
+    static void AutoDefault_UserPick_NeverReplaced()
+        => Scenario(nameof(AutoDefault_UserPick_NeverReplaced), sb =>
+        {
+            AsusAmdAmd(sb);
+            ResolveNewInstall(sb, bpfAvailable: false);
+            Assert(GpuBackendChoice.Select(GpuBackendKind.AsusWmi), "user ticks MUX");
+
+            Restart(sb);
+            ResolveNewInstall(sb);
+            AssertEqual(GpuBackendKind.AsusWmi, AppConfig.GetGpuBackend(), "user pick kept");
+            AssertEqual("asus-wmi", sb.BackendContent(), "marker");
         });
 
     static void Eco_AmdIgpuAmdDgpu_TargetsDgpu()
@@ -1851,8 +1917,8 @@ public static class Scenarios
             AppConfig.Set("gpu_backend", "ebpf");
             sb.WriteBackend("ebpf");
 
-            AssertEqual("pci", GpuBackendChoice.LeaveBpf(), "no ASUS platform: pci");
-            AssertEqual("pci", AppConfig.GetGpuBackend(), "config left ebpf");
+            AssertEqual(GpuBackendKind.Pci, GpuBackendChoice.LeaveBpf(), "no ASUS platform: pci");
+            AssertEqual(GpuBackendKind.Pci, AppConfig.GetGpuBackend(), "config left ebpf");
         });
 
     // A dGPU enable can outrun its opening pause, so the recovery ladder
@@ -2246,7 +2312,7 @@ public static class Scenarios
         => Scenario(nameof(GpuBlock_Backend_ConfigRoundTrip), sb =>
         {
             AppConfig.Set("gpu_backend", "ebpf");
-            AssertEqual("ebpf", AppConfig.GetGpuBackend(), "ebpf backend accepted");
+            AssertEqual(GpuBackendKind.Ebpf, AppConfig.GetGpuBackend(), "ebpf backend accepted");
             Assert(AppConfig.IsBpfGpuBackend(), "IsBpfGpuBackend true");
             Assert(!AppConfig.IsPciGpuBackend(), "ebpf is not the PCI backend");
 
@@ -2258,7 +2324,7 @@ public static class Scenarios
         => Scenario(nameof(GpuBlock_Backend_UnknownValueFallsBackToWmi), sb =>
         {
             AppConfig.Set("gpu_backend", "ebfp");
-            AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "typo falls back to the safe default");
+            AssertEqual(GpuBackendKind.AsusWmi, AppConfig.GetGpuBackend(), "typo falls back to the safe default");
             Assert(!AppConfig.IsBpfGpuBackend(), "typo does not select the filter");
         });
 
@@ -2266,7 +2332,7 @@ public static class Scenarios
         => Scenario(nameof(SelectBackend_Ebpf_WritesMarkerFile), sb =>
         {
             sb.WriteBackend("asus-wmi");
-            GpuBackendChoice.Select("ebpf");
+            GpuBackendChoice.Select(GpuBackendKind.Ebpf);
             AssertEqual("ebpf", sb.BackendContent(), "ebpf marker written for the boot service");
         });
 
@@ -2986,7 +3052,7 @@ public static class Scenarios
 
             sb.Controller.ApplyPendingOnStartup();
 
-            AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "config follows the marker");
+            AssertEqual(GpuBackendKind.AsusWmi, AppConfig.GetGpuBackend(), "config follows the marker");
             Assert(!sb.BlockOps.ActiveState, "no filter left without an owner");
             AssertEqual("standard", AppConfig.GetString("gpu_mode") ?? "", "ebpf Eco dropped");
             Assert(!sb.PersistentPresent(), "no persistent Eco for the other backend");
@@ -3001,7 +3067,7 @@ public static class Scenarios
 
             sb.Controller.ApplyPendingOnStartup();
 
-            AssertEqual("pci", AppConfig.GetGpuBackend(), "no marker, no ASUS platform: pci");
+            AssertEqual(GpuBackendKind.Pci, AppConfig.GetGpuBackend(), "no marker, no ASUS platform: pci");
             Assert(!sb.BlockOps.ActiveState, "filter detached");
         });
 
@@ -3013,10 +3079,10 @@ public static class Scenarios
             File.Delete(sb.BackendPath);
             Directory.CreateDirectory(sb.BackendPath);
             try
-            { Assert(!GpuBackendChoice.Select("ebpf"), "write failed"); }
+            { Assert(!GpuBackendChoice.Select(GpuBackendKind.Ebpf), "write failed"); }
             finally { Directory.Delete(sb.BackendPath); }
             Assert(string.IsNullOrEmpty(AppConfig.GetString("gpu_backend")), "config unchanged");
-            Assert(GpuBackendChoice.Select("ebpf"), "write ok");
+            Assert(GpuBackendChoice.Select(GpuBackendKind.Ebpf), "write ok");
             AssertEqual("ebpf", AppConfig.GetString("gpu_backend"), "config follows the marker");
         });
 
@@ -3042,7 +3108,7 @@ public static class Scenarios
             sb.BlockOps.ActiveState = true;
             File.WriteAllText(sb.PersistentPath, "optimized");
 
-            sb.Controller.OnBackendChanged("ebpf", "asus-wmi");
+            sb.Controller.OnBackendChanged(GpuBackendKind.Ebpf, GpuBackendKind.AsusWmi);
 
             Assert(!sb.BlockOps.ActiveState, "filter detached");
             Assert(!sb.PersistentPresent(), "marker dropped");
@@ -3059,7 +3125,7 @@ public static class Scenarios
             sb.Wmi.EcoEnabled = true;
             sb.Wmi.MuxMode = 1;
 
-            sb.Controller.OnBackendChanged("asus-wmi", "ebpf");
+            sb.Controller.OnBackendChanged(GpuBackendKind.AsusWmi, GpuBackendKind.Ebpf);
 
             Assert(!sb.Wmi.EcoEnabled, "dgpu_disable=0 written");
         });
@@ -3076,7 +3142,7 @@ public static class Scenarios
             sb.WriteBlockArtifacts();
             File.WriteAllText(sb.PersistentPath, "eco");
 
-            sb.Controller.OnBackendChanged("pci", "ebpf");
+            sb.Controller.OnBackendChanged(GpuBackendKind.Pci, GpuBackendKind.Ebpf);
 
             Assert(!sb.ModprobePresent(), "modprobe block removed");
             Assert(!sb.UdevPresent(), "udev remove rule removed");

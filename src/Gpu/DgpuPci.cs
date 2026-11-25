@@ -12,16 +12,17 @@ internal static class DgpuPci
     /// <summary>
     /// Scan /sys/bus/pci/devices for the discrete GPU graphics function,
     /// regardless of whether a driver is bound: NVIDIA (vendor 0x10de) or AMD
-    /// (vendor 0x1002 with boot_vga != 1 so the iGPU is excluded). Matches only
-    /// VGA (0x0300xx) / 3D (0x0302xx) classes so audio/USB sibling functions are
-    /// skipped. Returns (bdf, vendor) or null. Detects presence right after a
-    /// rescan, before the driver binds.
+    /// (vendor 0x1002 that drives no display, so the iGPU is excluded). Matches
+    /// only VGA (0x0300xx) / 3D (0x0302xx) classes so audio/USB sibling functions
+    /// are skipped. <paramref name="onlyVendor"/> limits the scan to one vendor.
+    /// Returns (bdf, vendor) or null. Detects presence right after a rescan,
+    /// before the driver binds.
     /// </summary>
-    internal static (string bdf, string vendor)? Find()
+    internal static (string bdf, string vendor)? Find(string? onlyVendor = null)
     {
         try
         {
-            string devDir = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices";
+            string devDir = SysfsHelper.HostPath("/sys/bus/pci/devices");
             if (!Directory.Exists(devDir))
                 return null;
             foreach (var dev in Directory.GetDirectories(devDir))
@@ -33,6 +34,8 @@ internal static class DgpuPci
                 bool isNvidia = vendor.Equals("0x10de", StringComparison.OrdinalIgnoreCase);
                 bool isAmd = vendor.Equals("0x1002", StringComparison.OrdinalIgnoreCase);
                 if (!isNvidia && !isAmd)
+                    continue;
+                if (onlyVendor != null && !vendor.Equals(onlyVendor, StringComparison.OrdinalIgnoreCase))
                     continue;
                 if (!IsGraphics(dev))
                     continue;
@@ -49,15 +52,15 @@ internal static class DgpuPci
         return null;
     }
 
-    /// <summary>VGA (0x0300xx) or 3D (0x0302xx) class: the graphics function, not audio or USB.</summary>
-    internal static bool IsGraphics(string dev)
+    // VGA (0x0300xx) or 3D (0x0302xx) class: the graphics function, not audio or USB.
+    private static bool IsGraphics(string dev)
     {
         string cls = SysfsHelper.ReadAttribute(Path.Combine(dev, "class")) ?? "";
         return cls.StartsWith("0x0300", StringComparison.Ordinal) || cls.StartsWith("0x0302", StringComparison.Ordinal);
     }
 
-    /// <summary>Boot display or internal panel: the iGPU, or the dGPU in Ultimate.</summary>
-    internal static bool DrivesPanel(string dev)
+    // Boot display or internal panel: the iGPU, or the dGPU in Ultimate.
+    private static bool DrivesPanel(string dev)
         => SysfsHelper.ReadInt(Path.Combine(dev, "boot_vga"), 0) == 1 || SysfsHelper.HasInternalDisplay(dev);
 
     /// <summary>First graphics function that drives no display, any vendor: what the eBPF block may hide.</summary>
@@ -65,7 +68,7 @@ internal static class DgpuPci
     {
         try
         {
-            foreach (var dev in Directory.EnumerateDirectories(SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices"))
+            foreach (var dev in Directory.EnumerateDirectories(SysfsHelper.HostPath("/sys/bus/pci/devices")))
                 if (IsGraphics(dev) && !DrivesPanel(dev))
                     return Path.GetFileName(dev);
         }
@@ -84,47 +87,19 @@ internal static class DgpuPci
         _dgpuPciScanned = false;
     }
 
-    /// <summary>
-    /// Scan /sys/bus/pci/devices for the AMD discrete GPU.
-    /// Looks for vendor=0x1002, class=0x0300xx or 0x0302xx, boot_vga=0.
-    /// Caches the result.
-    /// </summary>
+    /// <summary>AMD dGPU with a DRM card (see <see cref="Find"/>); cached.</summary>
     internal static string? FindAmd()
     {
         if (_dgpuPciScanned)
             return _cachedDgpuPciAddress;
         _dgpuPciScanned = true;
 
-        try
-        {
-            string pciDir = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices";
-            if (!Directory.Exists(pciDir))
-                return null;
-
-            foreach (var deviceDir in Directory.GetDirectories(pciDir))
-            {
-                string? vendor = SysfsHelper.ReadAttribute(Path.Combine(deviceDir, "vendor"));
-                if (vendor != "0x1002")
-                    continue; // Not AMD
-
-                if (!IsGraphics(deviceDir) || DrivesPanel(deviceDir))
-                    continue; // the iGPU drives the panel
-
-                // Confirm it has a DRM subsystem
-                if (!Directory.Exists(Path.Combine(deviceDir, "drm")))
-                    continue;
-
-                _cachedDgpuPciAddress = Path.GetFileName(deviceDir);
-                Logger.WriteLine($"GPUModeControl: found AMD dGPU at {_cachedDgpuPciAddress}");
-                return _cachedDgpuPciAddress;
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.WriteLine($"GPUModeControl: PCI scan failed: {ex.Message}");
-        }
-
-        return null;
+        string? bdf = Find("0x1002")?.bdf;
+        if (bdf == null || !Directory.Exists(SysfsHelper.HostPath($"/sys/bus/pci/devices/{bdf}/drm")))
+            return null;
+        _cachedDgpuPciAddress = bdf;
+        Logger.WriteLine($"GPUModeControl: found AMD dGPU at {bdf}");
+        return bdf;
     }
 
     /// <summary>
@@ -163,7 +138,7 @@ internal static class DgpuPci
     {
         try
         {
-            string pciDir = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices";
+            string pciDir = SysfsHelper.HostPath("/sys/bus/pci/devices");
             if (!Directory.Exists(pciDir))
                 return null;
             foreach (var dev in Directory.EnumerateDirectories(pciDir))
@@ -184,7 +159,7 @@ internal static class DgpuPci
     /// <summary>Read power/runtime_status for a PCI device. Returns "active"/"suspended"/etc.</summary>
     internal static string ReadRuntimeStatus(string pciAddr)
     {
-        string path = SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{pciAddr}/power/runtime_status";
+        string path = SysfsHelper.HostPath($"/sys/bus/pci/devices/{pciAddr}/power/runtime_status");
         return SysfsHelper.ReadAttribute(path) ?? "active";
     }
 
@@ -195,7 +170,7 @@ internal static class DgpuPci
         int count = 0;
         try
         {
-            string devDir = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices";
+            string devDir = SysfsHelper.HostPath("/sys/bus/pci/devices");
             if (!Directory.Exists(devDir))
                 return 0;
             foreach (var dev in Directory.GetDirectories(devDir))
@@ -225,7 +200,7 @@ internal static class DgpuPci
         var dev = Find();
         if (dev == null)
             return false;
-        return !Directory.Exists(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{dev.Value.bdf}/driver");
+        return !Directory.Exists(SysfsHelper.HostPath($"/sys/bus/pci/devices/{dev.Value.bdf}/driver"));
     }
 
     /// <summary>
@@ -239,7 +214,7 @@ internal static class DgpuPci
         string gfxDriver = isAmd ? "amdgpu" : "nvidia";
         foreach (var node in Functions(gfxBdf))
         {
-            string devDir = SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{node}";
+            string devDir = SysfsHelper.HostPath($"/sys/bus/pci/devices/{node}");
             if (Directory.Exists(Path.Combine(devDir, "driver")))
                 continue;
 
@@ -336,7 +311,7 @@ internal static class DgpuPci
             return;
         }
         string status = SysfsHelper.ReadAttribute(
-            SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{bridge}/power/runtime_status")?.Trim() ?? "?";
+            SysfsHelper.HostPath($"/sys/bus/pci/devices/{bridge}/power/runtime_status"))?.Trim() ?? "?";
         Logger.WriteLine($"GPUModeControl: escalation - waking bridge {bridge} (runtime_status={status})");
         RunPciPower(bridge!, "on");
     }
@@ -353,7 +328,7 @@ internal static class DgpuPci
             Logger.WriteLine("GPUModeControl: escalation - bridge unknown, cannot reset");
             return;
         }
-        if (!Directory.Exists(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{bridge}"))
+        if (!Directory.Exists(SysfsHelper.HostPath($"/sys/bus/pci/devices/{bridge}")))
         {
             Logger.WriteLine($"GPUModeControl: escalation - bridge {bridge} not in device tree, rescan only");
             SysfsHelper.WriteAttribute("/sys/bus/pci/rescan", "1");
@@ -434,7 +409,7 @@ internal static class DgpuPci
         {
             try
             {
-                var devDir = new DirectoryInfo(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{bdf}");
+                var devDir = new DirectoryInfo(SysfsHelper.HostPath($"/sys/bus/pci/devices/{bdf}"));
                 string real = devDir.ResolveLinkTarget(true)?.FullName ?? devDir.FullName;
                 string parent = Path.GetFileName(Path.GetDirectoryName(real) ?? "");
                 // Parent must itself be a BDF (root port); the top-level
@@ -490,7 +465,7 @@ internal static class DgpuPci
         string? slot = AppConfig.GetString(DgpuSlotKey);
         if (string.IsNullOrEmpty(slot))
             return false;
-        string slotDir = SysfsHelper.TestPathPrefix + $"/sys/bus/pci/slots/{slot}";
+        string slotDir = SysfsHelper.HostPath($"/sys/bus/pci/slots/{slot}");
         if (!Directory.Exists(slotDir))
             return false;
         string? cachedBdf = AppConfig.GetString(DgpuBdfKey);
@@ -510,7 +485,7 @@ internal static class DgpuPci
     {
         try
         {
-            string slotsDir = SysfsHelper.TestPathPrefix + "/sys/bus/pci/slots";
+            string slotsDir = SysfsHelper.HostPath("/sys/bus/pci/slots");
             if (!Directory.Exists(slotsDir))
                 return null;
             foreach (var dir in Directory.GetDirectories(slotsDir))
@@ -543,7 +518,7 @@ internal static class DgpuPci
             Logger.WriteLine("GPUModeControl: dGPU PCIe slot unknown - cannot assert slot power (rescan only)");
             return;
         }
-        int cur = SysfsHelper.ReadInt(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/slots/{slot}/power", -1);
+        int cur = SysfsHelper.ReadInt(SysfsHelper.HostPath($"/sys/bus/pci/slots/{slot}/power"), -1);
         if (cur == 1)
             return;
         bool ok = RunSlotPower(slot!, "1");
@@ -556,7 +531,7 @@ internal static class DgpuPci
         string? slot = ResolveSlot();
         if (string.IsNullOrEmpty(slot))
             return;
-        int cur = SysfsHelper.ReadInt(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/slots/{slot}/power", -1);
+        int cur = SysfsHelper.ReadInt(SysfsHelper.HostPath($"/sys/bus/pci/slots/{slot}/power"), -1);
         if (cur == 0)
             return;
         bool ok = RunSlotPower(slot!, "0");
@@ -579,7 +554,7 @@ internal static class DgpuPci
             return new List<UnbindRecord>();
         string prefix = dgpuBdf.Substring(0, dotIx);
 
-        string root = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices/";
+        string root = SysfsHelper.HostPath("/sys/bus/pci/devices/");
         var results = new List<UnbindRecord>();
         if (!Directory.Exists(root))
             return results;
@@ -621,7 +596,7 @@ internal static class DgpuPci
         var results = new List<string>();
         int dotIx = dgpuBdf.LastIndexOf('.');
         string prefix = dotIx < 0 ? dgpuBdf : dgpuBdf.Substring(0, dotIx);
-        string root = SysfsHelper.TestPathPrefix + "/sys/bus/pci/devices/";
+        string root = SysfsHelper.HostPath("/sys/bus/pci/devices/");
         if (!Directory.Exists(root))
             return results;
         foreach (var dir in Directory.GetDirectories(root))
@@ -670,7 +645,7 @@ internal static class DgpuPci
             return;
         foreach (var node in Functions(bdf!))
         {
-            if (File.Exists(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{node}/power/control"))
+            if (File.Exists(SysfsHelper.HostPath($"/sys/bus/pci/devices/{node}/power/control")))
                 RunPciPower(node, "auto");
         }
 
@@ -678,7 +653,7 @@ internal static class DgpuPci
         // return it to the kernel default so the link can runtime-suspend again.
         string? bridge = ResolveBridge();
         if (!string.IsNullOrEmpty(bridge)
-            && File.Exists(SysfsHelper.TestPathPrefix + $"/sys/bus/pci/devices/{bridge}/power/control"))
+            && File.Exists(SysfsHelper.HostPath($"/sys/bus/pci/devices/{bridge}/power/control")))
             RunPciPower(bridge!, "auto");
     }
 

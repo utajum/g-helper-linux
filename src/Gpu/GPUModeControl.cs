@@ -346,7 +346,7 @@ public class GPUModeControl
     public void ReconcileBpfAuto() => _bpf.Reconcile();
 
     /// <summary>Cleanup when the user changes the GPU backend. See <see cref="BpfGpuBackend.OnBackendChanged"/>.</summary>
-    public void OnBackendChanged(string oldBackend, string newBackend) => _bpf.OnBackendChanged(oldBackend, newBackend);
+    public void OnBackendChanged(GpuBackendKind oldBackend, GpuBackendKind newBackend) => _bpf.OnBackendChanged(oldBackend, newBackend);
 
     /// <summary>True when the dGPU driver holds the hardware. See <see cref="DgpuDriver.IsActive"/>.</summary>
     public bool IsDgpuDriverActive() => DgpuDriver.IsActive();

@@ -11,7 +11,7 @@ public static class GpuBlockPolicy
 {
     /// <summary>Written by gpu-helper as root, world readable.</summary>
     public static readonly string PolicyPath =
-        SysfsHelper.TestPathPrefix + "/etc/ghelper/gpu-allowed-comms";
+        SysfsHelper.HostPath("/etc/ghelper/gpu-allowed-comms");
 
     /// <summary>Matches USER_COMMS_MAX in bpf_ops.c.</summary>
     public const int MaxEntries = 50;

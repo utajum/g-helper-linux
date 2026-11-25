@@ -395,7 +395,7 @@ public static class Vietnamese
         ["gpu_backend_mux_label"] = "Dùng chế độ MUX (firmware ASUS)",
         ["gpu_backend_mux_hint"] = "Tắt dGPU trong firmware ASUS (dgpu_disable) và cho phép chế độ Ultimate qua công tắc MUX. Một số lần đổi chế độ cần khởi động lại.",
         ["gpu_backend_pci_label"] = "Dùng tắt PCI dGPU",
-        ["gpu_backend_pci_hint"] = "Tắt dGPU thông qua danh sách đen modprobe cộng với quy tắc udev hot-remove. Dùng ở nơi eBPF không thể chạy. Mỗi thay đổi chế độ đều cần khởi động lại vì các quy tắc chỉ áp dụng vào lần khởi động tiếp theo.",
+        ["gpu_backend_pci_hint"] = "Tắt dGPU thông qua danh sách đen modprobe cộng với quy tắc udev hot-remove. Dùng ở nơi eBPF không thể chạy. Thay đổi chế độ áp dụng ngay khi có thể, nếu không thì vào lần khởi động tiếp theo.",
         ["gpu_backend_bpf_label"] = "Chặn dGPU bằng eBPF (mặc định)",
         ["gpu_backend_bpf_hint"] = "Ẩn dGPU khỏi các ứng dụng bằng bộ lọc eBPF trong kernel thay vì tháo trình điều khiển, nhờ đó card chuyển sang D3cold và việc chuyển lại diễn ra ngay lập tức mà không cần khởi động lại. Các ứng dụng đã dùng GPU sẽ giữ nó cho đến khi đóng, và G-Helper đề nghị đóng chúng. Cần kernel khởi động với bpf trong danh sách LSM; hãy thiết lập trong phần Cập nhật.",
         ["gpu_backend_bpf_optimized"] = "Bật chế độ Tối ưu",

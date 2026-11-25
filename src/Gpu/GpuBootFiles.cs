@@ -7,16 +7,15 @@ namespace GHelper.Linux.Gpu;
 internal static class GpuBootFiles
 {
     // install/tests/test-gpu-block-helper.sh parses these paths, HelperSearchPaths and the block contents.
-    private static string TestPathPrefix => SysfsHelper.TestPathPrefix;
 
     /// <summary>Path to modprobe.d file that blocks dGPU driver loading (NVIDIA + AMD).</summary>
-    internal static readonly string ModprobeBlockPath = TestPathPrefix + "/etc/modprobe.d/ghelper-gpu-block.conf";
+    internal static readonly string ModprobeBlockPath = SysfsHelper.HostPath("/etc/modprobe.d/ghelper-gpu-block.conf");
 
     /// <summary>Path to udev rule that removes dGPU PCI devices from the bus (NVIDIA + AMD).</summary>
-    internal static readonly string UdevRemovePath = TestPathPrefix + "/etc/udev/rules.d/50-ghelper-remove-dgpu.rules";
+    internal static readonly string UdevRemovePath = SysfsHelper.HostPath("/etc/udev/rules.d/50-ghelper-remove-dgpu.rules");
 
     /// <summary>Path to trigger file read by ghelper on startup.</summary>
-    internal static readonly string TriggerPath = TestPathPrefix + "/etc/ghelper/pending-gpu-mode";
+    internal static readonly string TriggerPath = SysfsHelper.HostPath("/etc/ghelper/pending-gpu-mode");
 
     /// <summary>
     /// Persistent Eco marker. Unlike TriggerPath (consumed after one boot),
@@ -24,13 +23,13 @@ internal static class GpuBootFiles
     /// absent, the boot script treats its content as the pending mode, making
     /// Eco survive reboots on firmware that forgets dgpu_disable.
     /// </summary>
-    internal static readonly string PersistentTriggerPath = TestPathPrefix + "/etc/ghelper/persistent-gpu-mode";
+    internal static readonly string PersistentTriggerPath = SysfsHelper.HostPath("/etc/ghelper/persistent-gpu-mode");
 
-    /// <summary>Path to backend selector file. Content "asus-wmi" or "pci".</summary>
-    internal static readonly string BackendPath = TestPathPrefix + "/etc/ghelper/backend";
+    /// <summary>Path to backend selector file. Content "asus-wmi", "pci" or "ebpf".</summary>
+    internal static readonly string BackendPath = SysfsHelper.HostPath("/etc/ghelper/backend");
 
     /// <summary>Boot recovery marker; the app shows it once, then clears it.</summary>
-    internal static readonly string RecoveryMarkerPath = TestPathPrefix + "/etc/ghelper/last-recovery";
+    internal static readonly string RecoveryMarkerPath = SysfsHelper.HostPath("/etc/ghelper/last-recovery");
 
     /// <summary>Our PCI-Eco block artifacts (modprobe blacklist + udev
     /// hot-remove rule). Their presence means a dGPU exists but is hidden.</summary>
@@ -92,7 +91,7 @@ internal static class GpuBootFiles
             // Pass the active backend through to the helper so it writes the
             // marker file the boot script reads. Default "asus-wmi" preserves
             // legacy behaviour for any caller that hasn't opted into PCI mode.
-            string backend = AppConfig.GetGpuBackend();
+            string backend = GpuBackendChoice.Name(AppConfig.GetGpuBackend());
 
             if (writeBlocks)
                 Logger.WriteLine($"GPUModeControl: writing driver block (modprobe + udev + trigger=eco, backend={backend})");
@@ -257,17 +256,18 @@ internal static class GpuBootFiles
     }
 
     /// <summary>Write the backend marker; skipped when it already matches, which saves a polkit prompt. True when the marker holds it.</summary>
-    internal static bool SetBackend(string backend)
+    internal static bool SetBackend(GpuBackendKind kind)
     {
+        string backend = GpuBackendChoice.Name(kind);
         try
         {
-            if (ReadBackend() == backend)
+            if (ReadBackend() == kind)
                 return true;
 
             if (SysfsHelper.IsTestMode)
             {
                 RunHelperInTestMode("set-backend", backend: backend);
-                return ReadBackend() == backend;
+                return ReadBackend() == kind;
             }
 
             string? helper = FindHelperScript();
@@ -287,7 +287,7 @@ internal static class GpuBootFiles
                 SysfsHelper.RunPkexecBash(
                     $"mkdir -p /etc/ghelper\necho {backend} > {BackendPath}\nchmod 644 {BackendPath}");
             }
-            return ReadBackend() == backend;
+            return ReadBackend() == kind;
         }
         catch (Exception ex)
         {
@@ -296,12 +296,12 @@ internal static class GpuBootFiles
         }
     }
 
-    /// <summary>Backend marker content the boot service will read, or "" when missing.</summary>
-    internal static string ReadBackend()
+    /// <summary>Backend marker the boot service will read; null when missing or unknown.</summary>
+    internal static GpuBackendKind? ReadBackend()
     {
         try
-        { return File.Exists(BackendPath) ? File.ReadAllText(BackendPath).Trim() : ""; }
-        catch { return ""; }
+        { return File.Exists(BackendPath) ? GpuBackendChoice.Parse(File.ReadAllText(BackendPath)) : null; }
+        catch { return null; }
     }
 
     /// <summary>Drop the boot recovery marker, through the root helper when unlink is denied.</summary>

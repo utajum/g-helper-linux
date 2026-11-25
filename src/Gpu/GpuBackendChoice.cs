@@ -3,91 +3,113 @@ using GHelper.Linux.Platform;
 
 namespace GHelper.Linux.Gpu;
 
+/// <summary>How ghelper switches the dGPU off. Config and marker store it as "asus-wmi", "pci" or "ebpf".</summary>
+public enum GpuBackendKind { AsusWmi, Pci, Ebpf }
+
 /// <summary>
-/// Which dGPU backend is in use ("asus-wmi", "pci" or "ebpf"). The boot service
-/// follows /etc/ghelper/backend, so the marker is always written before the config.
+/// Which dGPU backend is in use; the only writer of the gpu_backend config. The boot
+/// service follows /etc/ghelper/backend: a user pick writes that marker first, while
+/// the automatic defaults (first-start PCI, leaving eBPF) only follow it.
 /// </summary>
 internal static class GpuBackendChoice
 {
-    // Backend the first start picked by itself; null once the user owns the choice.
-    private static string? _autoPicked;
+    // Set while the app picked the backend, not the user: eBPF replaces it once it can run.
+    private const string AutoKey = "gpu_backend_auto";
 
-    /// <summary>First start: eBPF where it can run now, else PCI without ASUS firmware. Existing installs keep their backend.</summary>
+    /// <summary>Config and marker text of a backend.</summary>
+    internal static string Name(GpuBackendKind backend) => backend switch
+    {
+        GpuBackendKind.Pci => "pci",
+        GpuBackendKind.Ebpf => "ebpf",
+        _ => "asus-wmi",
+    };
+
+    /// <summary>Backend from config or marker text; null when empty or unknown.</summary>
+    internal static GpuBackendKind? Parse(string? text) => text?.Trim().ToLowerInvariant() switch
+    {
+        "asus-wmi" => GpuBackendKind.AsusWmi,
+        "pci" => GpuBackendKind.Pci,
+        "ebpf" => GpuBackendKind.Ebpf,
+        _ => null,
+    };
+
+    /// <summary>Startup: eBPF while the app owns the choice and it can run, else PCI without ASUS firmware. A user pick is kept.</summary>
     internal static void ResolveAtStartup(IHardwareControl? wmi, Func<bool> bpfAvailable)
     {
-        _autoPicked = null;
-        if (!string.IsNullOrWhiteSpace(AppConfig.GetString("gpu_backend")))
+        bool unset = string.IsNullOrWhiteSpace(AppConfig.GetString("gpu_backend"));
+        if (AppConfig.IsNewInstall && unset)
+            AppConfig.Set(AutoKey, 1);
+        if (AppConfig.Is(AutoKey) && TryBpf(wmi, bpfAvailable))
             return;
-        if (AppConfig.IsNewInstall && TryBpf(wmi, bpfAvailable))
-            return;
-        if (!AppConfig.HasAsusPlatformDevice())
+        if (unset && !AppConfig.HasAsusPlatformDevice())
         {
-            AppConfig.Set("gpu_backend", "pci");
+            AppConfig.Set("gpu_backend", Name(GpuBackendKind.Pci));
             Logger.WriteLine("GpuBackendChoice: no ASUS platform device - gpu_backend=pci");
         }
-        if (AppConfig.IsNewInstall)
-            _autoPicked = AppConfig.GetString("gpu_backend") ?? "";
     }
 
-    /// <summary>First start, after the system files prompt: try eBPF again unless the user picked a backend.</summary>
-    internal static bool RetryNewInstall(IHardwareControl? wmi, Func<bool> bpfAvailable)
+    /// <summary>Same start, after the system files prompt: try eBPF again while the app owns the choice.</summary>
+    internal static bool RetryAutoDefault(IHardwareControl? wmi, Func<bool> bpfAvailable, Action waitForSystemFiles)
     {
-        if (_autoPicked == null || (AppConfig.GetString("gpu_backend") ?? "") != _autoPicked)
+        if (!AppConfig.Is(AutoKey))
             return false;
-        _autoPicked = null;
+        waitForSystemFiles();
         return TryBpf(wmi, bpfAvailable);
     }
 
     /// <summary>Switch the backend: marker first, then config. False leaves both as they were.</summary>
-    internal static bool Select(string backend)
+    internal static bool Select(GpuBackendKind backend)
     {
-        if (backend is not ("asus-wmi" or "pci" or "ebpf"))
-        {
-            Logger.WriteLine($"GpuBackendChoice: rejected invalid backend '{backend}'");
-            return false;
-        }
         // The MUX latch is real firmware state, so a backend change keeps it.
         if (!GpuBootFiles.SetBackend(backend))
         {
-            Logger.WriteLine($"GpuBackendChoice: marker not saved, staying on {AppConfig.GetGpuBackend()}");
+            Logger.WriteLine($"GpuBackendChoice: marker not saved, staying on {Name(AppConfig.GetGpuBackend())}");
             return false;
         }
-        AppConfig.Set("gpu_backend", backend);
+        AppConfig.Set("gpu_backend", Name(backend));
+        AppConfig.Set(AutoKey, 0);
         AppConfig.Flush();
-        Logger.WriteLine($"GpuBackendChoice: gpu_backend={backend}");
+        Logger.WriteLine($"GpuBackendChoice: gpu_backend={Name(backend)}");
         return true;
     }
 
     /// <summary>eBPF cannot stay: the config takes the marker's other backend, else the fallback. Returns it.</summary>
-    internal static string LeaveBpf()
+    internal static GpuBackendKind LeaveBpf()
     {
-        string marker = GpuBootFiles.ReadBackend();
-        string backend = marker is "asus-wmi" or "pci" ? marker : Fallback();
-        AppConfig.Set("gpu_backend", backend);
-        Logger.WriteLine($"GpuBackendChoice: leaving ebpf, marker '{marker}' - gpu_backend={backend}");
+        GpuBackendKind? marker = GpuBootFiles.ReadBackend();
+        GpuBackendKind backend = marker is GpuBackendKind.AsusWmi or GpuBackendKind.Pci ? marker.Value : Fallback();
+        AppConfig.Set("gpu_backend", Name(backend));
+        Logger.WriteLine($"GpuBackendChoice: leaving ebpf - gpu_backend={Name(backend)}");
         return backend;
     }
 
-    // Backend when eBPF cannot run: MUX mode on ASUS, PCI elsewhere.
-    private static string Fallback() => AppConfig.HasAsusPlatformDevice() ? "asus-wmi" : "pci";
-
     /// <summary>No backend box ticked means eBPF, unless this kernel or build can never run it.</summary>
-    internal static string WhenUnticked()
-        => Block.GpuBlockCapability.IsHardBlock(Block.GpuBlockCapability.UnavailableKey()) ? Fallback() : "ebpf";
+    internal static GpuBackendKind WhenUnticked()
+        => Block.GpuBlockCapability.IsHardBlock(Block.GpuBlockCapability.UnavailableKey()) ? Fallback() : GpuBackendKind.Ebpf;
+
+    // Backend when eBPF cannot run: MUX mode on ASUS, PCI elsewhere.
+    private static GpuBackendKind Fallback() => AppConfig.HasAsusPlatformDevice() ? GpuBackendKind.AsusWmi : GpuBackendKind.Pci;
 
     private static bool TryBpf(IHardwareControl? wmi, Func<bool> bpfAvailable)
     {
         // Firmware Eco or Ultimate set by another OS needs the MUX backend to undo.
         if (wmi == null || wmi.GetGpuEco() || wmi.GetGpuMuxMode() == 0)
             return false;
+        // Switch only from Standard: Eco and Optimized state belongs to the current backend.
+        if (AppConfig.GetString("gpu_mode") is not (null or "" or "standard") || AppConfig.Is("gpu_auto"))
+            return false;
         // Some iGPU-only firmwares expose dgpu_disable; the filter needs a real dGPU.
         if (DgpuPci.Find() == null)
             return false;
-        if (GpuBootFiles.ReadBackend() is not ("" or "ebpf") || !bpfAvailable())
+        // A first start keeps a marker another install left; later the marker is our own pick's.
+        GpuBackendKind? marker = GpuBootFiles.ReadBackend();
+        bool markerOk = marker is null or GpuBackendKind.Ebpf
+            || (!AppConfig.IsNewInstall && marker == AppConfig.GetGpuBackend());
+        if (!markerOk || !bpfAvailable())
             return false;
-        if (!Select("ebpf"))
+        if (!Select(GpuBackendKind.Ebpf))
             return false;
-        Logger.WriteLine("GpuBackendChoice: new install - gpu_backend=ebpf");
+        Logger.WriteLine("GpuBackendChoice: automatic default - gpu_backend=ebpf");
         return true;
     }
 }

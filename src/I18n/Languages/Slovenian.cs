@@ -540,7 +540,7 @@ public static class Slovenian
         ["gpu_backend_mux_label"] = "Uporabi način MUX (vdelana programska oprema ASUS)",
         ["gpu_backend_mux_hint"] = "Izklopi dGPU v vdelani programski opremi ASUS (dgpu_disable) in omogoči način Ultimate prek stikala MUX. Nekatere menjave načina zahtevajo ponovni zagon.",
         ["gpu_backend_pci_label"] = "Uporabi onemogočanje dGPU prek PCI",
-        ["gpu_backend_pci_hint"] = "Onemogoči dGPU prek črnega seznama modprobe in pravila za vroče odstranjevanje udev. Uporabite ga tam, kjer eBPF ne more delovati. Vsaka sprememba načina zahteva vnovični zagon, ker se pravila uporabijo šele ob naslednjem zagonu.",
+        ["gpu_backend_pci_hint"] = "Onemogoči dGPU prek črnega seznama modprobe in pravila za vroče odstranjevanje udev. Uporabite ga tam, kjer eBPF ne more delovati. Spremembe načina veljajo takoj, ko je mogoče, sicer ob naslednjem zagonu.",
         ["gpu_backend_bpf_label"] = "eBPF blokiranje dGPU (privzeto)",
         ["gpu_backend_bpf_hint"] = "Skrije dGPU pred aplikacijami z eBPF filtrom v jedru namesto odstranitve gonilnika, tako da kartica preide v D3cold, preklop nazaj pa je takojšen brez ponovnega zagona. Aplikacije, ki GPU že uporabljajo, jo držijo, dokler se ne zaprejo, G-Helper pa ponudi, da jih zapre. Zahteva jedro, zagnano z bpf na seznamu LSM; nastavite to v Posodobitvah.",
         ["gpu_backend_bpf_optimized"] = "Omogoči način Optimiziran",

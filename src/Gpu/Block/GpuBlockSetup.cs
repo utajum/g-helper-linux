@@ -7,7 +7,7 @@ public static class GpuBlockSetup
 {
     /// <summary>Written by lsm-enable; lsm-disable reverts only what it records.</summary>
     public static readonly string LsmStatePath =
-        SysfsHelper.TestPathPrefix + "/etc/ghelper/lsm-enable.state";
+        SysfsHelper.HostPath("/etc/ghelper/lsm-enable.state");
 
     public enum RowState { Ok, Missing, NotApplicable, Unknown }
 
