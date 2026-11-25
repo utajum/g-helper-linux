@@ -116,10 +116,10 @@ internal static class Lithuanian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Kiekvieno paleidimo metu vėl nustato Eco. Kai kuri programinė aparatinė įranga po paleidimo iš naujo pamiršta Eco nustatymą.",
         ["ExtraWindow.checkDgpuMonitor"] = "Nuskaito dGPU temperatūrą pagrindiniam langui ir dėklui. Išjunkite, kad dGPU galėtų užmigti (RTD3), nes nuskaitymas jį pažadina.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Išjungia dGPU branduolio įrankiais vietoj ASUS programinės aparatinės įrangos: tvarkyklės blokavimo sąrašas ir udev taisyklė, kuri pašalina plokštę. Reikalinga nešiojamiesiems kompiuteriams be ASUS programinės aparatinės įrangos.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Paslepia dGPU nuo programų branduolio eBPF filtru. Plokštė gali miegoti D3cold būsenoje ir grįžta iš karto, be paleidimo iš naujo. Programos, kurios jau naudoja dGPU, jį išlaiko, kol užsidaro.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Išjungia dGPU branduolio įrankiais: tvarkyklės blokavimo sąrašas ir udev taisyklė, kuri pašalina plokštę. Naudokite ten, kur eBPF negali veikti.",
         ["ExtraWindow.checkBpfOptimized"] = "Prideda režimo Optimizuotas mygtuką: Eco su baterija, Standartinis su tinklo maitinimu.",
         ["ExtraWindow.buttonGpuApps"] = "Atidaro sąrašą programų, kurios vis dar gali naudoti dGPU, kol eBPF blokavimas jį slepia.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Išjungia dGPU ASUS programinėje aparatinėje įrangoje vietoj eBPF. Nešiojamuosiuose kompiuteriuose su MUX jungikliu taip pat parodo mygtuką Ultimate. Kai kuriems režimo keitimams reikia paleisti iš naujo.",
         ["ExtraWindow.checkRawWmi"] = "Bendrauja su ASUS programine aparatine įranga tiesiogiai per debugfs. Tik senesnei Vivobook ir Zenbook programinei aparatinei įrangai be dgpu_disable. Paleidžia programą iš naujo.",
         ["ExtraWindow.comboApuMem"] = "Integruotam GPU rezervuota atmintis (UMA buferis). Daugiau atminties padeda žaidimams, mažiau palieka daugiau RAM programoms. Reikia paleisti iš naujo.",
         ["ExtraWindow.checkXGMLights"] = "Įjungia arba išjungia XG Mobile stotelės šviesas.",

@@ -116,10 +116,10 @@ internal static class French
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Remet Éco à chaque démarrage. Certains firmwares oublient le réglage Éco après un redémarrage.",
         ["ExtraWindow.checkDgpuMonitor"] = "Lit la température du dGPU pour la fenêtre principale et la barre système. Désactivez pour laisser le dGPU dormir (RTD3), car la lecture le réveille.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Éteint le dGPU avec les outils du noyau au lieu du firmware ASUS : une liste de blocage du pilote plus une règle udev qui retire la carte. Nécessaire sur les portables sans firmware ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Cache le dGPU aux applications avec un filtre eBPF du noyau. La carte peut dormir en D3cold et revient tout de suite, sans redémarrage. Les applications qui utilisent déjà le dGPU le gardent jusqu'à leur fermeture.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Éteint le dGPU avec les outils du noyau : une liste de blocage du pilote plus une règle udev qui retire la carte. À utiliser là où eBPF ne peut pas fonctionner.",
         ["ExtraWindow.checkBpfOptimized"] = "Ajoute le bouton du mode Optimisé : Éco sur batterie, Standard sur secteur.",
         ["ExtraWindow.buttonGpuApps"] = "Ouvre la liste des applications qui peuvent encore utiliser le dGPU quand le blocage eBPF le cache.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Éteint le dGPU dans le firmware ASUS au lieu d'eBPF. Sur les portables avec commutateur MUX, affiche aussi le bouton Ultime. Certains changements de mode nécessitent un redémarrage.",
         ["ExtraWindow.checkRawWmi"] = "Parle directement au firmware ASUS via debugfs. Seulement pour les anciens firmwares Vivobook et Zenbook sans dgpu_disable. Redémarre l'application.",
         ["ExtraWindow.comboApuMem"] = "Mémoire réservée au GPU intégré (tampon UMA). Plus de mémoire aide les jeux, moins laisse plus de RAM aux applications. Demande un redémarrage.",
         ["ExtraWindow.checkXGMLights"] = "Allume ou éteint les lumières du dock XG Mobile.",

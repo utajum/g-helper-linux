@@ -116,10 +116,10 @@ internal static class German
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Setzt Öko bei jedem Start erneut. Manche Firmware vergisst die Öko-Einstellung nach einem Neustart.",
         ["ExtraWindow.checkDgpuMonitor"] = "Liest die dGPU-Temperatur für Hauptfenster und Tray. Ausschalten lässt die dGPU schlafen (RTD3), weil das Lesen sie aufweckt.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Schaltet die dGPU mit Kernel-Werkzeugen statt mit der ASUS-Firmware aus: eine Treiber-Sperrliste plus eine udev-Regel, die die Karte entfernt. Nötig auf Laptops ohne ASUS-Firmware.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Versteckt die dGPU mit einem eBPF-Filter im Kernel vor Apps. Die Karte kann in D3cold schlafen und ist sofort zurück, ohne Neustart. Apps, die die dGPU schon nutzen, behalten sie, bis sie schließen.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Schaltet die dGPU mit Kernel-Werkzeugen aus: eine Treiber-Sperrliste plus eine udev-Regel, die die Karte entfernt. Nötig, wo eBPF nicht laufen kann.",
         ["ExtraWindow.checkBpfOptimized"] = "Fügt die Taste für den Modus Optimiert hinzu: Öko im Akkubetrieb, Standard am Netzteil.",
         ["ExtraWindow.buttonGpuApps"] = "Öffnet die Liste der Apps, die die dGPU weiter nutzen dürfen, während die eBPF-Sperre sie versteckt.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Schaltet die dGPU in der ASUS-Firmware statt mit eBPF ab. Auf Laptops mit MUX-Schalter zeigt es auch die Taste Ultimativ. Manche Moduswechsel brauchen einen Neustart.",
         ["ExtraWindow.checkRawWmi"] = "Spricht direkt über debugfs mit der ASUS-Firmware. Nur für ältere Vivobook- und Zenbook-Firmware ohne dgpu_disable. Startet die App neu.",
         ["ExtraWindow.comboApuMem"] = "Speicher, der für die integrierte GPU reserviert ist (UMA-Puffer). Mehr hilft Spielen, weniger lässt Apps mehr RAM. Erfordert einen Neustart.",
         ["ExtraWindow.checkXGMLights"] = "Schaltet die Lichter des XG-Mobile-Docks ein oder aus.",

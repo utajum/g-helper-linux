@@ -117,10 +117,10 @@ internal static class English
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Sets Eco again at every start. Some firmware forgets the Eco setting after a reboot.",
         ["ExtraWindow.checkDgpuMonitor"] = "Reads the dGPU temperature for the main window and tray. Turn off to let the dGPU sleep (RTD3), because reading wakes it up.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Turns the dGPU off with kernel tools instead of the ASUS firmware: a driver block list plus a udev rule that removes the card. Needed on laptops without ASUS firmware.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Hides the dGPU from apps with a kernel eBPF filter. The card can sleep in D3cold and comes back at once, with no reboot. Apps that already use the dGPU keep it until they close.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Turns the dGPU off with kernel tools: a driver block list plus a udev rule that removes the card. Use it where eBPF cannot run.",
         ["ExtraWindow.checkBpfOptimized"] = "Adds the Optimized mode button: Eco on battery, Standard on AC power.",
         ["ExtraWindow.buttonGpuApps"] = "Opens the list of apps that can still use the dGPU while it is hidden by the eBPF block.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Turns the dGPU off in the ASUS firmware instead of eBPF. On laptops with a MUX switch it also shows the Ultimate button. Some mode changes need a reboot.",
         ["ExtraWindow.checkRawWmi"] = "Talks to the ASUS firmware through debugfs directly. Only for older Vivobook and Zenbook firmware without dgpu_disable. Restarts the app.",
         ["ExtraWindow.comboApuMem"] = "Memory reserved for the integrated GPU (UMA buffer). More memory helps games, less leaves more RAM for apps. Needs a reboot.",
         ["ExtraWindow.checkXGMLights"] = "Turns the XG Mobile dock lights on or off.",

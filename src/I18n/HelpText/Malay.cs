@@ -116,10 +116,10 @@ internal static class Malay
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Menetapkan Eco semula pada setiap permulaan. Sesetengah perisian tegar melupakan tetapan Eco selepas but semula.",
         ["ExtraWindow.checkDgpuMonitor"] = "Membaca suhu dGPU untuk tetingkap utama dan dulang. Matikan supaya dGPU boleh tidur (RTD3), kerana bacaan membangunkannya.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Mematikan dGPU dengan alat kernel dan bukan perisian tegar ASUS: senarai sekatan pemacu serta peraturan udev yang mengeluarkan kad. Diperlukan pada komputer riba tanpa perisian tegar ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Menyembunyikan dGPU daripada aplikasi dengan penapis eBPF kernel. Kad boleh tidur dalam D3cold dan kembali serta-merta, tanpa but semula. Aplikasi yang sudah menggunakan dGPU mengekalkannya sehingga ditutup.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Mematikan dGPU dengan alat kernel: senarai sekatan pemacu serta peraturan udev yang mengeluarkan kad. Gunakannya di mana eBPF tidak dapat berjalan.",
         ["ExtraWindow.checkBpfOptimized"] = "Menambah butang mod Dioptimumkan: Eco semasa bateri, Standard semasa kuasa AC.",
         ["ExtraWindow.buttonGpuApps"] = "Membuka senarai aplikasi yang masih boleh menggunakan dGPU semasa ia disembunyikan oleh sekatan eBPF.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Mematikan dGPU dalam perisian tegar ASUS dan bukan dengan eBPF. Pada komputer riba dengan suis MUX, ia juga memaparkan butang Ultimate. Sesetengah pertukaran mod perlu but semula.",
         ["ExtraWindow.checkRawWmi"] = "Berhubung terus dengan perisian tegar ASUS melalui debugfs. Hanya untuk perisian tegar Vivobook dan Zenbook lama tanpa dgpu_disable. Memulakan semula aplikasi.",
         ["ExtraWindow.comboApuMem"] = "Memori yang dikhaskan untuk GPU bersepadu (penimbal UMA). Lebih banyak membantu permainan, kurang meninggalkan lebih banyak RAM untuk aplikasi. Perlu but semula.",
         ["ExtraWindow.checkXGMLights"] = "Menghidupkan atau mematikan lampu dok XG Mobile.",

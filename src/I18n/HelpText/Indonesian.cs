@@ -116,10 +116,10 @@ internal static class Indonesian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Mengatur Hemat lagi setiap startup. Beberapa firmware lupa pengaturan Hemat setelah reboot.",
         ["ExtraWindow.checkDgpuMonitor"] = "Membaca suhu dGPU untuk jendela utama dan tray. Matikan agar dGPU bisa tidur (RTD3), karena pembacaan membangunkannya.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Mematikan dGPU dengan alat kernel, bukan firmware ASUS: daftar blokir driver dan aturan udev yang melepas kartu. Diperlukan di laptop tanpa firmware ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Menyembunyikan dGPU dari aplikasi dengan filter eBPF kernel. Kartu bisa tidur di D3cold dan langsung kembali, tanpa reboot. Aplikasi yang sudah memakai dGPU tetap memakainya sampai ditutup.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Mematikan dGPU dengan alat kernel: daftar blokir driver dan aturan udev yang melepas kartu. Gunakan jika eBPF tidak dapat berjalan.",
         ["ExtraWindow.checkBpfOptimized"] = "Menambahkan tombol mode Dioptimalkan: Hemat saat baterai, Standar saat tersambung listrik.",
         ["ExtraWindow.buttonGpuApps"] = "Membuka daftar aplikasi yang masih bisa memakai dGPU saat disembunyikan oleh blokir eBPF.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Mematikan dGPU di firmware ASUS, bukan dengan eBPF. Di laptop dengan sakelar MUX, juga menampilkan tombol Maksimal. Beberapa pergantian mode perlu reboot.",
         ["ExtraWindow.checkRawWmi"] = "Berkomunikasi langsung dengan firmware ASUS lewat debugfs. Hanya untuk firmware Vivobook dan Zenbook lama tanpa dgpu_disable. Memulai ulang aplikasi.",
         ["ExtraWindow.comboApuMem"] = "Memori yang dicadangkan untuk GPU terintegrasi (buffer UMA). Lebih banyak membantu game, lebih sedikit menyisakan RAM lebih banyak untuk aplikasi. Perlu reboot.",
         ["ExtraWindow.checkXGMLights"] = "Menyalakan atau mematikan lampu dok XG Mobile.",

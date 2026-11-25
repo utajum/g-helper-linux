@@ -116,10 +116,10 @@ internal static class ChineseSimplified
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "每次启动时重新设置节能。部分固件在重启后会忘记节能设置。",
         ["ExtraWindow.checkDgpuMonitor"] = "为主窗口和托盘读取 dGPU 温度。读取会唤醒 dGPU，因此要让 dGPU 睡眠（RTD3）请关闭此项。",
-        ["ExtraWindow.checkPciGpuBackend"] = "用内核工具而不是 ASUS 固件关闭 dGPU：驱动黑名单加上一条移除显卡的 udev 规则。没有 ASUS 固件的笔记本需要此项。",
-        ["ExtraWindow.checkBpfGpuBackend"] = "用内核 eBPF 过滤器对应用隐藏 dGPU。显卡可以在 D3cold 中睡眠，并能立即恢复，无需重启。已在使用 dGPU 的应用会一直占用它，直到关闭。",
+        ["ExtraWindow.checkPciGpuBackend"] = "用内核工具关闭 dGPU：驱动黑名单加上一条移除显卡的 udev 规则。在无法运行 eBPF 的设备上使用。",
         ["ExtraWindow.checkBpfOptimized"] = "添加优化模式按钮：电池供电时为节能，接通电源时为标准。",
         ["ExtraWindow.buttonGpuApps"] = "打开在 eBPF 屏蔽隐藏 dGPU 期间仍可使用 dGPU 的应用列表。",
+        ["ExtraWindow.checkMuxGpuBackend"] = "用 ASUS 固件而不是 eBPF 关闭 dGPU。在带 MUX 开关的笔记本上还会显示极致按钮。部分模式切换需要重启。",
         ["ExtraWindow.checkRawWmi"] = "通过 debugfs 直接与 ASUS 固件通信。仅适用于没有 dgpu_disable 的旧款 Vivobook 和 Zenbook 固件。会重启应用。",
         ["ExtraWindow.comboApuMem"] = "为集成 GPU 保留的内存（UMA 缓冲区）。更多内存有利于游戏，更少则给应用留下更多 RAM。需要重启。",
         ["ExtraWindow.checkXGMLights"] = "打开或关闭 XG Mobile 扩展坞的灯光。",

@@ -116,10 +116,10 @@ internal static class Japanese
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "毎回の起動時にエコを再設定します。再起動後にエコの設定を忘れるファームウェアがあります。",
         ["ExtraWindow.checkDgpuMonitor"] = "メインウィンドウとトレイ用に dGPU の温度を読み取ります。読み取ると dGPU が起きるので、dGPU をスリープ (RTD3) させたい場合はオフにします。",
-        ["ExtraWindow.checkPciGpuBackend"] = "ASUS ファームウェアの代わりにカーネルの仕組みで dGPU をオフにします: ドライバーのブロックリストと、カードを取り外す udev ルールです。ASUS ファームウェアのないノート PC で必要です。",
-        ["ExtraWindow.checkBpfGpuBackend"] = "カーネルの eBPF フィルターで dGPU をアプリから隠します。カードは D3cold でスリープでき、再起動なしですぐ戻ります。すでに dGPU を使っているアプリは、終了するまで使い続けます。",
+        ["ExtraWindow.checkPciGpuBackend"] = "カーネルの仕組みで dGPU をオフにします: ドライバーのブロックリストと、カードを取り外す udev ルールです。eBPF が動作しない環境で使用します。",
         ["ExtraWindow.checkBpfOptimized"] = "最適化モードのボタンを追加します: バッテリーではエコ、AC 電源では標準。",
         ["ExtraWindow.buttonGpuApps"] = "eBPF ブロックで dGPU が隠れている間も dGPU を使えるアプリの一覧を開きます。",
+        ["ExtraWindow.checkMuxGpuBackend"] = "eBPF の代わりに ASUS ファームウェアで dGPU をオフにします。MUX スイッチのあるノート PC では最高ボタンも表示します。一部のモード変更には再起動が必要です。",
         ["ExtraWindow.checkRawWmi"] = "debugfs を通して ASUS ファームウェアと直接通信します。dgpu_disable のない古い Vivobook と Zenbook のファームウェア専用です。アプリを再起動します。",
         ["ExtraWindow.comboApuMem"] = "内蔵 GPU 用に予約するメモリ (UMA バッファー)。多いとゲームに有利、少ないとアプリ用の RAM が増えます。再起動が必要です。",
         ["ExtraWindow.checkXGMLights"] = "XG Mobile ドックのライトをオンまたはオフにします。",

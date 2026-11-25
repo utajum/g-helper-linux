@@ -116,10 +116,10 @@ internal static class Hungarian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Minden indításkor újra beállítja az Öko módot. Egyes firmware-ek újraindítás után elfelejtik az Öko beállítást.",
         ["ExtraWindow.checkDgpuMonitor"] = "Kiolvassa a dGPU hőmérsékletét a főablakhoz és a tálcához. Kapcsold ki, hogy a dGPU aludhasson (RTD3), mert a kiolvasás felébreszti.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Az ASUS firmware helyett kerneleszközökkel kapcsolja ki a dGPU-t: illesztőprogram-tiltólistával és egy udev szabállyal, amely eltávolítja a kártyát. ASUS firmware nélküli laptopokon szükséges.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Kernel eBPF szűrővel elrejti a dGPU-t az alkalmazások elől. A kártya D3cold állapotban alhat, és azonnal visszatér, újraindítás nélkül. A dGPU-t már használó alkalmazások bezárásukig megtartják.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Kerneleszközökkel kapcsolja ki a dGPU-t: illesztőprogram-tiltólistával és egy udev szabállyal, amely eltávolítja a kártyát. Ott használja, ahol az eBPF nem futhat.",
         ["ExtraWindow.checkBpfOptimized"] = "Hozzáadja az Optimalizált mód gombját: Öko akkuról, Standard hálózatról.",
         ["ExtraWindow.buttonGpuApps"] = "Megnyitja azoknak az alkalmazásoknak a listáját, amelyek továbbra is használhatják a dGPU-t, amíg az eBPF tiltás elrejti.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Az eBPF helyett az ASUS firmware-ben kapcsolja ki a dGPU-t. MUX kapcsolós laptopokon az Extrém gombot is megjeleníti. Egyes módváltásokhoz újraindítás kell.",
         ["ExtraWindow.checkRawWmi"] = "Közvetlenül a debugfs-en át kommunikál az ASUS firmware-rel. Csak régebbi, dgpu_disable nélküli Vivobook és Zenbook firmware-hez. Újraindítja az alkalmazást.",
         ["ExtraWindow.comboApuMem"] = "Az integrált GPU számára fenntartott memória (UMA puffer). Több memória segít a játékoknak, kevesebb több RAM-ot hagy az alkalmazásoknak. Újraindítás szükséges.",
         ["ExtraWindow.checkXGMLights"] = "Be- vagy kikapcsolja az XG Mobile dokkoló fényeit.",

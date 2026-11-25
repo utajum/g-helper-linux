@@ -116,10 +116,10 @@ internal static class Romanian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Setează Eco din nou la fiecare pornire. Unele firmware-uri uită setarea Eco după repornire.",
         ["ExtraWindow.checkDgpuMonitor"] = "Citește temperatura dGPU pentru fereastra principală și zona de notificare. Oprește pentru a lăsa dGPU-ul să doarmă (RTD3), pentru că citirea îl trezește.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Oprește dGPU-ul cu unelte ale nucleului în loc de firmware-ul ASUS: o listă de blocare a driverului plus o regulă udev care scoate placa. Necesar pe laptopuri fără firmware ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Ascunde dGPU-ul de aplicații cu un filtru eBPF în nucleu. Placa poate dormi în D3cold și revine imediat, fără repornire. Aplicațiile care folosesc deja dGPU-ul îl păstrează până se închid.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Oprește dGPU-ul cu unelte ale nucleului: o listă de blocare a driverului plus o regulă udev care scoate placa. Folosiți-l acolo unde eBPF nu poate rula.",
         ["ExtraWindow.checkBpfOptimized"] = "Adaugă butonul modului Optimizat: Eco pe baterie, Standard la priză.",
         ["ExtraWindow.buttonGpuApps"] = "Deschide lista aplicațiilor care pot folosi în continuare dGPU-ul cât blocarea eBPF îl ascunde.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Oprește dGPU-ul în firmware-ul ASUS în loc de eBPF. Pe laptopurile cu comutator MUX afișează și butonul Maxim. Unele schimbări de mod necesită repornire.",
         ["ExtraWindow.checkRawWmi"] = "Vorbește direct cu firmware-ul ASUS prin debugfs. Doar pentru firmware Vivobook și Zenbook mai vechi fără dgpu_disable. Repornește aplicația.",
         ["ExtraWindow.comboApuMem"] = "Memorie rezervată pentru GPU-ul integrat (buffer UMA). Mai multă memorie ajută jocurile, mai puțină lasă mai multă RAM aplicațiilor. Necesită repornire.",
         ["ExtraWindow.checkXGMLights"] = "Pornește sau oprește luminile stației XG Mobile.",

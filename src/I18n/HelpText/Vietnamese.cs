@@ -116,10 +116,10 @@ internal static class Vietnamese
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Đặt lại Tiết kiệm mỗi lần khởi động. Một số firmware quên cài đặt Tiết kiệm sau khi khởi động lại.",
         ["ExtraWindow.checkDgpuMonitor"] = "Đọc nhiệt độ dGPU cho cửa sổ chính và khay. Tắt để dGPU có thể ngủ (RTD3), vì việc đọc sẽ đánh thức nó.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Tắt dGPU bằng công cụ của kernel thay vì firmware ASUS: danh sách chặn trình điều khiển cùng một quy tắc udev gỡ card ra. Cần cho laptop không có firmware ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Ẩn dGPU khỏi ứng dụng bằng bộ lọc eBPF của kernel. Card có thể ngủ ở D3cold và quay lại ngay, không cần khởi động lại. Ứng dụng đang dùng dGPU sẽ giữ nó cho đến khi đóng.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Tắt dGPU bằng công cụ của kernel: danh sách chặn trình điều khiển cùng một quy tắc udev gỡ card ra. Dùng ở nơi eBPF không thể chạy.",
         ["ExtraWindow.checkBpfOptimized"] = "Thêm nút chế độ Tối ưu: Tiết kiệm khi dùng pin, Tiêu chuẩn khi cắm điện.",
         ["ExtraWindow.buttonGpuApps"] = "Mở danh sách ứng dụng vẫn có thể dùng dGPU khi nó bị ẩn bởi chặn eBPF.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Tắt dGPU trong firmware ASUS thay vì eBPF. Trên laptop có công tắc MUX, cũng hiện nút Tối đa. Một số lần đổi chế độ cần khởi động lại.",
         ["ExtraWindow.checkRawWmi"] = "Giao tiếp trực tiếp với firmware ASUS qua debugfs. Chỉ dành cho firmware Vivobook và Zenbook cũ không có dgpu_disable. Khởi động lại ứng dụng.",
         ["ExtraWindow.comboApuMem"] = "Bộ nhớ dành riêng cho GPU tích hợp (bộ đệm UMA). Nhiều hơn giúp trò chơi, ít hơn để lại nhiều RAM hơn cho ứng dụng. Cần khởi động lại.",
         ["ExtraWindow.checkXGMLights"] = "Bật hoặc tắt đèn của đế XG Mobile.",

@@ -116,10 +116,10 @@ internal static class Filipino
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Itinatakda ulit ang Eco sa bawat pagbukas. May firmware na nakakalimot sa Eco setting pagkatapos ng reboot.",
         ["ExtraWindow.checkDgpuMonitor"] = "Binabasa ang temperatura ng dGPU para sa main window at tray. I-off para makatulog ang dGPU (RTD3), dahil ginigising ito ng pagbasa.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Pinapatay ang dGPU gamit ang kernel tools sa halip na ASUS firmware: driver block list at udev rule na nag-aalis ng card. Kailangan sa mga laptop na walang ASUS firmware.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Itinatago ang dGPU sa mga app gamit ang kernel eBPF filter. Makakatulog ang card sa D3cold at agad bumabalik, walang reboot. Ang mga app na gumagamit na ng dGPU ay patuloy itong hawak hanggang magsara sila.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Pinapatay ang dGPU gamit ang kernel tools: driver block list at udev rule na nag-aalis ng card. Gamitin ito kung saan hindi gumagana ang eBPF.",
         ["ExtraWindow.checkBpfOptimized"] = "Idinadagdag ang button ng Optimized na mode: Eco sa baterya, Standard kapag naka-saksak.",
         ["ExtraWindow.buttonGpuApps"] = "Binubuksan ang listahan ng mga app na puwede pang gumamit ng dGPU habang nakatago ito dahil sa eBPF block.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Pinapatay ang dGPU sa ASUS firmware sa halip na eBPF. Sa mga laptop na may MUX switch, ipinapakita rin ang button na Ultimate. Kailangan ng reboot sa ilang pagpapalit ng mode.",
         ["ExtraWindow.checkRawWmi"] = "Direktang nakikipag-usap sa ASUS firmware sa pamamagitan ng debugfs. Para lang sa lumang Vivobook at Zenbook firmware na walang dgpu_disable. Nire-restart ang app.",
         ["ExtraWindow.comboApuMem"] = "Memory na nakalaan para sa integrated GPU (UMA buffer). Mas marami ay nakakatulong sa laro, mas kaunti ay nag-iiwan ng mas maraming RAM para sa mga app. Kailangan ng reboot.",
         ["ExtraWindow.checkXGMLights"] = "Ino-on o ino-off ang mga ilaw ng XG Mobile dock.",
