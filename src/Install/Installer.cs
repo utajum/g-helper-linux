@@ -1650,6 +1650,7 @@ public static partial class Installer
         // settings checkbox, so either entry point suppresses the startup popup.
         var dontShowAgain = new CheckBox
         {
+            Name = "checkSysfilesDontShow",
             Content = Labels.Get("sysfiles_popup_dont_show_again"),
             FontSize = 12,
             Foreground = new SolidColorBrush(Color.Parse("#CCCCCC")),
@@ -1663,6 +1664,7 @@ public static partial class Installer
 
         var btnConfirm = new Button
         {
+            Name = "buttonSysfilesConfirm",
             Content = Labels.Get("sysfiles_popup_confirm"),
             Classes = { "ghelper" },
             MinWidth = 140,
@@ -1671,6 +1673,7 @@ public static partial class Installer
         };
         var btnCancel = new Button
         {
+            Name = "buttonSysfilesCancel",
             Content = Labels.Get("sysfiles_popup_cancel"),
             MinWidth = 110,
             Padding = new Thickness(14, 8),
@@ -1750,6 +1753,7 @@ public static partial class Installer
     {
         var copy = new Button
         {
+            Name = "buttonSysfilesCopy",
             Content = Labels.Get("sysinfo_copy"),
             Classes = { "ghelper" },
             FontSize = 11,
@@ -1899,6 +1903,7 @@ public static partial class Installer
         {
             var diff = new Button
             {
+                Name = "buttonSysfilesDiff",
                 Content = Labels.Get("sysfiles_diff"),
                 Classes = { "ghelper" },
                 FontSize = 11,
@@ -1926,6 +1931,7 @@ public static partial class Installer
         {
             var repair = new Button
             {
+                Name = "buttonSysfilesRepair",
                 Content = Labels.Get("sysfiles_repair"),
                 Classes = { "ghelper" },
                 FontSize = 11,
@@ -1954,6 +1960,7 @@ public static partial class Installer
         {
             var remove = new Button
             {
+                Name = "buttonSysfilesRemove",
                 Content = Labels.Get("sysfiles_remove"),
                 Classes = { "ghelper" },
                 FontSize = 11,

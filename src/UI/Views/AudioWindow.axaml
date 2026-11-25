@@ -101,7 +101,7 @@
                         <CheckBox x:Name="checkRnn"
                                   IsCheckedChanged="CheckRnn_Changed"
                                   Content="Denoise" FontWeight="SemiBold" />
-                        <Button Classes="tile-body" Click="ButtonRnnOpen_Click">
+                        <Button x:Name="buttonRnnOpen" Classes="tile-body" Click="ButtonRnnOpen_Click">
                             <StackPanel Spacing="2" HorizontalAlignment="Center">
                                 <ctrl:Icon IconName="brain" Width="28" Height="28"
                                            HorizontalAlignment="Center" />
@@ -122,7 +122,7 @@
                         <CheckBox x:Name="checkVocoder"
                                   IsCheckedChanged="CheckVocoder_Changed"
                                   Content="Vocoder" FontWeight="SemiBold" />
-                        <Button Classes="tile-body" Click="ButtonVocoderOpen_Click">
+                        <Button x:Name="buttonVocoderOpen" Classes="tile-body" Click="ButtonVocoderOpen_Click">
                             <StackPanel Spacing="2" HorizontalAlignment="Center">
                                 <ctrl:Icon IconName="robot" Width="28" Height="28"
                                            HorizontalAlignment="Center" />
@@ -143,7 +143,7 @@
                         <CheckBox x:Name="checkEq"
                                   IsCheckedChanged="CheckEq_Changed"
                                   Content="EQ" FontWeight="SemiBold" />
-                        <Button Classes="tile-body" Click="ButtonEqOpen_Click">
+                        <Button x:Name="buttonEqOpen" Classes="tile-body" Click="ButtonEqOpen_Click">
                             <StackPanel Spacing="2" HorizontalAlignment="Center">
                                 <ctrl:Icon IconName="equalizer" Width="28" Height="28"
                                            HorizontalAlignment="Center" />
@@ -164,7 +164,7 @@
                         <CheckBox x:Name="checkDelay"
                                   IsCheckedChanged="CheckDelay_Changed"
                                   Content="Delay" FontWeight="SemiBold" />
-                        <Button Classes="tile-body" Click="ButtonDelayOpen_Click">
+                        <Button x:Name="buttonDelayOpen" Classes="tile-body" Click="ButtonDelayOpen_Click">
                             <StackPanel Spacing="2" HorizontalAlignment="Center">
                                 <ctrl:Icon IconName="delay" Width="28" Height="28"
                                            HorizontalAlignment="Center" />
@@ -185,7 +185,7 @@
                         <CheckBox x:Name="checkReverb"
                                   IsCheckedChanged="CheckReverb_Changed"
                                   Content="Reverb" FontWeight="SemiBold" />
-                        <Button Classes="tile-body" Click="ButtonReverbOpen_Click">
+                        <Button x:Name="buttonReverbOpen" Classes="tile-body" Click="ButtonReverbOpen_Click">
                             <StackPanel Spacing="2" HorizontalAlignment="Center">
                                 <ctrl:Icon IconName="wave" Width="28" Height="28"
                                            HorizontalAlignment="Center" />

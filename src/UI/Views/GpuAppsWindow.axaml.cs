@@ -172,6 +172,7 @@ public partial class GpuAppsWindow : Window
 
         var action = new Button
         {
+            Name = "buttonGpuAppToggle",
             Content = new TextBlock
             {
                 Text = Labels.Get(row.Allowed ? "gpu_apps_remove" : "gpu_apps_allow"),

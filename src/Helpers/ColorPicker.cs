@@ -54,9 +54,9 @@ public static class ColorPicker
             HorizontalAlignment = HorizontalAlignment.Center,
         };
 
-        var sliderR = new Slider { Minimum = 0, Maximum = 255, Value = initR, Foreground = new SolidColorBrush(Color.FromRgb(255, 80, 80)) };
-        var sliderG = new Slider { Minimum = 0, Maximum = 255, Value = initG, Foreground = new SolidColorBrush(Color.FromRgb(80, 255, 80)) };
-        var sliderB = new Slider { Minimum = 0, Maximum = 255, Value = initB, Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 255)) };
+        var sliderR = new Slider { Name = "sliderColorRed", Minimum = 0, Maximum = 255, Value = initR, Foreground = new SolidColorBrush(Color.FromRgb(255, 80, 80)) };
+        var sliderG = new Slider { Name = "sliderColorGreen", Minimum = 0, Maximum = 255, Value = initG, Foreground = new SolidColorBrush(Color.FromRgb(80, 255, 80)) };
+        var sliderB = new Slider { Name = "sliderColorBlue", Minimum = 0, Maximum = 255, Value = initB, Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 255)) };
 
         var labelR = new TextBlock { Text = $"R: {initR}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
         var labelG = new TextBlock { Text = $"G: {initG}", Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 2, 0, 0) };
@@ -66,6 +66,7 @@ public static class ColorPicker
         var hexLabel = new TextBlock { Text = Labels.Get("hex_label"), Foreground = Brushes.White, Margin = new Avalonia.Thickness(4, 6, 0, 0), FontSize = 11 };
         var hexInput = new TextBox
         {
+            Name = "textColorHex",
             Text = $"#{initR:X2}{initG:X2}{initB:X2}",
             Width = 100,
             Height = 28,
@@ -120,6 +121,7 @@ public static class ColorPicker
 
         var btnOk = new Button
         {
+            Name = "buttonColorApply",
             Content = Labels.Get("apply"),
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Avalonia.Thickness(0, 12, 0, 0),
@@ -146,6 +148,7 @@ public static class ColorPicker
         {
             var btn = new Button
             {
+                Name = "buttonColorPreset",
                 Width = 28,
                 Height = 28,
                 Background = new SolidColorBrush(Color.FromRgb(pr, pg, pb)),
@@ -184,6 +187,7 @@ public static class ColorPicker
         {
             var btnRandom = new Button
             {
+                Name = "buttonColorRandom",
                 Content = Labels.Get("aura_random_color"),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Avalonia.Thickness(0, 8, 0, 0),

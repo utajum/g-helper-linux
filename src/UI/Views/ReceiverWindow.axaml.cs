@@ -101,7 +101,7 @@ public partial class ReceiverWindow : Window
             FontWeight = FontWeight.SemiBold,
             VerticalAlignment = VerticalAlignment.Center,
         });
-        var pair = SmallButton(Labels.Get("receivers_pair"), () => PairAsync(entry));
+        var pair = SmallButton(name: "buttonReceiverPair", Labels.Get("receivers_pair"), () => PairAsync(entry));
         pair.IsEnabled = slots is not null;
         Grid.SetColumn(pair, 1);
         head.Children.Add(pair);
@@ -130,7 +130,7 @@ public partial class ReceiverWindow : Window
         // Nano receivers do not unpair; pairing a new device replaces the old one.
         if (entry.Kind == ReceiverKind.Nano)
             return row;
-        var unpair = SmallButton(Labels.Get("receivers_unpair"), () => UnpairAsync(entry, slot));
+        var unpair = SmallButton(name: "buttonReceiverUnpair", Labels.Get("receivers_unpair"), () => UnpairAsync(entry, slot));
         Grid.SetColumn(unpair, 1);
         row.Children.Add(unpair);
         return row;
@@ -221,10 +221,11 @@ public partial class ReceiverWindow : Window
     private static TextBlock DimText(string text) =>
         new() { Text = text, Foreground = Dim, FontSize = 12, TextWrapping = TextWrapping.Wrap };
 
-    private static Button SmallButton(string text, Action click)
+    private static Button SmallButton(string name, string text, Action click)
     {
         var button = new Button
         {
+            Name = name,
             Classes = { "ghelper" },
             Padding = new Thickness(10, 4),
             FontSize = 11,
@@ -247,8 +248,8 @@ public partial class ReceiverWindow : Window
             CanResize = false,
             Background = new SolidColorBrush(Color.Parse("#1C1C1C")),
         };
-        var yes = SmallButton(Labels.Get("receivers_unpair"), () => { tcs.TrySetResult(true); dialog.Close(); });
-        var no = SmallButton(Labels.Get("cancel"), () => { tcs.TrySetResult(false); dialog.Close(); });
+        var yes = SmallButton(name: "buttonReceiverUnpairConfirm", Labels.Get("receivers_unpair"), () => { tcs.TrySetResult(true); dialog.Close(); });
+        var no = SmallButton(name: "buttonReceiverUnpairCancel", Labels.Get("cancel"), () => { tcs.TrySetResult(false); dialog.Close(); });
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
         buttons.Children.Add(yes);
         buttons.Children.Add(no);

@@ -39,6 +39,7 @@ public partial class DevPanelsWindow : Window
         {
             var check = new CheckBox
             {
+                Name = "checkDevPanel",
                 Content = $"{toggle.Name}  ({toggle.Location})",
                 FontSize = 12,
                 IsChecked = Helpers.AppConfig.Is(toggle.ConfigKey),

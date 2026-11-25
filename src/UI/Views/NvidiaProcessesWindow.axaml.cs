@@ -200,6 +200,7 @@ public partial class NvidiaProcessesWindow : Window
 
         var btnKill = new Button
         {
+            Name = "buttonProcessKill",
             Content = Labels.Get("gpu_kill"),
             Classes = { "ghelper" },
             Padding = new Thickness(10, 6),
@@ -214,6 +215,7 @@ public partial class NvidiaProcessesWindow : Window
 
         var btnForce = new Button
         {
+            Name = "buttonProcessForceKill",
             Content = Labels.Get("gpu_force_kill"),
             Background = new SolidColorBrush(Color.Parse("#A82A2A")),
             Foreground = new SolidColorBrush(Color.Parse("#FFFFFF")),
@@ -299,6 +301,7 @@ public partial class NvidiaProcessesWindow : Window
 
         var btnYes = new Button
         {
+            Name = "buttonKillConfirm",
             Content = Labels.Get("gpu_kill_confirm_yes"),
             Background = new SolidColorBrush(Color.Parse("#A82A2A")),
             Foreground = new SolidColorBrush(Color.Parse("#FFFFFF")),
@@ -314,6 +317,7 @@ public partial class NvidiaProcessesWindow : Window
 
         var btnNo = new Button
         {
+            Name = "buttonKillCancel",
             Content = Labels.Get("cancel"),
             Background = new SolidColorBrush(Color.Parse("#2A2A2A")),
             Foreground = new SolidColorBrush(Color.Parse("#CCCCCC")),

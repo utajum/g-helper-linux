@@ -7,6 +7,10 @@
 #   C) no language file contains keys that don't exist in English
 #   E) no word mixes alphabets (looks right, breaks search and screen readers)
 #
+# A, C and E also run on the hover help text in src/I18n/HelpText (English.cs is
+# its schema), and every language must be in its HelpText/Help.cs map. Help text
+# that no control uses is caught by the C# test HoverHelp_NoDeadText.
+#
 # Why this exists:
 #   The Labels.Get() method silently falls back to English when a key is missing
 #   in the user's locale. That makes drift invisible at runtime, so without this
@@ -33,6 +37,9 @@ LANG_DIR="$REPO_ROOT/src/I18n/Languages"
 SRC_DIR="$REPO_ROOT/src"
 ENGLISH_FILE="$LANG_DIR/English.cs"
 LABELS_FILE="$REPO_ROOT/src/I18n/Labels.cs"
+HELP_DIR="$REPO_ROOT/src/I18n/HelpText"
+HELP_ENGLISH="$HELP_DIR/English.cs"
+HELP_MAP="$HELP_DIR/Help.cs"
 
 # Colors (only when stdout is a TTY)
 if [[ -t 1 ]]; then
@@ -96,14 +103,23 @@ if [[ ! -f "$LABELS_FILE" ]]; then
     echo "ERROR: Labels.cs not found: $LABELS_FILE" >&2
     exit 2
 fi
+if [[ ! -f "$HELP_ENGLISH" || ! -f "$HELP_MAP" ]]; then
+    echo "ERROR: help text not found: $HELP_DIR" >&2
+    exit 2
+fi
 
 # ----- helpers -----
 
 # Extract translation keys from a language file.
-# Matches lines like:    ["some_key"] = "value",
+# Matches lines like:    ["some_key"] = "value",   (help keys: ["Window.control"])
+# and help constants like:    internal const string ToggleLabel = "value";
 extract_keys() {
     local file="$1"
-    grep -oE '\["[a-zA-Z0-9_]+"\]' "$file" | sed 's/^\["//;s/"\]$//' | sort -u
+    [[ -f "$file" ]] || return 0
+    {
+        grep -oE '\["[a-zA-Z0-9_.]+"\]' "$file" | sed 's/^\["//;s/"\]$//'
+        grep -oE 'const string [A-Za-z0-9_]+ =' "$file" | sed -E 's/const string ([A-Za-z0-9_]+) =/\1/'
+    } | sort -u
 }
 
 # Collect every key referenced from C#/XAML code (direct + indirect).
@@ -183,12 +199,15 @@ WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 EN_KEYS_FILE="$WORK_DIR/en.keys"
+HELP_EN_KEYS_FILE="$WORK_DIR/help-en.keys"
 USED_KEYS_FILE="$WORK_DIR/used.keys"
 
 extract_keys "$ENGLISH_FILE" > "$EN_KEYS_FILE"
+extract_keys "$HELP_ENGLISH" > "$HELP_EN_KEYS_FILE"
 collect_used_keys > "$USED_KEYS_FILE"
 
 en_count=$(wc -l < "$EN_KEYS_FILE" | tr -d ' ')
+help_count=$(wc -l < "$HELP_EN_KEYS_FILE" | tr -d ' ')
 used_count=$(wc -l < "$USED_KEYS_FILE" | tr -d ' ')
 other_lang_count=$(( $(ls "$LANG_DIR"/*.cs 2>/dev/null | wc -l) - 1 ))
 
@@ -203,17 +222,26 @@ mkdir -p "$MISSING_DIR"
 total_missing=0
 missing_files=()
 
+# Help text is checked like a language file, as "HelpText-<Lang>.cs"; a missing
+# help file counts as all keys missing.
+HELP_FILES=()
 for file in "$LANG_DIR"/*.cs; do
+    HELP_FILES+=("$HELP_DIR/$(basename "$file")")
+done
+
+for file in "$LANG_DIR"/*.cs "${HELP_FILES[@]}"; do
     name=$(basename "$file")
     if [[ "$name" == "English.cs" ]]; then
         continue
     fi
+    en_keys="$EN_KEYS_FILE"
+    [[ "$file" == "$HELP_DIR"/* ]] && name="HelpText-$name" en_keys="$HELP_EN_KEYS_FILE"
 
     lang_keys_file="$WORK_DIR/${name}.keys"
     extract_keys "$file" > "$lang_keys_file"
 
     out="$MISSING_DIR/$name"
-    comm -23 "$EN_KEYS_FILE" "$lang_keys_file" > "$out"
+    comm -23 "$en_keys" "$lang_keys_file" > "$out"
 
     if [[ -s "$out" ]]; then
         count=$(wc -l < "$out" | tr -d ' ')
@@ -241,15 +269,17 @@ mkdir -p "$DRIFT_DIR"
 total_drift=0
 drift_files=()
 
-for file in "$LANG_DIR"/*.cs; do
+for file in "$LANG_DIR"/*.cs "${HELP_FILES[@]}"; do
     name=$(basename "$file")
     if [[ "$name" == "English.cs" ]]; then
         continue
     fi
+    en_keys="$EN_KEYS_FILE"
+    [[ "$file" == "$HELP_DIR"/* ]] && name="HelpText-$name" en_keys="$HELP_EN_KEYS_FILE"
 
     lang_keys_file="$WORK_DIR/${name}.keys"
     out="$DRIFT_DIR/$name"
-    comm -13 "$EN_KEYS_FILE" "$lang_keys_file" > "$out"
+    comm -13 "$en_keys" "$lang_keys_file" > "$out"
 
     if [[ -s "$out" ]]; then
         count=$(wc -l < "$out" | tr -d ' ')
@@ -258,6 +288,15 @@ for file in "$LANG_DIR"/*.cs; do
     else
         rm -f "$out"
     fi
+done
+
+# Help files for no label language are drift too.
+for file in "$HELP_DIR"/*.cs; do
+    base=$(basename "$file")
+    [[ "$base" == "Help.cs" || -f "$LANG_DIR/$base" ]] && continue
+    total_drift=$((total_drift + 1))
+    drift_files+=("HelpText-$base:1")
+    echo "(no matching src/I18n/Languages/$base)" > "$DRIFT_DIR/HelpText-$base"
 done
 
 load_loader_codes
@@ -304,8 +343,25 @@ if ((${#unreg_list[@]})); then
     mapfile -t unreg_list < <(printf '%s\n' "${unreg_list[@]}" | sort)
 fi
 
+# Every registered language must have help text in HelpText/Help.cs, and only those.
+declare -A HELP_SET=()
+while IFS= read -r code; do
+    [[ -n "$code" ]] && HELP_SET["$code"]=1
+done < <(grep -oE '\{[[:space:]]*"[^"]+",[[:space:]]*\(' "$HELP_MAP" | sed -E 's/\{[[:space:]]*"([^"]+)".*/\1/')
+help_map_list=()
+for code in "${!LOADER_SET[@]}"; do
+    [[ -n "${HELP_SET[$code]:-}" ]] || help_map_list+=("$code: missing in HelpText/Help.cs")
+done
+for code in "${!HELP_SET[@]}"; do
+    is_loader_code "$code" || help_map_list+=("$code: in HelpText/Help.cs but not in LanguageLoaders")
+done
+if ((${#help_map_list[@]})); then
+    mapfile -t help_map_list < <(printf '%s\n' "${help_map_list[@]}" | sort)
+fi
+help_map_fail=${#help_map_list[@]}
+
 loader_count=${#LOADER_SET[@]}
-detect_fail=$((detect_mismatch + detect_unregistered + detect_uncovered))
+detect_fail=$((detect_mismatch + detect_unregistered + detect_uncovered + help_map_fail))
 
 # ----- Audit E: mixed alphabets -----
 # Words mixing Latin/Cyrillic/Greek, or Cyrillic in other languages; \n escapes blanked.
@@ -315,12 +371,14 @@ WORD='[\p{L}\p{M}]*'
 MIX_PAT="$WORD(?:[A-Za-z]$WORD[\p{Cyrillic}\p{Greek}]|[\p{Cyrillic}\p{Greek}]$WORD[A-Za-z]|\p{Cyrillic}$WORD\p{Greek}|\p{Greek}$WORD\p{Cyrillic})$WORD"
 MIXED_FILE="$WORK_DIR/mixed"
 : > "$MIXED_FILE"
-for file in "$LANG_DIR"/*.cs; do
+for file in "$LANG_DIR"/*.cs "$HELP_DIR"/*.cs; do
     name=$(basename "$file")
+    tag="$name"
+    [[ "$file" == "$HELP_DIR"/* ]] && tag="HelpText/$name"
     pat="$MIX_PAT"
     [[ "$CYRILLIC_LANGS" == *" $name "* ]] || pat="$MIX_PAT|$WORD\p{Cyrillic}$WORD"
     sed -E 's/\\[nrt"\\]/ /g' "$file" | LC_ALL=C.UTF-8 grep -noP "$pat" \
-        | sed "s|^|$name:|" >> "$MIXED_FILE" || true
+        | sed "s|^|$tag:|" >> "$MIXED_FILE" || true
 done
 mixed_count=$(grep -c . "$MIXED_FILE" || true)
 
@@ -334,6 +392,8 @@ fi
 if [[ "$mode" == "json" ]]; then
     printf '{'
     printf '"english_keys":%d,' "$en_count"
+    printf '"help_keys":%d,' "$help_count"
+    printf '"help_map_issues":%d,' "$help_map_fail"
     printf '"used_keys":%d,' "$used_count"
     printf '"total_missing":%d,' "$total_missing"
     printf '"dead_count":%d,' "$dead_count"
@@ -352,9 +412,9 @@ fi
 
 if [[ "$mode" == "summary" ]]; then
     if [[ $exit_code -eq 0 ]]; then
-        echo "${GREEN}i18n OK${NC} - $en_count keys, $used_count used, 0 missing, 0 dead, 0 drift, $loader_count langs auto-detectable"
+        echo "${GREEN}i18n OK${NC} - $en_count keys, $used_count used, $help_count help keys, 0 missing, 0 dead, 0 drift, $loader_count langs auto-detectable"
     else
-        echo "${RED}i18n FAIL${NC} - $en_count keys | $total_missing missing across ${#missing_files[@]} langs | $dead_count dead | $total_drift drift across ${#drift_files[@]} langs | detect: $detect_mismatch mismatch / $detect_unregistered unregistered / $detect_uncovered uncovered | $mixed_count mixed-script"
+        echo "${RED}i18n FAIL${NC} - $en_count keys | $total_missing missing across ${#missing_files[@]} langs | $dead_count dead | $total_drift drift across ${#drift_files[@]} langs | detect: $detect_mismatch mismatch / $detect_unregistered unregistered / $detect_uncovered uncovered / $help_map_fail help-map | $mixed_count mixed-script"
     fi
     exit "$exit_code"
 fi
@@ -368,13 +428,14 @@ print_full() {
 
 print_full "${BOLD}=== i18n consistency check ===${NC}"
 print_full "${DIM}English.cs:${NC} $en_count keys (canonical schema)"
+print_full "${DIM}HelpText/English.cs:${NC} $help_count help keys (canonical schema)"
 print_full "${DIM}Code references:${NC} $used_count unique keys used"
 print_full ""
 
 # ---- Audit A output ----
 print_full "${BOLD}[A] Missing keys${NC} ${DIM}(in English.cs but absent in other langs)${NC}"
 if [[ $total_missing -eq 0 ]]; then
-    print_full "  ${GREEN}✓ All $other_lang_count non-English files complete${NC}"
+    print_full "  ${GREEN}✓ All $other_lang_count non-English files complete, labels and help text${NC}"
 else
     for entry in "${missing_files[@]}"; do
         name="${entry%%:*}"
@@ -430,7 +491,7 @@ print_full ""
 
 print_full "${BOLD}[D] DetectLocale coverage${NC} ${DIM}(every registered language is auto-detectable)${NC}"
 if [[ $detect_fail -eq 0 ]]; then
-    print_full "  ${GREEN}✓ All $loader_count registered languages reachable via DetectLocale (${#DETECT_FIXTURES[@]} locale fixtures)${NC}"
+    print_full "  ${GREEN}✓ All $loader_count registered languages reachable via DetectLocale (${#DETECT_FIXTURES[@]} locale fixtures) and in the help text map${NC}"
 else
     if [[ $detect_uncovered -gt 0 ]]; then
         if [[ "$mode" == "quiet" ]]; then
@@ -459,6 +520,16 @@ else
             echo "  ${RED}✗${NC} ${BOLD}$detect_unregistered fixture(s) expect an unregistered code${NC}"
             for u in "${unreg_list[@]}"; do
                 echo "      ${DIM}- $u${NC}"
+            done
+        fi
+    fi
+    if [[ $help_map_fail -gt 0 ]]; then
+        if [[ "$mode" == "quiet" ]]; then
+            echo "${RED}HELP-MAP${NC} $help_map_fail languages"
+        else
+            echo "  ${RED}✗${NC} ${BOLD}$help_map_fail language(s) wrong in the help text map${NC}"
+            for h in "${help_map_list[@]}"; do
+                echo "      ${DIM}- $h${NC}"
             done
         fi
     fi

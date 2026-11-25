@@ -75,7 +75,7 @@
 
             <!-- System integration files (self-installer) -->
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,8,0,0">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                <StackPanel Grid.Column="0" x:Name="panelSysFilesHeader" Orientation="Horizontal" Spacing="6"
                             Cursor="Hand" Background="Transparent"
                             VerticalAlignment="Center"
                             PointerPressed="SysFilesHeader_PointerPressed">

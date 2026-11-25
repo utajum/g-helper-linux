@@ -153,6 +153,7 @@ public class App : Application
 
         // Initialize i18n before any UI
         Labels.Initialize();
+        UI.HoverHelp.Install();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
