@@ -256,6 +256,7 @@ public static partial class Installer
 
         var onlyCompared = new CheckBox
         {
+            Name = "checkSysfilesDiffOnlyCompared",
             Content = Labels.Get("sysfiles_diff_only_compared"),
             FontSize = 12,
             Foreground = new SolidColorBrush(Color.Parse("#CCCCCC")),
@@ -266,6 +267,7 @@ public static partial class Installer
         };
         var btnClose = new Button
         {
+            Name = "buttonSysfilesDiffClose",
             Content = Labels.Get("sysfiles_diff_close"),
             Classes = { "ghelper" },
             MinWidth = 110,

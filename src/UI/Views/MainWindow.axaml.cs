@@ -791,6 +791,7 @@ public partial class MainWindow : Window
 
         var btnClose = new Button
         {
+            Name = "buttonReenableFailedClose",
             Content = Labels.Get("cancel"),
             Background = new SolidColorBrush(Color.Parse("#4CC2FF")),
             Foreground = new SolidColorBrush(Color.Parse("#000000")),
@@ -932,6 +933,7 @@ public partial class MainWindow : Window
         };
         var dgpuViewButton = new Button
         {
+            Name = "buttonDgpuUsersView",
             Content = Labels.Get("gpu_dgpu_users_view"),
             Background = new SolidColorBrush(Color.Parse("#3A3A3A")),
             Foreground = new SolidColorBrush(Color.Parse("#FFFFFF")),
@@ -969,10 +971,11 @@ public partial class MainWindow : Window
 
         // Buttons - all properties set directly, no CSS class
         // Shared properties applied via helper
-        Button MakeDialogButton(string text, string bg, string fg, bool bold = false)
+        Button MakeDialogButton(string name, string text, string bg, string fg, bool bold = false)
         {
             return new Button
             {
+                Name = name,
                 Content = text,
                 Background = new SolidColorBrush(Color.Parse(bg)),
                 Foreground = new SolidColorBrush(Color.Parse(fg)),
@@ -990,8 +993,8 @@ public partial class MainWindow : Window
             };
         }
 
-        var btnAfterReboot = MakeDialogButton(Labels.Get("gpu_driver_after_reboot"), "#4CC2FF", "#000000", bold: true);
-        var btnCancel = MakeDialogButton(Labels.Get("cancel"), "#2A2A2A", "#888888");
+        var btnAfterReboot = MakeDialogButton(name: "buttonDriverAfterReboot", Labels.Get("gpu_driver_after_reboot"), "#4CC2FF", "#000000", bold: true);
+        var btnCancel = MakeDialogButton(name: "buttonDriverCancel", Labels.Get("cancel"), "#2A2A2A", "#888888");
         btnAfterReboot.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
         btnCancel.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
 
@@ -999,7 +1002,7 @@ public partial class MainWindow : Window
         TextBlock? switchNowWarning = null;
         if (canSwitchNow)
         {
-            btnSwitchNow = MakeDialogButton(Labels.Get("gpu_driver_switch_now"), "#A82A2A", "#FFFFFF", bold: true);
+            btnSwitchNow = MakeDialogButton(name: "buttonDriverSwitchNow", Labels.Get("gpu_driver_switch_now"), "#A82A2A", "#FFFFFF", bold: true);
             btnSwitchNow.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
             switchNowWarning = new TextBlock
             {
@@ -1249,10 +1252,11 @@ public partial class MainWindow : Window
         cardContent.Children.Add(listScroll);
         card.Child = cardContent;
 
-        Button MakeBtn(string text, string bg, string fg, bool bold = false)
+        Button MakeBtn(string name, string text, string bg, string fg, bool bold = false)
         {
             return new Button
             {
+                Name = name,
                 Content = text,
                 Background = new SolidColorBrush(Color.Parse(bg)),
                 Foreground = new SolidColorBrush(Color.Parse(fg)),
@@ -1270,8 +1274,8 @@ public partial class MainWindow : Window
             };
         }
 
-        var btnRetry = MakeBtn(Labels.Get("gpu_kill_failure_retry"), "#A82A2A", "#FFFFFF", bold: true);
-        var btnClose = MakeBtn(Labels.Get("cancel"), "#2A2A2A", "#888888");
+        var btnRetry = MakeBtn(name: "buttonKillFailureRetry", Labels.Get("gpu_kill_failure_retry"), "#A82A2A", "#FFFFFF", bold: true);
+        var btnClose = MakeBtn(name: "buttonKillFailureClose", Labels.Get("cancel"), "#2A2A2A", "#888888");
         btnRetry.Margin = new Avalonia.Thickness(0, 0, 6, 0);
         btnClose.Margin = new Avalonia.Thickness(6, 0, 0, 0);
 

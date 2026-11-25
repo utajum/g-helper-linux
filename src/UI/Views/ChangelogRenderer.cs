@@ -183,6 +183,7 @@ internal static class ChangelogRenderer
     {
         var btn = new Button
         {
+            Name = "buttonChangelogLink",
             Content = new TextBlock
             {
                 Text = inline.Text,

@@ -42,6 +42,7 @@ public partial class DevWindowsWindow : Window
         {
             var button = new Button
             {
+                Name = "buttonDevWindow",
                 Content = name,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
                 Height = 30,

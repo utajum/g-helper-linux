@@ -175,6 +175,7 @@ public partial class FnLockWindow : Window
 
             var cb = new CheckBox
             {
+                Name = "checkFnLockDevice",
                 IsChecked = ticked,
                 IsEnabled = !c.IsOurOwn,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -264,7 +265,7 @@ public partial class FnLockWindow : Window
             Grid.SetColumn(lbl, 0);
             row.Children.Add(lbl);
 
-            var combo = new ComboBox { Height = 26, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var combo = new ComboBox { Name = "comboFnLockKey", Height = 26, HorizontalAlignment = HorizontalAlignment.Stretch };
             string? selectedTag = map.TryGetValue(fkey, out var t) ? t.Tag : null;
             int selIdx = 0;
             int idx = 0;

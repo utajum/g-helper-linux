@@ -169,10 +169,11 @@ public partial class ReportWindow : Window
         }
     }
 
-    private static Button LinkButton(string text, string url)
+    private static Button LinkButton(string name, string text, string url)
     {
         var b = new Button
         {
+            Name = name,
             Content = text,
             Background = Brushes.Transparent,
             Foreground = new SolidColorBrush(Color.Parse("#4DA3FF")),
@@ -189,7 +190,7 @@ public partial class ReportWindow : Window
         var links = BugReport.Links;
         panelReports.Children.Clear();
         foreach (var l in links)
-            panelReports.Children.Add(LinkButton($"#{l.Number}  {l.Title}  {l.Date}", l.Url));
+            panelReports.Children.Add(LinkButton(name: "buttonReportExisting", $"#{l.Number}  {l.Title}  {l.Date}", l.Url));
         labelYourReports.IsVisible = links.Count > 0;
     }
 
@@ -213,7 +214,7 @@ public partial class ReportWindow : Window
             FontWeight = FontWeight.Bold,
             Foreground = new SolidColorBrush(Color.Parse("#F0F0F0")),
         });
-        root.Children.Add(LinkButton(r.Url, r.Url));
+        root.Children.Add(LinkButton(name: "buttonReportLink", r.Url, r.Url));
         root.Children.Add(new TextBlock
         {
             Text = Labels.Get("report_sent_note"),
@@ -222,9 +223,9 @@ public partial class ReportWindow : Window
             Foreground = ColorText,
         });
 
-        var open = new Button { Content = Labels.Get("report_open"), MinWidth = 110 };
+        var open = new Button { Name = "buttonReportOpen", Content = Labels.Get("report_open"), MinWidth = 110 };
         open.Click += (_, _) => OpenUrl(r.Url);
-        var copy = new Button { Content = Labels.Get("report_copy_link"), MinWidth = 110 };
+        var copy = new Button { Name = "buttonReportCopyLink", Content = Labels.Get("report_copy_link"), MinWidth = 110 };
         copy.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(dialog)?.Clipboard is { } clipboard)
@@ -233,7 +234,7 @@ public partial class ReportWindow : Window
                 copy.Content = Labels.Get("copied");
             }
         };
-        var close = new Button { Content = Labels.Get("sysfiles_diff_close"), MinWidth = 90 };
+        var close = new Button { Name = "buttonReportClose", Content = Labels.Get("sysfiles_diff_close"), MinWidth = 90 };
         close.Click += (_, _) => dialog.Close();
         root.Children.Add(new StackPanel
         {

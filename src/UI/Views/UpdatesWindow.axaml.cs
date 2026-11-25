@@ -202,6 +202,7 @@ public partial class UpdatesWindow : Window
         // Content set to null so the default "On"/"Off" strings never show.
         var toggle = new ToggleSwitch
         {
+            Name = "toggleSteamShortcut",
             IsChecked = added,
             OnContent = null,
             OffContent = null,
@@ -679,6 +680,7 @@ public partial class UpdatesWindow : Window
 
                     var btnUpdate = new Button
                     {
+                        Name = "buttonSelfUpdate",
                         Content = Platform.Linux.NixOS.IsNixOS
                             ? Labels.Get("update_nixos_button") : Labels.Get("download_install"),
                         MinWidth = 130,
@@ -694,6 +696,7 @@ public partial class UpdatesWindow : Window
 
                     var btnRelease = new Button
                     {
+                        Name = "buttonViewRelease",
                         Content = Labels.Get("view_release"),
                         MinWidth = 100,
                         Foreground = ColorDim,
@@ -1393,6 +1396,7 @@ public partial class UpdatesWindow : Window
         var versionText = driver.Version.Replace("latest version at the ", "");
         var versionBtn = new Button
         {
+            Name = "buttonDriverVersion",
             Content = versionText,
             Foreground = versionColor,
             Background = Brushes.Transparent,
@@ -1531,6 +1535,7 @@ public partial class UpdatesWindow : Window
 
         var dontShow = new CheckBox
         {
+            Name = "checkUpdateDontShow",
             Content = Labels.Get("dont_show_again"),
             FontSize = 12,
             Foreground = new SolidColorBrush(Color.Parse("#999999")),
@@ -1543,6 +1548,7 @@ public partial class UpdatesWindow : Window
 
         var btnUpdate = new Button
         {
+            Name = "buttonUpdateNow",
             Content = Platform.Linux.NixOS.IsNixOS
                 ? Labels.Get("update_nixos_button") : Labels.Get("update_now"),
             MinWidth = 130,
@@ -1552,6 +1558,7 @@ public partial class UpdatesWindow : Window
 
         var btnLater = new Button
         {
+            Name = "buttonUpdateLater",
             Content = Labels.Get("not_now"),
             MinWidth = 100,
             Padding = new Avalonia.Thickness(14, 8),
@@ -1572,6 +1579,7 @@ public partial class UpdatesWindow : Window
 
         var btnChangelog = new Button
         {
+            Name = "buttonUpdateChangelog",
             Content = Labels.Get("changelog_title"),
             MinWidth = 100,
             Padding = new Avalonia.Thickness(14, 8),

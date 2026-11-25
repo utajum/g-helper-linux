@@ -258,6 +258,7 @@ public partial class ExtraWindow : Window
         checkSkipUpdatePrompt.Content = Labels.Get("skip_update_prompt_label");
         checkDisableAudio.Content = Labels.Get("disable_audio_label");
         checkDisableOsd.Content = Labels.Get("disable_osd_label");
+        checkHoverHelp.Content = HoverHelp.ToggleLabel;
         checkKeepBacklight.Content = Labels.Get("keep_backlight_on");
         checkCamera.Content = Labels.Get("camera");
         checkTouchpad.Content = Labels.Get("touchpad");
@@ -1384,6 +1385,7 @@ public partial class ExtraWindow : Window
 
         // Disable OSD/notifications
         checkDisableOsd.IsChecked = Helpers.AppConfig.Is("disable_osd");
+        checkHoverHelp.IsChecked = HoverHelp.Enabled;
 
         // Keep keyboard/lightbar lit (override system/idle dimming)
         checkKeepBacklight.IsChecked = Helpers.AppConfig.Is("kb_keep_on");
@@ -2083,6 +2085,13 @@ public partial class ExtraWindow : Window
         Helpers.AppConfig.Set("disable_osd", (checkDisableOsd.IsChecked ?? false) ? 1 : 0);
     }
 
+    private void CheckHoverHelp_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents)
+            return;
+        HoverHelp.Enabled = checkHoverHelp.IsChecked ?? false;
+    }
+
     private void CheckKeepBacklight_Changed(object? sender, RoutedEventArgs e)
     {
         if (_suppressEvents)
@@ -2495,7 +2504,7 @@ public partial class ExtraWindow : Window
         panelAppProfiles.Children.Clear();
         foreach (var (rule, name, iconPath) in rows)
         {
-            var combo = new ComboBox { Width = 140 };
+            var combo = new ComboBox { Name = "comboAppProfileMode", Width = 140 };
             foreach (var (id, modeName) in Mode.Modes.GetDictionary())
             {
                 combo.Items.Add(new ComboBoxItem { Content = modeName, Tag = id });
@@ -2509,7 +2518,7 @@ public partial class ExtraWindow : Window
                 Mode.AppProfiles.Save(Mode.AppProfiles.WithMode(Mode.AppProfiles.Load(), rule, mode));
             };
 
-            var remove = new Button { Content = "-", Width = 28, Height = 28, Margin = new Avalonia.Thickness(6, 0, 0, 0) };
+            var remove = new Button { Name = "buttonAppProfileRemove", Content = "-", Width = 28, Height = 28, Margin = new Avalonia.Thickness(6, 0, 0, 0) };
             remove.Classes.Add("ghelper");
             remove.Click += (_, _) =>
             {

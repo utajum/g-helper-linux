@@ -33,6 +33,7 @@ public static class Program
             AppProfilesTests.RunAll();
             NumberPadLayoutTests.RunAll();
             BugReportTests.RunAll();
+            HoverHelpTests.RunAll();
         }
         finally
         {

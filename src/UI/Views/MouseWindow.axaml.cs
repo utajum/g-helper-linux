@@ -377,7 +377,7 @@ public partial class MouseWindow : Window
 
                 if (btn.Divertable)
                 {
-                    var cb = new CheckBox { IsChecked = btn.Diverted, Tag = btn.Cid };
+                    var cb = new CheckBox { Name = "checkMouseButtonDivert", IsChecked = btn.Diverted, Tag = btn.Cid };
                     cb.IsCheckedChanged += OnButtonDivertToggled;
                     Grid.SetColumn(cb, 1);
                     row.Children.Add(cb);
@@ -395,6 +395,7 @@ public partial class MouseWindow : Window
             {
                 var cb = new CheckBox
                 {
+                    Name = "checkMouseGesture",
                     Content = g.Name,
                     IsChecked = g.Enabled,
                     Tag = g.EnableIndex,
@@ -409,6 +410,7 @@ public partial class MouseWindow : Window
             {
                 var cb = new CheckBox
                 {
+                    Name = "checkMouseGestureDivert",
                     Content = g.Name,
                     IsChecked = g.Diverted,
                     Tag = g.DivertIndex,
@@ -427,7 +429,7 @@ public partial class MouseWindow : Window
                 var lbl = new TextBlock { Text = paramLabel, VerticalAlignment = VerticalAlignment.Center };
                 lbl.Classes.Add("label-dim");
                 Grid.SetColumn(lbl, 0);
-                var slider = new Slider { Minimum = 0, Maximum = Math.Max(p.Max, p.Value), Value = p.Value, Tag = p.Index };
+                var slider = new Slider { Name = "sliderMouseGestureParam", Minimum = 0, Maximum = Math.Max(p.Max, p.Value), Value = p.Value, Tag = p.Index };
                 Grid.SetColumn(slider, 1);
                 var val = new TextBlock { Text = p.Value.ToString(), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
                 val.Classes.Add("value");
@@ -457,7 +459,7 @@ public partial class MouseWindow : Window
                 var lbl = new TextBlock { Text = $"{Labels.Get("mouse_force")} {b.Index + 1}", VerticalAlignment = VerticalAlignment.Center };
                 lbl.Classes.Add("label-dim");
                 Grid.SetColumn(lbl, 0);
-                var slider = new Slider { Minimum = b.Min, Maximum = b.Max, Value = b.Current, Tag = b.Index };
+                var slider = new Slider { Name = "sliderMouseForce", Minimum = b.Min, Maximum = b.Max, Value = b.Current, Tag = b.Index };
                 Grid.SetColumn(slider, 1);
                 var val = new TextBlock { Text = b.Current.ToString(), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
                 val.Classes.Add("value");
@@ -486,9 +488,9 @@ public partial class MouseWindow : Window
                 var header = new TextBlock { Text = Labels.Format("mouse_button_fmt", ab.Index + 1), Margin = new Avalonia.Thickness(0, 8, 0, 4) };
                 header.Classes.Add("label-dim");
                 stackAnalogButtons.Children.Add(header);
-                stackAnalogButtons.Children.Add(MakeAnalogSlider(Labels.Get("mouse_actuation"), ab.Index, "a", ab.Actuation, logi.AnalogMaxActuation));
-                stackAnalogButtons.Children.Add(MakeAnalogSlider(Labels.Get("mouse_rapid_trigger"), ab.Index, "r", ab.RapidTrigger, logi.AnalogMaxRapidTrigger));
-                stackAnalogButtons.Children.Add(MakeAnalogSlider(Labels.Get("mouse_haptics"), ab.Index, "h", ab.Haptics, logi.AnalogMaxHaptics));
+                stackAnalogButtons.Children.Add(MakeAnalogSlider(name: "sliderAnalogActuation", Labels.Get("mouse_actuation"), ab.Index, "a", ab.Actuation, logi.AnalogMaxActuation));
+                stackAnalogButtons.Children.Add(MakeAnalogSlider(name: "sliderAnalogRapidTrigger", Labels.Get("mouse_rapid_trigger"), ab.Index, "r", ab.RapidTrigger, logi.AnalogMaxRapidTrigger));
+                stackAnalogButtons.Children.Add(MakeAnalogSlider(name: "sliderAnalogHaptics", Labels.Get("mouse_haptics"), ab.Index, "h", ab.Haptics, logi.AnalogMaxHaptics));
             }
         }
 
@@ -984,7 +986,7 @@ public partial class MouseWindow : Window
         (_mouse as LogitechMouse)?.WriteReprogDivert(cid, cb.IsChecked == true);
     }
 
-    private Grid MakeAnalogSlider(string label, byte buttonIndex, string kind, int value, int max)
+    private Grid MakeAnalogSlider(string name, string label, byte buttonIndex, string kind, int value, int max)
     {
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("130,*,60"), Margin = new Avalonia.Thickness(0, 2, 0, 0) };
         var lbl = new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center };
@@ -993,7 +995,7 @@ public partial class MouseWindow : Window
         int sliderMax = Math.Max(max, value);
         if (sliderMax <= 0)
             sliderMax = 10;
-        var slider = new Slider { Minimum = 0, Maximum = sliderMax, Value = value, Tag = $"{buttonIndex}:{kind}" };
+        var slider = new Slider { Name = name, Minimum = 0, Maximum = sliderMax, Value = value, Tag = $"{buttonIndex}:{kind}" };
         Grid.SetColumn(slider, 1);
         var val = new TextBlock { Text = value.ToString(), VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
         val.Classes.Add("value");
@@ -1060,10 +1062,11 @@ public partial class MouseWindow : Window
 
         var btnSwitch = new Button
         {
+            Name = "buttonHostSwitchConfirm",
             Content = Labels.Get("mouse_switch"),
             Margin = new Avalonia.Thickness(0, 0, 8, 0),
         };
-        var btnCancel = new Button { Content = Labels.Get("mouse_cancel") };
+        var btnCancel = new Button { Name = "buttonHostSwitchCancel", Content = Labels.Get("mouse_cancel") };
         btnSwitch.Click += (_, _) => dialog.Close(true);
         btnCancel.Click += (_, _) => dialog.Close(false);
 

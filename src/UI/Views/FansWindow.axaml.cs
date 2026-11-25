@@ -160,6 +160,7 @@ public partial class FansWindow : Window
 
             var slider = new Slider
             {
+                Name = "sliderLenovoFanTarget",
                 Minimum = sliderMin,
                 Maximum = max,
                 TickFrequency = div,
@@ -594,30 +595,30 @@ public partial class FansWindow : Window
     private System.Timers.Timer? _advDebounce;
     private bool _buildingTunables;
 
-    private static readonly (Platform.Linux.AttrDef Attr, string Label, string Unit)[] _cpuExtraDefs =
+    private static readonly (Platform.Linux.AttrDef Attr, string Label, string Unit, string Name)[] _cpuExtraDefs =
     {
-        (Platform.Linux.LenovoAttributes.PptApuSpl, "APU SPL", "W"),
-        (Platform.Linux.LenovoAttributes.PptPl4Ipl, "Peak (PL4)", "W"),
-        (Platform.Linux.LenovoAttributes.PptTau, "Tau", "s"),
-        (Platform.Linux.LenovoAttributes.PptCpuCl, "CPU Cross-Load", "W"),
-        (Platform.Linux.LenovoAttributes.CpuTemp, "CPU Temp", "C"),
-        (Platform.Linux.LenovoAttributes.PptPl1SplCl, "PL1 (CL)", "W"),
-        (Platform.Linux.LenovoAttributes.PptPl2SpptCl, "PL2 (CL)", "W"),
-        (Platform.Linux.LenovoAttributes.PptPl3FpptCl, "FPPT (CL)", "W"),
-        (Platform.Linux.LenovoAttributes.PptPl4IplCl, "PL4 (CL)", "W"),
+        (Platform.Linux.LenovoAttributes.PptApuSpl, "APU SPL", "W", "sliderPptApuSpl"),
+        (Platform.Linux.LenovoAttributes.PptPl4Ipl, "Peak (PL4)", "W", "sliderPptPl4"),
+        (Platform.Linux.LenovoAttributes.PptTau, "Tau", "s", "sliderPptTau"),
+        (Platform.Linux.LenovoAttributes.PptCpuCl, "CPU Cross-Load", "W", "sliderPptCpuCl"),
+        (Platform.Linux.LenovoAttributes.CpuTemp, "CPU Temp", "C", "sliderLenovoCpuTemp"),
+        (Platform.Linux.LenovoAttributes.PptPl1SplCl, "PL1 (CL)", "W", "sliderPptPl1Cl"),
+        (Platform.Linux.LenovoAttributes.PptPl2SpptCl, "PL2 (CL)", "W", "sliderPptPl2Cl"),
+        (Platform.Linux.LenovoAttributes.PptPl3FpptCl, "FPPT (CL)", "W", "sliderPptFpptCl"),
+        (Platform.Linux.LenovoAttributes.PptPl4IplCl, "PL4 (CL)", "W", "sliderPptPl4Cl"),
     };
 
-    private static readonly (Platform.Linux.AttrDef Attr, string Label, string Unit)[] _gpuExtraDefs =
+    private static readonly (Platform.Linux.AttrDef Attr, string Label, string Unit, string Name)[] _gpuExtraDefs =
     {
-        (Platform.Linux.LenovoAttributes.DgpuBoostClk, "Boost Clock", " MHz"),
-        (Platform.Linux.LenovoAttributes.GpuNvCpuBoost, "CPU Boost", "W"),
-        (Platform.Linux.LenovoAttributes.GpuNvAcOffset, "AC Offset", "W"),
-        (Platform.Linux.LenovoAttributes.GpuNvBpl, "Battery Limit", "W"),
+        (Platform.Linux.LenovoAttributes.DgpuBoostClk, "Boost Clock", " MHz", "sliderDgpuBoostClock"),
+        (Platform.Linux.LenovoAttributes.GpuNvCpuBoost, "CPU Boost", "W", "sliderNvCpuBoost"),
+        (Platform.Linux.LenovoAttributes.GpuNvAcOffset, "AC Offset", "W", "sliderNvAcOffset"),
+        (Platform.Linux.LenovoAttributes.GpuNvBpl, "Battery Limit", "W", "sliderNvBatteryLimit"),
     };
 
     /// <summary>Build gated slider rows for a set of firmware-attribute tunables.</summary>
     private void BuildTunableRows(StackPanel panel,
-        (Platform.Linux.AttrDef Attr, string Label, string Unit)[] defs,
+        (Platform.Linux.AttrDef Attr, string Label, string Unit, string Name)[] defs,
         Platform.IHardwareControl? wmi)
     {
         // Drop previously built rows (keep the header at index 0) and their state.
@@ -636,7 +637,7 @@ public partial class FansWindow : Window
 
         _buildingTunables = true;
         bool any = false;
-        foreach (var (attr, label, unit) in defs)
+        foreach (var (attr, label, unit, name) in defs)
         {
             if (!wmi.IsFeatureSupported(attr))
                 continue;
@@ -657,6 +658,7 @@ public partial class FansWindow : Window
             lbl.Classes.Add("label-dim");
             var slider = new Slider
             {
+                Name = name,
                 Minimum = range.Min,
                 Maximum = range.Max,
                 TickFrequency = Math.Max(1, range.Step),
@@ -1411,6 +1413,7 @@ public partial class FansWindow : Window
             int preset = w;
             var button = new Button
             {
+                Name = "buttonTdpPreset",
                 Content = $"{preset}W",
                 MinWidth = 64,
                 Height = 30,
