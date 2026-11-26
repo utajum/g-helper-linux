@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kernel-check.sh - Track Linux kernel ASUS/Lenovo platform drivers for
+# kernel-check.sh - Track Linux kernel ASUS/Lenovo platform drivers and hid-asus for
 # features portable to g-helper-linux. Kernel analog of upstream-check.sh.
 #
 # Usage:
@@ -23,14 +23,21 @@ SRC_DIR="$REPO_ROOT/src"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; DIM='\033[2m'; BOLD='\033[1m'; NC='\033[0m'
 
-# Watched driver files (current mainline layout).
+# Watched driver files. Kernel 7.5 moves the ASUS drivers from x86/ to asus/;
+# both layouts are listed so every range spans the move.
 ASUS_PATHS=(
+    drivers/platform/asus/asus-armoury.c
+    drivers/platform/asus/asus-armoury.h
+    drivers/platform/asus/asus-nb-wmi.c
+    drivers/platform/asus/asus-wmi.c
+    drivers/platform/asus/asus-wmi.h
     drivers/platform/x86/asus-armoury.c
     drivers/platform/x86/asus-armoury.h
     drivers/platform/x86/asus-nb-wmi.c
     drivers/platform/x86/asus-wmi.c
     drivers/platform/x86/asus-wmi.h
     include/linux/platform_data/x86/asus-wmi.h
+    drivers/hid/hid-asus.c
 )
 LENOVO_PATHS=(
     drivers/platform/x86/lenovo/ideapad-laptop.c
@@ -83,7 +90,7 @@ done
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
-echo -e "${BOLD}=== Kernel Driver Check (ASUS / Lenovo platform-x86) ===${NC}"
+echo -e "${BOLD}=== Kernel Driver Check (ASUS / Lenovo platform, hid-asus) ===${NC}"
 echo -e "${DIM}Fetching kernel...${NC}"
 git -C "$KERNEL_DIR" fetch origin --quiet 2>/dev/null || echo -e "${YELLOW}(fetch failed - using local refs)${NC}"
 
@@ -148,7 +155,7 @@ devid_value() {
 # Resolve ASUS_WMI_DEVID_<NAME> to the asus-armoury sysfs attribute that fronts
 # it, via the `{ &<name>_attr_group, ASUS_WMI_DEVID_<NAME> }` table.
 devid_sysfs_name() {
-    [[ -f "$TMP/devid_map" ]] || git -C "$KERNEL_DIR" show "$TIP:drivers/platform/x86/asus-armoury.c" 2>/dev/null \
+    [[ -f "$TMP/devid_map" ]] || cat_paths "$TIP" drivers/platform/asus/asus-armoury.c drivers/platform/x86/asus-armoury.c \
         | grep -oE '\{ &[a-z0-9_]+_attr_group, ASUS_WMI_DEVID_[A-Z0-9_]+' \
         | sed -E 's/\{ &//; s/_attr_group,[[:space:]]*/ /' > "$TMP/devid_map" || true
     awk -v d="$1" '$2 == d { print $1; exit }' "$TMP/devid_map" 2>/dev/null
