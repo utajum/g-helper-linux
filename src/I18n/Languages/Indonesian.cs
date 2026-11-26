@@ -199,7 +199,7 @@ public static class Indonesian
         ["display"] = "Layar",
         ["refresh_rate_format"] = "Laju penyegaran: {0}Hz",
         ["auto_screen_ac"] = "Otomatis: {0}Hz, overdrive aktif",
-        ["auto_screen_battery"] = "Otomatis: 60Hz, overdrive nonaktif",
+        ["auto_screen_battery"] = "Otomatis: {0}Hz, overdrive nonaktif",
         ["setup_required"] = "Pengaturan Diperlukan",
         ["udev_not_installed"] = "Aturan udev belum dipasang. Jalankan install.sh untuk fungsionalitas penuh (batas baterai, kontrol kipas, dll.)",
 

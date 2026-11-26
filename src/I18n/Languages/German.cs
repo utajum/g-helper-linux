@@ -196,7 +196,7 @@ public static class German
         ["display"] = "Anzeige",
         ["refresh_rate_format"] = "Bildwiederholrate: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, Overdrive an",
-        ["auto_screen_battery"] = "Auto: 60Hz, Overdrive aus",
+        ["auto_screen_battery"] = "Auto: {0}Hz, Overdrive aus",
         ["setup_required"] = "Einrichtung erforderlich",
         ["udev_not_installed"] = "udev-Regeln nicht installiert. Führen Sie install.sh aus für volle Funktionalität (Akkulimit, Lüftersteuerung usw.)",
 

@@ -196,7 +196,7 @@ public static class Polish
         ["display"] = "Wyświetlacz",
         ["refresh_rate_format"] = "Częstotliwość odświeżania: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive wł.",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive wył.",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive wył.",
         ["setup_required"] = "Wymagana konfiguracja",
         ["udev_not_installed"] = "Reguły udev nie są zainstalowane. Uruchom install.sh, aby uzyskać pełną funkcjonalność (limit baterii, kontrola wentylatorów itp.)",
 

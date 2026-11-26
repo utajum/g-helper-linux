@@ -196,7 +196,7 @@ public static class Vietnamese
         ["display"] = "Màn hình",
         ["refresh_rate_format"] = "Tần số quét: {0}Hz",
         ["auto_screen_ac"] = "Tự động: {0}Hz, overdrive bật",
-        ["auto_screen_battery"] = "Tự động: 60Hz, overdrive tắt",
+        ["auto_screen_battery"] = "Tự động: {0}Hz, overdrive tắt",
         ["setup_required"] = "Cần thiết lập",
         ["udev_not_installed"] = "Chưa cài đặt quy tắc udev. Chạy install.sh để có đầy đủ chức năng (giới hạn pin, điều khiển quạt, v.v.)",
 

@@ -199,7 +199,7 @@ public static class Thai
         ["display"] = "จอแสดงผล",
         ["refresh_rate_format"] = "อัตรารีเฟรช: {0}Hz",
         ["auto_screen_ac"] = "อัตโนมัติ: {0}Hz, โอเวอร์ไดรว์เปิด",
-        ["auto_screen_battery"] = "อัตโนมัติ: 60Hz, โอเวอร์ไดรว์ปิด",
+        ["auto_screen_battery"] = "อัตโนมัติ: {0}Hz, โอเวอร์ไดรว์ปิด",
         ["setup_required"] = "ต้องตั้งค่า",
         ["udev_not_installed"] = "ยังไม่ได้ติดตั้งกฎ udev เรียกใช้ install.sh เพื่อใช้งานฟีเจอร์ทั้งหมด (จำกัดแบตเตอรี่, ควบคุมพัดลม, ฯลฯ)",
 

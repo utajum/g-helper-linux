@@ -199,7 +199,7 @@ public static class Korean
         ["display"] = "디스플레이",
         ["refresh_rate_format"] = "주사율: {0}Hz",
         ["auto_screen_ac"] = "자동: {0}Hz, 오버드라이브 켜기",
-        ["auto_screen_battery"] = "자동: 60Hz, 오버드라이브 끄기",
+        ["auto_screen_battery"] = "자동: {0}Hz, 오버드라이브 끄기",
         ["setup_required"] = "설정이 필요합니다",
         ["udev_not_installed"] = "udev 규칙이 설치되지 않았습니다. 전체 기능(배터리 제한, 팬 제어 등)을 사용하려면 install.sh를 실행하세요",
 

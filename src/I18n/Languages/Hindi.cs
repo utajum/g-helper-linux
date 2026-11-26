@@ -199,7 +199,7 @@ public static class Hindi
         ["display"] = "डिस्प्ले",
         ["refresh_rate_format"] = "रिफ्रेश दर: {0} Hz",
         ["auto_screen_ac"] = "ऑटो: {0} Hz, overdrive चालू",
-        ["auto_screen_battery"] = "ऑटो: 60 Hz, overdrive बंद",
+        ["auto_screen_battery"] = "ऑटो: {0} Hz, overdrive बंद",
         ["setup_required"] = "सेटअप आवश्यक",
         ["udev_not_installed"] = "udev नियम स्थापित नहीं हैं। पूर्ण कार्यक्षमता के लिए install.sh चलाएँ (बैटरी सीमा, पंखा नियंत्रण, आदि)",
 

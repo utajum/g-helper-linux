@@ -199,7 +199,7 @@ public static class Arabic
         ["display"] = "الشاشة",
         ["refresh_rate_format"] = "معدل التحديث: {0}Hz",
         ["auto_screen_ac"] = "تلقائي: {0}Hz، تسريع اللوحة مُفعَّل",
-        ["auto_screen_battery"] = "تلقائي: 60Hz، تسريع اللوحة مُعطَّل",
+        ["auto_screen_battery"] = "تلقائي: {0}Hz، تسريع اللوحة مُعطَّل",
         ["setup_required"] = "الإعداد مطلوب",
         ["udev_not_installed"] = "قواعد udev غير مثبّتة. قم بتشغيل install.sh للحصول على الوظائف الكاملة (حد البطارية، التحكم بالمروحة، إلخ)",
 

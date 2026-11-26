@@ -702,12 +702,13 @@ public class App : Application
         }
         else
         {
-            display.SetRefreshRate(60);
+            int lowHz = rates.Count == 0 || rates.Contains(60) ? 60 : rates.Min();
+            display.SetRefreshRate(lowHz);
             Wmi?.SetPanelOverdrive(false);
             AppConfig.Set("panel_od", 0);
-            Logger.WriteLine("AutoScreen: Battery -> 60Hz + overdrive OFF");
+            Logger.WriteLine($"AutoScreen: Battery -> {lowHz}Hz + overdrive OFF");
             if (!init)
-                System?.ShowNotification(Labels.Get("display"), Labels.Get("auto_screen_battery"), "video-display");
+                System?.ShowNotification(Labels.Get("display"), Labels.Format("auto_screen_battery", lowHz), "video-display");
         }
 
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>

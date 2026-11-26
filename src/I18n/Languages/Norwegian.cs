@@ -199,7 +199,7 @@ public static class Norwegian
         ["display"] = "Skjerm",
         ["refresh_rate_format"] = "Oppdateringsfrekvens: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive på",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive av",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive av",
         ["setup_required"] = "Oppsett påkrevd",
         ["udev_not_installed"] = "udev-regler er ikke installert. Kjør install.sh for full funksjonalitet (batteribegrensning, viftekontroll osv.)",
 

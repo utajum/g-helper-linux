@@ -199,7 +199,7 @@ public static class Serbian
         ["display"] = "Дисплеј",
         ["refresh_rate_format"] = "Учестаност освежавања: {0}Hz",
         ["auto_screen_ac"] = "Ауто: {0}Hz, overdrive укључен",
-        ["auto_screen_battery"] = "Ауто: 60Hz, overdrive искључен",
+        ["auto_screen_battery"] = "Ауто: {0}Hz, overdrive искључен",
         ["setup_required"] = "Потребно подешавање",
         ["udev_not_installed"] = "udev правила нису инсталирана. Покрените install.sh за пуну функционалност (ограничење батерије, контрола вентилатора, итд.)",
 

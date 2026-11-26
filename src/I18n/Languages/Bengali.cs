@@ -199,7 +199,7 @@ public static class Bengali
         ["display"] = "ডিসপ্লে",
         ["refresh_rate_format"] = "রিফ্রেশ রেট: {0} Hz",
         ["auto_screen_ac"] = "অটো: {0} Hz, overdrive চালু",
-        ["auto_screen_battery"] = "অটো: 60 Hz, overdrive বন্ধ",
+        ["auto_screen_battery"] = "অটো: {0} Hz, overdrive বন্ধ",
         ["setup_required"] = "সেটআপ প্রয়োজন",
         ["udev_not_installed"] = "udev নিয়ম ইনস্টল নেই। সম্পূর্ণ কার্যকারিতার জন্য install.sh চালান (ব্যাটারি সীমা, ফ্যান নিয়ন্ত্রণ ইত্যাদি)",
 

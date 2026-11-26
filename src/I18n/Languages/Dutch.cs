@@ -196,7 +196,7 @@ public static class Dutch
         ["display"] = "Beeldscherm",
         ["refresh_rate_format"] = "Verversingssnelheid: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive aan",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive uit",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive uit",
         ["setup_required"] = "Configuratie vereist",
         ["udev_not_installed"] = "udev-regels niet geïnstalleerd. Voer install.sh uit voor volledige functionaliteit (acculimiet, ventilatorregeling, enz.)",
 

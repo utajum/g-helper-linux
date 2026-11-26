@@ -196,7 +196,7 @@ public static class Romanian
         ["display"] = "Afișaj",
         ["refresh_rate_format"] = "Rată de reîmprospătare: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive pornit",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive oprit",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive oprit",
         ["setup_required"] = "Configurare necesară",
         ["udev_not_installed"] = "Regulile udev nu sunt instalate. Rulați install.sh pentru funcționalitate completă (limită baterie, control ventilatoare etc.)",
 

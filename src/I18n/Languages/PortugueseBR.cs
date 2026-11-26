@@ -196,7 +196,7 @@ public static class PortugueseBR
         ["display"] = "Tela",
         ["refresh_rate_format"] = "Taxa de atualização: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive ligado",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive desligado",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive desligado",
         ["setup_required"] = "Configuração necessária",
         ["udev_not_installed"] = "Regras udev não instaladas. Execute install.sh para funcionalidade completa (limite de bateria, controle de ventoinhas, etc.)",
 

@@ -199,7 +199,7 @@ public static class Swedish
         ["display"] = "Skärm",
         ["refresh_rate_format"] = "Uppdateringsfrekvens: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive på",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive av",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive av",
         ["setup_required"] = "Konfiguration krävs",
         ["udev_not_installed"] = "udev-regler ej installerade. Kör install.sh för full funktionalitet (batterigräns, fläktstyrning, etc.)",
 

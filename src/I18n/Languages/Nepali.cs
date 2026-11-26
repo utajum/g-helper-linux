@@ -199,7 +199,7 @@ public static class Nepali
         ["display"] = "डिस्प्ले",
         ["refresh_rate_format"] = "रिफ्रेस दर: {0} Hz",
         ["auto_screen_ac"] = "स्वतः: {0} Hz, overdrive चालु",
-        ["auto_screen_battery"] = "स्वतः: 60 Hz, overdrive बन्द",
+        ["auto_screen_battery"] = "स्वतः: {0} Hz, overdrive बन्द",
         ["setup_required"] = "सेटअप आवश्यक",
         ["udev_not_installed"] = "udev नियमहरू स्थापना भएका छैनन्। पूर्ण कार्यक्षमताका लागि install.sh चलाउनुहोस् (ब्याट्री सीमा, पङ्खा नियन्त्रण, आदि)",
 

@@ -196,7 +196,7 @@ public static class Italian
         ["display"] = "Schermo",
         ["refresh_rate_format"] = "Frequenza di aggiornamento: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive attivo",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive disattivato",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive disattivato",
         ["setup_required"] = "Configurazione necessaria",
         ["udev_not_installed"] = "Regole udev non installate. Eseguire install.sh per la funzionalità completa (limite batteria, controllo ventole, ecc.)",
 
