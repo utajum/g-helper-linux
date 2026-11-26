@@ -15,6 +15,7 @@ concurrency:
 jobs:
   # Listing stargazers needs a token with contents: write
   update:
+    if: github.repository == 'utajum/g-helper-linux'
     runs-on: ubuntu-latest
     permissions:
       contents: write
