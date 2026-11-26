@@ -837,7 +837,7 @@ public static class AppConfig
     public static bool IsNoOverdrive() => Is("no_overdrive");
     public static bool SwappedBrightness() => ContainsModel("FA506IEB") || ContainsModel("FA506IH") || ContainsModel("FA506IC") || ContainsModel("FA506II") || ContainsModel("FX506LU") || ContainsModel("FX506IC") || ContainsModel("FX506LH") || ContainsModel("FA506IV") || ContainsModel("FA706IC") || ContainsModel("FA706IH");
     public static bool IsForceMiniled() =>
-        ContainsModel("G834JYR") || ContainsModel("G834JZR") || ContainsModel("G634JZR") ||
+        ContainsModel("G834JYR") || ContainsModel("G834JZR") || ContainsModel("G634JZR") || ContainsModel("G634JYR") ||
         ContainsModel("G835L") || ContainsModel("G635L") || Is("force_miniled");
 
     // Form factor / misc

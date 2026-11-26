@@ -47,6 +47,7 @@
     <Compile Include="*.cs" />
     <Compile Include="../../src/Display/XrandrBackend.cs" />
     <Compile Include="../../src/Display/IDisplayBackend.cs" />
+    <Compile Include="../../src/Display/MiniLed.cs" />
 
     <Compile Include="../../src/Gpu/GPUModeControl.cs" />
     <Compile Include="../../src/Gpu/IGpuBackend.cs" />

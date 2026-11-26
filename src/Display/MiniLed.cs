@@ -34,4 +34,22 @@ public static class MiniLed
         wmi.SetMiniLedMode(next);
         return next;
     }
+
+    /// <summary>
+    /// Write back the mode the firmware reports. On some models the panel comes
+    /// up in multi-zone after a cold boot while the firmware still reports the
+    /// saved mode.
+    /// </summary>
+    public static void Reapply(Platform.IHardwareControl? wmi)
+    {
+        if (wmi == null || !Helpers.AppConfig.IsForceMiniled())
+            return;
+
+        int mode = wmi.GetMiniLedMode();
+        if (mode < 0)
+            return;
+
+        wmi.SetMiniLedMode(mode);
+        Helpers.Logger.WriteLine($"MiniLED: re-applied mode {mode}");
+    }
 }

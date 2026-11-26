@@ -665,6 +665,8 @@ public class App : Application
     /// </summary>
     public void AutoScreen(bool init = false)
     {
+        GHelper.Linux.Display.MiniLed.Reapply(Wmi);
+
         if (!AppConfig.Is("screen_auto"))
         {
             // Restore saved overdrive state even when auto-screen is off.
@@ -1270,6 +1272,8 @@ public class App : Application
             int savedOd = AppConfig.Get("panel_od", -1);
             if (savedOd >= 0)
                 Wmi?.SetPanelOverdrive(savedOd == 1);
+
+            GHelper.Linux.Display.MiniLed.Reapply(Wmi);
 
             // Restore keyboard brightness (firmware may reset on suspend).
             try
