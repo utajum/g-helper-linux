@@ -414,26 +414,10 @@ public class ModeControl
     /// <summary>Apply saved fan curves for the given mode.</summary>
     private void AutoFans(int mode)
     {
-        // experimental EC follower tracks the same per-mode switch
-        Fan.ManualFanService.Sync();
+        Fan.FanCurves.ApplyMode(mode);
 
         if (!Helpers.AppConfig.IsMode("auto_apply_fans"))
             return;
-
-        var wmi = App.Wmi;
-        if (wmi == null)
-            return;
-
-        int fanCount = wmi.FanCount;
-        for (int fan = 0; fan < fanCount; fan++)
-        {
-            byte[] curve = Helpers.AppConfig.GetFanConfig(fan);
-            if (curve.Length == 16)
-            {
-                wmi.SetFanCurve(fan, curve);
-                Helpers.Logger.WriteLine($"AutoFans: Applied fan {fan} curve for mode {mode}");
-            }
-        }
 
         // XG Mobile dock GPU fan (fan index 3) lives on the dock's HID bus,
         // not the laptop's WMI. Push our per-mode curve when the dock is

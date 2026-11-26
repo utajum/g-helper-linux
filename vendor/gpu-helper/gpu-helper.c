@@ -95,10 +95,11 @@
  *       data value. wmi-probe DSTS-reads all whitelisted IDs, one line each.
  *
  *   ec-fanctl
- *       Manual fan loop over the ASUS EC HealthyTable ports 0x25C/0x25D
- *       (the MyASUS fan test path, same as AsusSAIO.sys). Stdin: "probe",
- *       "set <fan> <duty>" (0-255), "auto", "quit". One reply line per
- *       command. Quit, EOF or a signal hands the fans back to the EC.
+ *       Manual fan loop over the ASUS EC HealthyTable (the MyASUS fan test
+ *       path), on ports 0x25C/0x25D or HID 0B05:4543. Stdin: "probe",
+ *       "set <d0> [<d1> [<d2>]]" (duty 0-255 per fan), "quit". One reply
+ *       line per command. Quit, EOF, a signal or 5 s without a command
+ *       hands the fans back to the BIOS.
  *
  *   lenovo-flip-to-start <0|1>
  *       Write the Lenovo "Flip to Start" FBSWIF UEFI variable (power on when

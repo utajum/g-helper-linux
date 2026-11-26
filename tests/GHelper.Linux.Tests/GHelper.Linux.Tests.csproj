@@ -96,6 +96,8 @@
     <Compile Include="../../src/Platform/Linux/Asus/LinuxAsusWmi.cs" />
     <Compile Include="../../src/Platform/Linux/Asus/AsusWmiDebugfs.cs" />
     <Compile Include="../../src/Fan/ManualFanMath.cs" />
+    <Compile Include="../../src/Fan/ManualFanPolicy.cs" />
+    <Compile Include="../../src/Fan/EcFanChannel.cs" />
     <Compile Include="../../src/Mode/AppProfiles.Match.cs" />
     <Compile Include="../../src/Peripherals/Logitech/HidPP/HidPPDecode.cs" />
     <Compile Include="../../src/Input/NumberPadLayouts.cs" />

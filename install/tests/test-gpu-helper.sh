@@ -41,6 +41,16 @@ mkdir -p "$LSM_DIR"
         process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c -ldl
 ) || { echo "FATAL: gpu-helper lsm test build failed" >&2; exit 2; }
 
+# ec-fanctl test build: simulated EC (EC_SIM env), lock file in $EC_DIR.
+EC_DIR="$WORK/ec"
+EC_BIN="$WORK/gpu-helper-ec"
+mkdir -p "$EC_DIR"
+(
+    cd "$SRC_DIR" || exit 1
+    cc -O2 -Wall -Wno-unused-result -DNDEBUG -DGH_EC_SIM="\"$EC_DIR\"" -o "$EC_BIN" gpu-helper.c \
+        process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c -ldl
+) || { echo "FATAL: gpu-helper ec test build failed" >&2; exit 2; }
+
 # A BDF and a slot that exist on no machine, so accepted writes fail with ENOENT.
 NO_BDF="0000:fe:1f.7"
 NO_SLOT="ghelper-test-none"
@@ -475,6 +485,69 @@ test_lsm_disable_nothing_to_undo() {
     [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet lsm=landlock,bpf"' ]] || { fail "touched: $(grub_line)"; return 1; }
 }
 
+# -- ec-fanctl ------------------------------------------------------------------
+# ec_run "<version> <vendor bit> <fans> <mode>" <stdin lines...>
+# Stdout replies and the simulated EC writes ("w <reg> <value>") end up in OUT.
+ec_run() {
+    local cfg="$1"
+    shift
+    OUT="$(printf '%s\n' "$@" | EC_SIM="$cfg" "$EC_BIN" ec-fanctl 2>&1)"
+    RC=$?
+}
+
+has() { grep -qxF -- "$1" <<<"$OUT" || { fail "missing line: $1"; return 1; }; }
+lacks() { ! grep -qxF -- "$1" <<<"$OUT" || { fail "unexpected line: $1"; return 1; }; }
+
+test_ec_detect_myasus_rule() {
+    ec_run "18 1 2 0" probe
+    has "probe ok sim 18 2 1000 1000" || return 1
+    ec_run "1 1 2 0" probe
+    has "probe no version" || return 1
+    ec_run "4 0 2 0" probe
+    has "probe no odm" || return 1
+    ec_run "5 0 2 0" probe
+    has "probe ok sim 5 2 1000 1000" || return 1
+    ec_run "18 1 4 0" probe
+    has "probe no fans" || return 1
+}
+
+test_ec_set_holds_and_quit_releases() {
+    ec_run "18 1 2 0" probe "set 100 120" "set 100 130" quit
+    has "w 31 01" && has "w 35 64" && has "w 35 78" && has "w 35 82" || return 1
+    [[ "$(grep -c '^w 35 64$' <<<"$OUT")" == 1 ]] || { fail "unchanged duty rewritten"; return 1; }
+    [[ "$(tail -n 1 <<<"$OUT")" == "w 31 00" ]] || { fail "quit did not release last"; return 1; }
+}
+
+test_ec_eof_releases_even_if_manual_at_start() {
+    ec_run "18 1 2 1" probe "set 50 50"
+    lacks "w 31 01" || return 1
+    [[ "$(tail -n 1 <<<"$OUT")" == "w 31 00" ]] || { fail "EOF did not release"; return 1; }
+}
+
+test_ec_rejects_bad_input() {
+    ec_run "18 1 2 0" "set 10" probe "set 1 2 3" "set 300" "set -1" bogus quit
+    [[ "$(head -n 1 <<<"$OUT")" == "err probe" ]] || { fail "set before probe"; return 1; }
+    [[ "$(grep -c '^err range$' <<<"$OUT")" == 3 ]] || { fail "range"; return 1; }
+    has "err cmd" && lacks "w 31 01" || return 1
+}
+
+test_ec_watchdog_releases_then_set_retakes() {
+    OUT="$( (printf 'probe\nset 50 60\n'; sleep 7; printf 'set 70 60\nquit\n') \
+        | EC_SIM="18 1 2 0" "$EC_BIN" ec-fanctl 2>&1)"
+    [[ "$(grep -cx 'w 31 00' <<<"$OUT")" == 2 ]] || { fail "watchdog + quit releases"; return 1; }
+    [[ "$(grep -cx 'w 31 01' <<<"$OUT")" == 2 ]] || { fail "set after watchdog did not retake"; return 1; }
+}
+
+test_ec_second_controller_busy() {
+    flock "$EC_DIR/ec-fan.lock" sleep 3 &
+    local holder=$!
+    sleep 0.5
+    ec_run "18 1 2 0" probe "set 50 50"
+    kill "$holder" 2>/dev/null
+    wait "$holder" 2>/dev/null
+    has "probe no busy" && has "err probe" && lacks "w 31 01" || return 1
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "="
 echo " gpu-helper argument tests"
@@ -528,6 +601,12 @@ for name in \
     lsm_round_trip_drops_added_token \
     lsm_disable_leaves_token_changed_by_user \
     lsm_disable_nothing_to_undo \
+    ec_detect_myasus_rule \
+    ec_set_holds_and_quit_releases \
+    ec_eof_releases_even_if_manual_at_start \
+    ec_rejects_bad_input \
+    ec_watchdog_releases_then_set_retakes \
+    ec_second_controller_busy \
 ; do
     scenario "$name"
 done

@@ -87,5 +87,70 @@ public static class ManualFanTests
             var q = new Queue<int>(new[] { 40, 50, 60 });
             Harness.AssertEqual(50.0, ManualFanMath.Average(q), "avg of 40,50,60");
         });
+
+        Console.WriteLine();
+        Console.WriteLine("--- ManualFanPolicy ---");
+
+        var own = new FanBlend(1, 0, -1);
+
+        Harness.Scenario("Policy_FanFollowsOwnSensor", _ =>
+        {
+            var step = new ManualFanPolicy().Next(45, 50, 2, own, _ => Curve());
+            Harness.AssertEqual("30,40", string.Join(",", step.Duty!), "cpu 45C, gpu 50C");
+        });
+
+        Harness.Scenario("Policy_GpuAsleep_GpuFanFollowsCpu", _ =>
+        {
+            var step = new ManualFanPolicy().Next(45, 0, 2, own, _ => Curve());
+            Harness.AssertEqual("30,30", string.Join(",", step.Duty!), "gpu temp 0");
+        });
+
+        Harness.Scenario("Policy_RollingWindow", _ =>
+        {
+            var p = new ManualFanPolicy();
+            p.Next(40, 0, 1, new FanBlend(2, 0, -1), _ => Curve());
+            var step = p.Next(50, 0, 1, new FanBlend(2, 0, -1), _ => Curve());
+            Harness.AssertEqual(30, step.Duty![0], "avg of 40C and 50C = 45C");
+        });
+
+        Harness.Scenario("Policy_OverheatFullUntilBothUnder90", _ =>
+        {
+            var p = new ManualFanPolicy();
+            Harness.AssertEqual(100, p.Next(95, 50, 1, own, _ => Curve()).Duty![0], "95C on");
+            Harness.AssertEqual(100, p.Next(60, 92, 1, own, _ => Curve()).Duty![0], "gpu 92C holds");
+            Harness.AssertEqual(20, p.Next(40, 89, 1, own, _ => Curve()).Duty![0], "both under 90C");
+            Harness.Assert(!p.Overheat, "latch off");
+        });
+
+        Harness.Scenario("Policy_CpuTempLost_GiveBackOnThird", _ =>
+        {
+            var p = new ManualFanPolicy();
+            var s1 = p.Next(0, 50, 1, own, _ => Curve());
+            var s2 = p.Next(-1, 50, 1, own, _ => Curve());
+            var s3 = p.Next(0, 50, 1, own, _ => Curve());
+            Harness.Assert(s1.Duty == null && !s1.GiveBack && !s2.GiveBack, "two misses hold");
+            Harness.Assert(s3.GiveBack, "third miss gives back");
+        });
+
+        Console.WriteLine();
+        Console.WriteLine("--- EcProbe ---");
+
+        Harness.Scenario("Probe_Ok", _ =>
+        {
+            var p = EcProbe.Parse("probe ok lpc 18 2 3100 2900");
+            Harness.Assert(p.Ok && p.Link == "lpc" && p.Version == 18 && p.Fans == 2 && p.Rpm0 == 3100, "fields");
+            Harness.AssertEqual<string?>(null, p.Reject(3000), "tach within 15%");
+            Harness.AssertEqual<string?>(null, p.Reject(0), "no hwmon tach");
+        });
+
+        Harness.Scenario("Probe_TachMismatchRejected", _ =>
+            Harness.AssertEqual<string?>("tach ec=3100 hwmon=5000",
+                EcProbe.Parse("probe ok lpc 18 2 3100 2900").Reject(5000), "foreign EC"));
+
+        Harness.Scenario("Probe_NoReason", _ =>
+            Harness.AssertEqual<string?>("odm", EcProbe.Parse("probe no odm").Reject(3000), "reason"));
+
+        Harness.Scenario("Probe_OldHelperRejected", _ =>
+            Harness.AssertEqual<string?>("helper", EcProbe.Parse("probe 18 2 3100 2900").Reject(3000), "old reply"));
     }
 }
