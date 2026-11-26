@@ -188,7 +188,7 @@ public static class CustomRgb
                 colors[6] = ColorUtils.HSV.UpSaturation(ColorUtils.GetMidColor(Cell(2, 1), Cell(3, 1)));
                 colors[7] = ColorUtils.HSV.UpSaturation(Cell(3, 1)); // right
                 // Keyboard zones follow the backlight level.
-                double dim = AppConfig.Get(Aura.GetBrightnessConfigKey(), -1) switch { 1 => 0.1, 2 => 0.3, _ => 1 };
+                double dim = Aura.ConfiguredBrightness() switch { 1 => 0.1, 2 => 0.3, _ => 1 };
                 for (int i = 0; i < 4; i++)
                 {
                     var c = ColorUtils.HSV.UpSaturation(Cell(i, 0));

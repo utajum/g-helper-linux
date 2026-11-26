@@ -1313,12 +1313,7 @@ public class App : Application
             return;
         try
         {
-            bool onAc = Power?.IsOnAcPower() ?? true;
-            int level = onAc
-                ? Helpers.AppConfig.Get("keyboard_brightness_ac", -1)
-                : Helpers.AppConfig.Get("keyboard_brightness", -1);
-            if (level < 0)
-                level = Helpers.AppConfig.Get("keyboard_brightness", -1);
+            int level = USB.Aura.ConfiguredBrightness();
             if (level < 0)
                 level = Wmi?.KbdMaxBrightness ?? 3;
             if (level > 0)
@@ -1345,12 +1340,7 @@ public class App : Application
         {
             try
             {
-                bool onAc = Power?.IsOnAcPower() ?? true;
-                int level = onAc
-                    ? Helpers.AppConfig.Get("keyboard_brightness_ac", -1)
-                    : Helpers.AppConfig.Get("keyboard_brightness", -1);
-                if (level < 0)
-                    level = Helpers.AppConfig.Get("keyboard_brightness", -1);
+                int level = USB.Aura.ConfiguredBrightness();
                 if (level < 0)
                     level = Wmi?.KbdMaxBrightness ?? 3;
                 if (level > 0)
