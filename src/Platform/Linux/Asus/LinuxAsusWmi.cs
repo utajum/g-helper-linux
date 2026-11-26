@@ -1334,7 +1334,7 @@ public class LinuxAsusWmi : IHardwareControl
             return nvmlTemp;
 
         // Last resort: nvidia-smi fork (~200ms)
-        if (!nvSkip && Directory.Exists("/sys/module/nvidia"))
+        if (!nvSkip && !Gpu.NVidia.GpuQueryGate.IsPaused && Directory.Exists("/sys/module/nvidia"))
         {
             try
             {

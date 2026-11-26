@@ -1106,34 +1106,33 @@ public partial class FansWindow : Window
                 { USB.XGM.SetFan(ClampXgmCurve(curve)); }
                 catch (Exception ex) { Helpers.Logger.WriteLine($"XGM.SetFan: {ex.Message}"); }
             }
-            else if (!Fan.ManualFanService.Running)
+            else
             {
-                App.Wmi?.SetFanCurve(fanIndex, curve);
+                Fan.FanCurves.Apply(fanIndex, curve);
             }
         }
     }
 
     private void ButtonApplyFans_Click(object? sender, RoutedEventArgs e)
     {
-        var wmi = App.Wmi;
-        if (wmi == null)
+        if (App.Wmi == null)
             return;
 
         if (chartCPU.CurveData is { Length: 16 })
         {
-            wmi.SetFanCurve(0, chartCPU.CurveData);
+            Fan.FanCurves.Apply(0, chartCPU.CurveData);
             Helpers.AppConfig.SetFanConfig(0, chartCPU.CurveData);
         }
 
         if (chartGPU.CurveData is { Length: 16 })
         {
-            wmi.SetFanCurve(1, chartGPU.CurveData);
+            Fan.FanCurves.Apply(1, chartGPU.CurveData);
             Helpers.AppConfig.SetFanConfig(1, chartGPU.CurveData);
         }
 
         if (chartMid.IsVisible && chartMid.CurveData is { Length: 16 })
         {
-            wmi.SetFanCurve(2, chartMid.CurveData);
+            Fan.FanCurves.Apply(2, chartMid.CurveData);
             Helpers.AppConfig.SetFanConfig(2, chartMid.CurveData);
         }
 
@@ -1152,7 +1151,9 @@ public partial class FansWindow : Window
             Helpers.AppConfig.SetFanConfig(3, chartXGM.CurveData);
         }
 
-        UpdateDisabledState();
+        // starts the EC follower again after Disable
+        Task.Run(() => Fan.ManualFanService.Sync())
+            .ContinueWith(_ => Dispatcher.UIThread.Post(UpdateDisabledState));
         Helpers.Logger.WriteLine("Fan curves applied");
     }
 
@@ -1213,27 +1214,22 @@ public partial class FansWindow : Window
 
     private void ButtonDisable_Click(object? sender, RoutedEventArgs e)
     {
-        var wmi = App.Wmi;
-        if (wmi == null)
+        if (App.Wmi == null)
             return;
 
-        wmi.DisableFanCurve(0);
-        wmi.DisableFanCurve(1);
-        if (chartMid.IsVisible)
-            wmi.DisableFanCurve(2);
-        UpdateDisabledState();
+        int fans = chartMid.IsVisible ? 3 : 2;
+        // stopping the EC follower waits for the root helper
+        Task.Run(() => Fan.FanCurves.Disable(fans))
+            .ContinueWith(_ => Dispatcher.UIThread.Post(UpdateDisabledState));
 
         Helpers.Logger.WriteLine("Custom fan curves disabled, using firmware defaults");
     }
 
     private void UpdateDisabledState()
     {
-        var wmi = App.Wmi;
-        // EC follower reads the curves from config, hwmon pwm_enable is moot
-        bool manual = Fan.ManualFanService.Running;
-        bool cpuEnabled = manual || (wmi?.IsFanCurveEnabled(0) ?? false);
-        bool gpuEnabled = manual || (wmi?.IsFanCurveEnabled(1) ?? false);
-        bool midEnabled = manual || !chartMid.IsVisible || (wmi?.IsFanCurveEnabled(2) ?? false);
+        bool cpuEnabled = Fan.FanCurves.IsActive(0);
+        bool gpuEnabled = Fan.FanCurves.IsActive(1);
+        bool midEnabled = !chartMid.IsVisible || Fan.FanCurves.IsActive(2);
         bool anyDisabled = !cpuEnabled || !gpuEnabled || !midEnabled;
 
         chartCPU.Disabled = !cpuEnabled;

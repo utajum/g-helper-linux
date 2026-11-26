@@ -4,6 +4,7 @@
 # Only input that must be rejected, or that targets a device that does not
 # exist, is sent. Exit codes: 1 rejected, 2 bad signal, 3 accepted but the
 # sysfs write failed (proves the argument passed validation).
+# ec-fanctl runs in a separate test build against a simulated EC.
 #
 # Run:    bash install/tests/test-gpu-helper.sh
 # Single: bash install/tests/test-gpu-helper.sh <pattern>
@@ -40,6 +41,16 @@ mkdir -p "$LSM_DIR"
     cc -O2 -Wall -Wno-unused-result -DNDEBUG -DGH_LSM_TEST="\"$LSM_DIR\"" -o "$LSM_BIN" gpu-helper.c \
         process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c -ldl
 ) || { echo "FATAL: gpu-helper lsm test build failed" >&2; exit 2; }
+
+# ec-fanctl test build: simulated EC (ec-sim.h, EC_SIM env), files in $EC_DIR.
+EC_DIR="$WORK/ec"
+EC_BIN="$WORK/gpu-helper-ec"
+mkdir -p "$EC_DIR"
+(
+    cd "$SRC_DIR" || exit 1
+    cc -O2 -Wall -Wno-unused-result -DNDEBUG -DGH_EC_SIM="\"$EC_DIR\"" -I"$SCRIPT_DIR" -o "$EC_BIN" gpu-helper.c \
+        process_ops.c nvidia_ops.c pci_ops.c wmi_ops.c ec_ops.c msr_ops.c lenovo_ops.c bpf_ops.c lsm_ops.c -ldl
+) || { echo "FATAL: gpu-helper ec test build failed" >&2; exit 2; }
 
 # A BDF and a slot that exist on no machine, so accepted writes fail with ENOENT.
 NO_BDF="0000:fe:1f.7"
@@ -475,6 +486,194 @@ test_lsm_disable_nothing_to_undo() {
     [[ "$(grub_line)" == 'GRUB_CMDLINE_LINUX_DEFAULT="quiet lsm=landlock,bpf"' ]] || { fail "touched: $(grub_line)"; return 1; }
 }
 
+# -- ec-fanctl ------------------------------------------------------------------
+# The simulated EC follows the decompiled ASUS Windows code: AsusSAIO.sys port
+# protocol (lpc), the SMBIOS check of the 2026+ ASUS EC driver, AsusEC DLL
+# feature report 7 (hid), and the MyASUS fan test rule in AsusSystemDiagnosis.exe.
+# ec_run "<link> <version> <vendor bit> <fans> <mode> [fault]" <stdin lines...>
+# Replies, EC writes ("w <reg> <value>") and protocol errors ("bad ...") land in OUT.
+ec_run() {
+    local cfg="$1"
+    shift
+    OUT="$(printf '%s\n' "$@" | EC_SIM="$cfg" "$EC_BIN" ec-fanctl 2>&1)"
+    RC=$?
+}
+
+has() { grep -qxF -- "$1" <<<"$OUT" || { fail "missing line: $1"; return 1; }; }
+lacks() { ! grep -qxF -- "$1" <<<"$OUT" || { fail "unexpected line: $1"; return 1; }; }
+protocol_ok() { ! grep -q '^bad' <<<"$OUT" || { fail "protocol error"; return 1; }; }
+last_is() { [[ "$(tail -n 1 <<<"$OUT")" == "$1" ]] || { fail "last line is not: $1"; return 1; }; }
+
+# Fake hidraw node: sysfs uevent, report descriptor and a /dev file.
+# hid_dev <name> <VID:PID> <descriptor hex>
+hid_dev() {
+    mkdir -p "$EC_DIR/sys/$1/device" "$EC_DIR/dev"
+    printf 'DRIVER=hid-generic\nHID_ID=0018:0000%s:0000%s\n' "${2%%:*}" "${2##*:}" > "$EC_DIR/sys/$1/device/uevent"
+    printf "$(sed 's/../\\x&/g' <<<"$3")" > "$EC_DIR/sys/$1/device/report_descriptor"
+    : > "$EC_DIR/dev/$1"
+}
+hid_reset() { rm -rf "$EC_DIR/sys" "$EC_DIR/dev"; }
+
+# SMBIOS table the lpc link reads: dmi <strings...>
+dmi() { printf '%s\0' "$@" > "$EC_DIR/dmi"; }
+dmi "ASUSTeK COMPUTER INC."
+
+# Usage Page (0xFF32), Usage (0x84), Collection: what the AsusEC DLL matches.
+EC_DESC="0632ff0984a101850709011500260000750895403f00b102c0"
+
+test_ec_detect_myasus_rule() {
+    local cfg want
+    while IFS='|' read -r cfg want; do
+        ec_run "lpc $cfg" probe
+        has "$want" || return 1
+    done <<'CASES'
+18 1 2 0|probe ok lpc 18 2 1000 1000
+2 1 2 0|probe ok lpc 2 2 1000 1000
+1 1 2 0|probe no version
+0 1 2 0|probe no version
+255 1 2 0|probe no silent
+4 0 2 0|probe no odm
+4 1 2 0|probe ok lpc 4 2 1000 1000
+5 0 2 0|probe ok lpc 5 2 1000 1000
+18 1 0 0|probe no fans
+18 1 3 0|probe ok lpc 18 3 1000 1000 1000
+18 1 4 0|probe no fans
+CASES
+}
+
+test_ec_lpc_port_protocol() {
+    ec_run "lpc 18 1 2 0" probe "set 100 120" "set 100 130" quit
+    protocol_ok && has "w 31 01" && has "w 35 64" && has "w 35 78" && has "w 35 82" || return 1
+    [[ "$(grep -c '^w 35 64$' <<<"$OUT")" == 1 ]] || { fail "unchanged duty rewritten"; return 1; }
+    last_is "w 31 00"
+}
+
+test_ec_lpc_drains_stale_output() {
+    ec_run "lpc 18 1 2 0 1" probe "set 50 50" quit
+    protocol_ok && has "probe ok lpc 18 2 1000 1000"
+}
+
+test_ec_select_before_duty() {
+    ec_run "lpc 18 1 2 0" probe "set 64 96" quit
+    grep -A1 -x 'w 32 00' <<<"$OUT" | grep -qx 'w 35 40' || { fail "fan 0: select then duty"; return 1; }
+    grep -A1 -x 'w 32 01' <<<"$OUT" | grep -qx 'w 35 60' || { fail "fan 1: select then duty"; return 1; }
+}
+
+test_ec_duty_bounds() {
+    # MyASUS fan test duties: 0x4C (30 %), 0x59 (35 %), 0x99 (60 %), 0xFF
+    ec_run "lpc 18 1 2 0" probe "set 0 255" "set 76 89" "set 153 255" "set 256" "set 0 -1" quit
+    [[ "$(grep -cx ok <<<"$OUT")" == 3 && "$(grep -cx 'err range' <<<"$OUT")" == 2 ]] || { fail "bounds"; return 1; }
+    has "w 35 00" && has "w 35 ff" && has "w 35 4c" && has "w 35 59" && has "w 35 99"
+}
+
+test_ec_hid_feature_report() {
+    hid_reset
+    hid_dev hidraw3 0B05:4543 "$EC_DESC"
+    ec_run "hid 18 1 2 0" probe "set 100 120" quit
+    hid_reset
+    protocol_ok && has "probe ok hid 18 2 1000 1000" && has "ok" && has "w 35 78" || return 1
+    last_is "w 31 00"
+}
+
+test_ec_hid_needs_asus_ec_device() {
+    hid_reset
+    hid_dev hidraw1 0B05:19B6 "$EC_DESC"
+    hid_dev hidraw2 0B05:4543 "05010906a101c0"
+    ec_run "hid 18 1 2 0" probe "set 50 50"
+    hid_reset
+    has "probe no silent" && has "err probe" && lacks "w 31 01"
+}
+
+test_ec_hid_error_status() {
+    hid_reset
+    hid_dev hidraw3 0B05:4543 "$EC_DESC"
+    ec_run "hid 18 1 2 0 2" probe
+    hid_reset
+    has "probe no silent"
+}
+
+test_ec_lpc_before_hid() {
+    hid_reset
+    hid_dev hidraw3 0B05:4543 "$EC_DESC"
+    ec_run "both 18 1 2 0" probe
+    hid_reset
+    has "probe ok lpc 18 2 1000 1000"
+}
+
+test_ec_lpc_needs_asus_smbios() {
+    local vendor
+    for vendor in "ASUSTeK COMPUTER INC." "ASUSTeK Computer Inc." "LENOVO"; do
+        dmi "$vendor"
+        ec_run "lpc 18 1 2 0" probe "set 50 50"
+        dmi "ASUSTeK COMPUTER INC."
+        if [[ "$vendor" == ASUSTeK* ]]; then
+            has "probe ok lpc 18 2 1000 1000" || return 1
+        else
+            has "probe no nolink" && has "err probe" && lacks "w 31 01" || return 1
+        fi
+    done
+}
+
+test_ec_no_link() {
+    ec_run "none 18 1 2 0" probe "set 50 50"
+    has "probe no silent" && has "err probe" && lacks "w 31 01"
+}
+
+test_ec_eof_releases_even_if_manual_at_start() {
+    ec_run "lpc 18 1 2 1" probe "set 50 50"
+    lacks "w 31 01" && last_is "w 31 00"
+}
+
+test_ec_refused_release_runs_fans_full() {
+    ec_run "lpc 18 1 2 0 3" probe "set 50 60" quit
+    [[ "$(tail -n 5 <<<"$OUT")" == $'w 31 00\nw 32 00\nw 35 ff\nw 32 01\nw 35 ff' ]] || { fail "no full duty after refused release"; return 1; }
+}
+
+test_ec_rearms_after_ec_reset() {
+    ec_run "lpc 18 1 2 0" probe "set 50 60" "sim reset" "set 50 60" quit
+    [[ "$(grep -cx 'w 31 01' <<<"$OUT")" == 2 ]] || { fail "manual mode not re-armed"; return 1; }
+    [[ "$(grep -cx 'w 35 32' <<<"$OUT")" == 2 ]] || { fail "duty not rewritten after reset"; return 1; }
+}
+
+test_ec_rejects_bad_input() {
+    ec_run "lpc 18 1 2 0" "set 10" probe "set 1 2 3" "set 300" "set -1" bogus quit
+    [[ "$(head -n 1 <<<"$OUT")" == "err probe" ]] || { fail "set before probe"; return 1; }
+    [[ "$(grep -c '^err range$' <<<"$OUT")" == 3 ]] || { fail "range"; return 1; }
+    has "err cmd" && lacks "w 31 01"
+}
+
+test_ec_watchdog_releases_then_set_retakes() {
+    OUT="$( (printf 'probe\nset 50 60\n'; sleep 7; printf 'set 70 60\nquit\n') \
+        | EC_SIM="lpc 18 1 2 0" "$EC_BIN" ec-fanctl 2>&1)"
+    [[ "$(grep -cx 'w 31 00' <<<"$OUT")" == 2 ]] || { fail "watchdog + quit releases"; return 1; }
+    [[ "$(grep -cx 'w 31 01' <<<"$OUT")" == 2 ]] || { fail "set after watchdog did not retake"; return 1; }
+}
+
+test_ec_signal_releases() {
+    local fifo="$EC_DIR/in" log="$EC_DIR/out" pid
+    rm -f "$fifo" && mkfifo "$fifo"
+    EC_SIM="lpc 18 1 2 0" "$EC_BIN" ec-fanctl < "$fifo" > "$log" 2>&1 &
+    pid=$!
+    exec 7> "$fifo"
+    printf 'probe\nset 50 50\n' >&7
+    sleep 1
+    kill -TERM "$pid"
+    wait "$pid"
+    exec 7>&-
+    OUT="$(cat "$log")"
+    has "ok" && last_is "w 31 00"
+}
+
+test_ec_second_controller_busy() {
+    flock "$EC_DIR/ec-fan.lock" sleep 3 &
+    local holder=$!
+    sleep 0.5
+    ec_run "lpc 18 1 2 0" probe "set 50 50"
+    kill "$holder" 2>/dev/null
+    wait "$holder" 2>/dev/null
+    has "probe no busy" && has "err probe" && lacks "w 31 01"
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "="
 echo " gpu-helper argument tests"
@@ -528,6 +727,24 @@ for name in \
     lsm_round_trip_drops_added_token \
     lsm_disable_leaves_token_changed_by_user \
     lsm_disable_nothing_to_undo \
+    ec_detect_myasus_rule \
+    ec_lpc_port_protocol \
+    ec_lpc_drains_stale_output \
+    ec_select_before_duty \
+    ec_duty_bounds \
+    ec_hid_feature_report \
+    ec_hid_needs_asus_ec_device \
+    ec_hid_error_status \
+    ec_lpc_before_hid \
+    ec_lpc_needs_asus_smbios \
+    ec_no_link \
+    ec_eof_releases_even_if_manual_at_start \
+    ec_refused_release_runs_fans_full \
+    ec_rearms_after_ec_reset \
+    ec_rejects_bad_input \
+    ec_watchdog_releases_then_set_retakes \
+    ec_signal_releases \
+    ec_second_controller_busy \
 ; do
     scenario "$name"
 done

@@ -47,6 +47,11 @@ public class LinuxNvidiaGpuControl : IGpuControl
 
     public string? GetGpuName() => _gpuName;
 
+    // one nvml-temp spawn per second, shared by every temperature reader
+    private const int NvmlTempCacheMs = 1000;
+    private static long _nvmlTempAt = -NvmlTempCacheMs;
+    private static int _nvmlTemp = -1;
+
     /// <summary>
     /// Fast GPU temp read via gpu-helper nvml-temp (~5ms, no nvidia-smi fork).
     /// Returns the temperature in Celsius or -1 on failure.
@@ -64,6 +69,17 @@ public class LinuxNvidiaGpuControl : IGpuControl
             return -1;
         if (!NvidiaProcessScanner.EnsureHelper())
             return -1;
+        long now = Environment.TickCount64;
+        if (now - _nvmlTempAt >= NvmlTempCacheMs)
+        {
+            _nvmlTempAt = now;
+            _nvmlTemp = ReadNvmlTemp();
+        }
+        return _nvmlTemp;
+    }
+
+    private static int ReadNvmlTemp()
+    {
         try
         {
             // Periodic poll: never escalate interactively (issue #146).
