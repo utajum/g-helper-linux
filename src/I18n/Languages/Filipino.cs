@@ -199,7 +199,7 @@ public static class Filipino
         ["display"] = "Display",
         ["refresh_rate_format"] = "Refresh rate: {0} Hz",
         ["auto_screen_ac"] = "Auto: {0} Hz, naka-on ang overdrive",
-        ["auto_screen_battery"] = "Auto: 60 Hz, naka-off ang overdrive",
+        ["auto_screen_battery"] = "Auto: {0} Hz, naka-off ang overdrive",
         ["setup_required"] = "Kailangan ng setup",
         ["udev_not_installed"] = "Hindi naka-install ang mga udev rule. Patakbuhin ang install.sh para sa buong functionality (limitasyon ng baterya, kontrol ng fan, atbp.)",
 

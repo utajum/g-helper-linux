@@ -199,7 +199,7 @@ public static class Greek
         ["display"] = "Οθόνη",
         ["refresh_rate_format"] = "Ρυθμός ανανέωσης: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive ενεργό",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive ανενεργό",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive ανενεργό",
         ["setup_required"] = "Απαιτείται ρύθμιση",
         ["udev_not_installed"] = "Οι κανόνες udev δεν έχουν εγκατασταθεί. Εκτελέστε install.sh για πλήρη λειτουργικότητα (όριο μπαταρίας, έλεγχος ανεμιστήρων κ.λπ.)",
 

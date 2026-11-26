@@ -199,7 +199,7 @@ public static class Lithuanian
         ["display"] = "Ekranas",
         ["refresh_rate_format"] = "Atnaujinimo dažnis: {0} Hz",
         ["auto_screen_ac"] = "Automatinis: {0} Hz, overdrive įjungtas",
-        ["auto_screen_battery"] = "Automatinis: 60 Hz, overdrive išjungtas",
+        ["auto_screen_battery"] = "Automatinis: {0} Hz, overdrive išjungtas",
         ["setup_required"] = "Reikia sąrankos",
         ["udev_not_installed"] = "udev taisyklės neįdiegtos. Visam funkcionalumui paleiskite install.sh (baterijos riba, ventiliatorių valdymas ir kt.)",
 

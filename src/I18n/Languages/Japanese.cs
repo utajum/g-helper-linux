@@ -199,7 +199,7 @@ public static class Japanese
         ["display"] = "ディスプレイ",
         ["refresh_rate_format"] = "リフレッシュレート: {0}Hz",
         ["auto_screen_ac"] = "自動: {0}Hz、オーバードライブ オン",
-        ["auto_screen_battery"] = "自動: 60Hz、オーバードライブ オフ",
+        ["auto_screen_battery"] = "自動: {0}Hz、オーバードライブ オフ",
         ["setup_required"] = "セットアップが必要",
         ["udev_not_installed"] = "udev ルールがインストールされていません。完全な機能（バッテリー制限、ファン制御など）を利用するには install.sh を実行してください",
 

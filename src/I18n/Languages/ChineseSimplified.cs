@@ -199,7 +199,7 @@ public static class ChineseSimplified
         ["display"] = "显示器",
         ["refresh_rate_format"] = "刷新率：{0}Hz",
         ["auto_screen_ac"] = "自动：{0}Hz，超频开启",
-        ["auto_screen_battery"] = "自动：60Hz，超频关闭",
+        ["auto_screen_battery"] = "自动：{0}Hz，超频关闭",
         ["setup_required"] = "需要设置",
         ["udev_not_installed"] = "udev 规则未安装。请运行 install.sh 以获得完整功能（电池限制、风扇控制等）",
 

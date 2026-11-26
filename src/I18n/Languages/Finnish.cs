@@ -199,7 +199,7 @@ public static class Finnish
         ["display"] = "Näyttö",
         ["refresh_rate_format"] = "Virkistystaajuus: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive päällä",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive pois",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive pois",
         ["setup_required"] = "Asennus vaaditaan",
         ["udev_not_installed"] = "udev-sääntöjä ei ole asennettu. Suorita install.sh täyden toiminnallisuuden saamiseksi (akun raja, tuuletinhallinta jne.)",
 

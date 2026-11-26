@@ -196,7 +196,7 @@ public static class Czech
         ["display"] = "Displej",
         ["refresh_rate_format"] = "Obnovovací frekvence: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive zap.",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive vyp.",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive vyp.",
         ["setup_required"] = "Vyžadováno nastavení",
         ["udev_not_installed"] = "Pravidla udev nejsou nainstalována. Spusťte install.sh pro plnou funkčnost (limit baterie, ovládání ventilátorů atd.)",
 

@@ -199,7 +199,7 @@ public static class Slovak
         ["display"] = "Displej",
         ["refresh_rate_format"] = "Obnovovacia frekvencia: {0} Hz",
         ["auto_screen_ac"] = "Auto: {0} Hz, overdrive zapnutý",
-        ["auto_screen_battery"] = "Auto: 60 Hz, overdrive vypnutý",
+        ["auto_screen_battery"] = "Auto: {0} Hz, overdrive vypnutý",
         ["setup_required"] = "Vyžaduje sa nastavenie",
         ["udev_not_installed"] = "Pravidlá udev nie sú nainštalované. Pre plnú funkčnosť spustite install.sh (limit batérie, ovládanie ventilátorov atď.)",
 

@@ -196,7 +196,7 @@ public static class Turkish
         ["display"] = "Ekran",
         ["refresh_rate_format"] = "Yenileme hızı: {0}Hz",
         ["auto_screen_ac"] = "Otomatik: {0}Hz, overdrive açık",
-        ["auto_screen_battery"] = "Otomatik: 60Hz, overdrive kapalı",
+        ["auto_screen_battery"] = "Otomatik: {0}Hz, overdrive kapalı",
         ["setup_required"] = "Kurulum Gerekli",
         ["udev_not_installed"] = "udev kuralları yüklü değil. Tam işlevsellik için install.sh dosyasını çalıştırın (pil limiti, fan kontrolü vb.)",
 

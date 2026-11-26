@@ -199,7 +199,7 @@ public static class ChineseTraditional
         ["display"] = "螢幕",
         ["refresh_rate_format"] = "更新率：{0}Hz",
         ["auto_screen_ac"] = "自動：{0}Hz，超頻開啟",
-        ["auto_screen_battery"] = "自動：60Hz，超頻關閉",
+        ["auto_screen_battery"] = "自動：{0}Hz，超頻關閉",
         ["setup_required"] = "需要設定",
         ["udev_not_installed"] = "udev 規則未安裝。請執行 install.sh 以獲得完整功能（電池限制、風扇控制等）",
 

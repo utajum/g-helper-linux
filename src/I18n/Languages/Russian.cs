@@ -196,7 +196,7 @@ public static class Russian
         ["display"] = "Дисплей",
         ["refresh_rate_format"] = "Частота обновления: {0}Hz",
         ["auto_screen_ac"] = "Авто: {0}Hz, overdrive вкл",
-        ["auto_screen_battery"] = "Авто: 60Hz, overdrive выкл",
+        ["auto_screen_battery"] = "Авто: {0}Hz, overdrive выкл",
         ["setup_required"] = "Требуется настройка",
         ["udev_not_installed"] = "Правила udev не установлены. Запустите install.sh для полной функциональности (лимит батареи, управление вентиляторами и т.д.)",
 

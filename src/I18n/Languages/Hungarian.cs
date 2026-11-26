@@ -196,7 +196,7 @@ public static class Hungarian
         ["display"] = "Kijelző",
         ["refresh_rate_format"] = "Frissítési ráta: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive be",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive ki",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive ki",
         ["setup_required"] = "Beállítás szükséges",
         ["udev_not_installed"] = "Az udev szabályok nincsenek telepítve. Futtassa az install.sh-t a teljes funkcionalitáshoz (akkumulátor korlát, ventilátor vezérlés stb.)",
 

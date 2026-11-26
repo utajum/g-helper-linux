@@ -199,7 +199,7 @@ public static class Malay
         ["display"] = "Paparan",
         ["refresh_rate_format"] = "Kadar segar semula: {0} Hz",
         ["auto_screen_ac"] = "Auto: {0} Hz, overdrive hidup",
-        ["auto_screen_battery"] = "Auto: 60 Hz, overdrive mati",
+        ["auto_screen_battery"] = "Auto: {0} Hz, overdrive mati",
         ["setup_required"] = "Persediaan diperlukan",
         ["udev_not_installed"] = "Peraturan udev tidak dipasang. Jalankan install.sh untuk fungsi penuh (had bateri, kawalan kipas, dll.)",
 

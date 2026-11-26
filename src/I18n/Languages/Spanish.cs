@@ -196,7 +196,7 @@ public static class Spanish
         ["display"] = "Pantalla",
         ["refresh_rate_format"] = "Tasa de refresco: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive activado",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive desactivado",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive desactivado",
         ["setup_required"] = "Configuración necesaria",
         ["udev_not_installed"] = "Reglas udev no instaladas. Ejecute install.sh para funcionalidad completa (límite de batería, control de ventiladores, etc.)",
 

@@ -199,7 +199,7 @@ public static class Danish
         ["display"] = "Skærm",
         ["refresh_rate_format"] = "Opdateringshastighed: {0}Hz",
         ["auto_screen_ac"] = "Auto: {0}Hz, overdrive til",
-        ["auto_screen_battery"] = "Auto: 60Hz, overdrive fra",
+        ["auto_screen_battery"] = "Auto: {0}Hz, overdrive fra",
         ["setup_required"] = "Opsætning påkrævet",
         ["udev_not_installed"] = "udev-regler er ikke installeret. Kør install.sh for fuld funktionalitet (batterigrænse, blæserstyring osv.)",
 

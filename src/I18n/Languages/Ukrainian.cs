@@ -196,7 +196,7 @@ public static class Ukrainian
         ["display"] = "Дисплей",
         ["refresh_rate_format"] = "Частота оновлення: {0}Hz",
         ["auto_screen_ac"] = "Авто: {0}Hz, overdrive увімк.",
-        ["auto_screen_battery"] = "Авто: 60Hz, overdrive вимк.",
+        ["auto_screen_battery"] = "Авто: {0}Hz, overdrive вимк.",
         ["setup_required"] = "Потрібне налаштування",
         ["udev_not_installed"] = "Правила udev не встановлені. Запустіть install.sh для повної функціональності (ліміт батареї, контроль вентиляторів тощо)",
 
