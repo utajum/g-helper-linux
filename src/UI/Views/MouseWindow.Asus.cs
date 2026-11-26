@@ -156,7 +156,9 @@ public partial class MouseWindow
     private void Mouse_BatteryUpdated(object? sender, EventArgs e) => Dispatcher.UIThread.Post(() =>
     {
         if (_asus is { } am)
-            labelBattery.Text = BatteryText(am);
+            labelBattery.Text = am.Battery < 0
+                ? "--"
+                : $"{am.Battery}%{(am.Charging ? $" ({Labels.Get("mouse_charging")})" : "")}";
     });
     private void Mouse_MouseReadyChanged(object? sender, EventArgs e) => Dispatcher.UIThread.Post(Refresh);
 

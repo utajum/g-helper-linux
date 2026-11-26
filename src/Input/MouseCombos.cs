@@ -44,7 +44,7 @@ internal static class MouseCombos
             }
             if (_watched.Count > 0)
             {
-                _keyboard ??= new OskUinput("G-Helper Mouse Combos");
+                _keyboard ??= new OskUinput();
                 _keyboard.Start();
             }
             Logger.WriteLine($"MouseCombos: watching {_watched.Count} event nodes");

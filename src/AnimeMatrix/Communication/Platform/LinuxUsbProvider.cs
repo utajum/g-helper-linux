@@ -72,11 +72,11 @@ public class LinuxUsbProvider : UsbProvider
 
         if (target is null)
             throw new IOException(
-                $"LinuxUsbProvider({path}): no HID device found for " +
-                $"VID=0x{vendorId:X4} PID=0x{productId:X4}");
+                $"LinuxUsbProvider(Slash): no HID device found for " +
+                $"VID=0x{vendorId:X4} PID=0x{productId:X4} path containing '{path}'");
 
         Logger.WriteLine(
-            $"LinuxUsbProvider({path}): opening {target.DevicePath} " +
+            $"LinuxUsbProvider(Slash): opening {target.DevicePath} " +
             $"(VID=0x{vendorId:X4} PID=0x{productId:X4})");
 
         var config = new OpenConfiguration();

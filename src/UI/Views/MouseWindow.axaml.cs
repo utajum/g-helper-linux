@@ -230,7 +230,9 @@ public partial class MouseWindow : Window
 
         mouse.ReadBattery();
         rowBattery.IsVisible = mouse.HasBattery();
-        labelBattery.Text = BatteryText(mouse);
+        labelBattery.Text = mouse.Battery < 0
+            ? "--"
+            : $"{mouse.Battery}%{(mouse.Charging ? $" ({Labels.Get("mouse_charging")})" : "")}";
 
         // DPI
         panelDpi.IsVisible = true;
@@ -663,10 +665,6 @@ public partial class MouseWindow : Window
         labelBrightness.Text = ((int)sliderBrightness.Value).ToString();
         borderColor.Background = new SolidColorBrush(Color.FromRgb(setting.RGBColor.R, setting.RGBColor.G, setting.RGBColor.B));
     }
-
-    private static string BatteryText(IPeripheral mouse) => mouse.Battery < 0
-        ? "--"
-        : $"{mouse.Battery}%{(mouse.Charging ? $" ({Labels.Get("mouse_charging")})" : "")}";
 
     private void SetSectionsEnabled(bool enabled)
     {
