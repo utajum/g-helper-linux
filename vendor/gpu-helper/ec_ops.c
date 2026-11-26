@@ -382,15 +382,22 @@ static const char *ec_set(const char *args, int fans, int *last, int *held)
     return NULL;
 }
 
-/* Back to the BIOS curve: mode 0, the way the MyASUS fan test ends. */
-static void ec_release(int *last, int *held, const char *why)
+/* Back to the BIOS curve: mode 0, the way the MyASUS fan test ends. An EC
+ * that still reads manual gets full duty, not the last one. */
+static void ec_release(int fans, int *last, int *held, const char *why)
 {
     if (!*held)
         return;
-    if (ht_write(EC_REG_MODE, 0) != 0)
-        glog(LOG_ERR, "ec-fanctl: release (%s) failed", why);
-    else
+    unsigned char mode = 1;
+    if (ht_write(EC_REG_MODE, 0) == 0 && ht_read(EC_REG_MODE, &mode) == 0 && mode == 0)
         glog(LOG_INFO, "ec-fanctl: fans back to BIOS (%s)", why);
+    else
+    {
+        glog(LOG_ERR, "ec-fanctl: release (%s) failed, trying full duty", why);
+        for (int i = 0; i < fans; i++)
+            if (ht_write(EC_REG_FAN_SEL, i) != 0 || ht_write(EC_REG_DUTY, 255) != 0)
+                break;
+    }
     *held = 0;
     for (int i = 0; i < EC_MAX_FANS; i++)
         last[i] = -1;
@@ -424,7 +431,7 @@ int do_ec_fanctl(void)
         if (ready <= 0)
         {
             if (ready == 0 && ++idle == EC_WATCHDOG_S && ec != NULL)
-                ec_release(last, &held, "no command");
+                ec_release(fans, last, &held, "no command");
             continue;
         }
         if (fgets(line, sizeof(line), stdin) == NULL)
@@ -451,7 +458,7 @@ int do_ec_fanctl(void)
     }
     if (ec != NULL)
     {
-        ec_release(last, &held, ec_stop ? "signal" : "exit");
+        ec_release(fans, last, &held, ec_stop ? "signal" : "exit");
         ec->close();
     }
     if (lock_fd >= 0)

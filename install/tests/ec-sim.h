@@ -8,6 +8,7 @@
  * EC_SIM="<lpc|hid|both|none> <version> <vendor bit> <fans> <mode> [fault]"
  *   fault 1: a stale byte waits in the lpc output buffer
  *   fault 2: hid get feature answers status 0x82 (invalid parameter)
+ *   fault 3: a mode 0 write is ignored, the EC stays in manual mode
  * Table writes go to stderr as "w <reg> <value>", protocol errors as
  * "bad ...". Stdin "sim reset" makes the EC leave manual mode by itself. */
 #include <linux/hidraw.h>
@@ -64,7 +65,7 @@ static int sim_exec(int cmd, const unsigned char *d, int len, int *reply)
     {
         fprintf(stderr, "w %02x %02x\n", d[1], d[2]);
         if (d[1] == 0x31)
-            sim.mode = d[2];
+            sim.mode = sim.fault == 3 && d[2] == 0 ? sim.mode : d[2];
         else if (d[1] == 0x32)
             sim.sel = d[2] & 7;
         else if (d[1] == 0x35)

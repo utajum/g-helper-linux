@@ -624,6 +624,11 @@ test_ec_eof_releases_even_if_manual_at_start() {
     lacks "w 31 01" && last_is "w 31 00"
 }
 
+test_ec_refused_release_runs_fans_full() {
+    ec_run "lpc 18 1 2 0 3" probe "set 50 60" quit
+    [[ "$(tail -n 5 <<<"$OUT")" == $'w 31 00\nw 32 00\nw 35 ff\nw 32 01\nw 35 ff' ]] || { fail "no full duty after refused release"; return 1; }
+}
+
 test_ec_rearms_after_ec_reset() {
     ec_run "lpc 18 1 2 0" probe "set 50 60" "sim reset" "set 50 60" quit
     [[ "$(grep -cx 'w 31 01' <<<"$OUT")" == 2 ]] || { fail "manual mode not re-armed"; return 1; }
@@ -734,6 +739,7 @@ for name in \
     ec_lpc_needs_asus_smbios \
     ec_no_link \
     ec_eof_releases_even_if_manual_at_start \
+    ec_refused_release_runs_fans_full \
     ec_rearms_after_ec_reset \
     ec_rejects_bad_input \
     ec_watchdog_releases_then_set_retakes \
