@@ -1088,7 +1088,7 @@ public static class GpuSwitchTests
 
         Harness.Scenario("Backend_StartupKeepsUserChoice", sb =>
         {
-            foreach (var choice in new[] { "asus-wmi", "pci" })
+            foreach (var choice in new[] { "asus-wmi", "pci", "ebpf" })
             {
                 AppConfig.Set("gpu_backend", choice);
                 GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => true);

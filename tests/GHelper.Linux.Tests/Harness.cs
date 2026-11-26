@@ -61,7 +61,8 @@ public static class Harness
             string libModules = Path.Combine(TempRoot, "lib", "modules");
             string procKernel = Path.Combine(TempRoot, "proc", "sys", "kernel");
             string sysPlatform = Path.Combine(TempRoot, "sys", "devices", "platform");
-            foreach (var d in new[] { sysBusPci, sysBusPciSlots, sysModule, libModules, procKernel, sysPlatform })
+            string sysKernel = Path.Combine(TempRoot, "sys", "kernel");
+            foreach (var d in new[] { sysBusPci, sysBusPciSlots, sysModule, libModules, procKernel, sysPlatform, sysKernel })
             {
                 if (Directory.Exists(d))
                     Directory.Delete(d, recursive: true);
@@ -82,6 +83,7 @@ public static class Harness
             // Always install the seam so no scenario can shell out to the
             // real privileged helper by accident.
             Gpu.Block.GpuBlockControl.TestOps = BlockOps;
+            Gpu.Block.GpuBlockCapability.TestCaps = null;
             // Model the display topology too, or results would depend on
             // whatever monitors the machine running the tests has plugged in.
             ExternalDisplay = false;

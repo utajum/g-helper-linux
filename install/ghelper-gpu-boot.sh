@@ -101,7 +101,8 @@ run_gpu_helper() {
     local secs="$1"; shift
     if [[ -n "$ROOT" ]]; then
         log "test: would gpu-helper $*"
-        return 0
+        [[ ! -f "${ROOT}/test-gpu-helper-fails" ]]
+        return
     fi
     if [[ ! -x "$GPU_HELPER" ]]; then
         log "gpu-helper not found at $GPU_HELPER"

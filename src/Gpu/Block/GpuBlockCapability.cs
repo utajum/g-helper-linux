@@ -69,7 +69,7 @@ public static class GpuBlockCapability
     /// <summary>Read the active LSM list; securityfs needs no privilege.</summary>
     public static bool IsLsmBpfActive()
     {
-        string? lsm = SysfsHelper.ReadAttributeSilent("/sys/kernel/security/lsm");
+        string? lsm = SysfsHelper.ReadAttributeSilent(SysfsHelper.HostPath("/sys/kernel/security/lsm"));
         if (string.IsNullOrEmpty(lsm))
             return false;
         foreach (var token in lsm.Split(',', StringSplitOptions.RemoveEmptyEntries))
@@ -78,23 +78,21 @@ public static class GpuBlockCapability
         return false;
     }
 
+    /// <summary>Test seam: "bpf-caps" output, so tests never run the helper.</summary>
+    internal static Func<string>? TestCaps { get; set; }
+
     /// <summary>Query the helper for the full capability set.</summary>
     public static Caps Query()
     {
+        if (TestCaps != null)
+            return ParseCaps(TestCaps());
         var (stdout, _, _) = SysfsHelper.RunSudoOrPkexecEx(
             SysfsHelper.GpuHelperPath, new[] { "bpf-caps" }, allowPkexec: false);
         return ParseCaps(stdout);
     }
 
-    /// <summary>True when the block can be turned on now.</summary>
-    public static bool IsAvailable()
-    {
-        // Cheap unprivileged check first.
-        if (!IsLsmBpfActive())
-            return false;
-        var caps = Query();
-        return caps.HelperRan && caps.LsmActive && caps.Bpffs && caps.Libbpf && caps.Filter;
-    }
+    /// <summary>True when the block can be turned on now; the cheap unprivileged check runs first.</summary>
+    public static bool IsAvailable() => IsLsmBpfActive() && UnavailableKey().Length == 0;
 
     /// <summary>Label key of the reason the block is unavailable, or empty.</summary>
     public static string UnavailableKey()

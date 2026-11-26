@@ -111,6 +111,12 @@ fi
 no "allow-pid bad arg" "$H bpf-block allow-pid 1x"
 ok "refused lists probe" "$H bpf-block refused | grep -q 'probe$'"
 
+# App update with the filter attached: a new helper file runs on the pins the old one left.
+busybox cp -p $H /tmp/gh-new && busybox mv -f /tmp/gh-new $H
+ok "update: status sees the filter" "$H bpf-block status | grep -q 'attached=1'"
+ok "update: refresh" "$H bpf-block refresh $DG"
+no "update: dgpu still denied" "probe open $V"
+
 $H bpf-block off >/dev/null
 ok "off: dgpu visible" "probe open $V"
 [ -n "$DC" ] && ok "off: card visible" "probe open /dev/dri/$DC"

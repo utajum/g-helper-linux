@@ -2007,6 +2007,22 @@ test_120_ebpf_optimized_no_mains_treated_as_ac() {
     expect_log_NOT_contains "bpf-block on" || return 1
 }
 
+# 121: ebpf eco, attach fails (kernel update dropped bpf from the LSM list) -> counted, no firmware fallback
+test_121_ebpf_eco_attach_fails() {
+    set_backend ebpf
+    set_legacy_dgpu 0
+    set_legacy_mux  1
+    add_pci_device 0000:01:00.0 0x10de 0 nvidia
+    set_trigger eco
+    : > "$SANDBOX/test-gpu-helper-fails"
+    run_boot_script || return 1
+    expect_log_contains "could not attach the filter for 0000:01:00.0" || return 1
+    expect_log_contains "eco: failure #1: ebpf filter could not be attached" || return 1
+    expect_file_content /etc/ghelper/eco-retry-count 1 || return 1
+    expect_file_exists /etc/ghelper/pending-gpu-mode || return 1
+    expect_file_content /sys/bus/platform/devices/asus-nb-wmi/dgpu_disable 0 || return 1
+}
+
 # -- Run ------------------------------------------------------------------------
 echo "═"
 echo " ghelper-gpu-boot.sh scenario tests"
@@ -2131,6 +2147,7 @@ for name in \
     118_ebpf_persistent_optimized_battery \
     119_ebpf_persistent_optimized_ac \
     120_ebpf_optimized_no_mains_treated_as_ac \
+    121_ebpf_eco_attach_fails \
 ; do
     scenario "$name"
 done
