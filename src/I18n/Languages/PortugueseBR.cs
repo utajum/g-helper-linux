@@ -1152,6 +1152,23 @@ public static class PortugueseBR
         ["mouse_host_switch_msg_fmt"] = "Trocar para o host {0}? O mouse será desconectado.",
         ["mouse_switch"] = "Trocar",
         ["mouse_cancel"] = "Cancelar",
+        ["mouse_profile"] = "Perfil",
+        ["mouse_synchronize"] = "Sincronizar com o mouse",
+        ["mouse_import"] = "Importar Perfil",
+        ["mouse_export"] = "Exportar Perfil",
+        ["mouse_import_failed"] = "Falha na importação. O arquivo não é um perfil de mouse válido ou está corrompido.",
+        ["mouse_dpi_add"] = "Adicionar nível de DPI",
+        ["mouse_dpi_remove"] = "Remover nível de DPI",
+        ["mouse_angle_tuning"] = "Ajuste de ângulo",
+        ["mouse_acceleration"] = "Aceleração",
+        ["mouse_deceleration"] = "Desaceleração",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Velocidade da Animação",
+        ["mouse_animation_direction"] = "Direção da animação",
+        ["mouse_clockwise"] = "Sentido horário",
+        ["mouse_counter_clockwise"] = "Sentido anti-horário",
+        ["mouse_sync_aura"] = "Sincronizar com laptop",
 
     };
 }

@@ -1152,6 +1152,23 @@ public static class Italian
         ["mouse_host_switch_msg_fmt"] = "Passare all'host {0}? Il mouse si disconnetterà.",
         ["mouse_switch"] = "Cambia",
         ["mouse_cancel"] = "Annulla",
+        ["mouse_profile"] = "Profilo",
+        ["mouse_synchronize"] = "Sincronizza con mouse",
+        ["mouse_import"] = "Importa profilo",
+        ["mouse_export"] = "Esporta profilo",
+        ["mouse_import_failed"] = "Importazione non riuscita. Il file non è un profilo di mouse valido, o è danneggiato.",
+        ["mouse_dpi_add"] = "Aggiungi livello DPI",
+        ["mouse_dpi_remove"] = "Rimuovi livello DPI",
+        ["mouse_angle_tuning"] = "Regolazione angolo",
+        ["mouse_acceleration"] = "Accelerazione",
+        ["mouse_deceleration"] = "Decelerazione",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Velocità animazione",
+        ["mouse_animation_direction"] = "Direzione animazione",
+        ["mouse_clockwise"] = "Senso orario",
+        ["mouse_counter_clockwise"] = "Senso antiorario",
+        ["mouse_sync_aura"] = "Sincronizza con il laptop",
 
     };
 }

@@ -3,6 +3,8 @@ src/bin/
 src/obj/
 tests/**/bin/
 tests/**/obj/
+scripts/mouse-golden/bin/
+scripts/mouse-golden/obj/
 dist/
 build/
 

@@ -1207,6 +1207,23 @@ public static class Filipino
         ["mouse_host_switch_msg_fmt"] = "Lumipat sa host {0}? Madidiskonek ang mouse.",
         ["mouse_switch"] = "Lumipat",
         ["mouse_cancel"] = "Kanselahin",
+        ["mouse_profile"] = "Profile",
+        ["mouse_synchronize"] = "I-sync sa mouse",
+        ["mouse_import"] = "I-import ang Profile",
+        ["mouse_export"] = "I-export ang Profile",
+        ["mouse_import_failed"] = "Nabigo ang pag-import. Ang file ay hindi valid na mouse profile, o sira ito.",
+        ["mouse_dpi_add"] = "Magdagdag ng DPI level",
+        ["mouse_dpi_remove"] = "Alisin ang DPI level",
+        ["mouse_angle_tuning"] = "Angle Tuning",
+        ["mouse_acceleration"] = "Acceleration",
+        ["mouse_deceleration"] = "Deceleration",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Bilis ng Animation",
+        ["mouse_animation_direction"] = "Direksyon ng Animation",
+        ["mouse_clockwise"] = "Pakanan",
+        ["mouse_counter_clockwise"] = "Pakaliwa",
+        ["mouse_sync_aura"] = "I-sync sa laptop",
 
     };
 }

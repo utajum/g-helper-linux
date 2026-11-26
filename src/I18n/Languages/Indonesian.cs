@@ -1155,6 +1155,23 @@ public static class Indonesian
         ["mouse_host_switch_msg_fmt"] = "Beralih ke host {0}? Mouse akan terputus.",
         ["mouse_switch"] = "Ganti",
         ["mouse_cancel"] = "Batal",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Sinkronkan dengan mouse",
+        ["mouse_import"] = "Impor Profil",
+        ["mouse_export"] = "Ekspor Profil",
+        ["mouse_import_failed"] = "Impor gagal. File bukan profil mouse yang valid, atau file rusak.",
+        ["mouse_dpi_add"] = "Tambah level DPI",
+        ["mouse_dpi_remove"] = "Hapus level DPI",
+        ["mouse_angle_tuning"] = "Penyetelan Sudut",
+        ["mouse_acceleration"] = "Akselerasi",
+        ["mouse_deceleration"] = "Perlambatan",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Kecepatan Animasi",
+        ["mouse_animation_direction"] = "Arah Animasi",
+        ["mouse_clockwise"] = "Searah Jarum Jam",
+        ["mouse_counter_clockwise"] = "Berlawanan Jarum Jam",
+        ["mouse_sync_aura"] = "Sinkronkan dengan laptop",
 
     };
 }

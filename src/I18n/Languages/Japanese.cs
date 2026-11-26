@@ -1155,6 +1155,23 @@ public static class Japanese
         ["mouse_host_switch_msg_fmt"] = "ホスト{0}に切り替えますか?マウスが切断されます。",
         ["mouse_switch"] = "切替",
         ["mouse_cancel"] = "キャンセル",
+        ["mouse_profile"] = "プロファイル",
+        ["mouse_synchronize"] = "マウスと同期",
+        ["mouse_import"] = "プロファイルをインポート",
+        ["mouse_export"] = "プロファイルをエクスポート",
+        ["mouse_import_failed"] = "インポートに失敗しました。選択したファイルは有効なマウスプロファイルではないか、壊れています。",
+        ["mouse_dpi_add"] = "DPIレベルを追加",
+        ["mouse_dpi_remove"] = "DPIレベルを削除",
+        ["mouse_angle_tuning"] = "角度調整",
+        ["mouse_acceleration"] = "加速",
+        ["mouse_deceleration"] = "減速",
+        ["mouse_motion_sync"] = "モーションシンク",
+        ["mouse_zone_mode"] = "Zoneモード",
+        ["mouse_animation_speed"] = "アニメーション速度",
+        ["mouse_animation_direction"] = "アニメーション方向",
+        ["mouse_clockwise"] = "時計回り",
+        ["mouse_counter_clockwise"] = "反時計回り",
+        ["mouse_sync_aura"] = "ノートPCと同期",
 
     };
 }

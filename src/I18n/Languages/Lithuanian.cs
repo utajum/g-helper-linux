@@ -1207,6 +1207,23 @@ public static class Lithuanian
         ["mouse_host_switch_msg_fmt"] = "Persijungti į pagrindinį {0}? Pelė bus atjungta.",
         ["mouse_switch"] = "Keisti",
         ["mouse_cancel"] = "Atšaukti",
+        ["mouse_profile"] = "Profilis",
+        ["mouse_synchronize"] = "Sinchronizuoti su pele",
+        ["mouse_import"] = "Importuoti profilį",
+        ["mouse_export"] = "Eksportuoti profilį",
+        ["mouse_import_failed"] = "Importuoti nepavyko. Failas nėra galiojantis pelės profilis arba yra sugadintas.",
+        ["mouse_dpi_add"] = "Pridėti DPI lygį",
+        ["mouse_dpi_remove"] = "Pašalinti DPI lygį",
+        ["mouse_angle_tuning"] = "Kampo reguliavimas",
+        ["mouse_acceleration"] = "Greitėjimas",
+        ["mouse_deceleration"] = "Lėtėjimas",
+        ["mouse_motion_sync"] = "Judesio sinch.",
+        ["mouse_zone_mode"] = "„Zone“ režimas",
+        ["mouse_animation_speed"] = "Animacijos greitis",
+        ["mouse_animation_direction"] = "Animacijos kryptis",
+        ["mouse_clockwise"] = "Pagal laikrodžio rodyklę",
+        ["mouse_counter_clockwise"] = "Prieš laikrodžio rodyklę",
+        ["mouse_sync_aura"] = "Sinchronizuoti su nešiojamuoju",
 
     };
 }

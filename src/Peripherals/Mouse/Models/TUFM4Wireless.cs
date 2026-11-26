@@ -1,52 +1,191 @@
-namespace GHelper.Linux.Peripherals.Mouse.Models;
+using GHelper.Linux.Helpers;
+using System.Drawing;
 
-public class TUFM4Wirelss : TUFM4Air
+namespace GHelper.Linux.Peripherals.Mouse.Models
 {
-    public TUFM4Wirelss() : this(0x19F4, "mi_00", true) { }
-    protected TUFM4Wirelss(ushort pid, string path, bool wireless, byte reportId = 0x00)
-        : base(pid, path, wireless, reportId) { }
+    //P306_Wireless
+    public class TUFM4Wirelss : AsusMouse
+    {
+        public TUFM4Wirelss() : base(0x0B05, 0x19F4, "mi_00", true)
+        {
+        }
 
-    public override string GetDisplayName() => "TUF Gaming M4 Wireless";
-    public override uint MaxDPI() => 12000;
-    public override bool HasDebounce() => true;
-}
+        public TUFM4Wirelss(ushort productId, bool wireless) : base(0x0B05, productId, "mi_00", wireless)
+        {
+        }
 
-public class TUFM4WirelssCN : TUFM4Wirelss
-{
-    public TUFM4WirelssCN() : base(0x1A8D, "mi_00", true) { }
-    public override string GetDisplayName() => "TUF Gaming M4 Wireless";
-}
+        public override int DPIProfileCount()
+        {
+            return 4;
+        }
 
-public class TXGamingMini : TUFM4Wirelss
-{
-    public TXGamingMini() : this(0x1AF5, "mi_00", true) { }
-    protected TXGamingMini(ushort pid, string path, bool wireless, byte reportId = 0x00)
-        : base(pid, path, wireless, reportId) { }
+        public override string GetDisplayName()
+        {
+            return "TUF GAMING M4 (Wireless)";
+        }
 
-    public override string GetDisplayName() => "TX Gaming Mini";
-    public override uint DPIIncrement() => 50;
-    public override bool HasXYDPI() => true;
-}
 
-public class TXGamingMiniWired : TXGamingMini
-{
-    public TXGamingMiniWired() : base(0x1AF3, "mi_00", false) { }
-    public override string GetDisplayName() => "TX Gaming Mini (Wired)";
-}
+        public override PollingRate[] SupportedPollingrates()
+        {
+            return new PollingRate[] {
+                PollingRate.PR125Hz,
+                PollingRate.PR250Hz,
+                PollingRate.PR500Hz,
+                PollingRate.PR1000Hz
+            };
+        }
 
-public class TUFGamingMiniMiku : TXGamingMini
-{
-    public TUFGamingMiniMiku() : this(0x1C57, true) { }
-    protected TUFGamingMiniMiku(ushort pid, bool wireless) : base(pid, "mi_00", wireless) { }
+        public override int ProfileCount()
+        {
+            return 3;
+        }
+        public override int MaxDPI()
+        {
+            return 12_000;
+        }
 
-    public override string GetDisplayName() => "TUF GAMING Mini Miku Edition (Wireless)";
+        public override bool HasLiftOffSetting()
+        {
+            return false;
+        }
 
-    public override LightingZone[] SupportedLightingZones() =>
-        [LightingZone.Logo, LightingZone.Scrollwheel, LightingZone.Underglow];
-}
+        public override bool HasDebounceSetting()
+        {
+            return true;
+        }
 
-public class TUFGamingMiniMikuWired : TUFGamingMiniMiku
-{
-    public TUFGamingMiniMikuWired() : base(0x1C56, false) { }
-    public override string GetDisplayName() => "TUF GAMING Mini Miku Edition (Wired)";
+        public override bool HasAutoPowerOff()
+        {
+            return true;
+        }
+
+        public override bool HasAngleSnapping()
+        {
+            return true;
+        }
+
+        public override bool HasAngleTuning()
+        {
+            return false;
+        }
+
+        public override bool HasLowBatteryWarning()
+        {
+            return true;
+        }
+
+        public override bool HasDPIColors()
+        {
+            return false;
+        }
+
+        public override int DPIIncrements()
+        {
+            return 100;
+        }
+
+        public override bool CanChangeDPIProfile()
+        {
+            return true;
+        }
+    }
+
+    //P310
+    public class TUFM4WirelssCN : TUFM4Wirelss
+    {
+        public TUFM4WirelssCN() : base(0x1A8D, true)
+        {
+
+        }
+
+
+        public override string GetDisplayName()
+        {
+            return "TX GAMING MOUSE (Wireless)";
+        }
+    }
+
+    //P519_Wireless
+    public class TXGamingMini : TUFM4Wirelss
+    {
+        public TXGamingMini() : base(0x1AF5, true)
+        {
+        }
+
+        public TXGamingMini(ushort productId, bool wireless) : base(productId, wireless)
+        {
+        }
+
+        public override int DPIIncrements()
+        {
+            return 50;
+        }
+
+
+        public override string GetDisplayName()
+        {
+            return "TX GAMING MOUSE Mini (Wireless)";
+        }
+
+        public override bool HasXYDPI()
+        {
+            return true;
+        }
+
+    }
+
+    //P519_Wired
+    public class TXGamingMiniWired : TXGamingMini
+    {
+        public TXGamingMiniWired() : base(0x1AF3, false)
+        {
+        }
+
+        public override int DPIIncrements()
+        {
+            return 50;
+        }
+
+
+        public override string GetDisplayName()
+        {
+            return "TX GAMING MOUSE Mini (Wired)";
+        }
+
+    }
+
+    public class TUFGamingMiniMiku : TXGamingMini
+    {
+        public TUFGamingMiniMiku() : base(0x1C57, true)
+        {
+        }
+
+        public TUFGamingMiniMiku(ushort productId, bool wireless) : base(productId, wireless)
+        {
+        }
+
+        public override string GetDisplayName()
+        {
+            return "TUF GAMING Mini Miku Edition (Wireless)";
+        }
+
+        public override bool HasRGB()
+        {
+            return true;
+        }
+
+    }
+
+    public class TUFGamingMiniMikuWired : TUFGamingMiniMiku
+    {
+        public TUFGamingMiniMikuWired() : base(0x1C56, false)
+        {
+        }
+
+        public override string GetDisplayName()
+        {
+            return "TUF GAMING Mini Miku Edition (Wired)";
+        }
+
+    }
 }

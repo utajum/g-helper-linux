@@ -1152,6 +1152,23 @@ public static class Vietnamese
         ["mouse_host_switch_msg_fmt"] = "Chuyển sang máy chủ {0}? Chuột sẽ ngắt kết nối.",
         ["mouse_switch"] = "Chuyển",
         ["mouse_cancel"] = "Hủy",
+        ["mouse_profile"] = "Hồ sơ",
+        ["mouse_synchronize"] = "Đồng bộ với chuột",
+        ["mouse_import"] = "Nhập cấu hình từ file",
+        ["mouse_export"] = "Xuất cấu hình ra file",
+        ["mouse_import_failed"] = "Nhập thất bại. File không phải hồ sơ chuột hợp lệ, hoặc file bị hỏng.",
+        ["mouse_dpi_add"] = "Thêm mức DPI",
+        ["mouse_dpi_remove"] = "Xóa mức DPI",
+        ["mouse_angle_tuning"] = "Tinh chỉnh góc",
+        ["mouse_acceleration"] = "Gia tốc",
+        ["mouse_deceleration"] = "Giảm tốc",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Tốc độ",
+        ["mouse_animation_direction"] = "Hướng hoạt ảnh",
+        ["mouse_clockwise"] = "Chiều kim đồng hồ",
+        ["mouse_counter_clockwise"] = "Ngược chiều kim đồng hồ",
+        ["mouse_sync_aura"] = "Đồng bộ với laptop",
 
     };
 }

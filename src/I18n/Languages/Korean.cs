@@ -1155,6 +1155,23 @@ public static class Korean
         ["mouse_host_switch_msg_fmt"] = "호스트 {0}(으)로 전환하시겠습니까? 마우스 연결이 끊깁니다.",
         ["mouse_switch"] = "전환",
         ["mouse_cancel"] = "취소",
+        ["mouse_profile"] = "프로필",
+        ["mouse_synchronize"] = "마우스와 동기화",
+        ["mouse_import"] = "프로필 가져오기",
+        ["mouse_export"] = "프로필 내보내기",
+        ["mouse_import_failed"] = "가져오기 실패. 유효한 마우스 프로필이 아니거나 손상된 파일입니다.",
+        ["mouse_dpi_add"] = "DPI 단계 추가",
+        ["mouse_dpi_remove"] = "DPI 단계 제거",
+        ["mouse_angle_tuning"] = "각도 조정",
+        ["mouse_acceleration"] = "가속",
+        ["mouse_deceleration"] = "감속",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "애니메이션 속도",
+        ["mouse_animation_direction"] = "애니메이션 방향",
+        ["mouse_clockwise"] = "시계 방향",
+        ["mouse_counter_clockwise"] = "반시계 방향",
+        ["mouse_sync_aura"] = "노트북과 동기화",
 
     };
 }

@@ -1207,6 +1207,23 @@ public static class Slovenian
         ["mouse_host_switch_msg_fmt"] = "Preklopi na gostitelja {0}? Miška se bo odklopila.",
         ["mouse_switch"] = "Preklopi",
         ["mouse_cancel"] = "Prekliči",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Sinhroniziraj z miško",
+        ["mouse_import"] = "Uvozi profil",
+        ["mouse_export"] = "Izvozi profil",
+        ["mouse_import_failed"] = "Uvoz ni uspel. Datoteka ni veljaven profil miške ali je poškodovana.",
+        ["mouse_dpi_add"] = "Dodaj raven DPI",
+        ["mouse_dpi_remove"] = "Odstrani raven DPI",
+        ["mouse_angle_tuning"] = "Nastavitev kota",
+        ["mouse_acceleration"] = "Pospešek",
+        ["mouse_deceleration"] = "Upočasnitev",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Hitrost animacije",
+        ["mouse_animation_direction"] = "Smer animacije",
+        ["mouse_clockwise"] = "V smeri urinega kazalca",
+        ["mouse_counter_clockwise"] = "V nasprotni smeri urinega kazalca",
+        ["mouse_sync_aura"] = "Sinhroniziraj s prenosnikom",
 
     };
 }

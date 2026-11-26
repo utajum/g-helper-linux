@@ -107,11 +107,25 @@
     <Compile Include="../../src/Input/NumberPad.cs" />
     <Compile Include="../../src/Input/EvdevInterop.cs" />
     <Compile Include="../../src/Helpers/AppConfig.cs" />
+    <!-- ASUS mouse port: MouseModelTests compare every model with the Windows source. -->
+    <Compile Include="../../src/Peripherals/Mouse/AsusMouse.cs" />
+    <Compile Include="../../src/Peripherals/Mouse/Models/*.cs" />
+    <Compile Include="../../src/Peripherals/IPeripheral.cs" />
+    <Compile Include="../../src/Peripherals/PeripheralEventListener.cs" />
+    <Compile Include="../../src/Peripherals/WindowsCompat.cs" />
+    <Compile Include="../../src/AnimeMatrix/Communication/Device.cs" />
+    <Compile Include="../../src/AnimeMatrix/Communication/Packet.cs" />
+    <Compile Include="../../src/AnimeMatrix/Communication/Platform/UsbProvider.cs" />
+    <Compile Include="../../src/AnimeMatrix/Communication/Platform/LinuxUsbProvider.cs" />
     <Compile Include="../../src/Helpers/BugReport.cs" />
     <Compile Include="../../src/Helpers/Logger.cs" />
     <Compile Include="../../src/Helpers/MemoryHelper.cs" />
     <!-- Labels.Get() in LinuxNvidiaGpuControl; pulls all language tables -->
     <Compile Include="../../src/I18n/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HidSharpCore" Version="1.3.0" />
   </ItemGroup>
 
 </Project>

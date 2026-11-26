@@ -1,18 +1,69 @@
-namespace GHelper.Linux.Peripherals.Mouse.Models;
+using GHelper.Linux.Helpers;
+using System.Drawing;
 
-public class TUFM4Air : AsusMouse
+namespace GHelper.Linux.Peripherals.Mouse.Models
 {
-    public TUFM4Air() : this(0x1A03, "mi_00", false) { }
-    protected TUFM4Air(ushort pid, string path, bool wireless, byte reportId = 0x00)
-        : base(0x0B05, pid, path, wireless, reportId) { }
+    //P307
+    public class TUFM4Air : AsusMouse
+    {
+        public TUFM4Air() : base(0x0B05, 0x1A03, "mi_00", false)
+        {
+        }
 
-    public override string GetDisplayName() => "TUF Gaming M4 Air";
-    public override int ProfileCount() => 5;
-    public override int DPIProfileCount() => 4;
-    public override uint MaxDPI() => 16000;
-    public override uint DPIIncrement() => 100;
-    public override bool HasDebounce() => false;
-    public override PollingRate[] SupportedPollingrates() =>
-        [PollingRate.PR125Hz, PollingRate.PR250Hz, PollingRate.PR500Hz, PollingRate.PR1000Hz];
-    public override LightingZone[] SupportedLightingZones() => [];
+        public override int DPIProfileCount()
+        {
+            return 4;
+        }
+
+        public override string GetDisplayName()
+        {
+            return "TUF GAMING M4 Air";
+        }
+
+
+        public override PollingRate[] SupportedPollingrates()
+        {
+            return new PollingRate[] {
+                PollingRate.PR125Hz,
+                PollingRate.PR250Hz,
+                PollingRate.PR500Hz,
+                PollingRate.PR1000Hz
+            };
+        }
+
+        public override int ProfileCount()
+        {
+            return 3;
+        }
+        public override int MaxDPI()
+        {
+            return 16_000;
+        }
+
+        public override bool HasLiftOffSetting()
+        {
+            return true;
+        }
+
+        public override bool HasAngleSnapping()
+        {
+            return true;
+        }
+
+        public override bool HasAngleTuning()
+        {
+            return false;
+        }
+
+        public override bool HasBattery()
+        {
+            return false;
+        }
+
+        public override int DPIIncrements()
+        {
+            return 100;
+        }
+    }
+
 }

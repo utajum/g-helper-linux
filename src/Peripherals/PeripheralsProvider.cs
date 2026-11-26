@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using GHelper.Linux.AnimeMatrix.Communication.Platform;
 using GHelper.Linux.Helpers;
 using GHelper.Linux.Peripherals.Logitech;
 using GHelper.Linux.Peripherals.Logitech.HidPP;
@@ -40,11 +41,18 @@ public static class PeripheralsProvider
         set => AppConfig.Set("peripherals_asus_disabled", value ? 1 : 0);
     }
 
-    /// <summary>Probes for all known ASUS mouse models. Skips already-connected models.</summary>
+    private const int OMNI_PID = 0x1ACE;
+    private static List<HidDevice> asusHidDevices = new();
+
+    /// <summary>Probes for all known ASUS mouse models (Windows DetectAllAsusMice). Skips already-connected models.</summary>
     public static void DetectAllAsusMice()
     {
         if (AsusPeripheralsDisabled)
             return;
+        asusHidDevices = DeviceList.Local.GetHidDevices(0x0B05).ToList();
+
+        DedectOmniMouse();
+        DetectHarpeIIWireless();
         DetectMouse(new Mouse.Models.ChakramX());
         DetectMouse(new Mouse.Models.ChakramXWired());
         DetectMouse(new Mouse.Models.GladiusIIIAimpoint());
@@ -72,10 +80,9 @@ public static class PeripheralsProvider
         DetectMouse(new Mouse.Models.GladiusIIIAimpointEva2Wired());
         DetectMouse(new Mouse.Models.HarpeAceAimLabEdition());
         DetectMouse(new Mouse.Models.HarpeAceAimLabEditionWired());
+        DetectMouse(new Mouse.Models.HarpeAceExtremeWeird());
         DetectMouse(new Mouse.Models.HarpeAceMiniWired());
-        DetectMouse(new Mouse.Models.HarpeAceMiniOmni());
         DetectMouse(new Mouse.Models.HarpeMiniCore());
-        DetectMouse(new Mouse.Models.HarpeIIAceWireless());
         DetectMouse(new Mouse.Models.HarpeIIAceWired());
         DetectMouse(new Mouse.Models.TUFM3());
         DetectMouse(new Mouse.Models.TUFM3GenII());
@@ -97,7 +104,6 @@ public static class PeripheralsProvider
         DetectMouse(new Mouse.Models.SpathaXWired());
         DetectMouse(new Mouse.Models.StrixCarry());
         DetectMouse(new Mouse.Models.StrixImpactIII());
-        DetectMouse(new Mouse.Models.StrixImpactIIIWirelessOmni());
         DetectMouse(new Mouse.Models.StrixImpact());
         DetectMouse(new Mouse.Models.TXGamingMini());
         DetectMouse(new Mouse.Models.TXGamingMiniWired());
@@ -107,6 +113,185 @@ public static class PeripheralsProvider
         DetectMouse(new Mouse.Models.MD200());
         DetectMouse(new Mouse.Models.MD301());
         DetectMouse(new Mouse.Models.MD301Wired());
+        DetectMouse(new Mouse.Models.BalteusQi());
+        DetectMouse(new Mouse.Models.Balteus());
+        DetectMouse(new Mouse.Models.BulwarkDock());
+    }
+
+    // Linux: the receiver's col01/col02/col03 collections share the mi_02 hidraw node.
+    public static void DedectOmniMouse()
+    {
+        foreach (var omni in asusHidDevices.Where(x => x.ProductID == OMNI_PID && LinuxUsbProvider.PathMatches(x, "mi_02")))
+            DedectOmniMouse(omni);
+    }
+
+    private static void DedectOmniMouse(HidDevice device)
+    {
+        try
+        {
+            var config = new OpenConfiguration();
+            config.SetOption(OpenOption.Interruptible, true);
+            config.SetOption(OpenOption.Exclusive, false);
+            config.SetOption(OpenOption.Priority, 10);
+
+            Mouse.AsusMouse? omniMouse;
+
+            using (var stream = device.Open(config))
+            {
+                stream.ReadTimeout = 2000;
+                stream.WriteTimeout = 2000;
+
+                var response = new byte[64];
+                stream.Write([0x01, 0xA0, 0x00, 0x00]);
+                ReadOmniReply(stream, response, 0x01, 0xA0);
+
+                Logger.WriteLine($"Omni paired devices: {BitConverter.ToString(response.Skip(5).Take(12).ToArray())}");
+
+                omniMouse = ResolveOmniMouse(response);
+                if (omniMouse is null)
+                    return;
+
+                omniMouse.SetPath(device.DevicePath);
+
+                stream.Write([0x03, 0x7D, 0x20, 0x02]);
+                ReadOmniReply(stream, response, 0x03, 0x7D);
+                Logger.WriteLine("Booster: " + BitConverter.ToString(response.Skip(5).Take(12).ToArray()));
+                omniMouse.Booster = response[5] == 0x01;
+            }
+
+            DetectMouse(omniMouse);
+        }
+        catch
+        {
+            return;
+        }
+    }
+
+    // On Linux one read can return a report of another collection of the same node.
+    private static void ReadOmniReply(HidStream stream, byte[] response, byte reportId, byte command)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            stream.Read(response);
+            if (response[0] == reportId && response[1] == command)
+                return;
+        }
+    }
+
+    private static Mouse.AsusMouse? ResolveOmniMouse(byte[] response)
+    {
+        for (int offset = 5; offset + 3 < response.Length; offset += 4)
+        {
+            int pid = response[offset] | (response[offset + 1] << 8);
+            if (pid == 0)
+                break;
+
+            var mouse = MouseFromOmniPid(pid);
+            if (mouse is not null)
+            {
+                Logger.WriteLine($"Omni slot @{offset}: {pid:X4} -> {mouse.GetDisplayName()}");
+                return mouse;
+            }
+
+            Logger.WriteLine($"Omni slot @{offset}: {pid:X4} (unknown, skipped)");
+        }
+
+        return null;
+    }
+
+    public static void DetectHarpeIIWireless()
+    {
+        var device = asusHidDevices.FirstOrDefault(x => x.ProductID == 0x1AD0);
+        if (device is null)
+            return;
+
+        string product = "";
+        try
+        { product = device.GetProductName() ?? ""; }
+        catch { }
+        Logger.WriteLine("0x1AD0 mouse: " + product);
+
+        if (product.Contains("EXTREME", StringComparison.OrdinalIgnoreCase))
+            DetectMouse(new Mouse.Models.HarpeIIExtremeEdition20());
+        else
+            DetectMouse(new Mouse.Models.HarpeIIAceWireless());
+    }
+
+    private static Mouse.AsusMouse? MouseFromOmniPid(int pid) => pid switch
+    {
+        0x1B65 => new Mouse.Models.HarpeAceMiniOmni(),
+        0x1C0E => new Mouse.Models.KerisIIOriginOmni(),
+        0x1D4E => new Mouse.Models.KerisIIOriginKJPOmni(),
+        0x1A94 => new Mouse.Models.HarpeAceAimLabEditionOmni(),
+        0x1AD7 => new Mouse.Models.StrixImpactIIIWirelessOmni(),
+        0x1A72 => new Mouse.Models.GladiusIIIAimpointOmni(),
+        0x1A68 or 0x1A6A => new Mouse.Models.KerisWirelssAimpointOmni(),
+        0x1B1A or 0x1B18 => new Mouse.Models.KerisAceIIOmni(),
+        0x1B68 or 0x1B69 => new Mouse.Models.HarpeAceExtremeOmni(),
+        _ => null,
+    };
+
+    /// <summary>Windows DetectMouse and Connect(AsusMouse): connect, sync up to 3 times, drop on disconnect.</summary>
+    private static void DetectMouse(Mouse.AsusMouse am)
+    {
+        lock (_lock)
+        {
+            if (!am.IsDeviceConnected(asusHidDevices) || ConnectedMice.Contains(am))
+                return;
+        }
+
+        Logger.WriteLine("Detected a new " + am.GetDisplayName() + " . Connecting...");
+        try
+        {
+            am.Connect();
+        }
+        catch (IOException e)
+        {
+            Logger.WriteLine(am.GetDisplayName() + " failed to connect to device: " + e.Message);
+            return;
+        }
+
+        int tries = 0;
+        while (!am.IsDeviceReady && tries < 3)
+        {
+            Thread.Sleep(250);
+            Logger.WriteLine(am.GetDisplayName() + " synchronising. Try " + (tries + 1));
+            am.SynchronizeDevice();
+            ++tries;
+        }
+
+        lock (_lock)
+        {
+            if (AsusPeripheralsDisabled || ConnectedMice.Contains(am))
+            {
+                am.Dispose();
+                return;
+            }
+            ConnectedMice.Add(am);
+        }
+        am.Disconnect += Mouse_Disconnect;
+        am.ButtonBindingsChanged += ButtonBindingsChanged;
+        Logger.WriteLine($"Peripherals: connected {am.GetDisplayName()}");
+        DeviceChanged?.Invoke();
+        Input.MouseCombos.RegisterKeys();
+    }
+
+    private static void ButtonBindingsChanged(object? sender, EventArgs e) => Input.MouseCombos.RegisterKeys();
+
+    private static void Mouse_Disconnect(object? sender, EventArgs e)
+    {
+        if (sender is not Mouse.AsusMouse am)
+            return;
+        am.Disconnect -= Mouse_Disconnect;
+        am.ButtonBindingsChanged -= ButtonBindingsChanged;
+        lock (_lock)
+        {
+            ConnectedMice.Remove(am);
+        }
+        Logger.WriteLine(am.GetDisplayName() + " reported disconnect.");
+        am.Dispose();
+        DeviceChanged?.Invoke();
+        Input.MouseCombos.RegisterKeys();
     }
 
     private static void DetectMouse(IMousePeripheral mouse)
@@ -406,6 +591,7 @@ public static class PeripheralsProvider
         // Fire the UI update first so a vendor switching from on -> off
         // empties the panel without waiting for any rediscovery work.
         DeviceChanged?.Invoke();
+        Input.MouseCombos.RegisterKeys();
 
         // Re-detect enabled vendors on a background thread.
         if (!LogitechDisabled || !AsusPeripheralsDisabled)

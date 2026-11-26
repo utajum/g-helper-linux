@@ -1207,6 +1207,23 @@ public static class Bengali
         ["mouse_host_switch_msg_fmt"] = "হোস্ট {0} এ সুইচ করবেন? মাউস সংযোগ বিচ্ছিন্ন হবে।",
         ["mouse_switch"] = "সুইচ",
         ["mouse_cancel"] = "বাতিল",
+        ["mouse_profile"] = "প্রোফাইল",
+        ["mouse_synchronize"] = "মাউসের সাথে সিঙ্ক করুন",
+        ["mouse_import"] = "প্রোফাইল ইমপোর্ট",
+        ["mouse_export"] = "প্রোফাইল এক্সপোর্ট",
+        ["mouse_import_failed"] = "ইমপোর্ট ব্যর্থ হয়েছে। ফাইলটি সঠিক মাউস প্রোফাইল নয়, অথবা এটি নষ্ট।",
+        ["mouse_dpi_add"] = "DPI লেভেল যোগ করুন",
+        ["mouse_dpi_remove"] = "DPI লেভেল সরান",
+        ["mouse_angle_tuning"] = "অ্যাঙ্গেল টিউনিং",
+        ["mouse_acceleration"] = "অ্যাক্সিলারেশন",
+        ["mouse_deceleration"] = "ডিসেলারেশন",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "অ্যানিমেশনের গতি",
+        ["mouse_animation_direction"] = "অ্যানিমেশনের দিক",
+        ["mouse_clockwise"] = "ঘড়ির কাঁটার দিকে",
+        ["mouse_counter_clockwise"] = "ঘড়ির কাঁটার বিপরীতে",
+        ["mouse_sync_aura"] = "ল্যাপটপের সাথে সিঙ্ক",
 
     };
 }

@@ -15,12 +15,14 @@ namespace GHelper.Linux.Input;
 /// </summary>
 internal sealed class OskUinput : IDisposable
 {
-    private const string DeviceName = "G-Helper OSK";
+    private readonly string _deviceName;
 
     private int _fd = -1;
     private readonly object _lock = new();
 
     public bool Started => _fd >= 0;
+
+    public OskUinput(string deviceName = "G-Helper OSK") => _deviceName = deviceName;
 
     /// <summary>Localized reason /dev/uinput cannot be used, or null when
     /// it is accessible. Mirrors FnLockRemapper.CheckCapability wording.</summary>
@@ -68,7 +70,7 @@ internal sealed class OskUinput : IDisposable
 
             var udev = new EvdevInterop.UinputUserDev
             {
-                name = DeviceName,
+                name = _deviceName,
                 id = new EvdevInterop.InputId
                 {
                     bustype = EvdevInterop.BUS_VIRTUAL,

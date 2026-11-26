@@ -1155,6 +1155,23 @@ public static class Thai
         ["mouse_host_switch_msg_fmt"] = "สลับไปยังโฮสต์ {0}? เมาส์จะถูกตัดการเชื่อมต่อ",
         ["mouse_switch"] = "สลับ",
         ["mouse_cancel"] = "ยกเลิก",
+        ["mouse_profile"] = "โปรไฟล์",
+        ["mouse_synchronize"] = "ซิงค์กับเมาส์",
+        ["mouse_import"] = "นำเข้าโปรไฟล์",
+        ["mouse_export"] = "ส่งออกโปรไฟล์",
+        ["mouse_import_failed"] = "นำเข้าไม่สำเร็จ ไฟล์ไม่ใช่โปรไฟล์เมาส์ที่ถูกต้อง หรือไฟล์เสียหาย",
+        ["mouse_dpi_add"] = "เพิ่มระดับ DPI",
+        ["mouse_dpi_remove"] = "ลบระดับ DPI",
+        ["mouse_angle_tuning"] = "ปรับมุม",
+        ["mouse_acceleration"] = "การเร่ง",
+        ["mouse_deceleration"] = "การหน่วง",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "ความเร็วแอนิเมชัน",
+        ["mouse_animation_direction"] = "ทิศทางแอนิเมชัน",
+        ["mouse_clockwise"] = "ตามเข็มนาฬิกา",
+        ["mouse_counter_clockwise"] = "ทวนเข็มนาฬิกา",
+        ["mouse_sync_aura"] = "ซิงค์กับแล็ปท็อป",
 
     };
 }

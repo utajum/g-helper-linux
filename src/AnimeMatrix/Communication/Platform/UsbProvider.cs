@@ -30,6 +30,9 @@ public abstract class UsbProvider : IDisposable
     /// <summary>Writes an HID output report.</summary>
     public abstract void Write(byte[] data);
 
+    /// <summary>Drops input reports that are still queued.</summary>
+    public virtual void Drain(int packetSize) { }
+
     /// <inheritdoc />
     public abstract void Dispose();
 }

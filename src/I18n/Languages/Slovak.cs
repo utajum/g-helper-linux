@@ -1207,6 +1207,23 @@ public static class Slovak
         ["mouse_host_switch_msg_fmt"] = "Prepnúť na hostiteľa {0}? Myš bude odpojená.",
         ["mouse_switch"] = "Prepnúť",
         ["mouse_cancel"] = "Zrušiť",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Synchronizovať s myšou",
+        ["mouse_import"] = "Importovať profil",
+        ["mouse_export"] = "Exportovať profil",
+        ["mouse_import_failed"] = "Import zlyhal. Súbor nie je platný profil myši, alebo je poškodený.",
+        ["mouse_dpi_add"] = "Pridať úroveň DPI",
+        ["mouse_dpi_remove"] = "Odobrať úroveň DPI",
+        ["mouse_angle_tuning"] = "Ladenie uhla",
+        ["mouse_acceleration"] = "Zrýchlenie",
+        ["mouse_deceleration"] = "Spomalenie",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Rýchlosť animácie",
+        ["mouse_animation_direction"] = "Smer animácie",
+        ["mouse_clockwise"] = "V smere hodinových ručičiek",
+        ["mouse_counter_clockwise"] = "Proti smeru hodinových ručičiek",
+        ["mouse_sync_aura"] = "Synchronizovať s notebookom",
 
     };
 }

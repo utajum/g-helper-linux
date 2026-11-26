@@ -1152,6 +1152,23 @@ public static class Turkish
         ["mouse_host_switch_msg_fmt"] = "Ana cihaz {0} olarak değiştirilsin mi? Fare bağlantısı kesilecek.",
         ["mouse_switch"] = "Değiştir",
         ["mouse_cancel"] = "İptal",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Fare ile eşitle",
+        ["mouse_import"] = "Profili İçe Aktar",
+        ["mouse_export"] = "Profili Dışa Aktar",
+        ["mouse_import_failed"] = "İçe aktarma başarısız oldu. Dosya geçerli bir fare profili değil veya bozuk.",
+        ["mouse_dpi_add"] = "DPI seviyesi ekle",
+        ["mouse_dpi_remove"] = "DPI seviyesini kaldır",
+        ["mouse_angle_tuning"] = "Açı Ayarı",
+        ["mouse_acceleration"] = "Hızlandırma",
+        ["mouse_deceleration"] = "Yavaşlama",
+        ["mouse_motion_sync"] = "Hareket Eşitlemesi",
+        ["mouse_zone_mode"] = "Fare Alan Modu",
+        ["mouse_animation_speed"] = "Animasyon Hızı",
+        ["mouse_animation_direction"] = "Animasyon yönü",
+        ["mouse_clockwise"] = "Saat Yönünde",
+        ["mouse_counter_clockwise"] = "Saat Yönünün Tersine",
+        ["mouse_sync_aura"] = "Dizüstüyle senkronize et",
 
     };
 }

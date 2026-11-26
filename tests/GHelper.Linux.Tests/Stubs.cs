@@ -17,6 +17,19 @@ public enum AuraMode
     Breathe = 1,
     Strobe = 2,
     GpuMode = 99,
+    // Real values, for AsusMouse.MapAuraToLightingMode.
+    AuraBreathe = 1,
+    AuraColorCycle = 2,
+    AuraRainbow = 3,
+    Comet = 11,
+}
+
+/// <summary>Stub AURA speed enum with the real values, for AsusMouse.SyncFromKeyboardAura.</summary>
+public enum AuraSpeed
+{
+    Slow = 0,
+    Normal = 1,
+    Fast = 2,
 }
 
 /// <summary>

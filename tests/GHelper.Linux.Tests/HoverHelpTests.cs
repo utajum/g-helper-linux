@@ -124,7 +124,7 @@ public static class HoverHelpTests
 
     private static int Line(string text, int index) => text.AsSpan(0, index).Count('\n') + 1;
 
-    private static string RepoRoot()
+    internal static string RepoRoot()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
             if (File.Exists(Path.Combine(dir.FullName, "src", "GHelper.Linux.csproj")))

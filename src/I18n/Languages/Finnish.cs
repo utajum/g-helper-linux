@@ -1155,6 +1155,23 @@ public static class Finnish
         ["mouse_host_switch_msg_fmt"] = "Vaihda isäntään {0}? Hiiri irrotetaan.",
         ["mouse_switch"] = "Vaihda",
         ["mouse_cancel"] = "Peruuta",
+        ["mouse_profile"] = "Profiili",
+        ["mouse_synchronize"] = "Synkronoi hiiren kanssa",
+        ["mouse_import"] = "Tuo profiili",
+        ["mouse_export"] = "Vie profiili",
+        ["mouse_import_failed"] = "Tuonti epäonnistui. Tiedosto ei ole kelvollinen hiiriprofiili, tai se on vioittunut.",
+        ["mouse_dpi_add"] = "Lisää DPI-taso",
+        ["mouse_dpi_remove"] = "Poista DPI-taso",
+        ["mouse_angle_tuning"] = "Kulman säätö",
+        ["mouse_acceleration"] = "Kiihtyvyys",
+        ["mouse_deceleration"] = "Hidastus",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Animaation nopeus",
+        ["mouse_animation_direction"] = "Animaation suunta",
+        ["mouse_clockwise"] = "Myötäpäivään",
+        ["mouse_counter_clockwise"] = "Vastapäivään",
+        ["mouse_sync_aura"] = "Synkronoi kannettavan kanssa",
 
     };
 }

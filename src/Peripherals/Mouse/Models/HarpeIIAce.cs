@@ -1,26 +1,172 @@
-namespace GHelper.Linux.Peripherals.Mouse.Models;
+using GHelper.Linux.Helpers;
+using System.Drawing;
 
-public class HarpeIIAceWired : AsusMouse
+namespace GHelper.Linux.Peripherals.Mouse.Models
 {
-    public HarpeIIAceWired() : this(0x1C69, "mi_00", false) { }
-    protected HarpeIIAceWired(ushort pid, string path, bool wireless, byte reportId = 0x00)
-        : base(0x0B05, pid, path, wireless, reportId) { }
+    //P723 - ROG HARPE II ACE (USB Wired)
+    public class HarpeIIAceWired : AsusMouse
+    {
+        public HarpeIIAceWired() : base(0x0B05, 0x1C69, "mi_00", false)
+        {
+        }
 
-    public override string GetDisplayName() => "ROG Harpe II Ace (Wired)";
-    public override int ProfileCount() => 5;
-    public override int DPIProfileCount() => 4;
-    public override uint MaxDPI() => 42000;
-    public override PollingRate[] SupportedPollingrates() =>
-        [PollingRate.PR125Hz, PollingRate.PR250Hz, PollingRate.PR500Hz, PollingRate.PR1000Hz,
-         PollingRate.PR2000Hz, PollingRate.PR4000Hz, PollingRate.PR8000Hz];
-    public override bool HasMotionSync() => true;
-    public override bool CanChangeDPICount() => true;
-    public override LightingZone[] SupportedLightingZones() => [LightingZone.Scrollwheel];
-}
+        protected HarpeIIAceWired(ushort productId, bool wireless, string endpoint, byte reportId) : base(0x0B05, productId, endpoint, wireless, reportId)
+        {
+        }
 
-public class HarpeIIAceWireless : HarpeIIAceWired
-{
-    public HarpeIIAceWireless() : base(0x1AD0, "mi_02&col03", true, 0x03) { }
-    public override string GetDisplayName() => "ROG Harpe II Ace";
-    public override bool HasZoneMode() => true;
+        public override string GetDisplayName()
+        {
+            return "ROG HARPE II ACE (Wired)";
+        }
+
+        public override int DPIProfileCount()
+        {
+            return 4;
+        }
+
+        public override int MaxDPI()
+        {
+            return 42_000;
+        }
+
+        public override int MinDPI()
+        {
+            return 100;
+        }
+        public override bool HasXYDPI()
+        {
+            return true;
+        }
+        public override bool HasDPIColors()
+        {
+            return true;
+        }
+        public override bool HasBattery()
+        {
+            return true;
+        }
+
+        public override bool HasAutoPowerOff()
+        {
+            return true;
+        }
+
+        public override bool HasLowBatteryWarning()
+        {
+            return true;
+        }
+
+        public override int ProfileCount()
+        {
+            return 5;
+        }
+
+        public override PollingRate[] SupportedPollingrates()
+        {
+            return new PollingRate[] {
+                PollingRate.PR125Hz,
+                PollingRate.PR250Hz,
+                PollingRate.PR500Hz,
+                PollingRate.PR1000Hz,
+                PollingRate.PR2000Hz,
+                PollingRate.PR4000Hz,
+                PollingRate.PR8000Hz
+            };
+        }
+
+        public override bool HasLiftOffSetting()
+        {
+            return true;
+        }
+
+        public override bool HasAngleSnapping()
+        {
+            return true;
+        }
+
+        public override bool HasAngleTuning()
+        {
+            return true;
+        }
+
+        public override bool HasMotionSync()
+        {
+            return true;
+        }
+
+
+
+        public override bool HasRGB()
+        {
+            return true;
+        }
+
+        public override LightingZone[] SupportedLightingZones()
+        {
+            return new LightingZone[] { LightingZone.Scrollwheel };
+        }
+
+
+        public override bool IsLightingModeSupported(LightingMode lightingMode)
+        {
+            return lightingMode == LightingMode.Static
+                || lightingMode == LightingMode.Breathing
+                || lightingMode == LightingMode.ColorCycle
+                || lightingMode == LightingMode.React
+                || lightingMode == LightingMode.BatteryState
+                || lightingMode == LightingMode.Off;
+        }
+
+        public override bool CanChangeDPICount()
+        {
+            return true;
+        }
+
+        public override int USBPacketSize()
+        {
+            return 64;
+        }
+    }
+
+    //P723 - ROG HARPE II ACE (Wireless 2.4GHz RF)
+    public class HarpeIIAceWireless : HarpeIIAceWired
+    {
+        public HarpeIIAceWireless() : base(0x1AD0, true, "mi_02&col03", 0x03)
+        {
+        }
+
+        public override string GetDisplayName()
+        {
+            return "ROG HARPE II ACE (Wireless)";
+        }
+
+        public override bool HasZoneMode()
+        {
+            return true;
+        }
+
+        public override IReadOnlyList<(string GroupLabel, IReadOnlyList<(ushort Code, string Name)> Items)>
+            BindingGroups => SpeedShiftBindingGroups;
+    }
+
+    public class HarpeIIExtremeEdition20 : HarpeIIAceWireless
+    {
+        public override string GetDisplayName()
+        {
+            return "HARPE II EXTREME EDITION 20 (Wireless)";
+        }
+
+        public override int MaxDPI()
+        {
+            return 65_000;
+        }
+
+        public override int DPIIncrements()
+        {
+            return 1;
+        }
+
+        public override IReadOnlyList<(string GroupLabel, IReadOnlyList<(ushort Code, string Name)> Items)>
+            BindingGroups => SpeedShiftBindingGroups;
+    }
 }

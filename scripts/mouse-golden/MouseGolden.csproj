@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Writes tests/GHelper.Linux.Tests/mouse-golden.txt from the Windows G-Helper mouse
+    source in ../g-helper. MouseScenario.cs runs the same calls on every model here
+    and in the tests, so the tests prove that the Linux port sends the same packets.
+    Run: scripts/mouse-golden.sh
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);WINDOWS_SOURCE</DefineConstants>
+    <!-- Warnings of the Windows source are not ours to fix. -->
+    <NoWarn>$(NoWarn);CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;CS0168;CS0219;CS0162;CS0414;CS0649</NoWarn>
+    <Upstream>$(MSBuildThisFileDirectory)../../../g-helper/app/</Upstream>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.Drawing" />
+    <Using Include="System.Windows.Forms" />
+    <Compile Include="$(Upstream)Peripherals/Mouse/AsusMouse.cs" />
+    <Compile Include="$(Upstream)Peripherals/Mouse/Models/*.cs" Exclude="$(Upstream)Peripherals/Mouse/Models/StrixArion.cs" />
+    <Compile Include="$(Upstream)Peripherals/IPeripheral.cs" />
+    <Compile Include="$(Upstream)Peripherals/PeripheralEventListener.cs" />
+    <Compile Include="$(Upstream)AnimeMatrix/Communication/Device.cs" />
+    <Compile Include="$(Upstream)AnimeMatrix/Communication/Packet.cs" />
+    <Compile Include="$(Upstream)AnimeMatrix/Communication/Platform/UsbProvider.cs" />
+    <Compile Include="../../tests/GHelper.Linux.Tests/MouseScenario.cs" />
+    <Compile Include="WindowsStubs.cs" />
+    <Compile Include="Program.cs" />
+    <PackageReference Include="HidSharpCore" Version="1.3.0" />
+  </ItemGroup>
+
+</Project>

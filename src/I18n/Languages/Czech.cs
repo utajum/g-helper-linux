@@ -1152,6 +1152,23 @@ public static class Czech
         ["mouse_host_switch_msg_fmt"] = "Přepnout na hostitele {0}? Myš bude odpojena.",
         ["mouse_switch"] = "Přepnout",
         ["mouse_cancel"] = "Zrušit",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Synchronizovat s myší",
+        ["mouse_import"] = "Import profilu",
+        ["mouse_export"] = "Export profilu",
+        ["mouse_import_failed"] = "Import se nezdařil. Vybraný soubor je neplatný profil myši, nebo je poškozený.",
+        ["mouse_dpi_add"] = "Přidat úroveň DPI",
+        ["mouse_dpi_remove"] = "Odebrat úroveň DPI",
+        ["mouse_angle_tuning"] = "Ladění úhlu",
+        ["mouse_acceleration"] = "Zrychlení",
+        ["mouse_deceleration"] = "Zpomalení",
+        ["mouse_motion_sync"] = "Synchronizace pohybu",
+        ["mouse_zone_mode"] = "Režim zóny",
+        ["mouse_animation_speed"] = "Rychlost animace",
+        ["mouse_animation_direction"] = "Směr animace",
+        ["mouse_clockwise"] = "Po směru",
+        ["mouse_counter_clockwise"] = "Proti směru",
+        ["mouse_sync_aura"] = "Synchronizovat s notebookem",
 
     };
 }

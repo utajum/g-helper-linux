@@ -34,6 +34,7 @@ public static class Program
             NumberPadLayoutTests.RunAll();
             BugReportTests.RunAll();
             HoverHelpTests.RunAll();
+            MouseModelTests.RunAll();
         }
         finally
         {
