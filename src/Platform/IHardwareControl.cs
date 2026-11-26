@@ -141,7 +141,7 @@ public interface IHardwareControl : IDisposable
     void SetKeyboardBrightness(int level);
 
     /// <summary>Highest valid step for the backlight (inclusive). ASUS=3,
-    /// Lenovo IdeaPad LEDs report 1 (on/off) or 2 (tristate).</summary>
+    /// Lenovo IdeaPad LEDs report 1 (on/off) or 2 (tristate), 3 with Auto.</summary>
     int KbdMaxBrightness { get; }
 
     /// <summary>Backlight level that means Auto (light sensor), or -1 when there is none.</summary>
