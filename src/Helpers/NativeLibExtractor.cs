@@ -10,9 +10,7 @@ namespace GHelper.Linux.Helpers;
 /// Avalonia initialises.
 ///
 /// Rewrites cached files only when their bytes differ from the payload,
-/// without any version stamping. Any leftover helper process from a
-/// previous run is reaped first to avoid the Linux "Text file busy"
-/// race on overwriting a running executable.
+/// without any version stamping.
 ///
 /// Every extraction outcome is logged via <see cref="Logger"/> so the
 /// startup banner and the diagnostics dump show which resources made it
@@ -42,17 +40,12 @@ public static class NativeLibExtractor
         return path;
     }
 
-    /// <summary>Helper executables extracted eagerly so spawn paths are fast.</summary>
-    private static readonly string[] EagerTools = ["ghelper-audio"];
-
     private static readonly Dictionary<string, IntPtr> _loadedLibs = new();
 
     public static void ExtractAndLoad()
     {
         var exeDir = Path.GetDirectoryName(Environment.ProcessPath) ?? ".";
         Logger.WriteLine($"NativeLibExtractor: starting (cache={Short(CacheDir)})");
-
-        KillStaleHelpers();
 
         foreach (var lib in NativeLibs)
         {
@@ -132,20 +125,6 @@ public static class NativeLibExtractor
         catch (Exception ex)
         {
             Logger.WriteLine($"NativeLibExtractor: HarfBuzz resolver hook failed: {ex.Message}");
-        }
-
-        foreach (var tool in EagerTools)
-        {
-            try
-            {
-                var path = ExtractFromResources(tool);
-                if (path == null)
-                    Logger.WriteLine($"NativeLibExtractor: eager extract of {tool} produced no path");
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteLine($"NativeLibExtractor: eager extract of {tool} threw: {ex.Message}");
-            }
         }
 
         Logger.WriteLine("NativeLibExtractor: done");
@@ -314,37 +293,6 @@ public static class NativeLibExtractor
             stream.Position = 0;
         }
     }
-
-    /// <summary>
-    /// Reap leftover helper processes by exact name so a still-running
-    /// child from a previous G-Helper run does not block File.Create from
-    /// overwriting its executable in the cache (Linux ETXTBSY rule).
-    /// Same as <c>pkill -x</c>, minus the ~25 ms pkill spawn.
-    /// </summary>
-    private static void KillStaleHelpers()
-    {
-        try
-        {
-            foreach (var dir in Directory.EnumerateDirectories("/proc"))
-            {
-                if (!int.TryParse(Path.GetFileName(dir), out int pid))
-                    continue;
-                string comm;
-                try
-                { comm = File.ReadAllText(Path.Combine(dir, "comm")).TrimEnd('\n'); }
-                catch { continue; }
-                if (Array.IndexOf(EagerTools, comm) >= 0 && kill(pid, 15) == 0)
-                    Logger.WriteLine($"NativeLibExtractor: reaped leftover {comm} process (pid {pid})");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.WriteLine($"NativeLibExtractor: could not reap helpers: {ex.Message}");
-        }
-    }
-
-    [DllImport("libc", SetLastError = true)]
-    private static extern int kill(int pid, int sig);
 
     /// <summary>
     /// Human-readable byte size used in log messages so operators can

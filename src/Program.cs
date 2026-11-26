@@ -48,6 +48,15 @@ class Program
             e.SetObserved();
         };
 
+        // Before the extract step, so a second launch leaves the cache alone.
+        if (!App.TryAcquireSingleInstanceLock())
+        {
+            Console.Error.WriteLine("g-helper: another instance is already running - exiting");
+            CommandIpc.TrySend("show");
+            Environment.Exit(0);
+            return;
+        }
+
         NativeLibExtractor.ExtractAndLoad();
 
         // Suppress X11 SMLib/ICELib noise on pure-Wayland sessions (COSMIC, niri).
