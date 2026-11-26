@@ -1151,7 +1151,9 @@ public partial class FansWindow : Window
             Helpers.AppConfig.SetFanConfig(3, chartXGM.CurveData);
         }
 
-        UpdateDisabledState();
+        // starts the EC follower again after Disable
+        Task.Run(() => Fan.ManualFanService.Sync())
+            .ContinueWith(_ => Dispatcher.UIThread.Post(UpdateDisabledState));
         Helpers.Logger.WriteLine("Fan curves applied");
     }
 
