@@ -536,6 +536,24 @@ public class App : Application
         LogFeatureDetection();
     }
 
+    /// <summary>The installer wrote the udev rules. If the SMU had no write access at
+    /// startup, wait for the rule and check again, so undervolt needs no app restart.</summary>
+    public static void RecheckSmuAccess()
+    {
+        var smu = Smu;
+        if (smu?.NoWriteAccess != true)
+            return;
+        Task.Run(() =>
+        {
+            if (!smu.WaitForWriteAccess(TimeSpan.FromSeconds(10)))
+                return;
+            Logger.WriteLine("Ryzen Curve Optimizer: udev rule gave write access, checking again");
+            Smu = new RyzenSmu();
+            if (Smu.IsAvailable)
+                Mode?.AutoRyzen();
+        });
+    }
+
     private void LogFeatureDetection()
     {
         var features = new (AttrDef attr, string name)[]

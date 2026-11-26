@@ -116,6 +116,9 @@ public sealed class RyzenSmu
     /// <summary>Human-readable reason if IsAvailable is false.</summary>
     public string? UnavailableReason { get; private set; }
 
+    /// <summary>Only write access was missing; the udev rule can still give it.</summary>
+    public bool NoWriteAccess { get; private set; }
+
     /// <summary>ryzen_smu codename ID.</summary>
     public int Codename => _codename;
 
@@ -150,6 +153,7 @@ public sealed class RyzenSmu
             {
                 UnavailableReason = "no write permission on ryzen_smu files (need root or udev rule)";
                 Helpers.Logger.WriteLine("RyzenSmu: " + UnavailableReason);
+                NoWriteAccess = true;
                 return;
             }
 
@@ -487,6 +491,20 @@ public sealed class RyzenSmu
         var trimmed = new byte[total];
         Array.Copy(buf, trimmed, total);
         return trimmed;
+    }
+
+    /// <summary>Wait for write access to the command files, up to <paramref name="timeout"/>.
+    /// <c>udevadm trigger</c> returns before the udev rule has run.</summary>
+    public bool WaitForWriteAccess(TimeSpan timeout)
+    {
+        var end = DateTime.UtcNow + timeout;
+        while (!IsWritable(CmdPath) || !IsWritable(SmuArgsPath))
+        {
+            if (DateTime.UtcNow >= end)
+                return false;
+            Thread.Sleep(250);
+        }
+        return true;
     }
 
     /// <summary>Check if a sysfs file is writable by the current user.</summary>
