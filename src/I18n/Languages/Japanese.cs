@@ -63,6 +63,7 @@ public static class Japanese
         ["backlight_low"] = "低",
         ["backlight_medium"] = "中",
         ["backlight_high"] = "高",
+        ["backlight_auto"] = "自動",
         ["backlight_level"] = "レベル {0}",
         ["backlight_prefix"] = "バックライト: {0}",
         ["color_primary"] = "プライマリカラー",

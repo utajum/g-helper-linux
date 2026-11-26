@@ -63,6 +63,7 @@ public static class Nepali
         ["backlight_low"] = "कम",
         ["backlight_medium"] = "मध्यम",
         ["backlight_high"] = "उच्च",
+        ["backlight_auto"] = "स्वतः",
         ["backlight_level"] = "स्तर {0}",
         ["backlight_prefix"] = "ब्याकलाइट: {0}",
         ["color_primary"] = "प्राथमिक रङ",

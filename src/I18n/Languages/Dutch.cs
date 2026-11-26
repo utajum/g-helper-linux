@@ -60,6 +60,7 @@ public static class Dutch
         ["backlight_low"] = "Laag",
         ["backlight_medium"] = "Gemiddeld",
         ["backlight_high"] = "Hoog",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Niveau {0}",
         ["backlight_prefix"] = "Verlichting: {0}",
         ["color_primary"] = "Hoofdkleur",

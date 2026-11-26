@@ -63,6 +63,7 @@ public static class Latvian
         ["backlight_low"] = "Zema",
         ["backlight_medium"] = "Vidēja",
         ["backlight_high"] = "Augsta",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Līmenis {0}",
         ["backlight_prefix"] = "Pretgaisma: {0}",
         ["color_primary"] = "Primārā krāsa",

@@ -65,6 +65,7 @@ public static class English
         ["backlight_low"] = "Low",
         ["backlight_medium"] = "Medium",
         ["backlight_high"] = "High",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Level {0}",
         ["backlight_prefix"] = "Backlight: {0}",
         ["color_primary"] = "Primary color",

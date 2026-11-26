@@ -63,6 +63,7 @@ public static class Lithuanian
         ["backlight_low"] = "Žemas",
         ["backlight_medium"] = "Vidutinis",
         ["backlight_high"] = "Aukštas",
+        ["backlight_auto"] = "Automatinis",
         ["backlight_level"] = "Lygis {0}",
         ["backlight_prefix"] = "Foninis apšvietimas: {0}",
         ["color_primary"] = "Pagrindinė spalva",

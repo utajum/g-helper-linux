@@ -60,6 +60,7 @@ public static class Turkish
         ["backlight_low"] = "Düşük",
         ["backlight_medium"] = "Orta",
         ["backlight_high"] = "Yüksek",
+        ["backlight_auto"] = "Otomatik",
         ["backlight_level"] = "Seviye {0}",
         ["backlight_prefix"] = "Arka Işık: {0}",
         ["color_primary"] = "Ana renk",

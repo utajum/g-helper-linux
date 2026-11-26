@@ -60,6 +60,7 @@ public static class Italian
         ["backlight_low"] = "Bassa",
         ["backlight_medium"] = "Media",
         ["backlight_high"] = "Alta",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Livello {0}",
         ["backlight_prefix"] = "Retroilluminazione: {0}",
         ["color_primary"] = "Colore principale",

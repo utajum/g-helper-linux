@@ -144,6 +144,9 @@ public interface IHardwareControl : IDisposable
     /// Lenovo IdeaPad LEDs report 1 (on/off) or 2 (tristate).</summary>
     int KbdMaxBrightness { get; }
 
+    /// <summary>Backlight level that means Auto (light sensor), or -1 when there is none.</summary>
+    int KbdAutoLevel => -1;
+
     /// <summary>Set TUF keyboard RGB color.</summary>
     void SetKeyboardRgb(byte r, byte g, byte b);
 

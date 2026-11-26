@@ -60,6 +60,7 @@ public static class Romanian
         ["backlight_low"] = "Scăzut",
         ["backlight_medium"] = "Mediu",
         ["backlight_high"] = "Ridicat",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Nivel {0}",
         ["backlight_prefix"] = "Iluminare: {0}",
         ["color_primary"] = "Culoare principală",

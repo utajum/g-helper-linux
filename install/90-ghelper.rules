@@ -287,7 +287,7 @@ ACTION=="add|change", SUBSYSTEM=="module", KERNEL=="lenovo_wmi_gamezone", \
 
 # Lenovo keyboard backlight LED (platform::kbd_backlight)
 SUBSYSTEM=="leds", KERNEL=="platform::kbd_backlight*", \
-  RUN+="/bin/sh -c 'chmod 0666 /sys/class/leds/%k/brightness 2>/dev/null || true'"
+  RUN+="/bin/sh -c 'chmod 0666 /sys/class/leds/%k/brightness /sys/class/leds/%k/trigger 2>/dev/null || true'"
 
 # lenovo-wmi-other firmware-attributes (PPT power limit tunables)
 ACTION=="add|change", SUBSYSTEM=="firmware-attributes", KERNEL=="lenovo-wmi-other*", \

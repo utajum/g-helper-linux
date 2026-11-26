@@ -60,6 +60,7 @@ public static class PortugueseBR
         ["backlight_low"] = "Baixo",
         ["backlight_medium"] = "Médio",
         ["backlight_high"] = "Alto",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Nível {0}",
         ["backlight_prefix"] = "Retroiluminação: {0}",
         ["color_primary"] = "Cor principal",

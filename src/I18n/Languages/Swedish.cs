@@ -63,6 +63,7 @@ public static class Swedish
         ["backlight_low"] = "Låg",
         ["backlight_medium"] = "Medel",
         ["backlight_high"] = "Hög",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Nivå {0}",
         ["backlight_prefix"] = "Bakgrundsbelysning: {0}",
         ["color_primary"] = "Primärfärg",

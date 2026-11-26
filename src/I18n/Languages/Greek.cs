@@ -63,6 +63,7 @@ public static class Greek
         ["backlight_low"] = "Χαμηλό",
         ["backlight_medium"] = "Μεσαίο",
         ["backlight_high"] = "Υψηλό",
+        ["backlight_auto"] = "Αυτόματο",
         ["backlight_level"] = "Επίπεδο {0}",
         ["backlight_prefix"] = "Οπίσθιος φωτισμός: {0}",
         ["color_primary"] = "Κύριο χρώμα",

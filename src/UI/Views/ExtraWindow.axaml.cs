@@ -598,7 +598,7 @@ public partial class ExtraWindow : Window
         // Brightness (0-3)
         int brightness = App.Wmi?.GetKeyboardBrightness() ?? 3;
         sliderKbdBrightness.Value = brightness;
-        labelKbdBrightness.Text = brightness.ToString();
+        labelKbdBrightness.Text = KbdLevelText(brightness);
 
         // Speed combo - populate items, then hide for modes where speed has
         // no effect (Static / Heatmap / GpuMode / Battery / Gradient / ZoneTest).
@@ -840,7 +840,7 @@ public partial class ExtraWindow : Window
         bool prev = _suppressEvents;
         _suppressEvents = true;
         sliderKbdBrightness.Value = brightness;
-        labelKbdBrightness.Text = brightness.ToString();
+        labelKbdBrightness.Text = KbdLevelText(brightness);
         _suppressEvents = prev;
     }
 
@@ -872,12 +872,15 @@ public partial class ExtraWindow : Window
                 bool prev = _suppressEvents;
                 _suppressEvents = true;
                 sliderKbdBrightness.Value = kbdBrightness;
-                labelKbdBrightness.Text = kbdBrightness.ToString();
+                labelKbdBrightness.Text = KbdLevelText(kbdBrightness);
                 _suppressEvents = prev;
             }
         };
         _brightnessTimer.Start();
     }
+
+    private static string KbdLevelText(int level)
+        => level == App.Wmi?.KbdAutoLevel ? Labels.Get("backlight_auto") : level.ToString();
 
     private void SliderKbdBrightness_ValueChanged(object? sender,
         Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -885,7 +888,7 @@ public partial class ExtraWindow : Window
         if (_suppressEvents)
             return;
         int level = (int)e.NewValue;
-        labelKbdBrightness.Text = level.ToString();
+        labelKbdBrightness.Text = KbdLevelText(level);
         // Persist under the AC- or battery-specific key based on current power state.
         Helpers.AppConfig.Set(Aura.GetBrightnessConfigKey(), level);
         Aura.ApplyBrightness(level, "KbdSlider");

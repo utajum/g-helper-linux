@@ -395,6 +395,22 @@ public static class SysfsHelper
         return defaultValue;
     }
 
+    /// <summary>
+    /// Parse an LED "trigger" file such as "none kbd-backlight [ideapad-auto]":
+    /// whether <paramref name="name"/> is listed, and whether it is the active one.
+    /// </summary>
+    public static (bool Listed, bool Active) ParseLedTrigger(string? content, string name)
+    {
+        foreach (var word in (content ?? "").Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (word == name)
+                return (true, false);
+            if (word == $"[{name}]")
+                return (true, true);
+        }
+        return (false, false);
+    }
+
     /// <summary>Write a string to a sysfs attribute. Returns true on success.</summary>
     public static bool WriteAttribute(string path, string value)
     {

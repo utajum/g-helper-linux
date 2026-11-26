@@ -60,6 +60,7 @@ public static class Russian
         ["backlight_low"] = "Низкая",
         ["backlight_medium"] = "Средняя",
         ["backlight_high"] = "Высокая",
+        ["backlight_auto"] = "Авто",
         ["backlight_level"] = "Уровень {0}",
         ["backlight_prefix"] = "Подсветка: {0}",
         ["color_primary"] = "Основной цвет",

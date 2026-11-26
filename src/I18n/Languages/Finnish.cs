@@ -63,6 +63,7 @@ public static class Finnish
         ["backlight_low"] = "Matala",
         ["backlight_medium"] = "Keskitaso",
         ["backlight_high"] = "Korkea",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Taso {0}",
         ["backlight_prefix"] = "Taustavalo: {0}",
         ["color_primary"] = "Pääväri",

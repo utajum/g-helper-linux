@@ -60,6 +60,7 @@ public static class Hungarian
         ["backlight_low"] = "Alacsony",
         ["backlight_medium"] = "Közepes",
         ["backlight_high"] = "Magas",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Szint {0}",
         ["backlight_prefix"] = "Háttérvilágítás: {0}",
         ["color_primary"] = "Elsődleges szín",

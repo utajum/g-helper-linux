@@ -63,6 +63,7 @@ public static class Korean
         ["backlight_low"] = "낮음",
         ["backlight_medium"] = "중간",
         ["backlight_high"] = "높음",
+        ["backlight_auto"] = "자동",
         ["backlight_level"] = "레벨 {0}",
         ["backlight_prefix"] = "백라이트: {0}",
         ["color_primary"] = "기본 색상",

@@ -60,6 +60,7 @@ public static class French
         ["backlight_low"] = "Faible",
         ["backlight_medium"] = "Moyen",
         ["backlight_high"] = "Élevé",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Niveau {0}",
         ["backlight_prefix"] = "Rétroéclairage : {0}",
         ["color_primary"] = "Couleur principale",

@@ -63,6 +63,7 @@ public static class Danish
         ["backlight_low"] = "Lav",
         ["backlight_medium"] = "Medium",
         ["backlight_high"] = "Høj",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Niveau {0}",
         ["backlight_prefix"] = "Baggrundsbelysning: {0}",
         ["color_primary"] = "Primær farve",

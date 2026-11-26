@@ -60,6 +60,7 @@ public static class Spanish
         ["backlight_low"] = "Bajo",
         ["backlight_medium"] = "Medio",
         ["backlight_high"] = "Alto",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Nivel {0}",
         ["backlight_prefix"] = "Retroiluminación: {0}",
         ["color_primary"] = "Color principal",

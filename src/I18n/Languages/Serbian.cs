@@ -63,6 +63,7 @@ public static class Serbian
         ["backlight_low"] = "Ниско",
         ["backlight_medium"] = "Средње",
         ["backlight_high"] = "Високо",
+        ["backlight_auto"] = "Ауто",
         ["backlight_level"] = "Ниво {0}",
         ["backlight_prefix"] = "Позадинско осветљење: {0}",
         ["color_primary"] = "Примарна боја",

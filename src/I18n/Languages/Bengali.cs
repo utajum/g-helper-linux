@@ -63,6 +63,7 @@ public static class Bengali
         ["backlight_low"] = "নিম্ন",
         ["backlight_medium"] = "মাঝারি",
         ["backlight_high"] = "উচ্চ",
+        ["backlight_auto"] = "অটো",
         ["backlight_level"] = "স্তর {0}",
         ["backlight_prefix"] = "ব্যাকলাইট: {0}",
         ["color_primary"] = "প্রাথমিক রঙ",

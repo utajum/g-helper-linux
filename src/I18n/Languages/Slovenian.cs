@@ -63,6 +63,7 @@ public static class Slovenian
         ["backlight_low"] = "Nizka",
         ["backlight_medium"] = "Srednja",
         ["backlight_high"] = "Visoka",
+        ["backlight_auto"] = "Samodejno",
         ["backlight_level"] = "Raven {0}",
         ["backlight_prefix"] = "Osvetlitev: {0}",
         ["color_primary"] = "Primarna barva",

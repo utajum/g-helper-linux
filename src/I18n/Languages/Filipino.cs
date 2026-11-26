@@ -63,6 +63,7 @@ public static class Filipino
         ["backlight_low"] = "Mababa",
         ["backlight_medium"] = "Katamtaman",
         ["backlight_high"] = "Mataas",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Antas {0}",
         ["backlight_prefix"] = "Backlight: {0}",
         ["color_primary"] = "Pangunahing kulay",

@@ -1418,6 +1418,7 @@ public partial class MainWindow : Window
         {
             string level = brightness switch
             {
+                _ when brightness == wmi.KbdAutoLevel => Labels.Get("backlight_auto"),
                 0 => Labels.Get("backlight_off"),
                 1 => Labels.Get("backlight_low"),
                 2 => Labels.Get("backlight_medium"),

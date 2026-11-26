@@ -60,6 +60,7 @@ public static class Vietnamese
         ["backlight_low"] = "Thấp",
         ["backlight_medium"] = "Trung bình",
         ["backlight_high"] = "Cao",
+        ["backlight_auto"] = "Tự động",
         ["backlight_level"] = "Mức {0}",
         ["backlight_prefix"] = "Đèn nền: {0}",
         ["color_primary"] = "Màu chính",
