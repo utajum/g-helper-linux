@@ -919,8 +919,7 @@ public static partial class Installer
             if (rc != 0)
                 return (false, changed, false);
             changed += rootIds.Length;
-            if (rootIds.Contains("udev_rules"))
-                App.RecheckSmuAccess();
+            App.RecheckSmuAccess();
         }
 
         return (true, changed, false);
