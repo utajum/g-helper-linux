@@ -89,7 +89,7 @@ public static class ManualFanService
         return false;
     }
 
-    /// <summary>Stop and hand the fans back to the EC.</summary>
+    /// <summary>Stop and hand the fans back to the BIOS.</summary>
     public static void Stop()
     {
         lock (_lock)

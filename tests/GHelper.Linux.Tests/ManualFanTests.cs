@@ -79,6 +79,15 @@ public static class ManualFanTests
             Harness.AssertEqual(255, ManualFanMath.ToDuty255(100), "100%");
         });
 
+        // duty bytes of the MyASUS fan test (AsusSystemDiagnosis.exe)
+        Harness.Scenario("ToDuty255_MatchesMyAsusFanTest", _ =>
+        {
+            Harness.AssertEqual(0x4C, ManualFanMath.ToDuty255(30), "30%");
+            Harness.AssertEqual(0x59, ManualFanMath.ToDuty255(35), "35%");
+            Harness.AssertEqual(0x99, ManualFanMath.ToDuty255(60), "60%");
+            Harness.AssertEqual(0xFF, ManualFanMath.ToDuty255(100), "100%");
+        });
+
         Harness.Scenario("Average_EmptyIsMinusOne", _ =>
             Harness.AssertEqual(-1.0, ManualFanMath.Average(new Queue<int>()), "empty window"));
 
@@ -141,6 +150,12 @@ public static class ManualFanTests
             Harness.Assert(p.Ok && p.Link == "lpc" && p.Version == 18 && p.Fans == 2 && p.Rpm0 == 3100, "fields");
             Harness.AssertEqual<string?>(null, p.Reject(3000), "tach within 15%");
             Harness.AssertEqual<string?>(null, p.Reject(0), "no hwmon tach");
+        });
+
+        Harness.Scenario("Probe_HidLinkThreeFans", _ =>
+        {
+            var p = EcProbe.Parse("probe ok hid 5 3 900 800 700");
+            Harness.Assert(p.Ok && p.Link == "hid" && p.Version == 5 && p.Fans == 3 && p.Rpm0 == 900, "fields");
         });
 
         Harness.Scenario("Probe_TachMismatchRejected", _ =>

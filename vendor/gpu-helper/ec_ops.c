@@ -20,6 +20,17 @@
 #define EC_HAVE_IO 1
 #endif
 
+/* The test build (-DGH_EC_SIM=dir) swaps port I/O and hidraw for a simulated
+ * EC (install/tests/ec-sim.h) and keeps its files in dir. */
+#ifdef GH_EC_SIM
+#include "ec-sim.h"
+#else
+#define EC_LOCK "/run/ghelper-ec-fan.lock"
+#define EC_HIDRAW_DIR "/sys/class/hidraw"
+#define EC_DEV_DIR "/dev"
+#define EC_HID_GAP_US 210000 /* the AsusEC DLL waits this long between batched commands */
+#endif
+
 #define EC_DATA 0x25C
 #define EC_CMD 0x25D
 #define EC_OBF 0x01
@@ -42,8 +53,7 @@
 
 #define EC_POLL_LIMIT 1000
 #define EC_POLL_US 100
-#define EC_GAP_US 20000      /* lpc: EC needs settle time after each transaction */
-#define EC_HID_GAP_US 210000 /* hid: the AsusEC DLL waits this long between commands */
+#define EC_GAP_US 20000 /* lpc: EC needs settle time after each transaction */
 #define EC_MAX_FANS 3
 #define EC_WATCHDOG_S 5 /* give the fans back after this long without a command */
 
@@ -52,13 +62,6 @@
 #define EC_HID_REPORT 7
 #define EC_HID_LEN 64
 #define EC_HID_OK 0x80
-
-/* The test build (-DGH_EC_SIM=dir) uses a simulated EC and keeps the lock in dir. */
-#ifdef GH_EC_SIM
-#define EC_LOCK GH_EC_SIM "/ec-fan.lock"
-#else
-#define EC_LOCK "/run/ghelper-ec-fan.lock"
-#endif
 
 struct ec_link
 {
@@ -144,7 +147,7 @@ static void lpc_close(void)
     ioperm(EC_DATA, 2, 0);
 }
 
-static const struct ec_link lpc_link __attribute__((unused)) = {"lpc", lpc_open, lpc_xfer, lpc_close};
+static const struct ec_link lpc_link = {"lpc", lpc_open, lpc_xfer, lpc_close};
 
 #endif /* EC_HAVE_IO */
 
@@ -173,7 +176,7 @@ static int contains(const unsigned char *buf, int n, const unsigned char *pat, i
 static int hid_open(void)
 {
     static const unsigned char usage[] = {0x06, 0x32, 0xFF, 0x09, 0x84};
-    DIR *dir = opendir("/sys/class/hidraw");
+    DIR *dir = opendir(EC_HIDRAW_DIR);
     if (dir == NULL)
         return -1;
     struct dirent *e;
@@ -184,7 +187,7 @@ static int hid_open(void)
         unsigned int bus, vid, pid;
         if (strncmp(e->d_name, "hidraw", 6) != 0)
             continue;
-        snprintf(path, sizeof(path), "/sys/class/hidraw/%s/device/uevent", e->d_name);
+        snprintf(path, sizeof(path), EC_HIDRAW_DIR "/%s/device/uevent", e->d_name);
         int n = read_file(path, buf, sizeof(buf) - 1);
         if (n <= 0)
             continue;
@@ -193,11 +196,11 @@ static int hid_open(void)
         if (id == NULL || sscanf(id, "HID_ID=%x:%x:%x", &bus, &vid, &pid) != 3 ||
             vid != EC_HID_VID || pid != EC_HID_PID)
             continue;
-        snprintf(path, sizeof(path), "/sys/class/hidraw/%s/device/report_descriptor", e->d_name);
+        snprintf(path, sizeof(path), EC_HIDRAW_DIR "/%s/device/report_descriptor", e->d_name);
         n = read_file(path, buf, sizeof(buf));
         if (n <= 0 || !contains(buf, n, usage, sizeof(usage)))
             continue;
-        snprintf(path, sizeof(path), "/dev/%s", e->d_name);
+        snprintf(path, sizeof(path), EC_DEV_DIR "/%s", e->d_name);
         hid_fd = open(path, O_RDWR | O_CLOEXEC);
     }
     closedir(dir);
@@ -234,74 +237,13 @@ static void hid_close(void)
     hid_fd = -1;
 }
 
-static const struct ec_link hid_link __attribute__((unused)) = {"hid", hid_open, hid_xfer, hid_close};
-
-#ifdef GH_EC_SIM
-/* Simulated EC: EC_SIM="<version> <vendor bit> <fans> <mode>". Each table
- * write is logged on stderr as "w <reg> <value>". */
-static int sim_version, sim_vendor, sim_fans, sim_mode, sim_sel, sim_duty[8];
-
-static int sim_open(void)
-{
-    const char *cfg = getenv("EC_SIM");
-    return cfg && sscanf(cfg, "%d %d %d %d", &sim_version, &sim_vendor, &sim_fans, &sim_mode) == 4 ? 0 : -1;
-}
-
-static int sim_xfer(int cmd, const unsigned char *data, int len, unsigned char *reply)
-{
-    if (cmd == EC_CMD_INFO && len == 1 && reply != NULL)
-    {
-        *reply = data[0] == EC_INFO_VERSION ? sim_version : data[0] == EC_INFO_VENDOR ? sim_vendor << 7 : 0;
-        return 0;
-    }
-    if (cmd != EC_CMD_TABLE || len != 3)
-        return -1;
-    if (data[0] == EC_WRITE)
-    {
-        fprintf(stderr, "w %02x %02x\n", data[1], data[2]);
-        if (data[1] == EC_REG_MODE)
-            sim_mode = data[2];
-        else if (data[1] == EC_REG_FAN_SEL)
-            sim_sel = data[2] & 7;
-        else if (data[1] == EC_REG_DUTY)
-            sim_duty[sim_sel] = data[2];
-        return 0;
-    }
-    int rpm = 1000 + sim_duty[sim_sel] * 20;
-    switch (data[1])
-    {
-    case EC_REG_FAN_COUNT:
-        *reply = sim_fans;
-        return 0;
-    case EC_REG_MODE:
-        *reply = sim_mode;
-        return 0;
-    case EC_REG_RPM_LO:
-        *reply = rpm & 0xFF;
-        return 0;
-    case EC_REG_RPM_HI:
-        *reply = rpm >> 8;
-        return 0;
-    }
-    return -1;
-}
-
-static void sim_close(void)
-{
-}
-
-static const struct ec_link sim_link = {"sim", sim_open, sim_xfer, sim_close};
-#endif
+static const struct ec_link hid_link = {"hid", hid_open, hid_xfer, hid_close};
 
 static const struct ec_link *const ec_links[] = {
-#ifdef GH_EC_SIM
-    &sim_link,
-#else
 #ifdef EC_HAVE_IO
     &lpc_link,
 #endif
     &hid_link,
-#endif
 };
 
 static int ht_info(int id, unsigned char *value)
@@ -476,6 +418,10 @@ int do_ec_fanctl(void)
         if (fgets(line, sizeof(line), stdin) == NULL)
             break;
         idle = 0;
+#ifdef EC_SIM_HOOK
+        if (EC_SIM_HOOK(line))
+            continue;
+#endif
         if (strncmp(line, "probe", 5) == 0 && lock_fd < 0)
             ec_probe(&lock_fd, &fans);
         else if (strncmp(line, "set ", 4) == 0)
