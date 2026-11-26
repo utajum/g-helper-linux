@@ -501,7 +501,7 @@ ec_run() {
 
 has() { grep -qxF -- "$1" <<<"$OUT" || { fail "missing line: $1"; return 1; }; }
 lacks() { ! grep -qxF -- "$1" <<<"$OUT" || { fail "unexpected line: $1"; return 1; }; }
-clean() { ! grep -q '^bad' <<<"$OUT" || { fail "protocol error"; return 1; }; }
+protocol_ok() { ! grep -q '^bad' <<<"$OUT" || { fail "protocol error"; return 1; }; }
 last_is() { [[ "$(tail -n 1 <<<"$OUT")" == "$1" ]] || { fail "last line is not: $1"; return 1; }; }
 
 # Fake hidraw node: sysfs uevent, report descriptor and a /dev file.
@@ -539,14 +539,14 @@ CASES
 
 test_ec_lpc_port_protocol() {
     ec_run "lpc 18 1 2 0" probe "set 100 120" "set 100 130" quit
-    clean && has "w 31 01" && has "w 35 64" && has "w 35 78" && has "w 35 82" || return 1
+    protocol_ok && has "w 31 01" && has "w 35 64" && has "w 35 78" && has "w 35 82" || return 1
     [[ "$(grep -c '^w 35 64$' <<<"$OUT")" == 1 ]] || { fail "unchanged duty rewritten"; return 1; }
     last_is "w 31 00"
 }
 
 test_ec_lpc_drains_stale_output() {
     ec_run "lpc 18 1 2 0 1" probe "set 50 50" quit
-    clean && has "probe ok lpc 18 2 1000 1000"
+    protocol_ok && has "probe ok lpc 18 2 1000 1000"
 }
 
 test_ec_select_before_duty() {
@@ -567,7 +567,7 @@ test_ec_hid_feature_report() {
     hid_dev hidraw3 0B05:4543 "$EC_DESC"
     ec_run "hid 18 1 2 0" probe "set 100 120" quit
     hid_reset
-    clean && has "probe ok hid 18 2 1000 1000" && has "ok" && has "w 35 78" || return 1
+    protocol_ok && has "probe ok hid 18 2 1000 1000" && has "ok" && has "w 35 78" || return 1
     last_is "w 31 00"
 }
 
