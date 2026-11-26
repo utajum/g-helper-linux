@@ -33,6 +33,8 @@ public abstract partial class AsusMouse : IMousePeripheral
 
     void IMousePeripheral.WriteDPI()
     {
+        if (DpiProfile < 1 || DpiProfile > DpiSettings.Length)
+            return;
         if (DpiSettings[DpiProfile - 1] is { } dpi)
             SetDPIForProfile(dpi, DpiProfile);
         SetDPIProfile(DpiProfile);

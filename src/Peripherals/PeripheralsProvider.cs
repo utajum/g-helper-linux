@@ -18,6 +18,13 @@ public static class PeripheralsProvider
 
     public static List<IMousePeripheral> ConnectedMice { get; } = new();
 
+    /// <summary>Copy of ConnectedMice, safe while a scan changes the list.</summary>
+    public static List<IMousePeripheral> SnapshotMice()
+    {
+        lock (_lock)
+            return new List<IMousePeripheral>(ConnectedMice);
+    }
+
     /// <summary>Fires when a peripheral is added or removed.</summary>
     public static event Action? DeviceChanged;
 

@@ -98,7 +98,7 @@ public partial class MouseWindow
         AttachAsus(am);
         bool asus = am is not null;
         rowAsusProfile.IsVisible = asus && am!.HasProfiles();
-        rowAsusActions.IsVisible = asus;
+        rowAsusActions.IsVisible = asus && am!.HasProfiles();
         rowDpiColor.IsVisible = asus && am!.HasDPIColors();
         rowDpiCount.IsVisible = asus && am!.CanChangeDPICount();
         rowAngleTuning.IsVisible = asus && am!.HasAngleTuning();
@@ -112,6 +112,7 @@ public partial class MouseWindow
         if (am is null)
             return;
 
+        panelDpi.IsVisible = am.DPIProfileCount() > 0;
         InitMouseCapabilities(am);
         VisualizeMouseSettings(am);
     }
@@ -276,6 +277,8 @@ public partial class MouseWindow
     // DPI: the DPI combo lists the DPI levels; Windows counts them from 1.
     private void VisualizeCurrentDPIProfile(AsusMouse am)
     {
+        if (am.DpiSettings.Length == 0)
+            return;
         int count = Math.Clamp(am.CurrentDPIProfileCount, 1, am.DpiSettings.Length);
         FillCombo(comboDpiProfile, Enumerable.Range(0, count).Select(i => $"DPI {i + 1}: {am.DpiSettings[i]?.DPI}"), am.DpiProfile - 1);
         buttonDpiAdd.IsEnabled = am.CurrentDPIProfileCount < 4;

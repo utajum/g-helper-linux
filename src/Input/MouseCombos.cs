@@ -23,7 +23,7 @@ internal static class MouseCombos
     /// <summary>Windows RegisterKeys: watch the mice that have a combo bound, stop the others.</summary>
     public static void RegisterKeys()
     {
-        var pids = PeripheralsProvider.ConnectedMice.OfType<AsusMouse>()
+        var pids = PeripheralsProvider.SnapshotMice().OfType<AsusMouse>()
             .Where(m => m.HasButtonBindings() && m.ButtonBindings.Any(AsusMouse.CombosByCode.ContainsKey))
             .Select(m => m.ProductID())
             .ToHashSet();

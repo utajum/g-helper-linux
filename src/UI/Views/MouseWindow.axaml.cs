@@ -235,12 +235,12 @@ public partial class MouseWindow : Window
         // DPI
         panelDpi.IsVisible = true;
         int profileCount = mouse.DpiSettings.Length;
-        int profile = Math.Clamp(mouse.DpiProfile, 0, profileCount - 1);
+        int profile = Math.Clamp(mouse.DpiProfile, 0, Math.Max(profileCount - 1, 0));
         FillCombo(comboDpiProfile, Enumerable.Range(1, profileCount).Select(i => Labels.Format("mouse_profile_fmt", i)), profile);
         sliderDpi.Minimum = mouse.MinDPI();
         sliderDpi.Maximum = mouse.MaxDPI();
         sliderDpi.TickFrequency = mouse.DPIIncrement();
-        sliderDpi.Value = mouse.DpiSettings[profile]?.DPI ?? 800;
+        sliderDpi.Value = profileCount > 0 ? mouse.DpiSettings[profile]?.DPI ?? 800 : 800;
         labelDpiValue.Text = ((int)sliderDpi.Value).ToString();
 
         rowSensitivitySwitch.IsVisible = mouse.HasSensitivitySwitch();
