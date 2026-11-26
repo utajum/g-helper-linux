@@ -15,6 +15,7 @@
 
 #define EC_HAVE_IO 1
 #define EC_LOCK GH_EC_SIM "/ec-fan.lock"
+#define EC_DMI GH_EC_SIM "/dmi"
 #define EC_HIDRAW_DIR GH_EC_SIM "/sys"
 #define EC_DEV_DIR GH_EC_SIM "/dev"
 #define EC_HID_GAP_US 1000

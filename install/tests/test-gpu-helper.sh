@@ -488,8 +488,8 @@ test_lsm_disable_nothing_to_undo() {
 
 # -- ec-fanctl ------------------------------------------------------------------
 # The simulated EC follows the decompiled ASUS Windows code: AsusSAIO.sys port
-# protocol (lpc), AsusEC DLL feature report 7 (hid), and the MyASUS fan test
-# rule in AsusSystemDiagnosis.exe.
+# protocol (lpc), the SMBIOS check of the 2026+ ASUS EC driver, AsusEC DLL
+# feature report 7 (hid), and the MyASUS fan test rule in AsusSystemDiagnosis.exe.
 # ec_run "<link> <version> <vendor bit> <fans> <mode> [fault]" <stdin lines...>
 # Replies, EC writes ("w <reg> <value>") and protocol errors ("bad ...") land in OUT.
 ec_run() {
@@ -513,6 +513,10 @@ hid_dev() {
     : > "$EC_DIR/dev/$1"
 }
 hid_reset() { rm -rf "$EC_DIR/sys" "$EC_DIR/dev"; }
+
+# SMBIOS table the lpc link reads: dmi <strings...>
+dmi() { printf '%s\0' "$@" > "$EC_DIR/dmi"; }
+dmi "ASUSTeK COMPUTER INC."
 
 # Usage Page (0xFF32), Usage (0x84), Collection: what the AsusEC DLL matches.
 EC_DESC="0632ff0984a101850709011500260000750895403f00b102c0"
@@ -594,6 +598,20 @@ test_ec_lpc_before_hid() {
     ec_run "both 18 1 2 0" probe
     hid_reset
     has "probe ok lpc 18 2 1000 1000"
+}
+
+test_ec_lpc_needs_asus_smbios() {
+    local vendor
+    for vendor in "ASUSTeK COMPUTER INC." "ASUSTeK Computer Inc." "LENOVO"; do
+        dmi "$vendor"
+        ec_run "lpc 18 1 2 0" probe "set 50 50"
+        dmi "ASUSTeK COMPUTER INC."
+        if [[ "$vendor" == ASUSTeK* ]]; then
+            has "probe ok lpc 18 2 1000 1000" || return 1
+        else
+            has "probe no nolink" && has "err probe" && lacks "w 31 01" || return 1
+        fi
+    done
 }
 
 test_ec_no_link() {
@@ -713,6 +731,7 @@ for name in \
     ec_hid_needs_asus_ec_device \
     ec_hid_error_status \
     ec_lpc_before_hid \
+    ec_lpc_needs_asus_smbios \
     ec_no_link \
     ec_eof_releases_even_if_manual_at_start \
     ec_rearms_after_ec_reset \

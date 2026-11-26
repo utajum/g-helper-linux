@@ -4,7 +4,8 @@
  * 0xBB <id> reads one info byte, 0xDD <dir> <reg> <value> reads or writes
  * the HealthyTable. Two links carry them; the first that passes detection
  * is used:
- *   lpc  private port pair 0x25C data / 0x25D command+status (AsusSAIO.sys)
+ *   lpc  private port pair 0x25C data / 0x25D command+status (AsusSAIO.sys,
+ *        and on 2026+ x64 models the ASUS EC driver the AsusEC DLL loads)
  *   hid  feature report 7 of HID 0B05:4543, usage page 0xFF32 (AsusEC DLL)
  * Detection is the MyASUS rule: table version (0xBB 0x50) >= 2, and below
  * version 5 the vendor bit (0xBB 0x51 bit 7) must say ASUS, not ODM. */
@@ -26,6 +27,7 @@
 #include "ec-sim.h"
 #else
 #define EC_LOCK "/run/ghelper-ec-fan.lock"
+#define EC_DMI "/sys/firmware/dmi/tables/DMI"
 #define EC_HIDRAW_DIR "/sys/class/hidraw"
 #define EC_DEV_DIR "/dev"
 #define EC_HID_GAP_US 210000 /* the AsusEC DLL waits this long between batched commands */
@@ -86,6 +88,27 @@ static void ec_sleep_us(long us)
     nanosleep(&ts, NULL);
 }
 
+/* Reads until EOF: sysfs hands out binary files one page per read. */
+static int read_file(const char *path, unsigned char *buf, int size)
+{
+    int fd = open(path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0)
+        return -1;
+    int n = 0, r;
+    while (n < size && (r = (int)read(fd, buf + n, size - n)) > 0)
+        n += r;
+    close(fd);
+    return n;
+}
+
+static int contains(const unsigned char *buf, int n, const unsigned char *pat, int m)
+{
+    for (int i = 0; i + m <= n; i++)
+        if (memcmp(buf + i, pat, m) == 0)
+            return 1;
+    return 0;
+}
+
 #ifdef EC_HAVE_IO
 
 /* Poll status until (status & mask) == want. */
@@ -109,8 +132,15 @@ static void lpc_drain(void)
     }
 }
 
+/* Claim the ports only when the SMBIOS tables name ASUSTeK: the 2026+ ASUS
+ * EC driver makes this check, and its DLL stops when it fails. */
 static int lpc_open(void)
 {
+    static unsigned char dmi[65536];
+    int n = read_file(EC_DMI, dmi, sizeof(dmi));
+    if (!contains(dmi, n, (const unsigned char *)"ASUSTeK Computer Inc", 20) &&
+        !contains(dmi, n, (const unsigned char *)"ASUSTeK COMPUTER INC", 20))
+        return -1;
     return ioperm(EC_DATA, 2, 1);
 }
 
@@ -152,24 +182,6 @@ static const struct ec_link lpc_link = {"lpc", lpc_open, lpc_xfer, lpc_close};
 #endif /* EC_HAVE_IO */
 
 static int hid_fd = -1;
-
-static int read_file(const char *path, unsigned char *buf, int size)
-{
-    int fd = open(path, O_RDONLY | O_CLOEXEC);
-    if (fd < 0)
-        return -1;
-    int n = (int)read(fd, buf, size);
-    close(fd);
-    return n;
-}
-
-static int contains(const unsigned char *buf, int n, const unsigned char *pat, int m)
-{
-    for (int i = 0; i + m <= n; i++)
-        if (memcmp(buf + i, pat, m) == 0)
-            return 1;
-    return 0;
-}
 
 /* The hidraw node of 0B05:4543 whose report descriptor declares usage
  * page 0xFF32, usage 0x84: the EC mailbox the AsusEC DLL opens. */
