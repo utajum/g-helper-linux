@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kernel-check.sh - Track Linux kernel ASUS/Lenovo platform drivers for
+# kernel-check.sh - Track Linux kernel ASUS/Lenovo platform drivers and hid-asus for
 # features portable to g-helper-linux. Kernel analog of upstream-check.sh.
 #
 # Usage:
@@ -90,7 +90,7 @@ done
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
-echo -e "${BOLD}=== Kernel Driver Check (ASUS / Lenovo platform-x86) ===${NC}"
+echo -e "${BOLD}=== Kernel Driver Check (ASUS / Lenovo platform, hid-asus) ===${NC}"
 echo -e "${DIM}Fetching kernel...${NC}"
 git -C "$KERNEL_DIR" fetch origin --quiet 2>/dev/null || echo -e "${YELLOW}(fetch failed - using local refs)${NC}"
 
