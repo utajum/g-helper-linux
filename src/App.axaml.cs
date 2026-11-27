@@ -536,6 +536,23 @@ public class App : Application
         LogFeatureDetection();
     }
 
+    /// <summary>The installer wrote root files. If the SMU had no write access at startup,
+    /// wait for the udev rule and check again, so undervolt needs no app restart.</summary>
+    public static void RecheckSmuAccess()
+    {
+        var smu = Smu;
+        if (smu?.NoWriteAccess != true)
+            return;
+        Task.Run(() =>
+        {
+            if (!smu.WaitForWriteAccess(TimeSpan.FromSeconds(10)))
+                return;
+            Smu = new RyzenSmu();
+            if (Smu.IsAvailable)
+                Mode?.AutoRyzen();
+        });
+    }
+
     private void LogFeatureDetection()
     {
         var features = new (AttrDef attr, string name)[]

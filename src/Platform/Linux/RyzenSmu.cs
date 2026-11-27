@@ -13,6 +13,7 @@ namespace GHelper.Linux.Platform.Linux;
 /// The ryzen_smu driver exposes:
 ///   /sys/kernel/ryzen_smu_drv/rsmu_cmd   - write: trigger RSMU command (blocks until done)
 ///                                           read: response status (0x01 = OK)
+///   /sys/kernel/ryzen_smu_drv/mp1_smu_cmd - same for the MP1 mailbox (APUs)
 ///   /sys/kernel/ryzen_smu_drv/smu_args   - write: set 6x uint32 LE arguments (24 bytes)
 ///                                           read: response arguments after command
 ///   /sys/kernel/ryzen_smu_drv/codename   - CPU codename ID from driver
@@ -25,13 +26,14 @@ namespace GHelper.Linux.Platform.Linux;
 ///
 /// Command IDs verified from ZenStates-Core (irusanov/ZenStates-Core):
 ///   Zen4Settings.cs + DragonRangeSettings.cs (identical RSMU CO commands)
+///   APU MP1 IDs from Windows G-Helper (app/Pawn/RyzenSmu.cs) and ryzenadj
 ///
 /// CO values are NOT persistent - they reset on every reboot.
 ///
 /// SAFETY:
-///   - Startup validation: sends a read-only GetDldoPsmMargin before allowing writes
+///   - Startup validation (RSMU only): sends a read-only GetDldoPsmMargin before allowing writes
 ///   - Range clamped to [MinCPUUV, MaxCPUUV] (matches Windows CpuInfo.MinCPUUV/MaxCPUUV)
-///   - Read-back verification after every write
+///   - Read-back verification after every write (RSMU only)
 ///   - All SMU interactions logged
 ///   - Application-level lock (defense-in-depth over kernel mutex)
 /// </summary>
@@ -39,6 +41,7 @@ public sealed class RyzenSmu
 {
     private const string DriverPath = "/sys/kernel/ryzen_smu_drv";
     private const string RsmuCmdPath = DriverPath + "/rsmu_cmd";
+    private const string Mp1CmdPath = DriverPath + "/mp1_smu_cmd";
     private const string SmuArgsPath = DriverPath + "/smu_args";
     private const string CodenamePath = DriverPath + "/codename";
     private const string VersionPath = DriverPath + "/version";
@@ -57,18 +60,19 @@ public sealed class RyzenSmu
     public const int MaxCPUUV = 0;
 
     /// <summary>
-    /// RSMU command IDs for Curve Optimizer, per CPU generation.
-    /// Verified from ZenStates-Core source (Zen3Settings.cs, Zen4Settings.cs, DragonRangeSettings.cs).
+    /// Curve Optimizer command IDs, per CPU generation. RSMU IDs from ZenStates-Core
+    /// (Zen3Settings.cs, Zen4Settings.cs, DragonRangeSettings.cs), MP1 IDs from Windows G-Helper and ryzenadj.
     /// </summary>
     private record SmuCommandSet(
         uint SetAllCoreCO,    // SetAllDldoPsmMargin
         uint SetPerCoreCO,    // SetDldoPsmMargin
-        uint GetPerCoreCO     // GetDldoPsmMargin (read-only, used for validation)
+        uint GetPerCoreCO,    // GetDldoPsmMargin (read-only, used for validation)
+        bool Mp1 = false      // MP1 mailbox, no read command
     );
 
     // ryzen_smu codename IDs (from amkillam/ryzen_smu smu.h enum smu_processor_codename)
-    // Command IDs verified from ZenStates-Core source. Startup validation probe
-    // (GetDldoPsmMargin) catches wrong command IDs before any writes happen.
+    // RSMU command IDs verified from ZenStates-Core source. Startup validation probe
+    // (GetDldoPsmMargin) catches wrong RSMU command IDs before any writes happen.
     private const int CODENAME_REMBRANDT = 11;     // Zen 3+ APU (Ryzen 6000 mobile)
     private const int CODENAME_VERMEER = 12;       // Zen 3 desktop (Ryzen 5000)
     private const int CODENAME_CEZANNE = 14;       // Zen 3 APU (Ryzen 5000G)
@@ -79,27 +83,30 @@ public sealed class RyzenSmu
     private const int CODENAME_HAWK_POINT = 24;    // Zen 4 refresh (Ryzen 8000 mobile)
     private const int CODENAME_STRIX_HALO = 26;    // Zen 5 (Ryzen AI 300 HX)
 
-    // Enabled codenames. Startup validation probe ensures safety - if the SMU rejects
+    // Enabled codenames. On RSMU the startup validation probe ensures safety - if the SMU rejects
     // the GetDldoPsmMargin read, CO disables itself before any writes happen.
     private static readonly Dictionary<int, SmuCommandSet> CommandSets = new()
     {
         // Zen 3 RSMU - ZenStates-Core/SMUSettings/Zen3Settings.cs
         [CODENAME_VERMEER] = new(SetAllCoreCO: 0x0B, SetPerCoreCO: 0x0A, GetPerCoreCO: 0x7C),
-        [CODENAME_CEZANNE] = new(SetAllCoreCO: 0x0B, SetPerCoreCO: 0x0A, GetPerCoreCO: 0x7C),
-        [CODENAME_REMBRANDT] = new(SetAllCoreCO: 0x0B, SetPerCoreCO: 0x0A, GetPerCoreCO: 0x7C),
 
         // Zen 4 RSMU - ZenStates-Core/SMUSettings/Zen4Settings.cs + DragonRangeSettings.cs (identical)
         [CODENAME_RAPHAEL] = new(SetAllCoreCO: 0x07, SetPerCoreCO: 0x06, GetPerCoreCO: 0xD5),
-        [CODENAME_PHOENIX] = new(SetAllCoreCO: 0x07, SetPerCoreCO: 0x06, GetPerCoreCO: 0xD5),
-        [CODENAME_HAWK_POINT] = new(SetAllCoreCO: 0x07, SetPerCoreCO: 0x06, GetPerCoreCO: 0xD5),
 
         // Zen 5 RSMU - ZenStates-Core/SMUSettings/Zen5Settings.cs
         [CODENAME_GRANITE_RIDGE] = new(SetAllCoreCO: 0x07, SetPerCoreCO: 0x06, GetPerCoreCO: 0xD5),
-        [CODENAME_STRIX_POINT] = new(SetAllCoreCO: 0x07, SetPerCoreCO: 0x06, GetPerCoreCO: 0xD5),
-        [CODENAME_STRIX_HALO] = new(SetAllCoreCO: 0x07, SetPerCoreCO: 0x06, GetPerCoreCO: 0xD5),
+
+        // APUs: MP1 like Windows G-Helper and ryzenadj; RSMU 0x07 returns OK but does nothing (#200)
+        [CODENAME_CEZANNE] = new(SetAllCoreCO: 0x55, SetPerCoreCO: 0x54, GetPerCoreCO: 0, Mp1: true),
+        [CODENAME_REMBRANDT] = new(SetAllCoreCO: 0x4C, SetPerCoreCO: 0x4B, GetPerCoreCO: 0, Mp1: true),
+        [CODENAME_PHOENIX] = new(SetAllCoreCO: 0x4C, SetPerCoreCO: 0x4B, GetPerCoreCO: 0, Mp1: true),
+        [CODENAME_HAWK_POINT] = new(SetAllCoreCO: 0x4C, SetPerCoreCO: 0x4B, GetPerCoreCO: 0, Mp1: true),
+        [CODENAME_STRIX_POINT] = new(SetAllCoreCO: 0x4C, SetPerCoreCO: 0x4B, GetPerCoreCO: 0, Mp1: true),
+        [CODENAME_STRIX_HALO] = new(SetAllCoreCO: 0x4C, SetPerCoreCO: 0x4B, GetPerCoreCO: 0, Mp1: true),
     };
 
     private SmuCommandSet? _commands;
+    private string CmdPath => _commands?.Mp1 == true ? Mp1CmdPath : RsmuCmdPath;
     private int _codename = -1;
     private readonly object _smuLock = new();  // Defense-in-depth over kernel mutex
 
@@ -108,6 +115,9 @@ public sealed class RyzenSmu
 
     /// <summary>Human-readable reason if IsAvailable is false.</summary>
     public string? UnavailableReason { get; private set; }
+
+    /// <summary>Only write access was missing; the udev rule can still give it.</summary>
+    public bool NoWriteAccess { get; private set; }
 
     /// <summary>ryzen_smu codename ID.</summary>
     public int Codename => _codename;
@@ -119,14 +129,6 @@ public sealed class RyzenSmu
             if (!Directory.Exists(DriverPath))
             {
                 UnavailableReason = "ryzen_smu driver not loaded";
-                Helpers.Logger.WriteLine("RyzenSmu: " + UnavailableReason);
-                return;
-            }
-
-            // Check write permissions on command files
-            if (!IsWritable(RsmuCmdPath) || !IsWritable(SmuArgsPath))
-            {
-                UnavailableReason = "no write permission on ryzen_smu files (need root or udev rule)";
                 Helpers.Logger.WriteLine("RyzenSmu: " + UnavailableReason);
                 return;
             }
@@ -143,6 +145,15 @@ public sealed class RyzenSmu
             {
                 UnavailableReason = $"unsupported CPU codename {_codename}";
                 Helpers.Logger.WriteLine("RyzenSmu: " + UnavailableReason);
+                return;
+            }
+
+            // Check write permissions on command files
+            if (!IsWritable(CmdPath) || !IsWritable(SmuArgsPath))
+            {
+                UnavailableReason = "no write permission on ryzen_smu files (need root or udev rule)";
+                Helpers.Logger.WriteLine("RyzenSmu: " + UnavailableReason);
+                NoWriteAccess = true;
                 return;
             }
 
@@ -193,6 +204,12 @@ public sealed class RyzenSmu
         if (_commands == null)
             return false;
 
+        if (_commands.Mp1)
+        {
+            Helpers.Logger.WriteLine("RyzenSmu: MP1 has no read-only probe, the driver checks MP1 at load");
+            return true;
+        }
+
         Helpers.Logger.WriteLine("RyzenSmu: validating with GetDldoPsmMargin (read-only) for CCD0/core0...");
 
         // CCD0, core0 mask
@@ -223,7 +240,7 @@ public sealed class RyzenSmu
     /// Set Curve Optimizer offset for ALL cores. Mirrors Windows RyzenSmuService.SetCoAll.
     /// </summary>
     /// <param name="offset">CO offset, clamped to [MinCPUUV, MaxCPUUV]. Negative = undervolt.</param>
-    /// <returns>True if the SMU accepted the command. Read-back is logged; a mismatch
+    /// <returns>True if the SMU accepted the command. Read-back (RSMU only) is logged; a mismatch
     /// does NOT flip the return to false (the write itself still succeeded).</returns>
     public bool SetCoAll(int offset)
     {
@@ -231,7 +248,8 @@ public sealed class RyzenSmu
             return false;
 
         offset = Math.Clamp(offset, MinCPUUV, MaxCPUUV);
-        uint encoded = EncodeCOMargin(offset);
+        // MP1 all-core takes a 20-bit value (ryzenadj: 0x100000 - N)
+        uint encoded = _commands.Mp1 ? (uint)offset & 0xFFFFF : EncodeCOMargin(offset);
 
         Helpers.Logger.WriteLine($"RyzenSmu: SetCoAll offset={offset} encoded=0x{encoded:X4}");
 
@@ -241,6 +259,9 @@ public sealed class RyzenSmu
             Helpers.Logger.WriteLine("RyzenSmu: SetCoAll FAILED");
             return false;
         }
+
+        if (_commands.Mp1)
+            return true;
 
         // Read-back verification: check core 0 to confirm the value took effect
         int? readback = GetPerCoreCO(0, 0);
@@ -307,7 +328,7 @@ public sealed class RyzenSmu
     /// <returns>The CO offset value, or null on failure.</returns>
     public int? GetPerCoreCO(int ccd, int core)
     {
-        if (!IsAvailable || _commands == null)
+        if (!IsAvailable || _commands == null || _commands.Mp1)
             return null;
 
         uint coreMask = ((uint)ccd << 28) | ((uint)(core % 8) << 20);
@@ -391,17 +412,17 @@ public sealed class RyzenSmu
                 // Step 2: Write command (triggers SMU execution, blocks)
                 var cmdBytes = new byte[4];
                 BitConverter.TryWriteBytes(cmdBytes.AsSpan(0, 4), command);
-                File.WriteAllBytes(RsmuCmdPath, cmdBytes);
+                File.WriteAllBytes(CmdPath, cmdBytes);
 
                 // Step 3: Read response status.
                 // sysfs files report st_size=4096 but only yield 4 actual bytes,
                 // so File.ReadAllBytes (which trusts stream length) throws
                 // "Unable to read beyond the end of the stream". Use fixed-size
                 // buffer reads instead.
-                var respBytes = ReadSysfsBytes(RsmuCmdPath, 4);
+                var respBytes = ReadSysfsBytes(CmdPath, 4);
                 if (respBytes.Length < 4)
                 {
-                    Helpers.Logger.WriteLine($"RyzenSmu: short response from rsmu_cmd ({respBytes.Length} bytes)");
+                    Helpers.Logger.WriteLine($"RyzenSmu: short response from {CmdPath} ({respBytes.Length} bytes)");
                     return (0, null);
                 }
 
@@ -470,6 +491,20 @@ public sealed class RyzenSmu
         var trimmed = new byte[total];
         Array.Copy(buf, trimmed, total);
         return trimmed;
+    }
+
+    /// <summary>Wait for write access to the command files, up to <paramref name="timeout"/>.
+    /// <c>udevadm trigger</c> returns before the udev rule has run.</summary>
+    public bool WaitForWriteAccess(TimeSpan timeout)
+    {
+        var end = DateTime.UtcNow + timeout;
+        while (!IsWritable(CmdPath) || !IsWritable(SmuArgsPath))
+        {
+            if (DateTime.UtcNow >= end)
+                return false;
+            Thread.Sleep(250);
+        }
+        return true;
     }
 
     /// <summary>Check if a sysfs file is writable by the current user.</summary>

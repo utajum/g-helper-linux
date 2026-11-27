@@ -919,6 +919,7 @@ public static partial class Installer
             if (rc != 0)
                 return (false, changed, false);
             changed += rootIds.Length;
+            App.RecheckSmuAccess();
         }
 
         return (true, changed, false);
