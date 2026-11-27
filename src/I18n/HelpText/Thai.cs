@@ -421,7 +421,7 @@ internal static class Thai
         ["MouseWindow.buttonHapticPlay"] = "เล่นรูปแบบสัมผัสที่เลือกหนึ่งครั้ง",
         ["MouseWindow.comboPowerOff"] = "เวลาที่ไม่ได้ใช้งานก่อนเมาส์ปิด",
         ["MouseWindow.sliderLowBattery"] = "ระดับแบตเตอรี่ที่เมาส์จะเตือนคุณ",
-        ["MouseWindow.sliderSleepTimeout"] = "เวลาที่ไม่ได้ใช้งานก่อนเมาส์เข้าสู่โหมดพัก",
+        ["MouseWindow.sliderSleepTimeout"] = "เวลาที่ไม่ได้ใช้งาน (วินาที) ก่อนไฟจะดับ",
         ["MouseWindow.comboSmartShift"] = "โหมดล้อเลื่อน: แบบมีจังหวะ (คลิก) หรือหมุนอิสระ",
         ["MouseWindow.sliderSmartShiftThreshold"] = "ความเร็วการเลื่อนที่ล้อสลับจากแบบมีจังหวะเป็นหมุนอิสระ",
         ["MouseWindow.checkHiResScroll"] = "การเลื่อนความละเอียดสูง: ขั้นการเลื่อนมากขึ้นเพื่อการเลื่อนที่ลื่นขึ้น",

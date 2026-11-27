@@ -421,7 +421,7 @@ internal static class ChineseSimplified
         ["MouseWindow.buttonHapticPlay"] = "播放一次所选的触觉模式。",
         ["MouseWindow.comboPowerOff"] = "鼠标关闭前的闲置时间。",
         ["MouseWindow.sliderLowBattery"] = "鼠标发出警告的电量。",
-        ["MouseWindow.sliderSleepTimeout"] = "鼠标进入睡眠前的闲置时间。",
+        ["MouseWindow.sliderSleepTimeout"] = "灯光关闭前的闲置时间（秒）。",
         ["MouseWindow.comboSmartShift"] = "滚轮模式：段落（有咔哒感）或自由滚动。",
         ["MouseWindow.sliderSmartShiftThreshold"] = "滚轮从段落切换为自由滚动的滚动速度。",
         ["MouseWindow.checkHiResScroll"] = "高精度滚动：更多滚动步进，滚动更平滑。",

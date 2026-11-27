@@ -421,7 +421,7 @@ internal static class Russian
         ["MouseWindow.buttonHapticPlay"] = "Один раз воспроизводит выбранный тактильный шаблон.",
         ["MouseWindow.comboPowerOff"] = "Время без использования, после которого мышь выключается.",
         ["MouseWindow.sliderLowBattery"] = "Уровень заряда, при котором мышь предупреждает вас.",
-        ["MouseWindow.sliderSleepTimeout"] = "Время без использования, после которого мышь засыпает.",
+        ["MouseWindow.sliderSleepTimeout"] = "Время без использования в секундах, после которого подсветка выключается.",
         ["MouseWindow.comboSmartShift"] = "Режим колеса прокрутки: с щелчками или свободное вращение.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Скорость прокрутки, при которой колесо переходит со щелчков на свободное вращение.",
         ["MouseWindow.checkHiResScroll"] = "Прокрутка высокого разрешения: больше шагов для более плавной прокрутки.",

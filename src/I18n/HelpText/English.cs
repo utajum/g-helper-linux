@@ -422,7 +422,7 @@ internal static class English
         ["MouseWindow.buttonHapticPlay"] = "Plays the selected haptic pattern once.",
         ["MouseWindow.comboPowerOff"] = "Time without use before the mouse turns off.",
         ["MouseWindow.sliderLowBattery"] = "Battery level at which the mouse warns you.",
-        ["MouseWindow.sliderSleepTimeout"] = "Time without use before the mouse goes to sleep.",
+        ["MouseWindow.sliderSleepTimeout"] = "Time without use, in seconds, before the lighting turns off.",
         ["MouseWindow.comboSmartShift"] = "Scroll wheel mode: ratchet (clicks) or free spin.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Scroll speed at which the wheel switches from ratchet to free spin.",
         ["MouseWindow.checkHiResScroll"] = "Hi-res scrolling: more scroll steps for smoother scrolling.",

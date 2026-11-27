@@ -421,7 +421,7 @@ internal static class Nepali
         ["MouseWindow.buttonHapticPlay"] = "छानिएको ह्याप्टिक ढाँचा एक पटक बजाउँछ।",
         ["MouseWindow.comboPowerOff"] = "प्रयोगबिनाको समय जसपछि माउस बन्द हुन्छ।",
         ["MouseWindow.sliderLowBattery"] = "ब्याट्री तह जसमा माउसले तपाईंलाई चेतावनी दिन्छ।",
-        ["MouseWindow.sliderSleepTimeout"] = "प्रयोगबिनाको समय जसपछि माउस सुत्छ।",
+        ["MouseWindow.sliderSleepTimeout"] = "प्रयोगबिनाको समय, सेकेन्डमा, जसपछि बत्ती बन्द हुन्छ।",
         ["MouseWindow.comboSmartShift"] = "स्क्रोल ह्विल मोड: र‍्याचेट (क्लिक) वा स्वतन्त्र घुमाइ।",
         ["MouseWindow.sliderSmartShiftThreshold"] = "स्क्रोल गति जसमा ह्विल र‍्याचेटबाट स्वतन्त्र घुमाइमा जान्छ।",
         ["MouseWindow.checkHiResScroll"] = "हाई-रेज स्क्रोलिङ: चिल्लो स्क्रोलका लागि बढी स्क्रोल चरण।",

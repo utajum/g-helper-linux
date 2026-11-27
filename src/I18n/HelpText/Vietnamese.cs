@@ -421,7 +421,7 @@ internal static class Vietnamese
         ["MouseWindow.buttonHapticPlay"] = "Phát kiểu xúc giác đã chọn một lần.",
         ["MouseWindow.comboPowerOff"] = "Thời gian không dùng trước khi chuột tắt.",
         ["MouseWindow.sliderLowBattery"] = "Mức pin mà chuột sẽ cảnh báo bạn.",
-        ["MouseWindow.sliderSleepTimeout"] = "Thời gian không dùng trước khi chuột ngủ.",
+        ["MouseWindow.sliderSleepTimeout"] = "Thời gian không dùng, tính bằng giây, trước khi đèn tắt.",
         ["MouseWindow.comboSmartShift"] = "Chế độ con lăn: có nấc (tạch) hoặc quay tự do.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Tốc độ cuộn mà con lăn chuyển từ có nấc sang quay tự do.",
         ["MouseWindow.checkHiResScroll"] = "Cuộn độ phân giải cao: nhiều bước cuộn hơn để cuộn mượt hơn.",

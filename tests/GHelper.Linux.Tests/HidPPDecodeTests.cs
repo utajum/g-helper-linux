@@ -209,5 +209,15 @@ public static class HidPPDecodeTests
             Harness.AssertEqual((ushort)2, HidPPDecode.BacklightSecondsToWire(6), "round up");
             Harness.AssertEqual((ushort)120, HidPPDecode.BacklightSecondsToWire(600), "10 min");
         });
+
+        Harness.Scenario("RgbPowerConfig_DecodeAndBuild", _ =>
+        {
+            // getOrSet echo, flags 0x0003, power save 60 s, off 300 s
+            var r = HidPPDecode.DecodeRgbPowerConfig([0x00, 0x00, 0x03, 0x00, 0x3C, 0x01, 0x2C]);
+            Harness.AssertEqual(((ushort)3, 60, 300), r!.Value, "decode");
+            Harness.Assert(HidPPDecode.DecodeRgbPowerConfig([0x00, 0x00, 0x03]) is null, "short reply");
+            Harness.AssertEqual("01-00-03-00-3C-01-2C", BitConverter.ToString(HidPPDecode.BuildRgbPowerConfig(3, 60, 300)), "build");
+            Harness.AssertEqual("01-00-00-00-00-FF-FF", BitConverter.ToString(HidPPDecode.BuildRgbPowerConfig(0, -5, 99999)), "clamp");
+        });
     }
 }

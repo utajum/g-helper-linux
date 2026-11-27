@@ -421,7 +421,7 @@ internal static class Finnish
         ["MouseWindow.buttonHapticPlay"] = "Toistaa valitun haptisen kuvion kerran.",
         ["MouseWindow.comboPowerOff"] = "Käyttämättömyysaika ennen kuin hiiri sammuu.",
         ["MouseWindow.sliderLowBattery"] = "Akun taso, jolla hiiri varoittaa sinua.",
-        ["MouseWindow.sliderSleepTimeout"] = "Käyttämättömyysaika ennen kuin hiiri menee lepotilaan.",
+        ["MouseWindow.sliderSleepTimeout"] = "Käyttämättömyysaika sekunteina ennen kuin valaistus sammuu.",
         ["MouseWindow.comboSmartShift"] = "Vierityspyörän tila: naksuttava tai vapaasti pyörivä.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Vieritysnopeus, jossa pyörä vaihtaa naksuttavasta vapaasti pyöriväksi.",
         ["MouseWindow.checkHiResScroll"] = "Korkean tarkkuuden vieritys: enemmän vieritysaskelia sulavampaan vieritykseen.",

@@ -421,7 +421,7 @@ internal static class Korean
         ["MouseWindow.buttonHapticPlay"] = "선택한 햅틱 패턴을 한 번 재생합니다.",
         ["MouseWindow.comboPowerOff"] = "마우스가 꺼지기 전까지의 미사용 시간.",
         ["MouseWindow.sliderLowBattery"] = "마우스가 경고하는 배터리 수준.",
-        ["MouseWindow.sliderSleepTimeout"] = "마우스가 절전에 들어가기 전까지의 미사용 시간.",
+        ["MouseWindow.sliderSleepTimeout"] = "조명이 꺼지기 전까지의 미사용 시간(초).",
         ["MouseWindow.comboSmartShift"] = "스크롤 휠 모드: 래칫(딸깍) 또는 프리 스핀.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "휠이 래칫에서 프리 스핀으로 바뀌는 스크롤 속도.",
         ["MouseWindow.checkHiResScroll"] = "고해상도 스크롤: 스크롤 단계를 늘려 더 부드럽게 스크롤합니다.",

@@ -421,7 +421,7 @@ internal static class Japanese
         ["MouseWindow.buttonHapticPlay"] = "選んだ触覚パターンを 1 回再生します。",
         ["MouseWindow.comboPowerOff"] = "マウスの電源が切れるまでの無操作時間。",
         ["MouseWindow.sliderLowBattery"] = "マウスが警告するバッテリー残量。",
-        ["MouseWindow.sliderSleepTimeout"] = "マウスがスリープするまでの無操作時間。",
+        ["MouseWindow.sliderSleepTimeout"] = "ライティングが消えるまでの無操作時間（秒）。",
         ["MouseWindow.comboSmartShift"] = "スクロールホイールのモード: ラチェット (クリック感あり) またはフリースピン。",
         ["MouseWindow.sliderSmartShiftThreshold"] = "ホイールがラチェットからフリースピンに切り替わるスクロール速度。",
         ["MouseWindow.checkHiResScroll"] = "高解像度スクロール: スクロールの段階を増やして滑らかにします。",

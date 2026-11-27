@@ -421,7 +421,7 @@ internal static class Spanish
         ["MouseWindow.buttonHapticPlay"] = "Reproduce una vez el patrón háptico elegido.",
         ["MouseWindow.comboPowerOff"] = "Tiempo sin uso antes de que el ratón se apague.",
         ["MouseWindow.sliderLowBattery"] = "Nivel de batería al que el ratón te avisa.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tiempo sin uso antes de que el ratón entre en suspensión.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tiempo sin uso, en segundos, antes de que se apague la iluminación.",
         ["MouseWindow.comboSmartShift"] = "Modo de la rueda de desplazamiento: con muescas (clics) o giro libre.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Velocidad de desplazamiento a la que la rueda pasa de muescas a giro libre.",
         ["MouseWindow.checkHiResScroll"] = "Desplazamiento de alta resolución: más pasos para un desplazamiento más suave.",

@@ -421,7 +421,7 @@ internal static class Lithuanian
         ["MouseWindow.buttonHapticPlay"] = "Vieną kartą groja pasirinktą lytėjimo šabloną.",
         ["MouseWindow.comboPowerOff"] = "Laikas be naudojimo, po kurio pelė išsijungia.",
         ["MouseWindow.sliderLowBattery"] = "Baterijos lygis, kuriam esant pelė jus įspėja.",
-        ["MouseWindow.sliderSleepTimeout"] = "Laikas be naudojimo, po kurio pelė užmiega.",
+        ["MouseWindow.sliderSleepTimeout"] = "Laikas be naudojimo sekundėmis, po kurio apšvietimas išsijungia.",
         ["MouseWindow.comboSmartShift"] = "Slinkties ratuko režimas: su spragtelėjimais arba laisvas sukimasis.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Slinkties greitis, kuriam esant ratukas persijungia iš spragtelėjimų į laisvą sukimąsi.",
         ["MouseWindow.checkHiResScroll"] = "Didelės raiškos slinktis: daugiau žingsnių sklandesnei slinkčiai.",

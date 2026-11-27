@@ -421,7 +421,7 @@ internal static class Danish
         ["MouseWindow.buttonHapticPlay"] = "Afspiller det valgte haptiske mønster én gang.",
         ["MouseWindow.comboPowerOff"] = "Tid uden brug, før musen slukker.",
         ["MouseWindow.sliderLowBattery"] = "Batteriniveau, hvor musen advarer dig.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tid uden brug, før musen går i dvale.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tid uden brug, i sekunder, før lyset slukker.",
         ["MouseWindow.comboSmartShift"] = "Rullehjulets tilstand: klik eller fri rotation.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Rullehastighed, hvor hjulet skifter fra klik til fri rotation.",
         ["MouseWindow.checkHiResScroll"] = "Højopløselig rulning: flere rulletrin for mere glidende rulning.",

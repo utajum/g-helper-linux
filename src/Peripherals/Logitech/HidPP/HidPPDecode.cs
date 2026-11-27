@@ -286,4 +286,15 @@ public static class HidPPDecode
 
     /// <summary>BACKLIGHT2 (0x1982) durations are in 5 s units on the wire; rounds up, min 1.</summary>
     public static ushort BacklightSecondsToWire(int seconds) => (ushort)Math.Clamp((seconds + 4) / 5, 1, 0xFFFF);
+
+    /// <summary>RGB_EFFECTS (0x8071) fn 0x70 payload: [getOrSet, flags(2), power-save s(2), off s(2)], big-endian.</summary>
+    public static (ushort flags, int powerSave, int off)? DecodeRgbPowerConfig(ReadOnlySpan<byte> p) =>
+        p.Length < 7 ? null : ((ushort)(p[1] << 8 | p[2]), p[3] << 8 | p[4], p[5] << 8 | p[6]);
+
+    /// <summary>Builds the fn 0x70 set payload; timeouts are clamped to 0..0xFFFF seconds.</summary>
+    public static byte[] BuildRgbPowerConfig(ushort flags, int powerSave, int off)
+    {
+        int ps = Math.Clamp(powerSave, 0, 0xFFFF), o = Math.Clamp(off, 0, 0xFFFF);
+        return [0x01, (byte)(flags >> 8), (byte)flags, (byte)(ps >> 8), (byte)ps, (byte)(o >> 8), (byte)o];
+    }
 }

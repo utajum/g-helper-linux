@@ -141,6 +141,7 @@ public class LogitechMouse : IMousePeripheral
     protected ushort _rgbFeature;
     protected ushort[][] _rgbZoneEffects = [];
     protected (byte control, byte events)? _rgbPriorControl;
+    protected ushort? _rgbPowerFlags;
     protected bool _lightingWritten;
     protected bool _hasBattery;
     protected bool _hasDpi;
@@ -246,12 +247,12 @@ public class LogitechMouse : IMousePeripheral
     public virtual bool HasPowerMgmt() => false;
     public virtual bool HasOnboardEffect() => _hasOnboardEffect;
     public virtual bool HasPerZoneLighting() => _hasPerZoneLighting;
+    public virtual bool HasIdleTimeout() => _rgbPowerFlags is not null;
+    public virtual bool HasSleepTimeout() => _rgbPowerFlags is not null;
     // No HID++ feature backs these; the old writes hit unrelated functions (0x1B04 reset, 0x8071 power mode).
     // Hand detection / side scroll are HID++ 1.0 register 0x01 bits, unreachable on 2.0 devices.
     public virtual bool HasSensitivitySwitch() => false;
     public virtual bool HasIdleEffect() => false;
-    public virtual bool HasIdleTimeout() => false;
-    public virtual bool HasSleepTimeout() => false;
     public virtual bool HasHapticWaveform() => _hasHaptic;
     public virtual bool HasBacklightDelay() => _hasBacklight;
     public virtual bool HasHandDetection() => false;
@@ -1682,6 +1683,14 @@ public class LogitechMouse : IMousePeripheral
                 && _device.FeatureRequest(Feature.SIDETONE, 0x00) is { Length: >= 3 } st)
                 HeadsetSidetone = Math.Min((int)st[2], 100);
 
+            _rgbPowerFlags = null;
+            if (HidPPProtocol.GetRGBPowerConfig(_device) is { } pc)
+            {
+                _rgbPowerFlags = pc.flags;
+                IdleTimeoutSeconds = pc.powerSave;
+                SleepTimeoutSeconds = pc.off;
+            }
+
             if (_hasPowerMgmt && _device.GetFeatureIndex(Feature.CENTURION_AUTO_SLEEP) < 0
                 && _device.FeatureRequest(Feature.ADC_MEASUREMENT, 0x10) is { Length: >= 3 } adc)
                 HeadsetAutoSleepMinutes = adc[2];
@@ -1936,9 +1945,22 @@ public class LogitechMouse : IMousePeripheral
 
     public virtual void WriteIdleEffect() { }
 
-    public virtual void WriteIdleTimeout() { }
+    public virtual void WriteIdleTimeout() => WriteRgbPowerConfig();
 
-    public virtual void WriteSleepTimeout() { }
+    public virtual void WriteSleepTimeout() => WriteRgbPowerConfig();
+
+    // 0x8071 fn 0x70: the firmware dims the lighting after IdleTimeoutSeconds and turns it off after SleepTimeoutSeconds.
+    private void WriteRgbPowerConfig()
+    {
+        if (_device is null || _rgbPowerFlags is not { } flags)
+            return;
+        try
+        {
+            if (!HidPPProtocol.SetRGBPowerConfig(_device, flags, IdleTimeoutSeconds, SleepTimeoutSeconds))
+                Logger.WriteLine($"LogitechMouse({GetDisplayName()}): RGB power config write failed");
+        }
+        catch (Exception ex) { Logger.WriteLine($"LogitechMouse({GetDisplayName()}): RGB power config write failed - {ex.Message}"); }
+    }
 
     public virtual void PlayHapticWaveform()
     {

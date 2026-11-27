@@ -421,7 +421,7 @@ internal static class Norwegian
         ["MouseWindow.buttonHapticPlay"] = "Spiller av det valgte haptiske mønsteret én gang.",
         ["MouseWindow.comboPowerOff"] = "Tid uten bruk før musen slår seg av.",
         ["MouseWindow.sliderLowBattery"] = "Batterinivå der musen advarer deg.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tid uten bruk før musen går i dvale.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tid uten bruk, i sekunder, før lyset slås av.",
         ["MouseWindow.comboSmartShift"] = "Rullehjulets modus: klikk eller fri rotasjon.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Rullehastighet der hjulet bytter fra klikk til fri rotasjon.",
         ["MouseWindow.checkHiResScroll"] = "Høyoppløst rulling: flere rulletrinn for jevnere rulling.",

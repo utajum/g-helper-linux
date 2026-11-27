@@ -550,6 +550,19 @@ public static class HidPPProtocol
         return (control, events);
     }
 
+    /// <summary>Reads RGB_EFFECTS (0x8071) fn 0x70 getRgbPowerModeConfig: no-activity seconds to power save and to off.</summary>
+    public static (ushort flags, int powerSave, int off)? GetRGBPowerConfig(HidPPDevice device)
+    {
+        if (device.GetFeatureIndex(Feature.RGB_EFFECTS) < 0)
+            return null;
+        byte[]? r = device.FeatureRequest(Feature.RGB_EFFECTS, 0x70, 0x00, 0x00, 0x00);
+        return r is null || r.Length < 9 ? null : HidPPDecode.DecodeRgbPowerConfig(r.AsSpan(2));
+    }
+
+    /// <summary>Writes RGB_EFFECTS (0x8071) fn 0x70 setRgbPowerModeConfig, keeping the flags as read.</summary>
+    public static bool SetRGBPowerConfig(HidPPDevice device, ushort flags, int powerSave, int off) =>
+        device.FeatureRequest(Feature.RGB_EFFECTS, 0x70, HidPPDecode.BuildRgbPowerConfig(flags, powerSave, off)) is not null;
+
     /// <summary>Returns cluster control to the firmware, restoring the flags read before the claim.</summary>
     public static void ReleaseRGBControl(HidPPDevice device, byte control, byte events)
     {

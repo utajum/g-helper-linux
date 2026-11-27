@@ -421,7 +421,7 @@ internal static class French
         ["MouseWindow.buttonHapticPlay"] = "Joue une fois le motif haptique choisi.",
         ["MouseWindow.comboPowerOff"] = "Temps sans utilisation avant que la souris s'éteigne.",
         ["MouseWindow.sliderLowBattery"] = "Niveau de batterie auquel la souris vous avertit.",
-        ["MouseWindow.sliderSleepTimeout"] = "Temps sans utilisation avant que la souris se mette en veille.",
+        ["MouseWindow.sliderSleepTimeout"] = "Temps sans utilisation, en secondes, avant que l'éclairage s'éteigne.",
         ["MouseWindow.comboSmartShift"] = "Mode de la molette : crantée (clics) ou rotation libre.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Vitesse de défilement à laquelle la molette passe de crantée à rotation libre.",
         ["MouseWindow.checkHiResScroll"] = "Défilement haute résolution : plus de pas pour un défilement plus fluide.",

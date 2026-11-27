@@ -421,7 +421,7 @@ internal static class Bengali
         ["MouseWindow.buttonHapticPlay"] = "বাছাই করা হ্যাপটিক প্যাটার্ন একবার বাজায়।",
         ["MouseWindow.comboPowerOff"] = "ব্যবহার ছাড়া সময় যার পরে মাউস বন্ধ হয়।",
         ["MouseWindow.sliderLowBattery"] = "ব্যাটারি স্তর যেখানে মাউস আপনাকে সতর্ক করে।",
-        ["MouseWindow.sliderSleepTimeout"] = "ব্যবহার ছাড়া সময় যার পরে মাউস ঘুমায়।",
+        ["MouseWindow.sliderSleepTimeout"] = "ব্যবহার ছাড়া সময়, সেকেন্ডে, যার পরে লাইটিং বন্ধ হয়।",
         ["MouseWindow.comboSmartShift"] = "স্ক্রল হুইল মোড: র‍্যাচেট (ক্লিক) বা মুক্ত ঘূর্ণন।",
         ["MouseWindow.sliderSmartShiftThreshold"] = "যে স্ক্রল গতিতে হুইল র‍্যাচেট থেকে মুক্ত ঘূর্ণনে যায়।",
         ["MouseWindow.checkHiResScroll"] = "হাই-রেজ স্ক্রলিং: মসৃণ স্ক্রলিংয়ের জন্য বেশি স্ক্রল ধাপ।",

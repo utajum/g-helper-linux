@@ -421,7 +421,7 @@ internal static class Latvian
         ["MouseWindow.buttonHapticPlay"] = "Vienreiz atskaņo izvēlēto taktilo rakstu.",
         ["MouseWindow.comboPowerOff"] = "Laiks bez lietošanas, pirms pele izslēdzas.",
         ["MouseWindow.sliderLowBattery"] = "Akumulatora līmenis, pie kura pele jūs brīdina.",
-        ["MouseWindow.sliderSleepTimeout"] = "Laiks bez lietošanas, pirms pele aizmieg.",
+        ["MouseWindow.sliderSleepTimeout"] = "Laiks bez lietošanas sekundēs, pirms apgaismojums izslēdzas.",
         ["MouseWindow.comboSmartShift"] = "Ritināšanas riteņa režīms: ar klikšķiem vai brīva griešanās.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Ritināšanas ātrums, pie kura ritenis pārslēdzas no klikšķiem uz brīvu griešanos.",
         ["MouseWindow.checkHiResScroll"] = "Augstas izšķirtspējas ritināšana: vairāk soļu plūdenākai ritināšanai.",

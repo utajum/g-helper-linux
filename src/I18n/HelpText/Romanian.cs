@@ -421,7 +421,7 @@ internal static class Romanian
         ["MouseWindow.buttonHapticPlay"] = "Redă o dată modelul haptic ales.",
         ["MouseWindow.comboPowerOff"] = "Timpul fără folosire după care mouse-ul se oprește.",
         ["MouseWindow.sliderLowBattery"] = "Nivelul bateriei la care mouse-ul te avertizează.",
-        ["MouseWindow.sliderSleepTimeout"] = "Timpul fără folosire după care mouse-ul intră în repaus.",
+        ["MouseWindow.sliderSleepTimeout"] = "Timpul fără folosire, în secunde, după care iluminarea se oprește.",
         ["MouseWindow.comboSmartShift"] = "Modul rotiței: cu clicuri sau rotire liberă.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Viteza de derulare la care rotița trece de la clicuri la rotire liberă.",
         ["MouseWindow.checkHiResScroll"] = "Derulare de înaltă rezoluție: mai mulți pași pentru o derulare mai fluidă.",
