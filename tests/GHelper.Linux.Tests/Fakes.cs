@@ -98,8 +98,10 @@ public sealed class FakeAsusWmi : IHardwareControl
     public bool SetBatteryChargeLimit(int percent) => true;
     public bool GetPanelOverdrive() => false;
     public bool SetPanelOverdrive(bool enabled) => true;
-    public int GetMiniLedMode() => 0;
-    public void SetMiniLedMode(int mode) { }
+    public int MiniLedMode;
+    public readonly List<int> MiniLedWrites = new();
+    public int GetMiniLedMode() => MiniLedMode;
+    public void SetMiniLedMode(int mode) { MiniLedWrites.Add(mode); MiniLedMode = mode; }
     public int GetMiniLedModeCount() => 0;
     public int GetScreenAutoBrightness() => -1;
     public void SetScreenAutoBrightness(bool enabled) { }

@@ -684,24 +684,22 @@ public static class Aura
     }
 
     /// <summary>
+    /// Saved brightness for the current AC/battery state, or -1 when never set.
+    /// Older configs have only <c>keyboard_brightness</c>; AC falls back to it.
+    /// </summary>
+    public static int ConfiguredBrightness()
+    {
+        int level = AppConfig.Get(GetBrightnessConfigKey(), -1);
+        return level < 0 ? AppConfig.Get("keyboard_brightness", -1) : level;
+    }
+
+    /// <summary>
     /// Read the configured brightness for the current AC/battery state and apply it.
     /// Used on AC/DC transitions and at startup.
     /// </summary>
     public static void ApplyConfiguredBrightness(string log = "Configured")
     {
-        bool onAc = App.Power?.IsOnAcPower() ?? true;
-        int level;
-        if (onAc)
-        {
-            // Migrate older configs that only have keyboard_brightness
-            level = AppConfig.Get("keyboard_brightness_ac", -1);
-            if (level < 0)
-                level = AppConfig.Get("keyboard_brightness", -1);
-        }
-        else
-        {
-            level = AppConfig.Get("keyboard_brightness", -1);
-        }
+        int level = ConfiguredBrightness();
         if (level < 0) // never configured - leave hardware as-is
             return;
         ApplyBrightness(Math.Clamp(level, 0, 3), log);

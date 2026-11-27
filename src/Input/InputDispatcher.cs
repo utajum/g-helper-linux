@@ -422,9 +422,8 @@ public static class InputDispatcher
         if (App.Wmi?.HasKbdBrightnessHwChanged == true)
         {
             // Kernel already changed brightness in sysfs - just read the new value
-            next = App.Wmi.GetKeyboardBrightness();
-            if (next < 0)
-                next = 0;
+            // Kernels before 7.5 can report one level past the max after the up key.
+            next = Math.Clamp(App.Wmi.GetKeyboardBrightness(), 0, App.Wmi.KbdMaxBrightness);
         }
         else
         {

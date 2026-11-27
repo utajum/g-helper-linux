@@ -235,6 +235,11 @@ public static class Scenarios
         Console.WriteLine("\n GPU query gate ");
         Gate_Extend_NeverShortensWindow();
         Gate_Extend_DoesNotClearHold();
+
+        Console.WriteLine("\n MiniLED re-apply ");
+        MiniLed_Reapply_ForcedModel_WritesReportedMode();
+        MiniLed_Reapply_OtherModel_NoWrite();
+        MiniLed_Reapply_NoMiniLed_NoWrite();
     }
 
     // 
@@ -1642,6 +1647,41 @@ public static class Scenarios
 
             Gate.Resume();
             Assert(!Gate.IsPaused, "Resume clears Hold");
+        });
+
+    // MiniLED: some models come up in multi-zone after a cold boot while the
+    // firmware still reports the saved mode, so the app writes that mode back.
+
+    static void MiniLed_Reapply_ForcedModel_WritesReportedMode()
+        => Scenario(nameof(MiniLed_Reapply_ForcedModel_WritesReportedMode), sb =>
+        {
+            AppConfig.Set("force_miniled", 1);
+            sb.Wmi.MiniLedMode = 2;
+
+            GHelper.Linux.Display.MiniLed.Reapply(sb.Wmi);
+
+            AssertEqual("2", string.Join(",", sb.Wmi.MiniLedWrites), "reported mode written once");
+        });
+
+    static void MiniLed_Reapply_OtherModel_NoWrite()
+        => Scenario(nameof(MiniLed_Reapply_OtherModel_NoWrite), sb =>
+        {
+            sb.Wmi.MiniLedMode = 2;
+
+            GHelper.Linux.Display.MiniLed.Reapply(sb.Wmi);
+
+            AssertEqual(0, sb.Wmi.MiniLedWrites.Count, "no write");
+        });
+
+    static void MiniLed_Reapply_NoMiniLed_NoWrite()
+        => Scenario(nameof(MiniLed_Reapply_NoMiniLed_NoWrite), sb =>
+        {
+            AppConfig.Set("force_miniled", 1);
+            sb.Wmi.MiniLedMode = -1;
+
+            GHelper.Linux.Display.MiniLed.Reapply(sb.Wmi);
+
+            AssertEqual(0, sb.Wmi.MiniLedWrites.Count, "no write");
         });
 
     // ── Power limit bounds ───────────────────────────────────────────────
