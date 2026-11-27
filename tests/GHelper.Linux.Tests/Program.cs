@@ -35,6 +35,7 @@ public static class Program
             BugReportTests.RunAll();
             HoverHelpTests.RunAll();
             MouseModelTests.RunAll();
+            ModesTests.RunAll();
         }
         finally
         {
