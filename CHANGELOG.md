@@ -8,6 +8,30 @@
 
 ### Changed
 
+## v1.0.102 (2026-11-27)
+
+### Added
+
+- ASUS mice work: 75 models from G-Helper, 13 new, like Omni receiver mice and Balteus (#290).
+- Hover help on every control, in all 38 languages. Turn it on in Extra > General > Show help on hover (#281).
+- Logitech: Idle Timeout and Sleep Timeout for RGB lighting, on devices that support them (#292).
+- Lenovo IdeaPad, Legion and LOQ: keyboard Auto mode (light sensor) on kernel 7.5+ (#289).
+- Manual fan control: EC detection like MyASUS, watchdog and overheat guard (#284).
+
+### Fixed
+
+- Curve Optimizer on AMD APUs uses the MP1 mailbox, so it works on more laptops (#275).
+- Auto refresh rate on battery uses the lowest rate when the panel has no 60 Hz (#286).
+- Starting G-Helper a second time no longer stops the audio helper (#282, #283).
+- MiniLED mode is set again after cold boot and resume on some Scar models (#288).
+- Ambient light follows keyboard brightness. Keyboard brightness stays in range (#288).
+- Logitech: rows that do nothing are hidden (#291).
+
+### Changed
+
+- eBPF GPU switching is the default on new installs. MUX mode is under a checkbox (#280).
+- CI: star history runs only in this repo, with its own script (#279, #285).
+
 ## v1.0.101 (2026-11-24)
 
 <img width="1387" height="865" alt="Screenshot_20261124_204435" src="https://github.com/user-attachments/assets/ef9ed017-f013-4595-b783-c19614476ec3" />
