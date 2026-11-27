@@ -2,7 +2,7 @@
 # mouse-golden.sh - Write tests/GHelper.Linux.Tests/mouse-golden.txt from the Windows
 # G-Helper mouse source. The C# tests run the same calls on the Linux port and compare.
 #
-# Run after ./scripts/mouse-port.sh syncs a new upstream copy.
+# Run after the upstream mouse code is copied by hand.
 # Requires: upstream G-Helper repo cloned at ../g-helper (relative to this repo root)
 
 set -euo pipefail
