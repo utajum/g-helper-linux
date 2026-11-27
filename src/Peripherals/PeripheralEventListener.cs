@@ -2,79 +2,88 @@ using GHelper.Linux.AnimeMatrix.Communication.Platform;
 using GHelper.Linux.Helpers;
 using HidSharp;
 
-namespace GHelper.Linux.Peripherals
+namespace GHelper.Linux.Peripherals;
+
+// button actions arrive on an input-only collection that varies per model, so all are watched
+internal sealed class PeripheralEventListener
 {
-    // button actions arrive on an input-only collection that varies per model, so all are watched
-    internal sealed class PeripheralEventListener
+    private readonly ushort vendorId;
+    private readonly ushort productId;
+    private readonly string name;
+    private readonly Action<byte[], int> onReport;
+
+    private readonly List<HidStream> streams = new();
+
+    public PeripheralEventListener(ushort vendorId, ushort productId, string name, Action<byte[], int> onReport)
     {
-        private readonly ushort vendorId;
-        private readonly ushort productId;
-        private readonly string name;
-        private readonly Action<byte[], int> onReport;
+        this.vendorId = vendorId;
+        this.productId = productId;
+        this.name = name;
+        this.onReport = onReport;
+    }
 
-        private readonly List<HidStream> streams = new();
-
-        public PeripheralEventListener(ushort vendorId, ushort productId, string name, Action<byte[], int> onReport)
+    public void Start(string? commandPath)
+    {
+        lock (streams)
         {
-            this.vendorId = vendorId;
-            this.productId = productId;
-            this.name = name;
-            this.onReport = onReport;
-        }
+            if (streams.Count > 0)
+                return;
 
-        public void Start(string? commandPath)
-        {
-            lock (streams)
+            foreach (var device in DeviceList.Local.GetHidDevices(vendorId, productId))
             {
-                if (streams.Count > 0) return;
-
-                foreach (var device in DeviceList.Local.GetHidDevices(vendorId, productId))
+                try
                 {
-                    try
-                    {
-                        // mi_00 is the pointer collection and would report every mouse movement
-                        if (LinuxUsbProvider.PathMatches(device, "mi_00")) continue;
-                        if (commandPath is not null && LinuxUsbProvider.PathMatches(device, commandPath)) continue;
-                        int size = device.GetMaxInputReportLength();
-                        if (size < 2) continue;
+                    // mi_00 is the pointer collection and would report every mouse movement
+                    if (LinuxUsbProvider.PathMatches(device, "mi_00"))
+                        continue;
+                    if (commandPath is not null && LinuxUsbProvider.PathMatches(device, commandPath))
+                        continue;
+                    int size = device.GetMaxInputReportLength();
+                    if (size < 2)
+                        continue;
 
-                        var config = new OpenConfiguration();
-                        config.SetOption(OpenOption.Interruptible, true);
-                        config.SetOption(OpenOption.Exclusive, false);
-                        var opened = device.Open(config);
-                        opened.ReadTimeout = Timeout.Infinite;
-                        streams.Add(opened);
-                        Task.Run(() => Loop(opened, size));
-                    }
-                    catch { }
+                    var config = new OpenConfiguration();
+                    config.SetOption(OpenOption.Interruptible, true);
+                    config.SetOption(OpenOption.Exclusive, false);
+                    var opened = device.Open(config);
+                    opened.ReadTimeout = Timeout.Infinite;
+                    streams.Add(opened);
+                    Task.Run(() => Loop(opened, size));
                 }
-
-                Logger.WriteLine(name + ": listening for events on " + streams.Count + " interfaces");
+                catch { }
             }
+
+            Logger.WriteLine(name + ": listening for events on " + streams.Count + " interfaces");
         }
+    }
 
-        public void Stop()
+    public void Stop()
+    {
+        lock (streams)
         {
-            lock (streams)
+            foreach (var opened in streams)
             {
-                foreach (var opened in streams)
-                {
-                    try { opened.Dispose(); } catch { }
-                }
-                streams.Clear();
+                try
+                { opened.Dispose(); }
+                catch { }
             }
+            streams.Clear();
         }
+    }
 
-        private void Loop(HidStream opened, int size)
+    private void Loop(HidStream opened, int size)
+    {
+        byte[] buffer = new byte[size];
+        while (true)
         {
-            byte[] buffer = new byte[size];
-            while (true)
-            {
-                int count;
-                try { count = opened.Read(buffer); }
-                catch { break; }
-                if (count > 0) try { onReport(buffer, count); } catch { }
-            }
+            int count;
+            try
+            { count = opened.Read(buffer); }
+            catch { break; }
+            if (count > 0)
+                try
+                { onReport(buffer, count); }
+                catch { }
         }
     }
 }
