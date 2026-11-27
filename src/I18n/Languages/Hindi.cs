@@ -1207,6 +1207,23 @@ public static class Hindi
         ["mouse_host_switch_msg_fmt"] = "होस्ट {0} पर स्विच करें? माउस डिस्कनेक्ट हो जाएगा।",
         ["mouse_switch"] = "स्विच",
         ["mouse_cancel"] = "रद्द करें",
+        ["mouse_profile"] = "प्रोफ़ाइल",
+        ["mouse_synchronize"] = "माउस के साथ सिंक करें",
+        ["mouse_import"] = "प्रोफ़ाइल इम्पोर्ट",
+        ["mouse_export"] = "प्रोफ़ाइल एक्सपोर्ट",
+        ["mouse_import_failed"] = "इम्पोर्ट विफल। फ़ाइल सही माउस प्रोफ़ाइल नहीं है, या खराब है।",
+        ["mouse_dpi_add"] = "DPI लेवल जोड़ें",
+        ["mouse_dpi_remove"] = "DPI लेवल हटाएं",
+        ["mouse_angle_tuning"] = "एंगल ट्यूनिंग",
+        ["mouse_acceleration"] = "एक्सेलेरेशन",
+        ["mouse_deceleration"] = "डिसेलेरेशन",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "एनिमेशन गति",
+        ["mouse_animation_direction"] = "एनिमेशन दिशा",
+        ["mouse_clockwise"] = "घड़ी की दिशा में",
+        ["mouse_counter_clockwise"] = "घड़ी की उल्टी दिशा में",
+        ["mouse_sync_aura"] = "लैपटॉप के साथ सिंक",
 
     };
 }

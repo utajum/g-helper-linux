@@ -1155,6 +1155,23 @@ public static class Norwegian
         ["mouse_host_switch_msg_fmt"] = "Bytt til vert {0}? Musen vil bli koblet fra.",
         ["mouse_switch"] = "Bytt",
         ["mouse_cancel"] = "Avbryt",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Synkroniser med mus",
+        ["mouse_import"] = "Importer profil",
+        ["mouse_export"] = "Eksporter profil",
+        ["mouse_import_failed"] = "Import mislyktes. Filen er ikke en gyldig museprofil, eller den er skadet.",
+        ["mouse_dpi_add"] = "Legg til DPI-nivå",
+        ["mouse_dpi_remove"] = "Fjern DPI-nivå",
+        ["mouse_angle_tuning"] = "Vinkeljustering",
+        ["mouse_acceleration"] = "Akselerasjon",
+        ["mouse_deceleration"] = "Retardasjon",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Animasjonshastighet",
+        ["mouse_animation_direction"] = "Animasjonsretning",
+        ["mouse_clockwise"] = "Med klokken",
+        ["mouse_counter_clockwise"] = "Mot klokken",
+        ["mouse_sync_aura"] = "Synkroniser med laptop",
 
     };
 }

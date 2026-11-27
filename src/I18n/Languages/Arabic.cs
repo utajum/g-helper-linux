@@ -1155,6 +1155,23 @@ public static class Arabic
         ["mouse_host_switch_msg_fmt"] = "التبديل إلى المضيف {0}؟ سيتم قطع اتصال الفأرة.",
         ["mouse_switch"] = "تبديل",
         ["mouse_cancel"] = "إلغاء",
+        ["mouse_profile"] = "الملف",
+        ["mouse_synchronize"] = "مزامنة مع الماوس",
+        ["mouse_import"] = "استيراد الملف الشخصي",
+        ["mouse_export"] = "تصدير الملف الشخصي",
+        ["mouse_import_failed"] = "فشل الاستيراد. الملف المحدد ليس ملف إعدادات ماوس صالح أو تالف.",
+        ["mouse_dpi_add"] = "إضافة مستوى DPI",
+        ["mouse_dpi_remove"] = "إزالة مستوى DPI",
+        ["mouse_angle_tuning"] = "ضبط الزاوية",
+        ["mouse_acceleration"] = "تسارع",
+        ["mouse_deceleration"] = "إبطاء",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "سرعة الحركة",
+        ["mouse_animation_direction"] = "اتجاه الحركة",
+        ["mouse_clockwise"] = "باتجاه عقارب الساعة",
+        ["mouse_counter_clockwise"] = "عكس عقارب الساعة",
+        ["mouse_sync_aura"] = "مزامنة مع اللاب توب",
 
     };
 }

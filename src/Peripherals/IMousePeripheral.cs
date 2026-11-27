@@ -49,8 +49,6 @@ public interface IMousePeripheral : IPeripheral, IDisposable
     bool AngleSnapping { get; set; }
     int AngleAdjustmentDegrees { get; set; }
     DebounceTime Debounce { get; set; }
-    bool Acceleration { get; set; }
-    bool Deceleration { get; set; }
     bool MotionSync { get; set; }
     bool ZoneMode { get; set; }
     PowerOffSetting PowerOff { get; set; }
@@ -102,7 +100,6 @@ public interface IMousePeripheral : IPeripheral, IDisposable
     void WritePollingRate();
     void WriteLiftOffDistance();
     void WriteDebounce();
-    void WriteAcceleration();
     void WriteLightingSetting();
     void WriteMotionSync();
     void WriteAngleSnapping();

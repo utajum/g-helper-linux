@@ -1155,6 +1155,23 @@ public static class Serbian
         ["mouse_host_switch_msg_fmt"] = "Пребацити на хост {0}? Миш ће бити искључен.",
         ["mouse_switch"] = "Промени",
         ["mouse_cancel"] = "Откажи",
+        ["mouse_profile"] = "Профил",
+        ["mouse_synchronize"] = "Синхронизуј са мишем",
+        ["mouse_import"] = "Увези профил",
+        ["mouse_export"] = "Извези профил",
+        ["mouse_import_failed"] = "Увоз није успео. Датотека није исправан профил миша, или је оштећена.",
+        ["mouse_dpi_add"] = "Додај DPI ниво",
+        ["mouse_dpi_remove"] = "Уклони DPI ниво",
+        ["mouse_angle_tuning"] = "Подешавање угла",
+        ["mouse_acceleration"] = "Убрзање",
+        ["mouse_deceleration"] = "Успорење",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Брзина анимације",
+        ["mouse_animation_direction"] = "Смер анимације",
+        ["mouse_clockwise"] = "У смеру казаљке",
+        ["mouse_counter_clockwise"] = "Супротно од казаљке",
+        ["mouse_sync_aura"] = "Синхронизуј са лаптопом",
 
     };
 }

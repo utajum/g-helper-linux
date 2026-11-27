@@ -1152,6 +1152,23 @@ public static class Dutch
         ["mouse_host_switch_msg_fmt"] = "Wisselen naar host {0}? De muis wordt losgekoppeld.",
         ["mouse_switch"] = "Wisselen",
         ["mouse_cancel"] = "Annuleren",
+        ["mouse_profile"] = "Profiel",
+        ["mouse_synchronize"] = "Synchroniseren met muis",
+        ["mouse_import"] = "Profiel importeren",
+        ["mouse_export"] = "Profiel exporteren",
+        ["mouse_import_failed"] = "Importeren mislukt. Het bestand is geen geldig muisprofiel, of het is beschadigd.",
+        ["mouse_dpi_add"] = "DPI-niveau toevoegen",
+        ["mouse_dpi_remove"] = "DPI-niveau verwijderen",
+        ["mouse_angle_tuning"] = "Hoekafstelling",
+        ["mouse_acceleration"] = "Versnelling",
+        ["mouse_deceleration"] = "Vertraging",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Animatiesnelheid",
+        ["mouse_animation_direction"] = "Animatierichting",
+        ["mouse_clockwise"] = "Met de klok mee",
+        ["mouse_counter_clockwise"] = "Tegen de klok in",
+        ["mouse_sync_aura"] = "Synchroniseren met laptop",
 
     };
 }

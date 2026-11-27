@@ -1155,6 +1155,23 @@ public static class ChineseTraditional
         ["mouse_host_switch_msg_fmt"] = "切換到主機 {0}?滑鼠將會中斷連線。",
         ["mouse_switch"] = "切換",
         ["mouse_cancel"] = "取消",
+        ["mouse_profile"] = "設定檔",
+        ["mouse_synchronize"] = "與滑鼠同步",
+        ["mouse_import"] = "匯入設定檔",
+        ["mouse_export"] = "匯出設定檔",
+        ["mouse_import_failed"] = "匯入失敗，所選檔案並非有效的滑鼠設定檔或該檔已毀損。",
+        ["mouse_dpi_add"] = "新增 DPI 段位",
+        ["mouse_dpi_remove"] = "移除 DPI 段位",
+        ["mouse_angle_tuning"] = "角度調整",
+        ["mouse_acceleration"] = "滑鼠加速",
+        ["mouse_deceleration"] = "滑鼠減速",
+        ["mouse_motion_sync"] = "動態同步",
+        ["mouse_zone_mode"] = "Zone 模式",
+        ["mouse_animation_speed"] = "動畫速度",
+        ["mouse_animation_direction"] = "動畫方向",
+        ["mouse_clockwise"] = "順時針",
+        ["mouse_counter_clockwise"] = "逆時針",
+        ["mouse_sync_aura"] = "與筆電同步",
 
     };
 }

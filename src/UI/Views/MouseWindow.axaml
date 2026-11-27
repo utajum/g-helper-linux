@@ -27,6 +27,17 @@
                         <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblBattery" Text="Battery" />
                         <TextBlock Grid.Column="1" x:Name="labelBattery" Classes="value" Text="--" />
                     </Grid>
+
+                    <Grid x:Name="rowAsusProfile" ColumnDefinitions="130,*" Margin="0,6,0,0">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblAsusProfile" Text="Profile" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboAsusProfile" HorizontalAlignment="Stretch" SelectionChanged="ComboAsusProfile_Changed" />
+                    </Grid>
+
+                    <WrapPanel x:Name="rowAsusActions" Margin="0,6,0,0">
+                        <Button x:Name="buttonAsusSync" Classes="ghelper" Content="Synchronize with Mouse" Margin="0,0,6,6" Click="ButtonAsusSync_Click" />
+                        <Button x:Name="buttonAsusImport" Classes="ghelper" Content="Import Profile" Margin="0,0,6,6" Click="ButtonAsusImport_Click" />
+                        <Button x:Name="buttonAsusExport" Classes="ghelper" Content="Export Profile" Margin="0,0,6,6" Click="ButtonAsusExport_Click" />
+                    </WrapPanel>
                 </StackPanel>
             </Border>
 
@@ -56,6 +67,17 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
 
+                    <Grid x:Name="rowDpiColor" ColumnDefinitions="130,Auto,Auto" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblDpiColor" Text="Color" VerticalAlignment="Center" />
+                        <Border Grid.Column="1" x:Name="borderDpiColor" Width="40" Height="24" CornerRadius="4" Background="White" VerticalAlignment="Center" />
+                        <Button Grid.Column="2" x:Name="buttonDpiColor" Classes="ghelper" Content="Pick Color" Margin="8,0,0,0" Click="ButtonDpiColor_Click" />
+                    </Grid>
+
+                    <StackPanel x:Name="rowDpiCount" Orientation="Horizontal" Spacing="6" Margin="130,4,0,4">
+                        <Button x:Name="buttonDpiAdd" Classes="ghelper" Content="Add DPI Level" Click="ButtonDpiAdd_Click" />
+                        <Button x:Name="buttonDpiRemove" Classes="ghelper" Content="Remove DPI Level" Click="ButtonDpiRemove_Click" />
+                    </StackPanel>
+
                     <Grid x:Name="rowSensitivitySwitch" ColumnDefinitions="130,*" Margin="0,4">
                         <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblSensitivitySwitch" Text="Sensitivity Switching" VerticalAlignment="Center" />
                         <CheckBox Grid.Column="1" x:Name="checkSensitivitySwitch" IsCheckedChanged="CheckSensitivitySwitch_Changed" />
@@ -70,7 +92,7 @@
                         <TextBlock Classes="header" x:Name="lblHeaderPerformance" Text="Performance" />
                     </Border>
 
-                    <Grid ColumnDefinitions="130,*" Margin="0,4">
+                    <Grid x:Name="rowPollingRate" ColumnDefinitions="130,*" Margin="0,4">
                         <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblPollingRate" Text="Polling Rate"
                                    VerticalAlignment="Center" />
                         <ComboBox Grid.Column="1" x:Name="comboPollingRate"
@@ -83,6 +105,14 @@
                                    VerticalAlignment="Center" />
                         <CheckBox Grid.Column="1" x:Name="checkAngleSnapping"
                                   IsCheckedChanged="CheckAngleSnapping_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowAngleTuning" ColumnDefinitions="130,*,60" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblAngleTuning" Text="Angle Tuning" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderAngleTuning" Minimum="-30" Maximum="30" Value="0"
+                                TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="SliderAngleTuning_Changed" />
+                        <TextBlock Grid.Column="2" x:Name="labelAngleTuning" Classes="value" Text="0"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
 
                     <Grid x:Name="rowDebounce" ColumnDefinitions="130,*" Margin="0,4">
@@ -99,6 +129,45 @@
                         <ComboBox Grid.Column="1" x:Name="comboLiftOff"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="ComboLiftOff_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowAcceleration" ColumnDefinitions="130,*,60" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblAcceleration" Text="Acceleration" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderAcceleration" Minimum="0" Maximum="9" Value="0"
+                                TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="SliderAcceleration_Changed" />
+                        <TextBlock Grid.Column="2" x:Name="labelAcceleration" Classes="value" Text="0"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid x:Name="rowDeceleration" ColumnDefinitions="130,*,60" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblDeceleration" Text="Deceleration" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderDeceleration" Minimum="0" Maximum="9" Value="0"
+                                TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="SliderDeceleration_Changed" />
+                        <TextBlock Grid.Column="2" x:Name="labelDeceleration" Classes="value" Text="0"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid x:Name="rowMotionSync" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblMotionSync" Text="Motion Sync" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" x:Name="checkMotionSync" IsCheckedChanged="CheckMotionSync_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowZoneMode" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblZoneMode" Text="Zone Mode" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" x:Name="checkZoneMode" IsCheckedChanged="CheckZoneMode_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowZoneModeDpi" ColumnDefinitions="130,*,60" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblZoneModeDpi" Text="DPI" VerticalAlignment="Center" />
+                        <Slider Grid.Column="1" x:Name="sliderZoneModeDpi" Minimum="100" Maximum="36000" Value="1600"
+                                TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SliderZoneModeDpi_Changed" />
+                        <TextBlock Grid.Column="2" x:Name="labelZoneModeDpi" Classes="value" Text="1600"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid x:Name="rowZoneModePolling" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblZoneModePolling" Text="Polling Rate" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboZoneModePolling" HorizontalAlignment="Stretch" SelectionChanged="ComboZoneModePolling_Changed" />
                     </Grid>
 
                     <Grid x:Name="rowOnboardProfiles" ColumnDefinitions="130,*" Margin="0,4">
@@ -278,7 +347,12 @@
                     <Border Classes="panel-header" Margin="0,0,0,8">
                         <TextBlock Classes="header" x:Name="lblHeaderButtons" Text="Buttons" />
                     </Border>
+                    <StackPanel x:Name="rowBindingLayer" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+                        <Button x:Name="buttonBindingsNormal" Classes="ghelper" Content="Buttons" Click="ButtonBindingsNormal_Click" />
+                        <Button x:Name="buttonBindingsShift" Classes="ghelper" Content="SpeedShift" Click="ButtonBindingsShift_Click" />
+                    </StackPanel>
                     <StackPanel x:Name="stackButtons" Spacing="4" />
+                    <Button x:Name="buttonBindingsReset" Classes="ghelper" Content="Reset" Margin="0,6,0,0" Click="ButtonBindingsReset_Click" />
                 </StackPanel>
             </Border>
 
@@ -513,7 +587,7 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
 
-                    <Grid ColumnDefinitions="130,Auto,Auto" Margin="0,4">
+                    <Grid x:Name="rowColor" ColumnDefinitions="130,Auto,Auto" Margin="0,4">
                         <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblColor" Text="Color"
                                    VerticalAlignment="Center" />
                         <Border Grid.Column="1" x:Name="borderColor"
@@ -522,6 +596,26 @@
                         <Button Grid.Column="2" x:Name="buttonColor" Classes="ghelper"
                                 Content="Pick Color" Margin="8,0,0,0"
                                 Click="ButtonColor_Click" />
+                    </Grid>
+
+                    <Grid x:Name="rowRandomColor" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblRandomColor" Text="Random" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" x:Name="checkRandomColor" IsCheckedChanged="CheckRandomColor_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowAnimationSpeed" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblAnimationSpeed" Text="Animation Speed" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboAnimationSpeed" HorizontalAlignment="Stretch" SelectionChanged="ComboAnimationSpeed_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowAnimationDirection" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblAnimationDirection" Text="Animation Direction" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" x:Name="comboAnimationDirection" HorizontalAlignment="Stretch" SelectionChanged="ComboAnimationDirection_Changed" />
+                    </Grid>
+
+                    <Grid x:Name="rowSyncAura" ColumnDefinitions="130,*" Margin="0,4">
+                        <TextBlock Grid.Column="0" Classes="label-dim" x:Name="lblSyncAura" Text="Sync with Keyboard Aura" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="1" x:Name="checkSyncAura" IsCheckedChanged="CheckSyncAura_Changed" />
                     </Grid>
 
                     <Grid x:Name="rowIdleEffect" ColumnDefinitions="130,*" Margin="0,4">

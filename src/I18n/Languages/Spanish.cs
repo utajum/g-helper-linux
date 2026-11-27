@@ -1152,6 +1152,23 @@ public static class Spanish
         ["mouse_host_switch_msg_fmt"] = "¿Cambiar al host {0}? El ratón se desconectará.",
         ["mouse_switch"] = "Cambiar",
         ["mouse_cancel"] = "Cancelar",
+        ["mouse_profile"] = "Perfil",
+        ["mouse_synchronize"] = "Sincronizar con el ratón",
+        ["mouse_import"] = "Importar perfil",
+        ["mouse_export"] = "Exportar perfil",
+        ["mouse_import_failed"] = "Importación fallida. El archivo no es un perfil de ratón válido o está dañado.",
+        ["mouse_dpi_add"] = "Añadir nivel de DPI",
+        ["mouse_dpi_remove"] = "Quitar nivel de DPI",
+        ["mouse_angle_tuning"] = "Ajuste de ángulo",
+        ["mouse_acceleration"] = "Aceleración",
+        ["mouse_deceleration"] = "Desaceleración",
+        ["mouse_motion_sync"] = "Sincronización de movimiento",
+        ["mouse_zone_mode"] = "Modo zona",
+        ["mouse_animation_speed"] = "Velocidad",
+        ["mouse_animation_direction"] = "Dirección de animación",
+        ["mouse_clockwise"] = "Sentido horario",
+        ["mouse_counter_clockwise"] = "Sentido anti-horario",
+        ["mouse_sync_aura"] = "Sincronizar con portátil",
 
     };
 }

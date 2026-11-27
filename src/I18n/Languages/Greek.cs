@@ -1155,6 +1155,23 @@ public static class Greek
         ["mouse_host_switch_msg_fmt"] = "Εναλλαγή στον κεντρικό {0}; Το ποντίκι θα αποσυνδεθεί.",
         ["mouse_switch"] = "Εναλλαγή",
         ["mouse_cancel"] = "Άκυρο",
+        ["mouse_profile"] = "Προφίλ",
+        ["mouse_synchronize"] = "Συγχρονισμός με το ποντίκι",
+        ["mouse_import"] = "Εισαγωγή προφίλ",
+        ["mouse_export"] = "Εξαγωγή προφίλ",
+        ["mouse_import_failed"] = "Η εισαγωγή απέτυχε. Το αρχείο δεν είναι έγκυρο προφίλ ποντικιού ή είναι κατεστραμμένο.",
+        ["mouse_dpi_add"] = "Προσθήκη επιπέδου DPI",
+        ["mouse_dpi_remove"] = "Αφαίρεση επιπέδου DPI",
+        ["mouse_angle_tuning"] = "Ρύθμιση γωνίας",
+        ["mouse_acceleration"] = "Επιτάχυνση",
+        ["mouse_deceleration"] = "Επιβράδυνση",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Ταχύτητα κίνησης",
+        ["mouse_animation_direction"] = "Κατεύθυνση κίνησης",
+        ["mouse_clockwise"] = "Δεξιόστροφα",
+        ["mouse_counter_clockwise"] = "Αριστερόστροφα",
+        ["mouse_sync_aura"] = "Συγχρονισμός με το laptop",
 
     };
 }

@@ -25,7 +25,7 @@ SKIP_PATTERNS='mouse|ally|xgm|xg.mobile|crowdin|readme|screenshot|slash.light|dy
 RELEVANT_PATTERNS='fan|mode|aura|rgb|gpu|eco|camera|touchpad|fnlock|fn.lock|power.limit|acpi|wmi|hotkey|keyboard|brightness|config|notification|overdrive|miniled|mini.led|refresh|mux|thermal|cpu|battery|charge|aspm|backlight|clamshell|startup|tray|performance|silent|turbo|balanced'
 
 # Core files that promote a commit to relevant regardless of message
-CORE_FILES='AppConfig\.cs|ModeControl\.cs|Modes\.cs|GPUModeControl\.cs|Aura|InputHandler|FanControl|NativeWmi|AsusACPI'
+CORE_FILES='AppConfig\.cs|ModeControl\.cs|Modes\.cs|GPUModeControl\.cs|Aura|InputHandler|FanControl|NativeWmi|AsusACPI|AsusMouse|/Mouse/|PeripheralEventListener'
 
 show_details=false
 show_all=false

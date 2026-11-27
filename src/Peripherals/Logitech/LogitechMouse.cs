@@ -845,7 +845,16 @@ public class LogitechMouse : IMousePeripheral
                         try
                         {
                             byte[] bytes = Convert.FromHexString(v.GetString()!);
-                            LightingSettings[i].Import(bytes);
+                            if (!LightingSettings[i].Import(bytes) && bytes.Length == 9)
+                            {
+                                // Before 12-byte LightingSetting: mode, brightness, R, G, B, random, speed, direction
+                                LightingSettings[i].LightingMode = (LightingMode)bytes[0];
+                                LightingSettings[i].Brightness = bytes[1];
+                                LightingSettings[i].RGBColor = System.Drawing.Color.FromArgb(bytes[2], bytes[3], bytes[4]);
+                                LightingSettings[i].RandomColor = bytes[5] != 0;
+                                LightingSettings[i].AnimationSpeed = (AnimationSpeed)bytes[6];
+                                LightingSettings[i].AnimationDirection = (AnimationDirection)bytes[7];
+                            }
                         }
                         catch { }
                     }
@@ -1046,13 +1055,9 @@ public class LogitechMouse : IMousePeripheral
                     if (HidppEffectToLightingMode(id) is not { } mode)
                         continue;
                     var ls = LightingSettings[zone];
-                    ls.Mode = mode;
+                    ls.LightingMode = mode;
                     if (id is 0x01 or 0x02 or 0x0A)
-                    {
-                        ls.R = cur.Value.effectParams[0];
-                        ls.G = cur.Value.effectParams[1];
-                        ls.B = cur.Value.effectParams[2];
-                    }
+                        ls.RGBColor = System.Drawing.Color.FromArgb(cur.Value.effectParams[0], cur.Value.effectParams[1], cur.Value.effectParams[2]);
                 }
             }
             catch (Exception ex)
@@ -1189,8 +1194,8 @@ public class LogitechMouse : IMousePeripheral
                 for (int zone = 0; zone < _rgbZoneCount; zone++)
                 {
                     var ls = LightingSettings[Math.Min(zone, LightingSettings.Length - 1)];
-                    if (!WriteRgbZone((byte)zone, ls.Mode, ls.R, ls.G, ls.B, (int)ls.Speed * 1000))
-                        Logger.WriteLine($"LogitechMouse({GetDisplayName()}): zone {zone} lighting {ls.Mode} not applied");
+                    if (!WriteRgbZone((byte)zone, ls.LightingMode, ls.RGBColor.R, ls.RGBColor.G, ls.RGBColor.B, (int)ls.AnimationSpeed * 1000))
+                        Logger.WriteLine($"LogitechMouse({GetDisplayName()}): zone {zone} lighting {ls.LightingMode} not applied");
                 }
             }
             catch (Exception ex)

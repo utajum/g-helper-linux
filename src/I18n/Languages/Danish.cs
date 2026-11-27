@@ -1155,6 +1155,23 @@ public static class Danish
         ["mouse_host_switch_msg_fmt"] = "Skift til vært {0}? Musen vil blive afbrudt.",
         ["mouse_switch"] = "Skift",
         ["mouse_cancel"] = "Annullér",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Synkroniser med mus",
+        ["mouse_import"] = "Importer profil",
+        ["mouse_export"] = "Eksporter profil",
+        ["mouse_import_failed"] = "Import mislykkedes. Den valgte fil er ikke en gyldig museprofil, eller den er beskadiget.",
+        ["mouse_dpi_add"] = "Tilføj DPI-niveau",
+        ["mouse_dpi_remove"] = "Fjern DPI-niveau",
+        ["mouse_angle_tuning"] = "Vinkeljustering",
+        ["mouse_acceleration"] = "Acceleration",
+        ["mouse_deceleration"] = "Deceleration",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Animationshastighed",
+        ["mouse_animation_direction"] = "Animationsretning",
+        ["mouse_clockwise"] = "Med uret",
+        ["mouse_counter_clockwise"] = "Mod uret",
+        ["mouse_sync_aura"] = "Synkroniser med laptop",
 
     };
 }

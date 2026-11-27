@@ -1152,6 +1152,23 @@ public static class Hungarian
         ["mouse_host_switch_msg_fmt"] = "Váltás a(z) {0} gazdára? Az egér megszakad.",
         ["mouse_switch"] = "Váltás",
         ["mouse_cancel"] = "Mégse",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Szinkronizálás egérrel",
+        ["mouse_import"] = "Profil importálása",
+        ["mouse_export"] = "Profil exportálása",
+        ["mouse_import_failed"] = "Importálás nem sikerült. A fájl nem érvényes egérprofil, vagy sérült.",
+        ["mouse_dpi_add"] = "DPI-szint hozzáadása",
+        ["mouse_dpi_remove"] = "DPI-szint eltávolítása",
+        ["mouse_angle_tuning"] = "Szögbeállítás",
+        ["mouse_acceleration"] = "Gyorsítás",
+        ["mouse_deceleration"] = "Lassítás",
+        ["mouse_motion_sync"] = "Mozgás szinkronizálása",
+        ["mouse_zone_mode"] = "Zóna mód",
+        ["mouse_animation_speed"] = "Animáció sebessége",
+        ["mouse_animation_direction"] = "Animáció iránya",
+        ["mouse_clockwise"] = "Jobbra forog",
+        ["mouse_counter_clockwise"] = "Balra forog",
+        ["mouse_sync_aura"] = "Szinkronizálás laptoppal",
 
     };
 }

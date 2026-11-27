@@ -1152,6 +1152,23 @@ public static class Polish
         ["mouse_host_switch_msg_fmt"] = "Przełączyć na host {0}? Mysz zostanie odłączona.",
         ["mouse_switch"] = "Przełącz",
         ["mouse_cancel"] = "Anuluj",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Synchronizuj z myszką",
+        ["mouse_import"] = "Importuj profil",
+        ["mouse_export"] = "Eksportuj profil",
+        ["mouse_import_failed"] = "Błąd importu. Plik nie jest poprawnym profilem myszy lub jest uszkodzony.",
+        ["mouse_dpi_add"] = "Dodaj poziom DPI",
+        ["mouse_dpi_remove"] = "Usuń poziom DPI",
+        ["mouse_angle_tuning"] = "Regulacja kąta",
+        ["mouse_acceleration"] = "Przyśpieszenie",
+        ["mouse_deceleration"] = "Spowolnienie",
+        ["mouse_motion_sync"] = "Synchronizacja ruchu",
+        ["mouse_zone_mode"] = "Tryb Zone",
+        ["mouse_animation_speed"] = "Prędkość animacji",
+        ["mouse_animation_direction"] = "Kierunek animacji",
+        ["mouse_clockwise"] = "W prawo",
+        ["mouse_counter_clockwise"] = "W lewo",
+        ["mouse_sync_aura"] = "Synchronizuj z laptopem",
 
     };
 }

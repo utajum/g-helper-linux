@@ -1152,6 +1152,23 @@ public static class German
         ["mouse_host_switch_msg_fmt"] = "Zu Host {0} wechseln? Die Maus wird getrennt.",
         ["mouse_switch"] = "Wechseln",
         ["mouse_cancel"] = "Abbrechen",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Maus synchronisieren",
+        ["mouse_import"] = "Profil importieren",
+        ["mouse_export"] = "Profil exportieren",
+        ["mouse_import_failed"] = "Import fehlgeschlagen. Die Datei ist kein gültiges Mausprofil oder beschädigt.",
+        ["mouse_dpi_add"] = "DPI-Stufe hinzufügen",
+        ["mouse_dpi_remove"] = "DPI-Stufe entfernen",
+        ["mouse_angle_tuning"] = "Winkelanpassung",
+        ["mouse_acceleration"] = "Beschleunigung",
+        ["mouse_deceleration"] = "Verlangsamung",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Animationsgeschwindigkeit",
+        ["mouse_animation_direction"] = "Animationsrichtung",
+        ["mouse_clockwise"] = "Im Uhrzeigersinn",
+        ["mouse_counter_clockwise"] = "Gegen den Uhrzeigersinn",
+        ["mouse_sync_aura"] = "Mit Laptop synchronisieren",
 
     };
 }

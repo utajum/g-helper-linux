@@ -1,451 +1,747 @@
-using System.Text;
-using Avalonia.Media;
+using GHelper.Linux.AnimeMatrix.Communication;
 using GHelper.Linux.AnimeMatrix.Communication.Platform;
 using GHelper.Linux.Helpers;
-using HidSharp;
-using AsusDevice = GHelper.Linux.AnimeMatrix.Communication.Device;
+using GHelper.Linux.USB;
+using System.Drawing;
+using System.Runtime.CompilerServices;
+using System.Text;
 
-namespace GHelper.Linux.Peripherals.Mouse;
+#pragma warning disable CS8604, CS8625
 
-public enum PowerOffSetting : byte
+namespace GHelper.Linux.Peripherals.Mouse
 {
-    Minutes1 = 0,
-    Minutes2 = 1,
-    Minutes3 = 2,
-    Minutes5 = 3,
-    Minutes10 = 4,
-    Never = 0xFF,
-}
-
-public enum DebounceTime : byte
-{
-    OFF = 0,
-    MS8 = 1,
-    MS12 = 2,
-    MS16 = 3,
-    MS20 = 4,
-    MS24 = 5,
-    MS28 = 6,
-    MS32 = 7,
-}
-
-public enum PollingRate : byte
-{
-    PR125Hz = 0,
-    PR250Hz = 1,
-    PR500Hz = 2,
-    PR1000Hz = 3,
-    PR2000Hz = 4,
-    PR4000Hz = 5,
-    PR8000Hz = 6,
-    PR16000Hz = 7,
-}
-
-public enum LiftOffDistance : byte
-{
-    Low = 0,
-    High = 1,
-}
-
-public enum AnimationDirection : byte
-{
-    Clockwise = 0,
-    CounterClockwise = 1,
-}
-
-public enum AnimationSpeed : byte
-{
-    Slow = 9,
-    Medium = 7,
-    Fast = 5,
-}
-
-public enum LightingMode : byte
-{
-    Off = 0xF0,
-    Static = 0,
-    Breathing = 1,
-    ColorCycle = 2,
-    Rainbow = 3,
-    React = 4,
-    Comet = 5,
-    BatteryState = 6,
-}
-
-public enum LightingZone : byte
-{
-    Logo = 0,
-    Scrollwheel = 1,
-    Underglow = 2,
-    All = 3,
-    Dock = 4,
-}
-
-public class LightingSetting
-{
-    public LightingMode Mode { get; set; } = LightingMode.Static;
-    public byte Brightness { get; set; } = 100;
-    public byte R { get; set; } = 255;
-    public byte G { get; set; }
-    public byte B { get; set; }
-    public bool RandomColor { get; set; }
-    public AnimationSpeed Speed { get; set; } = AnimationSpeed.Medium;
-    public AnimationDirection Direction { get; set; } = AnimationDirection.Clockwise;
-
-    /// <summary>Serialise to a fixed 9-byte wire format.</summary>
-    public byte[] Export()
+    public enum PowerOffSetting
     {
-        return new byte[]
+        Minutes1 = 0,
+        Minutes2 = 1,
+        Minutes3 = 2,
+        Minutes5 = 3,
+        Minutes10 = 4,
+        Never = 0xFF
+    }
+
+    public enum DebounceTime
+    {
+        OFF = 0x00, //?? not sure because mice with this setting have no "disabled". But the mouse accepts and stores 0x00 just fine
+        MS8 = 0x01,
+        MS12 = 0x02,
+        MS16 = 0x03,
+        MS20 = 0x04,
+        MS24 = 0x05,
+        MS28 = 0x06,
+        MS32 = 0x07
+    }
+
+    public enum PollingRate
+    {
+        PR125Hz = 0,
+        PR250Hz = 1,
+        PR500Hz = 2,
+        PR1000Hz = 3,
+        PR2000Hz = 4,
+        PR4000Hz = 5,
+        PR8000Hz = 6,
+        PR16000Hz = 7 //for whenever that gets supported lol
+    }
+
+    public enum LiftOffDistance
+    {
+        Low = 0,
+        High = 1
+    }
+    public enum AnimationDirection
+    {
+        Clockwise = 0x0,
+        CounterClockwise = 0x1
+    }
+
+    public enum AnimationSpeed
+    {
+        Slow = 0x9,
+        Medium = 0x7,
+        Fast = 0x5
+    }
+    public enum LightingMode
+    {
+        Off = 0xF0,
+        Static = 0x0,
+        Breathing = 0x1,
+        ColorCycle = 0x2,
+        Rainbow = 0x3,
+        React = 0x4,
+        Comet = 0x5,
+        BatteryState = 0x6
+    }
+
+    public enum LightingZone
+    {
+        Logo = 0x00,
+        Scrollwheel = 0x01,
+        Underglow = 0x02,
+        All = 0x03,
+        Dock = 0x04,
+    }
+
+    public class LightingSetting
+    {
+        public LightingSetting()
         {
-            (byte)Mode,
-            Brightness,
-            R, G, B,
-            (byte)(RandomColor ? 1 : 0),
-            (byte)Speed,
-            (byte)Direction,
-            0, // reserved
-        };
-    }
-
-    /// <summary>Deserialise from wire bytes (9 bytes expected).</summary>
-    public void Import(byte[] data)
-    {
-        if (data.Length < 8)
-            return;
-        Mode = (LightingMode)data[0];
-        Brightness = data[1];
-        R = data[2];
-        G = data[3];
-        B = data[4];
-        RandomColor = data[5] != 0;
-        Speed = (AnimationSpeed)data[6];
-        Direction = (AnimationDirection)data[7];
-    }
-}
-
-public class AsusMouseDPI
-{
-    public uint DPI { get; set; } = 800;
-    public Color Color { get; set; } = Colors.White;
-
-    /// <summary>Serialise to a fixed 5-byte wire format (2 DPI + 3 RGB).</summary>
-    public byte[] Export()
-    {
-        return new byte[]
-        {
-            (byte)(DPI >> 8),
-            (byte)(DPI & 0xFF),
-            Color.R, Color.G, Color.B,
-        };
-    }
-
-    /// <summary>Deserialise from wire bytes (5 bytes expected).</summary>
-    public void Import(byte[] data)
-    {
-        if (data.Length < 5)
-            return;
-        DPI = (uint)((data[0] << 8) | data[1]);
-        Color = Color.FromRgb(data[2], data[3], data[4]);
-    }
-}
-
-/// <summary>Base class for ASUS mouse peripherals. Uses HID transport from Device and implements IMousePeripheral.</summary>
-public abstract class AsusMouse : AsusDevice, IMousePeripheral
-{
-    // Export header
-    private static readonly byte[] ExportMagic = "GMP1"u8.ToArray();
-
-    private readonly string _path;
-    private readonly bool _wireless;
-    private readonly byte _reportId;
-
-    public bool IsDeviceReady { get; protected set; }
-    public bool Wireless => _wireless;
-    public int Battery { get; protected set; } = -1;
-    public bool Charging { get; protected set; }
-
-    private LightingSetting[]? _lightingSettings;
-    public LightingSetting[] LightingSettings
-    {
-        get
-        {
-            if (_lightingSettings is null)
-            {
-                var zones = SupportedLightingZones();
-                _lightingSettings = new LightingSetting[zones.Length];
-                for (int i = 0; i < zones.Length; i++)
-                    _lightingSettings[i] = new LightingSetting();
-            }
-            return _lightingSettings;
+            //Some Sane defaults
+            LightingMode = LightingMode.Static;
+            AnimationSpeed = AnimationSpeed.Medium;
+            AnimationDirection = AnimationDirection.Clockwise;
+            RandomColor = false;
+            Brightness = 25;
+            RGBColor = Color.Red;
         }
-        set => _lightingSettings = value;
-    }
 
-    private AsusMouseDPI[]? _dpiSettings;
-    public AsusMouseDPI[] DpiSettings
-    {
-        get
+        public LightingMode LightingMode { get; set; }
+        public int Brightness { get; set; }
+        public Color RGBColor { get; set; }
+        public bool RandomColor { get; set; }
+        public AnimationSpeed AnimationSpeed { get; set; }
+
+        public AnimationDirection AnimationDirection { get; set; }
+
+        public byte[] Export()
         {
-            if (_dpiSettings is null)
-            {
-                _dpiSettings = new AsusMouseDPI[DPIProfileCount()];
-                for (int i = 0; i < _dpiSettings.Length; i++)
-                    _dpiSettings[i] = new AsusMouseDPI { DPI = 800 };
-            }
-            return _dpiSettings;
+            byte[] data = new byte[0];
+
+            data = data
+                .Append((byte)LightingMode)                         // 1 Byte
+                .Concat(BitConverter.GetBytes(Brightness))          // 4 Bytes
+                .Concat(BitConverter.GetBytes(RGBColor.ToArgb()))   // 4 Bytes
+                .Concat(BitConverter.GetBytes(RandomColor))         // 1 Byte
+                .Append((byte)AnimationSpeed)                       // 1 Byte
+                .Append((byte)AnimationDirection)                   // 1 Byte
+                .ToArray();
+
+            //12 bytes
+            return data;
         }
-        set => _dpiSettings = value;
-    }
 
-    public int DpiProfile { get; set; }
-    public int CurrentDPIProfileCount { get; set; } = 1;
-
-    public PollingRate PollingRate { get; set; } = PollingRate.PR1000Hz;
-    public bool AngleSnapping { get; set; }
-    public int AngleAdjustmentDegrees { get; set; }
-    public DebounceTime Debounce { get; set; } = DebounceTime.MS12;
-    public bool Acceleration { get; set; }
-    public bool Deceleration { get; set; }
-    public bool MotionSync { get; set; }
-    public bool ZoneMode { get; set; }
-    public ushort[] ButtonBindings { get; set; } = new ushort[16];
-    public bool Booster { get; set; }
-
-    public PowerOffSetting PowerOff { get; set; } = PowerOffSetting.Minutes3;
-    public LiftOffDistance LiftOff { get; set; } = LiftOffDistance.Low;
-    public byte LowBatteryWarning { get; set; } = 25;
-
-    /// <param name="vendorId">USB vendor ID (typically 0x0B05 for ASUS).</param>
-    /// <param name="productId">USB product ID for this mouse model.</param>
-    /// <param name="path">HidSharp device path substring for matching.</param>
-    /// <param name="wireless">True if this is the wireless receiver entry.</param>
-    /// <param name="reportId">HID report ID used for mouse protocol (0x00 = default output report).</param>
-    protected AsusMouse(ushort vendorId, ushort productId, string path, bool wireless, byte reportId = 0x00)
-        : base(vendorId, productId)
-    {
-        _path = path;
-        _wireless = wireless;
-        _reportId = reportId;
-    }
-
-    public abstract string GetDisplayName();
-    public abstract int ProfileCount();
-    public abstract int DPIProfileCount();
-    public abstract PollingRate[] SupportedPollingrates();
-
-    public virtual bool HasBattery() => Wireless;
-    public virtual bool HasXYDPI() => false;
-    public virtual bool HasAngleSnapping() => true;
-    public virtual bool HasAngleTuning() => false;
-    public virtual bool HasDPIColors() => false;
-    public virtual bool HasAutoPowerOff() => Wireless;
-    public virtual bool HasLowBatteryWarning() => false;
-    public virtual bool HasDebounce() => true;
-    public virtual bool HasAcceleration() => false;
-    public virtual bool HasMotionSync() => false;
-    public virtual bool HasZoneMode() => false;
-    public bool HasSmartShift() => false;
-    public bool HasHiResScroll() => false;
-    public bool HasThumbWheel() => false;
-    public bool HasHaptic() => false;
-    public bool HasForceSensing() => false;
-    public bool HasAnalogButtons() => false;
-    public bool SmartShiftRatchet { get; set; }
-    public int SmartShiftThreshold { get; set; }
-    public bool HiResScrollEnabled { get; set; }
-    public bool HiResScrollInvert { get; set; }
-    public bool HiResScrollDivert { get; set; }
-    public bool ThumbWheelDivert { get; set; }
-    public bool ThumbWheelInvert { get; set; }
-    public void WriteSmartShift() { }
-    public void WriteHiResScroll() { }
-    public void WriteThumbWheel() { }
-    public void WriteHaptic() { }
-    public bool HapticEnabled { get; set; }
-    public int HapticLevel { get; set; }
-    public bool HasPointerSpeed() => false;
-    public int PointerSpeed { get; set; }
-    public void WritePointerSpeed() { }
-    public bool HasChangeHost() => false;
-    public int HostCount { get; set; } = 1;
-    public int CurrentHost { get; set; }
-    public void WriteChangeHost() { }
-    public bool HasCrown() => false;
-    public bool CrownSmooth { get; set; }
-    public bool CrownDivert { get; set; }
-    public void WriteCrown() { }
-    public bool HasOnboardProfiles() => false;
-    public bool OnboardProfileEnabled { get; set; }
-    public void WriteOnboardMode() { }
-    public bool HasSensitivitySwitch() => false;
-    public bool HasIdleEffect() => false;
-    public bool HasIdleTimeout() => false;
-    public bool HasSleepTimeout() => false;
-    public bool HasHapticWaveform() => false;
-    public bool HasBacklightDelay() => false;
-    public bool HasHandDetection() => false;
-    public bool HasSideScrolling() => false;
-    public bool HasLowresMode() => false;
-    public bool SensitivitySwitch { get; set; }
-    public int IdleEffectIndex { get; set; }
-    public int IdleTimeoutSeconds { get; set; }
-    public int SleepTimeoutSeconds { get; set; }
-    public int HapticWaveformIndex { get; set; }
-    public int BacklightDelayHandsIn { get; set; }
-    public int BacklightDelayHandsOut { get; set; }
-    public int BacklightDelayPowered { get; set; }
-    public bool HandDetection { get; set; }
-    public bool SideScrolling { get; set; }
-    public int LowresModeIndex { get; set; }
-    public void WriteSensitivitySwitch() { }
-    public void WriteIdleEffect() { }
-    public void WriteIdleTimeout() { }
-    public void WriteSleepTimeout() { }
-    public void PlayHapticWaveform() { }
-    public void WriteBacklightDelays() { }
-    public void WriteHandDetection() { }
-    public void WriteSideScrolling() { }
-    public void WriteLowresMode() { }
-
-    public virtual LightingMode[] SupportedLightingModes() =>
-        [LightingMode.Static, LightingMode.Breathing, LightingMode.ColorCycle, LightingMode.Rainbow, LightingMode.React];
-
-    public virtual LightingZone[] SupportedLightingZones() =>
-        [LightingZone.Logo, LightingZone.Scrollwheel, LightingZone.Underglow];
-
-    public virtual uint MaxDPI() => 36000;
-    public virtual uint MinDPI() => 100;
-    public virtual uint DPIIncrement() => 50;
-    public virtual int MaxBrightness() => 100;
-    public virtual int AngleTuningStep() => 1;
-    public virtual int USBPacketSize() => 65;
-    public virtual bool CanChangeDPICount() => false;
-
-    /// <summary>Creates a LinuxUsbProvider for the vendor config interface.</summary>
-    public override void SetProvider()
-    {
-        if (_usbProvider is not null)
-            return;
-
-        var device = FindDevice();
-        if (device is null)
-            throw new IOException($"AsusMouse({GetDisplayName()}): no HID interface found");
-
-        _usbProvider = new LinuxUsbProvider(_vendorId, _productId, device.DevicePath);
-    }
-
-    /// <summary>Checks whether a matching HID device is present on the system.</summary>
-    public bool IsDeviceConnected()
-    {
-        return FindDevice() is not null;
-    }
-
-    /// <summary>
-    /// Finds the HID interface used for the mouse protocol. The Windows path hint
-    /// (mi_xx) never matches Linux hidraw paths, so fall back to picking the
-    /// interface with full-size output reports (the vendor config interface).
-    /// </summary>
-    private HidDevice? FindDevice()
-    {
-        try
+        public bool Import(byte[] blob)
         {
-            foreach (var d in DeviceList.Local.GetHidDevices(_vendorId, _productId))
+            if (blob.Length != 12)
             {
-                try
-                {
-                    if (d.DevicePath.Contains(_path, StringComparison.OrdinalIgnoreCase)
-                        || d.GetMaxOutputReportLength() >= USBPacketSize() - 1)
-                        return d;
-                }
-                catch
-                {
-                    // Unreadable descriptor, skip
-                }
+                //Data must be 12 bytes
+                return false;
+            }
+
+            LightingMode = (LightingMode)blob[0];
+
+            Brightness = BitConverter.ToInt32(blob, 1);
+            RGBColor = Color.FromArgb(BitConverter.ToInt32(blob, 5));
+            RandomColor = BitConverter.ToBoolean(blob, 9);
+
+            AnimationSpeed = (AnimationSpeed)blob[10];
+            AnimationDirection = (AnimationDirection)blob[11];
+
+            return true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is LightingSetting setting &&
+                   LightingMode == setting.LightingMode &&
+                   Brightness == setting.Brightness &&
+                   RGBColor.Equals(setting.RGBColor) &&
+                   RandomColor == setting.RandomColor &&
+                   AnimationSpeed == setting.AnimationSpeed &&
+                   AnimationDirection == setting.AnimationDirection;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(LightingMode, Brightness, RGBColor, RandomColor, AnimationSpeed, AnimationDirection);
+        }
+
+        public override string? ToString()
+        {
+            return "LightingMode: " + LightingMode + ", Color (" + RGBColor.R + ", " + RGBColor.G + ", " + RGBColor.B
+                + "), Brightness: " + Brightness + "%, LightingSpeed: " + AnimationSpeed + ", RandomColor:" + RandomColor + ", AnimationDirection:" + AnimationDirection;
+        }
+
+
+    }
+
+    public class AsusMouseDPI
+    {
+        public AsusMouseDPI()
+        {
+            Color = Color.Red;
+            DPI = 800;
+        }
+        public Color Color { get; set; }
+        public uint DPI { get; set; }
+        public override string? ToString()
+        {
+            return "DPI: " + DPI + ", Color (" + Color.R + ", " + Color.G + ", " + Color.B + ")";
+        }
+
+        public byte[] Export()
+        {
+            byte[] data = new byte[0];
+
+            data = data
+                .Concat(BitConverter.GetBytes(DPI))                     // 4 bytes
+                .Concat(BitConverter.GetBytes(Color.ToArgb()))          // 4 bytes
+                .ToArray();
+
+            //8 bytes
+            return data;
+        }
+
+        public bool Import(byte[] blob)
+        {
+            if (blob.Length != 8)
+            {
+                //Data must be 8 bytes
+                return false;
+            }
+
+            DPI = BitConverter.ToUInt32(blob, 0);
+            Color = Color.FromArgb(BitConverter.ToInt32(blob, 4));
+
+            return true;
+        }
+    }
+
+    public abstract partial class AsusMouse : Device, IPeripheral
+    {
+        private static string[] POLLING_RATES = { "125 Hz", "250 Hz", "500 Hz", "1000 Hz", "2000 Hz", "4000 Hz", "8000 Hz", "16000 Hz" };
+        internal const bool PACKET_LOGGER_ALWAYS_ON = false;
+
+        public event EventHandler? Disconnect;
+        public event EventHandler? BatteryUpdated;
+        public event EventHandler? MouseReadyChanged;
+        public event EventHandler? ProfileChanged;
+
+        private string path;
+
+        protected byte reportId = 0x00;
+
+        public bool IsDeviceReady { get; protected set; }
+
+        private void SetDeviceReady(bool ready)
+        {
+            bool notify = false;
+            if (IsDeviceReady != ready)
+            {
+                notify = true;
+            }
+            IsDeviceReady = ready;
+
+
+            if (MouseReadyChanged is not null && notify)
+            {
+                MouseReadyChanged(this, EventArgs.Empty);
             }
         }
-        catch (Exception ex)
+        public bool Wireless { get; protected set; }
+        public int Battery { get; protected set; }
+        public bool Charging { get; protected set; }
+        public LightingSetting[] LightingSetting { get; protected set; }
+        public int LowBatteryWarning { get; protected set; }
+        public PowerOffSetting PowerOffSetting { get; protected set; }
+        public LiftOffDistance LiftOffDistance { get; protected set; }
+        public int DpiProfile { get; protected set; }
+        public int CurrentDPIProfileCount { get; protected set; }
+        public AsusMouseDPI[] DpiSettings { get; protected set; }
+        public int Profile { get; protected set; }
+        public PollingRate PollingRate { get; protected set; }
+        public bool AngleSnapping { get; protected set; }
+        public short AngleAdjustmentDegrees { get; protected set; }
+        public DebounceTime Debounce { get; protected set; }
+        public int Acceleration { get; protected set; }
+        public int Deceleration { get; protected set; }
+        public bool MotionSync { get; protected set; }
+        public bool ZoneMode { get; protected set; }
+        public int ZoneModeDPI { get; set; } = 1600;
+        public PollingRate ZoneModePollingRate { get; set; } = PollingRate.PR4000Hz;
+        public ushort[] ButtonBindings { get; protected set; } = new ushort[16];
+
+        private bool _buttonBindingsReady;
+        public bool ButtonBindingsReady
         {
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): device scan failed: {ex.Message}");
-        }
-        return null;
-    }
-
-    public void Connect()
-    {
-        SetProvider();
-    }
-
-    public void Disconnect()
-    {
-        Dispose();
-    }
-
-    /// <summary>Sends a packet and waits for a matching response via interrupt read/write.</summary>
-    /// <param name="packet">Raw packet bytes, resized to USBPacketSize.</param>
-    /// <param name="matchLength">Number of leading bytes that must match.</param>
-    /// <returns>Response bytes, or null on timeout/mismatch.</returns>
-    protected byte[]? WriteForResponse(byte[] packet, int matchLength = 3)
-    {
-        try
-        {
-            // Resize to device packet size
-            int size = USBPacketSize();
-            byte[] outBuf = new byte[size];
-            Array.Copy(packet, outBuf, Math.Min(packet.Length, size));
-
-            // Prepend report ID if needed
-            if (_reportId != 0 && outBuf[0] == 0)
-                outBuf[0] = _reportId;
-
-            Write(outBuf);
-
-            // Read response with retries
-            for (int attempt = 0; attempt < 3; attempt++)
+            get => _buttonBindingsReady;
+            protected set
             {
-                byte[] response = new byte[size];
-                try
-                {
-                    Read(response);
-                }
-                catch (TimeoutException)
-                {
-                    continue;
-                }
-                catch (IOException)
-                {
-                    Thread.Sleep(200);
-                    continue;
-                }
-
-                // Check if the leading bytes match
-                bool match = true;
-                for (int i = 0; i < matchLength && i < packet.Length && i < response.Length; i++)
-                {
-                    if (packet[i] != response[i])
-                    {
-                        match = false;
-                        break;
-                    }
-                }
-
-                if (match)
-                    return response;
+                _buttonBindingsReady = value;
+                if (value) ButtonBindingsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
-        catch (Exception ex)
+
+        public event EventHandler? ButtonBindingsChanged;
+
+        public bool Booster = false;
+
+        public AsusMouse(ushort vendorId, ushort productId, string path, bool wireless) : base(vendorId, productId)
         {
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): WriteForResponse failed - {ex.Message}");
+            this.path = path;
+            this.Wireless = wireless;
+            DpiSettings = new AsusMouseDPI[1];
+            CurrentDPIProfileCount = DPIProfileCount();
+            if (SupportedLightingZones().Length == 0)
+            {
+                LightingSetting = new LightingSetting[1];
+            }
+            else
+            {
+                LightingSetting = new LightingSetting[SupportedLightingZones().Length];
+            }
+            this.reportId = 0x00;
         }
 
-        return null;
-    }
-
-    /// <summary>Reads all settings from the device. Sets IsDeviceReady on success.</summary>
-    public void SynchronizeDevice()
-    {
-        try
+        public AsusMouse(ushort vendorId, ushort productId, string path, bool wireless, byte reportId) : this(vendorId, productId, path, wireless)
         {
+            this.reportId = reportId;
+        }
+
+        public void SetPath(string path)
+        {
+            this.path = path;
+        }
+
+
+        public bool CanExport()
+        {
+            return true;
+        }
+
+        //GMP1 = G-Helper Mouse Profile Version 1 :D
+        private static readonly byte[] MAGIC = { (byte)'G', (byte)'M', (byte)'P', (byte)'1' };
+
+        public byte[] Export()
+        {
+            byte[] data = new byte[0];
+
+            data = data
+                .Concat(MAGIC)                                          // 4 Byte Magic
+                .ToArray();
+
+            foreach (LightingSetting ls in LightingSetting)
+            {
+                data = data.Concat(ls.Export()).ToArray();                     // Append 12 bytes for each Lighting setting
+            }
+
+
+            data = data                                                        // = 6 Bytes
+                .Concat(BitConverter.GetBytes(LowBatteryWarning))       // 4 Bytes
+                .Append((byte)PowerOffSetting)                          // 1 Byte
+                .Append((byte)LiftOffDistance)                          // 1 Byte
+                .ToArray();
+
+            foreach (AsusMouseDPI dpi in DpiSettings)
+            {
+                data = data.Concat(dpi.Export()).ToArray();                     // Append 8 bytes for each DPI Profile
+            }
+
+
+
+            data = data                                                        // = 13 Bytes
+               .Append((byte)PollingRate)                               // 1 Byte
+               .Concat(BitConverter.GetBytes(AngleSnapping))            // 1 Byte
+               .Concat(BitConverter.GetBytes(AngleAdjustmentDegrees))   // 2 Bytes
+               .Append((byte)Debounce)                                  // 1 Byte
+               .Concat(BitConverter.GetBytes(Acceleration))             // 4 Bytes
+               .Concat(BitConverter.GetBytes(Deceleration))             // 4 Bytes
+               .ToArray();
+
+            //Total length: 4 + (LightingSetting.Length * 12) + 6 + (DPIProfileCount() + 8) + 13 Bytes
+
+            return data;
+        }
+
+        public bool Import(byte[] blob)
+        {
+            int expectedLength = 4 + (LightingSetting.Length * 12) + 6 + (DPIProfileCount() * 8) + 13;
+
+            if (blob.Length != expectedLength)
+            {
+                //Wrong lenght. Will not decode properly anyways.
+                Logger.WriteLine(GetDisplayName() + " Import: Failed to import due to wrong data Lenght. Expected: " + expectedLength + " Is: " + blob.Length);
+                return false;
+            }
+
+            if (blob[0] != MAGIC[0] || blob[1] != MAGIC[1] || blob[2] != MAGIC[2] || blob[3] != MAGIC[3])
+            {
+                //MAGIC does not match. Maybe some other profile or not even a profile at all.
+                Logger.WriteLine(GetDisplayName() + " Import: Failed to import. Magic Wrong: " + ByteArrayToString(blob));
+                return false;
+            }
+
+
+            int offset = 4; // skip MAGIC
+
+            for (int i = 0; i < LightingSetting.Length; ++i)
+            {
+                byte[] data = blob.Skip(offset).Take(12).ToArray(); // Read 12 Byte blocks
+                offset += 12;
+
+
+                if (!LightingSetting[i].Import(data))
+                {
+                    Logger.WriteLine(GetDisplayName() + " Import: Failed to import LightingSetting. Data: " + ByteArrayToString(data));
+                    return false;
+                }
+            }
+
+
+            LowBatteryWarning = BitConverter.ToInt32(blob, offset);
+            offset += 4;
+
+            PowerOffSetting = (PowerOffSetting)blob[offset++];
+            LiftOffDistance = (LiftOffDistance)blob[offset++];
+
+            for (int i = 0; i < DpiSettings.Length; ++i)
+            {
+                byte[] data = blob.Skip(offset).Take(8).ToArray(); // Read 8 Byte blocks
+                offset += 8;
+
+
+                if (!DpiSettings[i].Import(data))
+                {
+                    Logger.WriteLine(GetDisplayName() + " Import: Failed to import DPISettings. Data: " + ByteArrayToString(data));
+                    return false;
+                }
+            }
+
+
+            PollingRate = (PollingRate)blob[offset++];
+
+            AngleSnapping = BitConverter.ToBoolean(blob, offset++);
+            AngleAdjustmentDegrees = BitConverter.ToInt16(blob, offset);
+            offset += 2;
+
+
+            Acceleration = BitConverter.ToInt32(blob, offset);
+            offset += 4;
+            Deceleration = BitConverter.ToInt32(blob, offset);
+            offset += 4;
+
+
+
+            //Apply Settings to the mouse
+            if (HasBattery())
+                SetEnergySettings(LowBatteryWarning, PowerOffSetting);
+
+            SetPollingRate(PollingRate);
+
+            if (HasLiftOffSetting())
+                SetLiftOffDistance(LiftOffDistance);
+
+            if (HasAngleSnapping())
+                SetAngleSnapping(AngleSnapping);
+
+            if (HasAngleTuning())
+                SetAngleAdjustment(AngleAdjustmentDegrees);
+
+            if (HasAcceleration())
+                SetAcceleration(Acceleration);
+
+            if (HasDeceleration())
+                SetDeceleration(Deceleration);
+
+
+
+            if (HasRGB())
+            {
+                for (int i = 0; i < SupportedLightingZones().Length; ++i)
+                {
+                    LightingZone lz = SupportedLightingZones()[i];
+                    LightingSetting ls = LightingSettingForZone(lz);
+
+                    SetLightingSetting(ls, lz);
+                }
+            }
+
+            for (int i = 0; i < DPIProfileCount(); ++i)
+            {
+                AsusMouseDPI dpi = DpiSettings[i];
+
+                SetDPIForProfile(dpi, i + 1);
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not AsusMouse item)
+            {
+                return false;
+            }
+
+            return this.VendorID().Equals(item.VendorID())
+                && this.ProductID().Equals(item.ProductID())
+                && this.path.Equals(item.path);
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 23;
+            hash = hash * 31 + VendorID();
+            hash = hash * 31 + ProductID();
+            hash = hash * 31 + path.GetHashCode();
+            return hash;
+        }
+
+        public void Connect()
+        {
+            SetProvider();
+            HidSharp.DeviceList.Local.Changed += Device_Changed;
+        }
+
+        public override void Dispose()
+        {
+            Logger.WriteLine(GetDisplayName() + ": Disposing");
+            StopEventListener();
+            HidSharp.DeviceList.Local.Changed -= Device_Changed;
+            base.Dispose();
+        }
+
+        private PeripheralEventListener? events;
+
+        public void StartEventListener()
+        {
+            events ??= new PeripheralEventListener(VendorID(), ProductID(), GetDisplayName(), OnEventReport);
+            events.Start(path);
+        }
+
+        public void StopEventListener()
+        {
+            events?.Stop();
+        }
+
+        // 12 01 is the raw button bitmap and precedes the state change it causes
+        private void OnEventReport(byte[] buffer, int count)
+        {
+            if (count < 3 || buffer[1] != 0x12 || buffer[2] == 0x01) return;
+
+            int was = Profile;
+            int wasDpi = DpiProfile;
+            ReadProfile();
+            if (Profile != was || DpiProfile != wasDpi) ProfileChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void Device_Changed(object? sender, HidSharp.DeviceListChangedEventArgs e)
+        {
+            //Use this to validate whether the device is still connected.
+            //If not, this will also initiate the disconnect and cleanup sequence.
+            CheckConnection();
+        }
+
+        //Override this for non battery devices to check whether the connection is still there
+        //This function should automatically disconnect the device in GHelper if the device is no longer there or the pipe is broken.
+        public virtual void CheckConnection()
+        {
+            if (!IsDeviceConnected())
+            {
+                OnDisconnect();
+                return;
+            }
             ReadBattery();
+        }
+
+        public bool IsDeviceConnected()
+        {
+            try
+            {
+                return HidSharp.DeviceList.Local.GetHidDevices(VendorID(), ProductID())
+                    .FirstOrDefault(x => LinuxUsbProvider.PathMatches(x, path)) != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool IsDeviceConnected(IEnumerable<HidSharp.HidDevice> devices)
+        {
+            return devices.Any(x => x.VendorID == VendorID() && x.ProductID == ProductID() && LinuxUsbProvider.PathMatches(x, path));
+        }
+
+        public virtual int USBTimeout()
+        {
+            return 300;
+        }
+
+        public virtual int USBPacketSize()
+        {
+            return 65;
+        }
+
+        public override void SetProvider()
+        {
+            _usbProvider = new LinuxUsbProvider(_vendorId, _productId, path, USBTimeout());
+        }
+
+        protected virtual void OnDisconnect()
+        {
+            Logger.WriteLine(GetDisplayName() + ": OnDisconnect()");
+            if (Disconnect is not null)
+            {
+                Disconnect(this, EventArgs.Empty);
+            }
+        }
+
+        protected static bool IsPacketLoggerEnabled()
+        {
+#if DEBUG
+            return true;
+#else
+
+            return AppConfig.Get("usb_packet_logger") == 1 || PACKET_LOGGER_ALWAYS_ON;
+#endif
+        }
+
+        protected virtual bool IsMouseError(byte[] packet)
+        {
+            return packet[1] == 0xFF && packet[2] == 0xAA;
+        }
+
+        protected virtual long MeasuredIO(Action<byte[]> ioFunc, byte[] param)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            ioFunc(param);
+
+            watch.Stop();
+            return watch.ElapsedMilliseconds;
+        }
+
+        private int _otherIoBusy;
+        private long _otherIoEndedMs;
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        protected virtual byte[]? WriteForResponse(byte[] packet, int matchLength = 3)
+        {
+            Interlocked.Increment(ref _otherIoBusy);
+            try
+            {
+                return WriteForResponseImpl(packet, matchLength);
+            }
+            finally
+            {
+                _otherIoEndedMs = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                Interlocked.Decrement(ref _otherIoBusy);
+            }
+        }
+
+        private byte[]? WriteForResponseImpl(byte[] packet, int matchLength)
+        {
+            Array.Resize(ref packet, USBPacketSize());
+
+            try { Drain(USBPacketSize()); } catch { }
+
+            byte[] response = new byte[USBPacketSize()];
+            response[0] = reportId;
+
+            int retries = 3;
+
+            while (retries > 0)
+            {
+                response = new byte[USBPacketSize()];
+
+                try
+                {
+                    if (IsPacketLoggerEnabled())
+                        Logger.WriteLine(GetDisplayName() + ": Sending packet: " + ByteArrayToString(packet)
+                            + " Try " + (retries - 2) + " of 3");
+
+                    long time = MeasuredIO(Write, packet);
+                    if (IsPacketLoggerEnabled()) Logger.WriteLine(GetDisplayName() + ": Write took " + time + "ms");
+
+                    time = MeasuredIO(Read, response);
+                    if (IsPacketLoggerEnabled()) Logger.WriteLine(GetDisplayName() + ": Read took " + time + "ms");
+
+
+                    if (IsMouseError(response))
+                    {
+                        if (IsPacketLoggerEnabled())
+                            Logger.WriteLine(GetDisplayName() + ": Read packet: " + ByteArrayToString(response));
+
+                        if (!(packet[1] == 0x12 && packet[2] == 0x07))
+                            Logger.WriteLine(GetDisplayName() + ": Mouse returned error (FF AA). Packet probably not supported by mouse firmware.");
+                        //Error. Mouse could not understand or process the sent packet
+                        return response;
+                    }
+
+                    if (response[1] == 0 && response[2] == 0 && response[3] == 0)
+                    {
+                        if (IsPacketLoggerEnabled())
+                            Logger.WriteLine(GetDisplayName() + ": Read packet: " + ByteArrayToString(response));
+                        Logger.WriteLine(GetDisplayName() + ": Received empty packet. Stopping here.");
+                        //Empty packet
+                        return null;
+                    }
+
+                    // ↓ only change from original: added matchLength >= 4 guard
+                    while (response[0] != packet[0] || response[1] != packet[1] || response[2] != packet[2]
+                           || (matchLength >= 4 && response[3] != packet[3]))
+                    {
+                        if (IsPacketLoggerEnabled())
+                            Logger.WriteLine(GetDisplayName() + ": Read wrong packet left in buffer: " + ByteArrayToString(response) + ". Retrying...");
+                        //Read again
+                        time = MeasuredIO(Read, response);
+                        if (IsPacketLoggerEnabled()) Logger.WriteLine(GetDisplayName() + ": Read took " + time + "ms");
+                    }
+
+                    if (IsPacketLoggerEnabled())
+                        Logger.WriteLine(GetDisplayName() + ": Read packet: " + ByteArrayToString(response));
+
+
+                    return response;
+
+                }
+                catch (IOException e)
+                {
+                    Logger.WriteLine(GetDisplayName() + ": Failed to read packet " + e.Message);
+                    OnDisconnect();
+                    return null;
+                }
+                catch (TimeoutException e)
+                {
+                    Logger.WriteLine(GetDisplayName() + ": Timeout reading packet " + e.Message + " Trying again.");
+                    retries--;
+                    continue;
+                }
+                catch (ObjectDisposedException)
+                {
+                    Logger.WriteLine(GetDisplayName() + ": Channel closed ");
+                    OnDisconnect();
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        public abstract string GetDisplayName();
+
+        public PeripheralType DeviceType()
+        {
+            return PeripheralType.Mouse;
+        }
+
+        public virtual Image Icon()
+        {
+            return Properties.Resources.icons8_maus_48;
+        }
+
+        public virtual void SynchronizeDevice()
+        {
+            DpiSettings = new AsusMouseDPI[DPIProfileCount()];
+            ReadBattery();
+            if (HasBattery() && Battery <= 0 && Charging == false)
+            {
+                //Likely only the dongle connected and the mouse is either sleeping or turned off.
+                //The mouse will not respond with proper data, but empty responses at this point
+                SetDeviceReady(false);
+                return;
+            }
+            SetDeviceReady(true);
+
             ReadProfile();
             ReadDPI();
             ReadPollingRate();
@@ -455,273 +751,1841 @@ public abstract class AsusMouse : AsusDevice, IMousePeripheral
             ReadLightingSetting();
             ReadMotionSync();
             ReadZoneMode();
-
-            IsDeviceReady = true;
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): synchronised OK");
+            ReadAndLogButtonBindings();
         }
-        catch (Exception ex)
+
+        // ------------------------------------------------------------------------------
+        // Battery
+        // ------------------------------------------------------------------------------
+
+        public virtual bool HasBattery()
         {
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): SynchronizeDevice failed - {ex.Message}");
-        }
-    }
-
-    public virtual void ReadBattery()
-    {
-        if (!HasBattery())
-            return;
-        // TODO: send [0x00, 0x12, 0x07], parse response[4] = %, [5] = charging
-    }
-
-    protected virtual void ReadProfile()
-    {
-        // TODO: send [0x00, 0x12, 0x01], parse active DPI profile
-    }
-
-    protected virtual void ReadDPI()
-    {
-        // TODO: send [0x00, 0x12, 0x04, profile] per profile
-    }
-
-    protected virtual void ReadPollingRate()
-    {
-        // TODO: send [0x00, 0x12, 0x02]
-    }
-
-    protected virtual void ReadLiftOffDistance()
-    {
-        // TODO: send [0x00, 0x12, 0x05]
-    }
-
-    protected virtual void ReadDebounce()
-    {
-        if (!HasDebounce())
-            return;
-        // TODO: send [0x00, 0x12, 0x06]
-    }
-
-    protected virtual void ReadAcceleration()
-    {
-        if (!HasAcceleration())
-            return;
-        // Stub
-    }
-
-    protected virtual void ReadLightingSetting()
-    {
-        // TODO: send [0x00, 0x12, 0x03, zone] per zone
-    }
-
-    protected virtual void ReadMotionSync()
-    {
-        if (!HasMotionSync())
-            return;
-        // Stub
-    }
-
-    protected virtual void ReadZoneMode()
-    {
-        if (!HasZoneMode())
-            return;
-        // Stub
-    }
-
-    public virtual void WriteDPI()
-    {
-        // TODO: send [0x00, 0x51, 0x31, profile, dpiHigh, dpiLow, ...]
-    }
-
-    public virtual void WritePollingRate()
-    {
-        // TODO: send [0x00, 0x51, 0x32, (byte)PollingRate]
-    }
-
-    public virtual void WriteLiftOffDistance()
-    {
-        // TODO: send [0x00, 0x51, 0x35, (byte)LiftOff]
-    }
-
-    public virtual void WriteDebounce()
-    {
-        if (!HasDebounce())
-            return;
-        // Stub
-    }
-
-    public virtual void WriteAcceleration()
-    {
-        if (!HasAcceleration())
-            return;
-        // Stub
-    }
-
-    public virtual void WriteLightingSetting()
-    {
-        // TODO: send [0x00, 0x51, 0x28, zone, mode, brightness, R, G, B, speed, direction]
-    }
-
-    public virtual void WriteMotionSync()
-    {
-        if (!HasMotionSync())
-            return;
-        // Stub
-    }
-
-    public virtual void WriteAngleSnapping()
-    {
-        if (!HasAngleSnapping())
-            return;
-        // Stub
-    }
-
-    public virtual void WritePowerOff()
-    {
-        if (!HasAutoPowerOff())
-            return;
-        // Stub
-    }
-
-    public virtual void WriteLowBatteryWarning()
-    {
-        if (!HasLowBatteryWarning())
-            return;
-        // Stub
-    }
-
-    /// <summary>Streams a single colour to the mouse LEDs for Aura Sync.</summary>
-    public virtual void WriteColorDirect(Color color)
-    {
-        // TODO: send [0x00, 0x51, 0x28, 0x00, 0x00, 0x04, R, G, B] (direct mode)
-    }
-
-    /// <summary>Syncs lighting from the keyboard Aura profile when Aura Sync is enabled.</summary>
-    public virtual void SyncFromKeyboardAura()
-    {
-        // Stub
-    }
-
-    public PeripheralType DeviceType() => PeripheralType.Mouse;
-
-    public bool CanExport() => true;
-
-    /// <summary>Serialises all mouse settings into a portable byte blob (GMP1 format).</summary>
-    public byte[] Export()
-    {
-        try
-        {
-            using var ms = new MemoryStream();
-            ms.Write(ExportMagic);        // 4 bytes magic
-            ms.WriteByte(0x01);           // version
-
-            // DPI profiles
-            ms.WriteByte((byte)DpiSettings.Length);
-            ms.WriteByte((byte)DpiProfile);
-            foreach (var dpi in DpiSettings)
-                ms.Write(dpi.Export());
-
-            // Polling rate
-            ms.WriteByte((byte)PollingRate);
-
-            // Lift-off distance
-            ms.WriteByte((byte)LiftOff);
-
-            // Debounce
-            ms.WriteByte((byte)Debounce);
-
-            // Angle snapping + angle adjustment
-            ms.WriteByte((byte)(AngleSnapping ? 1 : 0));
-            ms.WriteByte((byte)AngleAdjustmentDegrees);
-
-            // Acceleration / deceleration
-            ms.WriteByte((byte)(Acceleration ? 1 : 0));
-            ms.WriteByte((byte)(Deceleration ? 1 : 0));
-
-            // Motion sync
-            ms.WriteByte((byte)(MotionSync ? 1 : 0));
-
-            // Lighting
-            ms.WriteByte((byte)LightingSettings.Length);
-            foreach (var ls in LightingSettings)
-                ms.Write(ls.Export());
-
-            return ms.ToArray();
-        }
-        catch (Exception ex)
-        {
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): Export failed - {ex.Message}");
-            return [];
-        }
-    }
-
-    /// <summary>Restores settings from a GMP1 blob created by Export.</summary>
-    public bool Import(byte[] blob)
-    {
-        try
-        {
-            if (blob.Length < 5)
-                return false;
-
-            // Check magic
-            for (int i = 0; i < ExportMagic.Length; i++)
-            {
-                if (blob[i] != ExportMagic[i])
-                    return false;
-            }
-
-            int pos = 4;
-            byte version = blob[pos++];
-            if (version != 0x01)
-                return false;
-
-            // DPI profiles
-            int dpiCount = blob[pos++];
-            DpiProfile = blob[pos++];
-            var dpis = new AsusMouseDPI[dpiCount];
-            for (int i = 0; i < dpiCount; i++)
-            {
-                dpis[i] = new AsusMouseDPI();
-                dpis[i].Import(blob[pos..(pos + 5)]);
-                pos += 5;
-            }
-            DpiSettings = dpis;
-
-            // Polling rate
-            PollingRate = (PollingRate)blob[pos++];
-
-            // Lift-off distance
-            LiftOff = (LiftOffDistance)blob[pos++];
-
-            // Debounce
-            Debounce = (DebounceTime)blob[pos++];
-
-            // Angle snapping + angle adjustment
-            AngleSnapping = blob[pos++] != 0;
-            AngleAdjustmentDegrees = blob[pos++];
-
-            // Acceleration / deceleration
-            Acceleration = blob[pos++] != 0;
-            Deceleration = blob[pos++] != 0;
-
-            // Motion sync
-            MotionSync = blob[pos++] != 0;
-
-            // Lighting
-            int lightCount = blob[pos++];
-            var lights = new LightingSetting[lightCount];
-            for (int i = 0; i < lightCount; i++)
-            {
-                lights[i] = new LightingSetting();
-                lights[i].Import(blob[pos..(pos + 9)]);
-                pos += 9;
-            }
-            LightingSettings = lights;
-
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): imported settings OK");
             return true;
         }
-        catch (Exception ex)
+
+        public virtual bool HasAutoPowerOff()
         {
-            Logger.WriteLine($"AsusMouse({GetDisplayName()}): Import failed - {ex.Message}");
             return false;
         }
+
+        public virtual int LowBatteryWarningStep()
+        {
+            return 10;
+        }
+
+        public virtual int LowBatteryWarningMax()
+        {
+            return 50;
+        }
+
+        public virtual bool HasLowBatteryWarning()
+        {
+            return false;
+        }
+
+        protected virtual byte[] GetBatteryReportPacket()
+        {
+            return new byte[] { reportId, 0x12, 0x07 };
+        }
+
+        protected virtual int ParseBattery(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x07)
+            {
+                return packet[5];
+            }
+
+            return -1;
+        }
+        protected virtual bool ParseChargingState(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x07)
+            {
+                return packet[10] > 0;
+            }
+
+            return false;
+        }
+
+        protected virtual PowerOffSetting ParsePowerOffSetting(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x07)
+            {
+                return (PowerOffSetting)packet[6];
+            }
+
+            return PowerOffSetting.Never;
+        }
+        protected virtual int ParseLowBatteryWarning(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x07)
+            {
+                return packet[7];
+            }
+
+            return 0;
+        }
+        protected virtual byte[] GetUpdateEnergySettingsPacket(int lowBatteryWarning, PowerOffSetting powerOff)
+        {
+            return new byte[] { reportId, 0x51, 0x37, 0x00, 0x00, (byte)powerOff, 0x00, (byte)lowBatteryWarning };
+        }
+
+        public void SetEnergySettings(int lowBatteryWarning, PowerOffSetting powerOff)
+        {
+            if (!HasAutoPowerOff() && !HasLowBatteryWarning())
+            {
+                return;
+            }
+
+            WriteForResponse(GetUpdateEnergySettingsPacket(lowBatteryWarning, powerOff));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Got Auto Power Off: " + powerOff + " - Low Battery Warnning at: " + lowBatteryWarning + "%");
+            this.PowerOffSetting = powerOff;
+            this.LowBatteryWarning = lowBatteryWarning;
+        }
+
+        public void ReadBattery()
+        {
+            if (!HasBattery() && !HasAutoPowerOff())
+            {
+                return;
+            }
+
+            byte[]? response = WriteForResponse(GetBatteryReportPacket());
+            if (response is null) return;
+
+            if (HasBattery())
+            {
+                Battery = ParseBattery(response);
+                Charging = ParseChargingState(response);
+
+                //If the device goes to standby it will not report battery state anymore.
+                bool wasReady = IsDeviceReady;
+                SetDeviceReady(Battery > 0);
+
+                if (!IsDeviceReady)
+                {
+                    if (wasReady) Logger.WriteLine(GetDisplayName() + ": Device gone");
+                    return;
+                }
+
+                Logger.WriteLine(GetDisplayName() + ": Got Battery Percentage " + Battery + "% - Charging:" + Charging);
+
+                if (BatteryUpdated is not null)
+                {
+                    BatteryUpdated(this, EventArgs.Empty);
+                }
+            }
+
+            if (HasAutoPowerOff())
+            {
+                PowerOffSetting = ParsePowerOffSetting(response);
+            }
+
+            if (HasLowBatteryWarning())
+            {
+                LowBatteryWarning = ParseLowBatteryWarning(response);
+            }
+
+            if (HasLowBatteryWarning() || HasAutoPowerOff())
+            {
+                string pos = HasAutoPowerOff() ? PowerOffSetting.ToString() : "Not Supported";
+                string lbw = HasLowBatteryWarning() ? LowBatteryWarning.ToString() : "Not Supported";
+                Logger.WriteLine(GetDisplayName() + ": Got Auto Power Off: " + pos + " - Low Battery Warnning at: " + lbw + "%");
+            }
+
+        }
+
+        // ------------------------------------------------------------------------------
+        // Profiles
+        // ------------------------------------------------------------------------------
+        public abstract int ProfileCount();
+
+        public virtual bool HasProfiles()
+        {
+            return true;
+        }
+
+        protected virtual int ParseProfile(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x00 && packet[3] == 0x00)
+            {
+                return packet[11];
+            }
+            Logger.WriteLine(GetDisplayName() + ": " + BitConverter.ToString(packet));
+            Logger.WriteLine(GetDisplayName() + ": Failed to decode active profile");
+            return 0;
+        }
+
+        protected virtual int ParseDPIProfile(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x00 && packet[3] == 0x00)
+            {
+                return packet[12];
+            }
+            Logger.WriteLine(GetDisplayName() + ": " + BitConverter.ToString(packet));
+            Logger.WriteLine(GetDisplayName() + ": Failed to decode active DPI profile");
+            return 1;
+        }
+
+        protected virtual byte[] GetReadProfilePacket()
+        {
+            return new byte[] { reportId, 0x12, 0x00 };
+        }
+
+        protected virtual byte[] GetUpdateProfilePacket(int profile)
+        {
+            return new byte[] { reportId, 0x50, 0x02, (byte)profile };
+        }
+
+        public void ReadProfile()
+        {
+            if (!HasProfiles())
+            {
+                return;
+            }
+
+            byte[]? response = WriteForResponse(GetReadProfilePacket(), matchLength: 4);
+            if (response is null) return;
+
+            Profile = ParseProfile(response);
+            if (DPIProfileCount() > 1)
+            {
+                DpiProfile = ParseDPIProfile(response);
+                if (CanChangeDPICount())
+                {
+                    int count = response[19];
+                    if (count >= 2 && count <= 4)
+                    {
+                        CurrentDPIProfileCount = count;
+                    }
+                }
+            }
+            Logger.WriteLine(GetDisplayName() + ": Active Profile " + (Profile + 1)
+                + ((DPIProfileCount() > 1 ? ", Active DPI Profile: " + DpiProfile : ""))
+                + ((CanChangeDPICount() ? ", DPI Count: " + CurrentDPIProfileCount : "")));
+        }
+
+        public void SetProfile(int profile)
+        {
+            if (!HasProfiles())
+            {
+                return;
+            }
+
+            if (profile > ProfileCount() || profile < 0)
+            {
+                Logger.WriteLine(GetDisplayName() + ": Profile:" + profile + " is invalid.");
+                return;
+            }
+
+            WriteForResponse(GetUpdateProfilePacket(profile));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Profile set to " + profile);
+            this.Profile = profile;
+        }
+
+        // ------------------------------------------------------------------------------
+        // Polling Rate and Angle Snapping
+        // ------------------------------------------------------------------------------
+
+
+        public virtual bool HasAngleSnapping()
+        {
+            return false;
+        }
+        public virtual bool HasAngleTuning()
+        {
+            return false;
+        }
+
+        public virtual int AngleTuningStep()
+        {
+            return 1;
+        }
+
+        public virtual int AngleTuningMin()
+        {
+            return -20;
+        }
+
+        public virtual int AngleTuningMax()
+        {
+            return 20;
+        }
+
+        public virtual string PollingRateDisplayString(PollingRate pollingRate)
+        {
+            return POLLING_RATES[(int)pollingRate];
+        }
+
+        public virtual int PollingRateCount()
+        {
+            return SupportedPollingrates().Length;
+        }
+
+        public virtual int PollingRateIndex(PollingRate pollingRate)
+        {
+            for (int i = 0; i < PollingRateCount(); ++i)
+            {
+                if (SupportedPollingrates()[i] == pollingRate)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+
+        public virtual bool IsPollingRateSupported(PollingRate pollingRate)
+        {
+            return SupportedPollingrates().Contains(pollingRate);
+        }
+
+        public abstract PollingRate[] SupportedPollingrates();
+
+        protected PollingRate[] BoosterPollingrates()
+        {
+            return new PollingRate[] {
+                PollingRate.PR125Hz,
+                PollingRate.PR250Hz,
+                PollingRate.PR500Hz,
+                PollingRate.PR1000Hz,
+                PollingRate.PR2000Hz,
+                PollingRate.PR4000Hz,
+                PollingRate.PR8000Hz
+            };
+        }
+
+        public virtual bool CanSetPollingRate()
+        {
+            return true;
+        }
+
+        protected virtual byte[] GetReadPollingRatePacket()
+        {
+            return new byte[] { reportId, 0x12, 0x04, 0x00 };
+        }
+
+        protected virtual byte[] GetUpdatePollingRatePacket(PollingRate pollingRate)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x04, 0x00, (byte)pollingRate };
+        }
+        protected virtual byte[] GetUpdateAngleSnappingPacket(bool angleSnapping)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x06, 0x00, (byte)(angleSnapping ? 0x01 : 0x00) };
+        }
+        protected virtual byte[] GetUpdateAngleAdjustmentPacket(short angleAdjustment)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x0B, 0x00, (byte)(angleAdjustment & 0xFF), (byte)((angleAdjustment >> 8) & 0xFF) };
+        }
+
+        protected virtual PollingRate ParsePollingRate(byte[] packet)
+        {
+            PollingRate result;
+
+            Logger.WriteLine(GetDisplayName() + ": Raw Polling Rate " + BitConverter.ToString(packet));
+            if (packet[1] == 0x12 && packet[2] == 0x04 && packet[3] == 0x00)
+            {
+                byte raw = packet[13];
+                if (Booster)
+                {
+                    byte highNibble = (byte)((raw >> 4) & 0x0F);
+                    result = highNibble > 0 ? (PollingRate)highNibble : (PollingRate)(raw & 0x07);
+                }
+                else
+                {
+                    result = (PollingRate)(raw & 0x07);
+                }
+            }
+            else
+            {
+                result = PollingRate.PR125Hz;
+            }
+
+            if (!SupportedPollingrates().Contains(result))
+            {
+                PollingRate maxSupported = SupportedPollingrates().Max();
+                Logger.WriteLine(GetDisplayName() + ": Parsed polling rate " + result + " is not supported. Falling back to max supported: " + maxSupported);
+                return maxSupported;
+            }
+
+            return result;
+        }
+
+
+        protected virtual bool ParseAngleSnapping(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x04 && packet[3] == 0x00)
+            {
+                return packet[17] == 0x01;
+            }
+
+            return false;
+        }
+
+        protected virtual short ParseAngleAdjustment(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x04 && packet[3] == 0x00)
+            {
+                return (short)(packet[20] << 8 | packet[19]);
+            }
+
+            return 0;
+        }
+
+        public void ReadPollingRate()
+        {
+            if (!CanSetPollingRate())
+            {
+                return;
+            }
+
+            byte[]? response = WriteForResponse(GetReadPollingRatePacket(), matchLength: 4);
+            if (response is null) return;
+
+            PollingRate = ParsePollingRate(response);
+
+
+            Logger.WriteLine(GetDisplayName() + ": Pollingrate: " + PollingRateDisplayString(PollingRate) + " (" + PollingRate + ")");
+
+
+
+            if (HasAngleSnapping())
+            {
+                AngleSnapping = ParseAngleSnapping(response);
+                if (HasAngleTuning())
+                    AngleAdjustmentDegrees = ParseAngleAdjustment(response);
+
+                Logger.WriteLine(GetDisplayName() + ": Angle Snapping enabled: " + AngleSnapping + ", Angle Adjustment: " + AngleAdjustmentDegrees + "°");
+            }
+        }
+
+        public void SetPollingRate(PollingRate pollingRate)
+        {
+            if (!CanSetPollingRate())
+            {
+                return;
+            }
+
+            if (!IsPollingRateSupported(pollingRate))
+            {
+                Logger.WriteLine(GetDisplayName() + ": Pollingrate:" + pollingRate + " is not supported by this mouse.");
+                return;
+            }
+
+            WriteForResponse(GetUpdatePollingRatePacket(pollingRate));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Pollingrate set to " + PollingRateDisplayString(pollingRate));
+            this.PollingRate = pollingRate;
+        }
+
+        public void SetAngleSnapping(bool angleSnapping)
+        {
+            if (!HasAngleSnapping())
+            {
+                return;
+            }
+
+            WriteForResponse(GetUpdateAngleSnappingPacket(angleSnapping));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Angle Snapping set to " + angleSnapping);
+            this.AngleSnapping = angleSnapping;
+        }
+
+        public void SetAngleAdjustment(short angleAdjustment)
+        {
+            if (!HasAngleTuning())
+            {
+                return;
+            }
+
+            if (angleAdjustment < AngleTuningMin() || angleAdjustment > AngleTuningMax())
+            {
+                Logger.WriteLine(GetDisplayName() + ": Angle Adjustment:" + angleAdjustment
+                    + " is outside of range [" + AngleTuningMin() + "; " + AngleTuningMax() + "].");
+                return;
+            }
+
+            WriteForResponse(GetUpdateAngleAdjustmentPacket(angleAdjustment));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Angle Adjustment set to " + angleAdjustment);
+            this.AngleAdjustmentDegrees = angleAdjustment;
+        }
+
+        // ------------------------------------------------------------------------------
+        // Acceleration/Deceleration
+        // ------------------------------------------------------------------------------
+        public virtual bool HasAcceleration()
+        {
+            return false;
+        }
+
+        public virtual bool HasDeceleration()
+        {
+            return false;
+        }
+
+        public virtual int MaxAcceleration()
+        {
+            return 0;
+        }
+        public virtual int MaxDeceleration()
+        {
+            return 0;
+        }
+
+        protected virtual byte[] GetChangeAccelerationPacket(int acceleration)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x07, 0x00, (byte)acceleration };
+        }
+
+        protected virtual byte[] GetChangeDecelerationPacket(int deceleration)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x08, 0x00, (byte)deceleration };
+        }
+
+        public virtual void SetAcceleration(int acceleration)
+        {
+            if (!HasAcceleration())
+            {
+                return;
+            }
+
+            if (acceleration > MaxAcceleration() || acceleration < 0)
+            {
+                Logger.WriteLine(GetDisplayName() + ": Acceleration " + acceleration + " is invalid.");
+                return;
+            }
+
+            WriteForResponse(GetChangeAccelerationPacket(acceleration));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Acceleration set to " + acceleration);
+            this.Acceleration = acceleration;
+        }
+
+        public virtual void SetDeceleration(int deceleration)
+        {
+            if (!HasDeceleration())
+            {
+                return;
+            }
+
+            if (deceleration > MaxDeceleration() || deceleration < 0)
+            {
+                Logger.WriteLine(GetDisplayName() + ": Deceleration " + deceleration + " is invalid.");
+                return;
+            }
+
+            WriteForResponse(GetChangeDecelerationPacket(deceleration));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Deceleration set to " + deceleration);
+            this.Deceleration = deceleration;
+        }
+
+        protected virtual byte[] GetReadAccelerationPacket()
+        {
+            return new byte[] { reportId, 0x12, 0x04, 0x01 };
+        }
+
+        protected virtual int ParseAcceleration(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x04 || packet[3] != 0x01)
+            {
+                return 0;
+            }
+
+            return packet[5];
+        }
+
+        protected virtual int ParseDeceleration(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x04 || packet[3] != 0x01)
+            {
+                return 0;
+            }
+
+            return packet[7];
+        }
+
+        public virtual void ReadAcceleration()
+        {
+            if (!HasAcceleration() && !HasDeceleration())
+            {
+                return;
+            }
+
+            byte[]? response = WriteForResponse(GetReadAccelerationPacket());
+            if (response is null) return;
+
+            if (HasAcceleration())
+            {
+                Acceleration = ParseAcceleration(response);
+                Logger.WriteLine(GetDisplayName() + ": Read Acceleration: " + Acceleration);
+            }
+
+            if (HasDeceleration())
+            {
+                Deceleration = ParseDeceleration(response);
+                Logger.WriteLine(GetDisplayName() + ": Read Deceleration: " + Deceleration);
+            }
+        }
+
+        // ------------------------------------------------------------------------------
+        // DPI
+        // ------------------------------------------------------------------------------
+        public abstract int DPIProfileCount();
+        public virtual bool HasDPIColors()
+        {
+            return false;
+        }
+
+        public virtual int DPIIncrements()
+        {
+            return 50;
+        }
+
+        public virtual bool CanChangeDPIProfile()
+        {
+            return DPIProfileCount() > 1;
+        }
+
+        public virtual bool CanChangeDPICount()
+        {
+            return false;
+        }
+
+        public virtual int MaxDPI()
+        {
+            return 2000;
+        }
+        public virtual int MinDPI()
+        {
+            return 100;
+        }
+
+        public virtual bool HasXYDPI()
+        {
+            return false;
+        }
+
+        protected virtual byte[] GetChangeDPIProfilePacket(int profile)
+        {
+            //legacy function kept for TUFM3
+            return new byte[] { reportId, 0x51, 0x31, 0x0A, 0x00, (byte)profile };
+        }
+
+        protected virtual byte[] GetSetDPIProfileCountPacket(int count)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x0A, 0x00, (byte)count };
+        }
+
+        protected virtual byte[] GetChangeDPIProfilePacket2(int profile)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x09, 0x00, (byte)profile };
+        }
+
+        //profiles start to count at 1
+        public virtual void SetDPIProfile(int profile)
+        {
+            if (!CanChangeDPIProfile())
+            {
+                this.DpiProfile = profile;
+                return;
+            }
+
+            if (profile > CurrentDPIProfileCount || profile < 1)
+            {
+                Logger.WriteLine(GetDisplayName() + ": DPI Profile:" + profile + " is invalid.");
+                return;
+            }
+
+            //The first DPI profile is 1
+            WriteForResponse(GetChangeDPIProfilePacket2(profile));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": DPI Profile set to " + profile);
+            this.DpiProfile = profile;
+        }
+
+        protected virtual byte[] GetReadDPIPacket()
+        {
+            if (!HasXYDPI())
+            {
+                return new byte[] { reportId, 0x12, 0x04, 0x00 };
+            }
+
+            return new byte[] { reportId, 0x12, 0x04, 0x02 };
+        }
+
+        protected virtual byte[]? GetUpdateDPIPacket(AsusMouseDPI dpi, int profile)
+        {
+            if (dpi is null)
+            {
+                return null;
+            }
+            if (dpi.DPI > MaxDPI() || dpi.DPI < MinDPI())
+            {
+                return null;
+            }
+            ushort dpiEncoded = (ushort)((dpi.DPI - DPIIncrements()) / DPIIncrements());
+
+            if (HasDPIColors())
+            {
+                return new byte[] { reportId, 0x51, 0x31, (byte)(profile - 1), 0x00, (byte)(dpiEncoded & 0xFF), (byte)((dpiEncoded >> 8) & 0xFF), dpi.Color.R, dpi.Color.G, dpi.Color.B };
+            }
+            else
+            {
+                return new byte[] { reportId, 0x51, 0x31, (byte)(profile - 1), 0x00, (byte)(dpiEncoded & 0xFF), (byte)((dpiEncoded >> 8) & 0xFF) };
+            }
+
+        }
+
+        protected virtual void ParseDPI(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x04) return;
+            byte expectedByte3 = HasXYDPI() ? (byte)0x02 : (byte)0x00;
+            if (packet[3] != expectedByte3) return;
+
+            for (int i = 0; i < DPIProfileCount(); ++i)
+            {
+                if (DpiSettings[i] is null)
+                {
+                    DpiSettings[i] = new AsusMouseDPI();
+                }
+
+                int offset = HasXYDPI() ? (5 + (i * 4)) : (5 + (i * 2));
+
+
+                uint b1 = packet[offset];
+                uint b2 = packet[offset + 1];
+
+                DpiSettings[i].DPI = (uint)((b2 << 8 | b1) * DPIIncrements() + DPIIncrements());
+            }
+        }
+
+        protected virtual byte[] GetReadDPIColorsPacket()
+        {
+            return new byte[] { reportId, 0x12, 0x04, 0x03 };
+        }
+
+        protected virtual void ParseDPIColors(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x04 || packet[3] != 0x03)
+            {
+                return;
+            }
+
+            for (int i = 0; i < DPIProfileCount(); ++i)
+            {
+                if (DpiSettings[i] is null)
+                {
+                    DpiSettings[i] = new AsusMouseDPI();
+                }
+
+                int offset = 5 + (i * 3);
+
+                DpiSettings[i].Color = Color.FromArgb(packet[offset], packet[offset + 1], packet[offset + 2]);
+            }
+        }
+
+        public void ReadDPI()
+        {
+            byte[]? response = WriteForResponse(GetReadDPIPacket(), matchLength: 4);
+            if (response is null) return;
+            ParseDPI(response);
+
+            if (HasDPIColors())
+            {
+                response = WriteForResponse(GetReadDPIColorsPacket(), matchLength: 4);
+                if (response is null) return;
+                ParseDPIColors(response);
+            }
+
+            for (int i = 0; i < DPIProfileCount(); ++i)
+            {
+                DpiSettings[i] ??= new AsusMouseDPI();
+                Logger.WriteLine(GetDisplayName() + ": Read DPI Setting " + (i + 1) + ": " + DpiSettings[i].ToString());
+            }
+
+        }
+
+        public void SetDPIForProfile(AsusMouseDPI dpi, int profile)
+        {
+            if (profile > DPIProfileCount() || profile < 1)
+            {
+                Logger.WriteLine(GetDisplayName() + ": DPI Profile:" + profile + " is invalid.");
+                return;
+            }
+
+            byte[]? packet = GetUpdateDPIPacket(dpi, profile);
+            if (packet == null)
+            {
+                Logger.WriteLine(GetDisplayName() + ": DPI setting for profile " + profile + " does not exist or is invalid.");
+                return;
+            }
+            WriteForResponse(packet);
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": DPI for profile " + profile + " set to " + DpiSettings[profile - 1].DPI);
+            //this.DpiProfile = profile;
+            this.DpiSettings[profile - 1] = dpi;
+        }
+
+        public void SetDPIProfileCount(int count)
+        {
+            if (count < 2 || count > 4) return;
+
+            WriteForResponse(GetSetDPIProfileCountPacket(count));
+
+            // Resync settings for all profiles
+            for (int i = 0; i < count; i++)
+            {
+                if (DpiSettings[i] != null)
+                {
+                    WriteForResponse(GetUpdateDPIPacket(DpiSettings[i], i + 1));
+                }
+            }
+
+            FlushSettings();
+
+            CurrentDPIProfileCount = count;
+            Logger.WriteLine(GetDisplayName() + ": DPI Profile Count set to " + count);
+        }
+
+        public void AddDPIProfile()
+        {
+            if (CurrentDPIProfileCount >= 4) return;
+
+            int newIndex = CurrentDPIProfileCount;
+
+            // Set defaults for new slot
+            if (DpiSettings[newIndex] == null) DpiSettings[newIndex] = new AsusMouseDPI();
+
+            if (newIndex == 2) // Slot 3
+            {
+                DpiSettings[newIndex].DPI = 1600;
+                DpiSettings[newIndex].Color = Color.Blue;
+            }
+            else if (newIndex == 3) // Slot 4
+            {
+                DpiSettings[newIndex].DPI = 3200;
+                DpiSettings[newIndex].Color = Color.Green;
+            }
+
+            SetDPIProfileCount(CurrentDPIProfileCount + 1);
+        }
+
+        public void DeleteDPIProfile(int index)
+        {
+            if (CurrentDPIProfileCount <= 2) return;
+            if (index < 0 || index >= CurrentDPIProfileCount) return;
+
+            // Shift Logic
+            for (int i = index; i < CurrentDPIProfileCount - 1; i++)
+            {
+                // Create new object to avoid reference copy
+                if (DpiSettings[i + 1] != null)
+                {
+                    DpiSettings[i] = new AsusMouseDPI
+                    {
+                        DPI = DpiSettings[i + 1].DPI,
+                        Color = DpiSettings[i + 1].Color
+                    };
+                }
+            }
+
+            // Cleanup last element
+            DpiSettings[CurrentDPIProfileCount - 1] = null;
+
+            SetDPIProfileCount(CurrentDPIProfileCount - 1);
+
+            if (DpiProfile > CurrentDPIProfileCount) DpiProfile = CurrentDPIProfileCount;
+
+        }
+
+
+
+        // ------------------------------------------------------------------------------
+        // Lift-off Distance
+        // ------------------------------------------------------------------------------
+
+        public virtual bool HasLiftOffSetting()
+        {
+            return false;
+        }
+
+        protected virtual byte[] GetReadLiftOffDistancePacket()
+        {
+            return new byte[] { reportId, 0x12, 0x06 };
+        }
+
+        //This also resets the "calibration" to default. There is no seperate command to only set the lift off distance
+        protected virtual byte[] GetUpdateLiftOffDistancePacket(LiftOffDistance liftOffDistance)
+        {
+            return new byte[] { reportId, 0x51, 0x35, 0xFF, 0x00, 0xFF, ((byte)liftOffDistance) };
+        }
+
+        protected virtual LiftOffDistance ParseLiftOffDistance(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x06)
+            {
+                return LiftOffDistance.Low;
+            }
+
+            return (LiftOffDistance)packet[8];
+        }
+
+        public void ReadLiftOffDistance()
+        {
+            if (!HasLiftOffSetting())
+            {
+                return;
+            }
+            byte[]? response = WriteForResponse(GetReadLiftOffDistancePacket());
+            if (response is null) return;
+
+            LiftOffDistance = ParseLiftOffDistance(response);
+
+
+            Logger.WriteLine(GetDisplayName() + ": Read Lift Off Setting: " + LiftOffDistance);
+        }
+
+        public void SetLiftOffDistance(LiftOffDistance liftOffDistance)
+        {
+            if (!HasLiftOffSetting())
+            {
+                return;
+            }
+
+            WriteForResponse(GetUpdateLiftOffDistancePacket(liftOffDistance));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Set Liftoff Distance to " + liftOffDistance);
+            this.LiftOffDistance = liftOffDistance;
+        }
+
+        // ------------------------------------------------------------------------------
+        // Debounce
+        // ------------------------------------------------------------------------------
+
+        public virtual bool HasDebounceSetting()
+        {
+            return false;
+        }
+
+        public virtual int DebounceTimeInMS(DebounceTime dbt)
+        {
+            switch (dbt)
+            {
+                case DebounceTime.MS8: return 8;
+                case DebounceTime.MS12: return 12;
+                case DebounceTime.MS16: return 16;
+                case DebounceTime.MS20: return 20;
+                case DebounceTime.MS24: return 24;
+                case DebounceTime.MS28: return 28;
+                case DebounceTime.MS32: return 32;
+
+
+                default: return 0;
+            }
+        }
+
+        public virtual DebounceTime MinDebounce()
+        {
+            return DebounceTime.MS12;
+        }
+        public virtual DebounceTime MaxDebounce()
+        {
+            return DebounceTime.MS32;
+        }
+
+        protected virtual byte[] GetReadDebouncePacket()
+        {
+            return new byte[] { reportId, 0x12, 0x04, 0x00 };
+        }
+
+
+        protected virtual byte[] GetUpdateDebouncePacket(DebounceTime debounce)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x05, 0x00, ((byte)debounce) };
+        }
+
+        protected virtual DebounceTime ParseDebounce(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x04 || packet[3] != 0x00)
+            {
+                return MinDebounce();
+            }
+
+            if (packet[15] < (int)MinDebounce())
+            {
+                return MinDebounce();
+            }
+
+            if (packet[15] > (int)MaxDebounce())
+            {
+                return MaxDebounce();
+            }
+
+            return (DebounceTime)packet[15];
+        }
+
+        public void ReadDebounce()
+        {
+            if (!HasDebounceSetting())
+            {
+                return;
+            }
+            byte[]? response = WriteForResponse(GetReadDebouncePacket());
+            if (response is null) return;
+
+            Debounce = ParseDebounce(response);
+
+
+            Logger.WriteLine(GetDisplayName() + ": Read Debouce Setting: " + Debounce);
+        }
+
+        public void SetDebounce(DebounceTime debounce)
+        {
+            if (!HasDebounceSetting())
+            {
+                return;
+            }
+
+            WriteForResponse(GetUpdateDebouncePacket(debounce));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Set Debouce to " + debounce);
+            this.Debounce = debounce;
+        }
+
+        // ------------------------------------------------------------------------------
+        // Motion Sync
+        // ------------------------------------------------------------------------------
+
+        public virtual bool HasMotionSync()
+        {
+            return false;
+        }
+
+        protected virtual byte[] GetUpdateMotionSyncPacket(bool enabled)
+        {
+            return new byte[] { reportId, 0x51, 0x31, 0x12, 0x00, (byte)(enabled ? 0x01 : 0x00) };
+        }
+
+        public void SetMotionSync(bool enabled)
+        {
+            if (!HasMotionSync())
+            {
+                return;
+            }
+
+            // Motion Sync cannot be enabled at 8000Hz polling rate
+            if (PollingRate == PollingRate.PR8000Hz && enabled)
+            {
+                Logger.WriteLine(GetDisplayName() + ": Motion Sync cannot be enabled at 8000Hz polling rate.");
+                return;
+            }
+
+            WriteForResponse(GetUpdateMotionSyncPacket(enabled));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Motion Sync set to " + enabled);
+            this.MotionSync = enabled;
+        }
+
+        protected virtual byte[] GetReadMotionSyncPacket()
+        {
+            return new byte[] { reportId, 0x12, 0x04, 0x04 };
+        }
+
+        protected virtual bool ParseMotionSync(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x04 && packet[3] == 0x04)
+            {
+                return packet[5] == 0x01;
+            }
+
+            return false;
+        }
+
+        public void ReadMotionSync()
+        {
+            if (!HasMotionSync())
+            {
+                return;
+            }
+
+            byte[]? response = WriteForResponse(GetReadMotionSyncPacket());
+            if (response is null) return;
+
+            MotionSync = ParseMotionSync(response);
+            Logger.WriteLine(GetDisplayName() + ": Motion Sync: " + MotionSync);
+        }
+
+        // ------------------------------------------------------------------------------
+        // Zone Mode
+        // ------------------------------------------------------------------------------
+
+        public virtual bool HasZoneMode()
+        {
+            return false;
+        }
+
+        protected virtual byte[] GetUpdateZoneModePacket(bool enabled)
+        {
+            // DPI formula: ((DPI - increment) / increment) - using 2 bytes
+            int dpiVal = (ZoneModeDPI - DPIIncrements()) / DPIIncrements();
+            byte dpiLow = (byte)(dpiVal & 0xFF);
+            byte dpiHigh = (byte)((dpiVal >> 8) & 0xFF);
+
+            return new byte[] { reportId, 0x51, 0x44, 0x00, 0x00,
+                (byte)(enabled ? 0x01 : 0x00),
+                (byte)ZoneModePollingRate,
+                dpiLow, dpiHigh };
+        }
+
+        public void SetZoneMode(bool enabled)
+        {
+            if (!HasZoneMode())
+            {
+                return;
+            }
+
+            WriteForResponse(GetUpdateZoneModePacket(enabled));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Zone Mode set to " + enabled);
+            this.ZoneMode = enabled;
+        }
+
+        public void UpdateZoneModeDPI(int dpi)
+        {
+            if (!HasZoneMode() || !ZoneMode)
+            {
+                return;
+            }
+
+            ZoneModeDPI = dpi;
+            WriteForResponse(GetUpdateZoneModePacket(true));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Zone Mode DPI set to " + dpi);
+        }
+
+        public void UpdateZoneModePollingRate(PollingRate pollingRate)
+        {
+            if (!HasZoneMode() || !ZoneMode)
+            {
+                return;
+            }
+
+            ZoneModePollingRate = pollingRate;
+            WriteForResponse(GetUpdateZoneModePacket(true));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Zone Mode Polling Rate set to " + pollingRate);
+        }
+
+        protected virtual byte[] GetReadZoneModePacket()
+        {
+            return new byte[] { reportId, 0x12, 0x14 };
+        }
+
+        protected virtual void ParseZoneMode(byte[] packet)
+        {
+            if (packet[1] == 0x12 && packet[2] == 0x14)
+            {
+                ZoneMode = packet[5] == 0x01;
+                ZoneModePollingRate = (PollingRate)packet[6];
+                // DPI formula: (byteL + byteH * 256) * increment + increment
+                if (packet.Length > 8)
+                {
+                    int dpiVal = packet[7] | (packet[8] << 8);
+                    ZoneModeDPI = dpiVal * DPIIncrements() + DPIIncrements();
+                }
+                else
+                {
+                    ZoneModeDPI = packet[7] * DPIIncrements() + DPIIncrements();
+                }
+            }
+        }
+
+        public void ReadZoneMode()
+        {
+            if (!HasZoneMode())
+            {
+                return;
+            }
+
+            byte[]? response = WriteForResponse(GetReadZoneModePacket());
+            if (response is null) return;
+
+            ParseZoneMode(response);
+            Logger.WriteLine(GetDisplayName() + ": Zone Mode: " + ZoneMode + ", DPI: " + ZoneModeDPI + ", PollingRate: " + ZoneModePollingRate);
+        }
+
+        // ------------------------------------------------------------------------------
+        // RGB
+        // ------------------------------------------------------------------------------
+
+        public virtual bool HasRGB()
+        {
+            return false;
+        }
+
+        public virtual int MaxBrightness()
+        {
+            return 100;
+        }
+
+        //Override to remap lighting mode IDs.
+        //From OpenRGB code it looks like some mice have different orders of the modes or do not support some modes at all.
+        protected virtual byte IndexForLightingMode(LightingMode lightingMode)
+        {
+            return ((byte)lightingMode);
+        }
+
+        //Also override this for the reverse mapping
+        protected virtual LightingMode LightingModeForIndex(byte lightingMode)
+        {
+            //We do not support other mods. we treat them as off. True off is actually 0xF0.
+            if (lightingMode > 0x06)
+            {
+                return LightingMode.Off;
+            }
+            return ((LightingMode)lightingMode);
+        }
+
+        //And this if not all modes are supported
+        public virtual bool IsLightingModeSupported(LightingMode lightingMode)
+        {
+            return true;
+        }
+
+        public virtual bool SupportsRandomColor(LightingMode lightingMode)
+        {
+            return lightingMode == LightingMode.Comet;
+        }
+
+        public virtual bool SupportsAnimationDirection(LightingMode lightingMode)
+        {
+            return lightingMode == LightingMode.Rainbow
+                || lightingMode == LightingMode.Comet;
+        }
+        public virtual bool SupportsAnimationSpeed(LightingMode lightingMode)
+        {
+            return lightingMode == LightingMode.Rainbow;
+        }
+
+        public virtual bool SupportsColorSetting(LightingMode lightingMode)
+        {
+            return lightingMode == LightingMode.Static
+                 || lightingMode == LightingMode.Breathing
+                 || lightingMode == LightingMode.Comet
+                 || lightingMode == LightingMode.React;
+        }
+
+        public virtual LightingZone[] SupportedLightingZones()
+        {
+            return new LightingZone[] { LightingZone.Logo };
+        }
+
+        public virtual int IndexForZone(LightingZone zone)
+        {
+            LightingZone[] lz = SupportedLightingZones();
+            for (int i = 0; i < lz.Length; ++i)
+            {
+                if (lz[i] == zone)
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        public virtual bool IsLightingZoned()
+        {
+            if (LightingSetting.Length < 2)
+            {
+                return false;
+            }
+
+            //Check whether all zones are the same or not
+            for (int i = 1; i < LightingSetting.Length; ++i)
+            {
+                if (LightingSetting[i] is null
+                   || LightingSetting[i - 1] is null
+                   || !LightingSetting[i].Equals(LightingSetting[i - 1]))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public virtual bool IsLightingModeSupportedForZone(LightingMode lm, LightingZone lz)
+        {
+            if (lz == LightingZone.All)
+            {
+                return true;
+            }
+
+            return lm == LightingMode.Static
+                || lm == LightingMode.Breathing
+                || lm == LightingMode.ColorCycle
+                || lm == LightingMode.React;
+        }
+
+        public virtual LightingSetting LightingSettingForZone(LightingZone zone)
+        {
+            if (zone == LightingZone.All)
+            {
+                //First zone is treated as ALL for reading purpose
+                return LightingSetting[0];
+            }
+
+            return LightingSetting[IndexForZone(zone)];
+        }
+
+        protected virtual byte[] GetReadLightingModePacket(LightingZone zone)
+        {
+            int idx = 0;
+
+            if (zone != LightingZone.All)
+            {
+                idx = IndexForZone(zone);
+            }
+
+            return new byte[] { reportId, 0x12, 0x03, (byte)idx };
+        }
+
+        protected virtual byte[] GetUpdateLightingModePacket(LightingSetting lightingSetting, LightingZone zone)
+        {
+            if (lightingSetting.Brightness < 0 || lightingSetting.Brightness > MaxBrightness())
+            {
+                Logger.WriteLine(GetDisplayName() + ": Brightness " + lightingSetting.Brightness
+                    + " is out of range [0;" + MaxBrightness() + "]. Setting to " + (MaxBrightness() / 4) + " .");
+
+                lightingSetting.Brightness = MaxBrightness() / 4; // set t0 25% of max brightness
+            }
+            if (!IsLightingModeSupported(lightingSetting.LightingMode))
+            {
+                Logger.WriteLine(GetDisplayName() + ": Lighting Mode " + lightingSetting.LightingMode + " is not supported. Setting to Color Cycle ;)");
+                lightingSetting.LightingMode = LightingMode.ColorCycle;
+            }
+
+            return new byte[] { reportId, 0x51, 0x28, (byte)zone, 0x00,
+                IndexForLightingMode(lightingSetting.LightingMode),
+                (byte)lightingSetting.Brightness,
+                lightingSetting.RGBColor.R, lightingSetting.RGBColor.G, lightingSetting.RGBColor.B,
+                (byte)(SupportsAnimationDirection(lightingSetting.LightingMode) ? lightingSetting.AnimationDirection : 0x00),
+                (byte)((lightingSetting.RandomColor && SupportsRandomColor(lightingSetting.LightingMode)) ? 0x01: 0x00),
+                (byte)(SupportsAnimationSpeed(lightingSetting.LightingMode) ? lightingSetting.AnimationSpeed : 0x00)
+            };
+        }
+
+        protected virtual LightingSetting? ParseLightingSetting(byte[] packet)
+        {
+            if (packet[1] != 0x12 || packet[2] != 0x03)
+            {
+                return null;
+            }
+
+            LightingSetting setting = new LightingSetting();
+
+            setting.LightingMode = LightingModeForIndex(packet[5]);
+            setting.Brightness = packet[6];
+
+            setting.RGBColor = Color.FromArgb(packet[7], packet[8], packet[9]);
+
+
+            setting.AnimationDirection = SupportsAnimationDirection(setting.LightingMode)
+                ? (AnimationDirection)packet[11]
+                : AnimationDirection.Clockwise;
+
+            setting.RandomColor = SupportsRandomColor(setting.LightingMode) && packet[12] == 0x01;
+            setting.AnimationSpeed = SupportsAnimationSpeed(setting.LightingMode)
+                ? (AnimationSpeed)packet[13]
+                : AnimationSpeed.Medium;
+
+            //If the mouse reports an out of range value, which it does when the current setting has no speed option, chose medium as default
+            if (setting.AnimationSpeed != AnimationSpeed.Fast
+                && setting.AnimationSpeed != AnimationSpeed.Medium
+                && setting.AnimationSpeed != AnimationSpeed.Slow)
+            {
+                setting.AnimationSpeed = AnimationSpeed.Medium;
+            }
+
+            return setting;
+        }
+
+        public virtual void ReadLightingSetting()
+        {
+            if (!HasRGB())
+            {
+                return;
+            }
+
+            LightingZone[] lz = SupportedLightingZones();
+            for (int i = 0; i < lz.Length; ++i)
+            {
+                byte[]? response = WriteForResponse(GetReadLightingModePacket(lz[i]));
+                if (response is null) return;
+
+                LightingSetting? ls = ParseLightingSetting(response);
+                if (ls is null)
+                {
+                    Logger.WriteLine(GetDisplayName() + ": Failed to read RGB Setting for Zone " + lz[i].ToString());
+                    continue;
+                }
+
+                Logger.WriteLine(GetDisplayName() + ": Read RGB Setting for Zone " + lz[i].ToString() + ": " + ls.ToString());
+                LightingSetting[i] = ls;
+            }
+        }
+
+        public void SetLightingSetting(LightingSetting lightingSetting, LightingZone zone)
+        {
+            if (!HasRGB() || lightingSetting is null)
+            {
+                return;
+            }
+
+            WriteForResponse(GetUpdateLightingModePacket(lightingSetting, zone));
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName() + ": Set RGB Setting for zone " + zone.ToString() + ": " + lightingSetting.ToString());
+            if (zone == LightingZone.All)
+            {
+                for (int i = 0; i < this.LightingSetting.Length; ++i)
+                {
+                    this.LightingSetting[i] = lightingSetting;
+                }
+            }
+            else
+            {
+                this.LightingSetting[IndexForZone(zone)] = lightingSetting;
+            }
+        }
+
+        public static LightingMode MapAuraToLightingMode(AuraMode auraMode)
+        {
+            switch (auraMode)
+            {
+                case AuraMode.AuraBreathe: return LightingMode.Breathing;
+                case AuraMode.AuraColorCycle: return LightingMode.ColorCycle;
+                case AuraMode.AuraRainbow: return LightingMode.Rainbow;
+                case AuraMode.Comet: return LightingMode.Comet;
+                default: return LightingMode.Static;
+            }
+        }
+
+        private int _streamingBusy;
+
+        public void WriteColorDirect(Color color)
+        {
+            if (!HasRGB() || !IsDeviceReady) return;
+            if (_otherIoBusy > 0) return;
+            if (DateTimeOffset.Now.ToUnixTimeMilliseconds() - _otherIoEndedMs < 200) return;
+            if (Interlocked.CompareExchange(ref _streamingBusy, 1, 0) != 0) return;
+
+            try
+            {
+                LightingSetting cached = LightingSettingForZone(LightingZone.All);
+                LightingSetting tmp = new LightingSetting
+                {
+                    LightingMode = LightingMode.Static,
+                    RGBColor = color,
+                    Brightness = cached?.Brightness ?? 25,
+                };
+
+                byte[] packet = GetUpdateLightingModePacket(tmp, LightingZone.All);
+                Array.Resize(ref packet, USBPacketSize());
+
+                Write(packet);
+            }
+            catch { }
+            finally
+            {
+                Interlocked.Exchange(ref _streamingBusy, 0);
+            }
+        }
+
+        public bool SyncFromKeyboardAura()
+        {
+            if (!HasRGB() || !IsDeviceReady) return false;
+
+            LightingMode lm = MapAuraToLightingMode((AuraMode)AppConfig.Get("aura_mode"));
+
+            if (lm == LightingMode.Rainbow && !IsLightingModeSupported(LightingMode.Rainbow))
+                lm = LightingMode.ColorCycle;
+
+            if (!IsLightingModeSupported(lm)) return false;
+
+            Color color = Color.FromArgb(AppConfig.Get("aura_color"));
+            AnimationSpeed mappedSpeed = (AuraSpeed)AppConfig.Get("aura_speed") switch
+            {
+                AuraSpeed.Fast => AnimationSpeed.Fast,
+                AuraSpeed.Slow => AnimationSpeed.Slow,
+                _ => AnimationSpeed.Medium,
+            };
+
+            LightingSetting ls = LightingSettingForZone(LightingZone.All);
+            if (ls is null) return false;
+
+            ls.LightingMode = lm;
+            if (SupportsColorSetting(lm)) ls.RGBColor = color;
+            if (SupportsAnimationSpeed(lm)) ls.AnimationSpeed = mappedSpeed;
+
+            SetLightingSetting(ls, LightingZone.All);
+            return true;
+        }
+
+        protected virtual byte[] GetSaveProfilePacket()
+        {
+            return new byte[] { reportId, 0x50, 0x03 };
+        }
+
+        public void FlushSettings()
+        {
+            WriteForResponse(GetSaveProfilePacket());
+
+            Logger.WriteLine(GetDisplayName() + ": Settings Flushed ");
+        }
+
+        public override string? ToString()
+        {
+            return "";
+
+        }
+
+
+        public static string ByteArrayToString(byte[] packet)
+        {
+            StringBuilder hex = new StringBuilder(packet.Length * 2);
+            foreach (byte b in packet)
+                hex.AppendFormat("{0:x2} ", b);
+            return hex.ToString();
+        }
+
+        // Shared across all protocols
+        public static readonly IReadOnlyList<(ushort, string)> MultimediaBindings = new List<(ushort, string)>
+        {
+            (0x00F6, "Volume Up"     ),
+            (0x00F5, "Volume Down"   ),
+            (0x00F2, "Next Track"    ),
+            (0x00F3, "Previous Track"),
+            (0x00F4, "Mute"          ),
+            (0x00F0, "Play/Pause"    ),
+            (0x00F1, "Stop"          ),
+        };
+
+        public static readonly IReadOnlyList<(ushort, string)> KeyboardBindings = new List<(ushort, string)>
+        {
+            // letters
+            (0x0004, "A"), (0x0005, "B"), (0x0006, "C"), (0x0007, "D"),
+            (0x0008, "E"), (0x0009, "F"), (0x000A, "G"), (0x000B, "H"),
+            (0x000C, "I"), (0x000D, "J"), (0x000E, "K"), (0x000F, "L"),
+            (0x0010, "M"), (0x0011, "N"), (0x0012, "O"), (0x0013, "P"),
+            (0x0014, "Q"), (0x0015, "R"), (0x0016, "S"), (0x0017, "T"),
+            (0x0018, "U"), (0x0019, "V"), (0x001A, "W"), (0x001B, "X"),
+            (0x001C, "Y"), (0x001D, "Z"),
+            // number row
+            (0x001E, "1"), (0x001F, "2"), (0x0020, "3"), (0x0021, "4"),
+            (0x0022, "5"), (0x0023, "6"), (0x0024, "7"), (0x0025, "8"),
+            (0x0026, "9"), (0x0027, "0"),
+            // common
+            (0x0028, "Enter"    ), (0x0029, "Escape"   ), (0x002A, "Backspace"),
+            (0x002B, "Tab"      ), (0x002C, "Space"    ), (0x002D, "-"        ),
+            (0x002E, "="        ), (0x002F, "["        ), (0x0030, "]"        ),
+            (0x0033, ";"        ), (0x0034, "'"        ), (0x0036, ","        ),
+            (0x0037, "."        ), (0x0038, "/"        ),
+            // function keys
+            (0x003A, "F1" ), (0x003B, "F2" ), (0x003C, "F3" ), (0x003D, "F4" ),
+            (0x003E, "F5" ), (0x003F, "F6" ), (0x0040, "F7" ), (0x0041, "F8" ),
+            (0x0042, "F9" ), (0x0043, "F10"), (0x0044, "F11"), (0x0045, "F12"),
+            (0x0068, "F13"), (0x0069, "F14"), (0x006A, "F15"), (0x006B, "F16"),
+            (0x006C, "F17"), (0x006D, "F18"), (0x006E, "F19"), (0x006F, "F20"),
+            (0x0070, "F21"), (0x0071, "F22"), (0x0072, "F23"), (0x0073, "F24"),
+            // navigation
+            (0x0046, "Print Screen"),
+            (0x0049, "Insert"   ), (0x004A, "Home"     ), (0x004B, "Page Up"  ),
+            (0x004C, "Delete"   ), (0x004D, "End"      ), (0x004E, "Page Down"),
+            (0x004F, "Right"    ), (0x0050, "Left"     ),
+            (0x0051, "Down"     ), (0x0052, "Up"       ),
+            // numpad
+            (0x0059, "Num 1"), (0x005A, "Num 2"), (0x005B, "Num 3"),
+            (0x005C, "Num 4"), (0x005D, "Num 5"), (0x005E, "Num 6"),
+            (0x005F, "Num 7"), (0x0060, "Num 8"), (0x0061, "Num 9"),
+            (0x0062, "Num 0"), (0x0063, "Num ." ),
+            // modifiers
+            (0x00E0, "Left Ctrl" ), (0x00E1, "Left Shift" ),
+            (0x00E2, "Left Alt"  ), (0x00E3, "Left Win"   ),
+            (0x00E4, "Right Ctrl"), (0x00E5, "Right Shift"),
+            (0x00E6, "Right Alt" ), (0x00E7, "Right Win"  ),
+        };
+
+        public static readonly IReadOnlyList<(ushort, string)> MouseBindings = new List<(ushort, string)>
+        {
+            (0x01F0, "Mouse Left"   ),
+            (0x01F1, "Mouse Right"  ),
+            (0x01F2, "Mouse Middle" ),
+            (0x01E3, "Double Click" ),
+            (0x01E4, "Mouse Back"   ),
+            (0x01E5, "Mouse Forward"),
+            (0x01E6, "DPI Switch"   ),
+            (0x01E7, "Target Focus" ),
+            (0x01E8, "Scroll Up"    ),
+            (0x01E9, "Scroll Down"  ),
+            (0x01C0, "RapidFire (Toggle)"),
+            (0x01C1, "RapidFire (Hold)"  ),
+            (0x0000, "Disabled"     ),
+        };
+
+        public const ushort SpeedShiftCode = 0x00FD;
+
+        public static readonly IReadOnlyList<(ushort, string)> SpeedShiftMouseBindings =
+            MouseBindings.Append((SpeedShiftCode, "Speed Shift")).ToList();
+
+        public sealed record ComboDef(ushort PassthroughCode, string Label, string DefaultCommand)
+        {
+            public string ConfigKey => $"mouse_combo_F{13 + (PassthroughCode - 0x0068)}";
+            public string ResolveCommand() => AppConfig.GetString(ConfigKey) ?? DefaultCommand;
+        }
+
+        private static string Hex(params Keys[] keys) =>
+            string.Join(" ", keys.Select(k => $"0x{(int)k:X2}"));
+
+        public static readonly IReadOnlyList<ComboDef> MouseCombos = new List<ComboDef>
+        {
+            new(0x0068, "Alt + Tab",          Hex(Keys.LMenu,       Keys.Tab)),
+            new(0x0069, "Alt + F4",           Hex(Keys.LMenu,       Keys.F4)),
+            new(0x006A, "Win + D",            Hex(Keys.LWin,        Keys.D)),
+            new(0x006B, "Win + E",            Hex(Keys.LWin,        Keys.E)),
+            new(0x006C, "Win + L",            Hex(Keys.LWin,        Keys.L)),
+            new(0x006D, "Win + Tab",          Hex(Keys.LWin,        Keys.Tab)),
+            new(0x006E, "Win + V",            Hex(Keys.LWin,        Keys.V)),
+            new(0x006F, "Copy",               Hex(Keys.LControlKey, Keys.C)),
+            new(0x0070, "Paste",              Hex(Keys.LControlKey, Keys.V)),
+            new(0x0071, "Undo",               Hex(Keys.LControlKey, Keys.Z)),
+            new(0x0072, "Task Manager",       Hex(Keys.LControlKey, Keys.LShiftKey, Keys.Escape)),
+            new(0x0073, "Minimize All",       Hex(Keys.LWin,        Keys.M)),
+        };
+
+        public static readonly Dictionary<ushort, ComboDef> CombosByCode =
+            MouseCombos.ToDictionary(c => c.PassthroughCode);
+
+        public static readonly IReadOnlyList<(string GroupLabel, IReadOnlyList<(ushort Code, string Name)> Items)>
+        DefaultBindingGroups = new List<(string, IReadOnlyList<(ushort, string)>)>
+        {
+            ("Mouse",      MouseBindings),
+            ("Combos",     MouseCombos.Select(c => (c.PassthroughCode, c.Label)).ToList()),
+            ("Multimedia", MultimediaBindings),
+            ("Keyboard",   KeyboardBindings),
+        };
+
+        public static readonly IReadOnlyList<(string GroupLabel, IReadOnlyList<(ushort Code, string Name)> Items)>
+        SpeedShiftBindingGroups = DefaultBindingGroups
+            .Select(g => g.GroupLabel == "Mouse" ? (g.GroupLabel, SpeedShiftMouseBindings) : g)
+            .ToList();
+
+        public static readonly Dictionary<ushort, string> BindingCodes =
+            SpeedShiftBindingGroups.SelectMany(g => g.Items)
+                .DistinctBy(e => e.Code)
+                .ToDictionary(e => e.Code, e => e.Name);
+
+        public static string LabelForActionCode(ushort code)
+            => BindingCodes.TryGetValue(code, out var n) ? n : $"Unknown (0x{code:X4})";
+
+        public virtual IReadOnlyList<(string GroupLabel, IReadOnlyList<(ushort Code, string Name)> Items)>
+            BindingGroups => DefaultBindingGroups;
+
+        public virtual Dictionary<int, (ushort SourceCode, string Name)> ButtonSlots => new()
+        {
+            { 0, (0x01F0, "Left Click"  ) },
+            { 1, (0x01F1, "Right Click" ) },
+            { 2, (0x01F2, "Scroll Click") },
+            { 3, (0x01E4, "Side Back"   ) },
+            { 4, (0x01E5, "Side Forward") },
+            { 5, (0x01E6, "DPI Button"  ) },
+            { 6, (0x01E8, "Scroll Up"   ) },
+            { 7, (0x01E9, "Scroll Down" ) },
+        };
+
+        public virtual bool HasButtonBindings() => true;
+
+        // Slots whose bindings cannot be read back from device — always written, never reliably read.
+        public virtual HashSet<int> WriteOnlySlots => [];
+
+        private string WriteOnlySlotConfigKey(int slot) =>
+            $"mouse_binding_{_productId:X4}_{slot}";
+
+        protected void SaveWriteOnlySlot(int slot, ushort code) =>
+            AppConfig.Set(WriteOnlySlotConfigKey(slot), (int)code);
+
+        protected ushort LoadWriteOnlySlot(int slot, ushort fallback) =>
+            (ushort)AppConfig.Get(WriteOnlySlotConfigKey(slot), fallback);
+
+        public virtual void ReadAndLogButtonBindings()
+        {
+            if (!HasButtonBindings()) return;
+
+            ButtonBindingsReady = false;
+            Logger.WriteLine(GetDisplayName() + ": ── Reading Button Bindings ──");
+
+            byte[]? response = QueryAllButtonBindings();
+            if (response is null)
+            {
+                Logger.WriteLine(GetDisplayName() + ": No response reading button bindings");
+                return;
+            }
+
+            string rawHex = BitConverter.ToString(response, 0, Math.Min(21, response.Length))
+                                        .Replace("-", " ");
+            Logger.WriteLine(GetDisplayName() + $": RAW: {rawHex}");
+
+            // Validate packet structure: expect 0x12 0x05 header
+            if (response.Length < 6 || response[1] != 0x12 || response[2] != 0x05)
+            {
+                Logger.WriteLine(GetDisplayName() + ": Button bindings packet header mismatch — hiding bindings panel");
+                return;
+            }
+
+            var slots = ButtonSlots;
+            int slotCount = Math.Min(ButtonBindings.Length, slots.Count);
+            for (int slot = 0; slot < slotCount; slot++)
+            {
+                int offset = 5 + slot * 2;
+                string slotName = slots.TryGetValue(slot, out var def) ? def.Name : $"Slot {slot}";
+                if (WriteOnlySlots.Contains(slot))
+                {
+                    ButtonBindings[slot] = LoadWriteOnlySlot(slot, def.SourceCode);
+                    Logger.WriteLine(GetDisplayName() + $": Slot {slot} ({slotName}): {LabelForActionCode(ButtonBindings[slot])} (0x{ButtonBindings[slot]:X4}) [write-only]");
+                    continue;
+                }
+                if (offset + 1 >= response.Length)
+                {
+                    Logger.WriteLine(GetDisplayName() + $": Slot {slot} ({slotName}): out of range");
+                    continue;
+                }
+
+                // Deserialise 2-byte little-endian destination action code
+                ushort actionCode = (ushort)(response[offset] | (response[offset + 1] << 8));
+                ButtonBindings[slot] = actionCode;
+
+                Logger.WriteLine(GetDisplayName()
+                    + $": Slot {slot} ({slotName}): {LabelForActionCode(actionCode)} (0x{actionCode:X4})");
+            }
+
+            ButtonBindingsReady = true;
+            Logger.WriteLine(GetDisplayName() + ": ── End Button Bindings ──");
+        }
+
+        protected virtual byte[]? QueryAllButtonBindings(int group = 0)
+        {
+            return WriteForResponse(new byte[]
+            {
+                reportId,
+                0x12,
+                0x05,
+                (byte)group,
+                0x00,
+                0x00,
+            });
+        }
+
+        public void ResetButtonBindings()
+        {
+            if (!HasButtonBindings()) return;
+            Logger.WriteLine(GetDisplayName() + ": Resetting all button bindings to defaults");
+            foreach (var (slot, slotDef) in ButtonSlots)
+            {
+                WriteForResponse(GetSetButtonBindingPacket(slotDef.SourceCode, slotDef.SourceCode));
+                ButtonBindings[slot] = slotDef.SourceCode;
+                Logger.WriteLine(GetDisplayName()
+                    + $": Slot {slot} ({slotDef.Name}) → default (0x{slotDef.SourceCode:X4})");
+            }
+            FlushSettings();
+        }
+
+        public bool HasSpeedShift => BindingGroups == SpeedShiftBindingGroups;
+
+        private string SpeedShiftSlotConfigKey(int slot) =>
+            $"mouse_shift_binding_{_productId:X4}_{slot}";
+
+        public ushort GetSpeedShiftBinding(int slot) =>
+            (ushort)AppConfig.Get(SpeedShiftSlotConfigKey(slot),
+                ButtonSlots.TryGetValue(slot, out var def) ? def.SourceCode : 0);
+
+        public void SetSpeedShiftBinding(int slot, ushort actionCode)
+        {
+            if (!ButtonSlots.TryGetValue(slot, out var slotDef)) return;
+
+            WriteForResponse(GetSetButtonBindingPacket(slotDef.SourceCode, actionCode, 0x23));
+            FlushSettings();
+            AppConfig.Set(SpeedShiftSlotConfigKey(slot), (int)actionCode);
+
+            Logger.WriteLine(GetDisplayName()
+                + $": Shift Slot {slot} ({slotDef.Name}) → {LabelForActionCode(actionCode)}"
+                + $" (src=0x{slotDef.SourceCode:X4}, dst=0x{actionCode:X4})");
+        }
+
+        public virtual void SetButtonBinding(int slot, ushort actionCode)
+        {
+            if (!HasButtonBindings()) return;
+
+            var slots = ButtonSlots;
+            if (slot < 0 || !slots.TryGetValue(slot, out var slotDef))
+            {
+                Logger.WriteLine(GetDisplayName()
+                    + $": SetButtonBinding: slot {slot} out of range (0–{slots.Count - 1}).");
+                return;
+            }
+
+            ushort sourceCode = slotDef.SourceCode;
+
+            WriteForResponse(GetSetButtonBindingPacket(sourceCode, actionCode));
+            if (actionCode == 0x01C0 || actionCode == 0x01C1)
+            {
+                ushort l = (ushort)AppConfig.Get("mouse_rapidfire_left", 50);
+                ushort r = (ushort)AppConfig.Get("mouse_rapidfire_right", 0);
+                ushort s = (ushort)AppConfig.Get("mouse_rapidfire_scroll", 0);
+                WriteForResponse(new byte[] { reportId, 0x51, 0x22, 0x00, 0x00, (byte)l, (byte)(l >> 8), (byte)r, (byte)(r >> 8), (byte)s, (byte)(s >> 8) });
+            }
+            FlushSettings();
+
+            Logger.WriteLine(GetDisplayName()
+                + $": Slot {slot} ({slotDef.Name}) → {LabelForActionCode(actionCode)}"
+                + $" (src=0x{sourceCode:X4}, dst=0x{actionCode:X4})");
+
+            ButtonBindings[slot] = actionCode;
+            if (WriteOnlySlots.Contains(slot)) SaveWriteOnlySlot(slot, actionCode);
+        }
+
+        protected virtual byte[] GetSetButtonBindingPacket(ushort sourceCode, ushort destCode, byte subCommand = 0x21)
+        {
+            return new byte[]
+            {
+                reportId,
+                0x51,                              // command: Set Binding
+                subCommand,                        // 0x21 normal layer, 0x23 Speed Shift layer
+                0x00,                              // profile / flags (always 0)
+                0x00,
+                (byte)( sourceCode        & 0xFF), // src low  byte
+                (byte)((sourceCode >> 8)  & 0xFF), // src high byte
+                (byte)( destCode          & 0xFF), // dst low  byte
+                (byte)((destCode   >> 8)  & 0xFF), // dst high byte
+            };
+        }
+
     }
 }

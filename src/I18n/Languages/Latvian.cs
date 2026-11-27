@@ -1207,6 +1207,23 @@ public static class Latvian
         ["mouse_host_switch_msg_fmt"] = "Pārslēgties uz resursdatoru {0}? Pele tiks atvienota.",
         ["mouse_switch"] = "Mainīt",
         ["mouse_cancel"] = "Atcelt",
+        ["mouse_profile"] = "Profils",
+        ["mouse_synchronize"] = "Sinhronizēt ar peli",
+        ["mouse_import"] = "Importēt profilu",
+        ["mouse_export"] = "Eksportēt profilu",
+        ["mouse_import_failed"] = "Importēšana neizdevās. Fails nav derīgs peles profils, vai tas ir bojāts.",
+        ["mouse_dpi_add"] = "Pievienot DPI līmeni",
+        ["mouse_dpi_remove"] = "Noņemt DPI līmeni",
+        ["mouse_angle_tuning"] = "Leņķa regulēšana",
+        ["mouse_acceleration"] = "Paātrinājums",
+        ["mouse_deceleration"] = "Palēninājums",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Animācijas ātrums",
+        ["mouse_animation_direction"] = "Animācijas virziens",
+        ["mouse_clockwise"] = "Pulksteņrādītāja virzienā",
+        ["mouse_counter_clockwise"] = "Pretēji pulksteņrādītājam",
+        ["mouse_sync_aura"] = "Sinhronizēt ar klēpjdatoru",
 
     };
 }

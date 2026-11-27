@@ -1,19 +1,123 @@
-namespace GHelper.Linux.Peripherals.Mouse.Models;
+using GHelper.Linux.Helpers;
+using System.Drawing;
 
-public class KerisIIAceWired : AsusMouse
+namespace GHelper.Linux.Peripherals.Mouse.Models
 {
-    public KerisIIAceWired()
-        : base(0x0B05, 0x1B16, "mi_00", true) { }
 
-    public override string GetDisplayName() => "ROG Keris II Ace (Wired)";
-    public override int ProfileCount() => 5;
-    public override int DPIProfileCount() => 4;
-    public override uint MaxDPI() => 42000;
-    public override PollingRate[] SupportedPollingrates() =>
-        [PollingRate.PR125Hz, PollingRate.PR250Hz, PollingRate.PR500Hz, PollingRate.PR1000Hz];
-    public override bool HasXYDPI() => true;
-    public override bool HasAngleTuning() => true;
-    public override int AngleTuningStep() => 5;
-    public override bool HasDPIColors() => true;
-    public override LightingZone[] SupportedLightingZones() => [LightingZone.Logo];
+    public class KerisIIAceWired : AsusMouse
+    {
+        public KerisIIAceWired() : base(0x0B05, 0x1B16, "mi_00", true)
+        {
+        }
+
+        protected KerisIIAceWired(ushort productId, bool wireless, string endpoint, byte reportId) : base(0x0B05, productId, endpoint, wireless, reportId)
+        {
+        }
+
+        public override int DPIProfileCount()
+        {
+            return 4;
+        }
+
+        public override string GetDisplayName()
+        {
+            return "ROG Keris II Ace (Wired)";
+        }
+
+
+        public override PollingRate[] SupportedPollingrates()
+        {
+            if (Booster) return BoosterPollingrates();
+            return new PollingRate[] {
+                PollingRate.PR125Hz,
+                PollingRate.PR250Hz,
+                PollingRate.PR500Hz,
+                PollingRate.PR1000Hz
+            };
+        }
+
+        public override int ProfileCount()
+        {
+            return 5;
+        }
+
+
+        public override int MaxDPI()
+        {
+            return 42_000;
+        }
+
+        public override bool HasLiftOffSetting()
+        {
+            return true;
+        }
+
+        public override bool HasRGB()
+        {
+            return true;
+        }
+
+        public override bool HasXYDPI()
+        {
+            return true;
+        }
+
+
+        public override bool IsLightingModeSupported(LightingMode lightingMode)
+        {
+            return lightingMode == LightingMode.Static
+                || lightingMode == LightingMode.Breathing
+                || lightingMode == LightingMode.ColorCycle
+                || lightingMode == LightingMode.BatteryState
+                || lightingMode == LightingMode.React
+                || lightingMode == LightingMode.Off;
+        }
+
+        public override bool HasAutoPowerOff()
+        {
+            return true;
+        }
+
+        public override bool HasAngleSnapping()
+        {
+            return true;
+        }
+
+        public override bool HasAngleTuning()
+        {
+            return true;
+        }
+
+        public override bool HasLowBatteryWarning()
+        {
+            return true;
+        }
+
+        public override bool HasDPIColors()
+        {
+            return true;
+        }
+
+        public override int AngleTuningStep()
+        {
+            return 5;
+        }
+    }
+
+    public class KerisAceIIOmni : KerisIIAceWired
+    {
+        public KerisAceIIOmni() : base(0x1ACE, true, "mi_02&col03", 0x03)
+        {
+        }
+
+        public override string GetDisplayName()
+        {
+            return "ROG Keris II Ace (OMNI)";
+        }
+
+        public override int USBPacketSize()
+        {
+            return 64;
+        }
+    }
 }

@@ -1155,6 +1155,23 @@ public static class Macedonian
         ["mouse_host_switch_msg_fmt"] = "Да се промени на хост {0}? Глувчето ќе биде исклучено.",
         ["mouse_switch"] = "Промени",
         ["mouse_cancel"] = "Откажи",
+        ["mouse_profile"] = "Профил",
+        ["mouse_synchronize"] = "Синхронизирај со глувчето",
+        ["mouse_import"] = "Увези профил",
+        ["mouse_export"] = "Извези профил",
+        ["mouse_import_failed"] = "Увезувањето не успеа. Датотеката не е валиден профил на глувче, или е оштетена.",
+        ["mouse_dpi_add"] = "Додај DPI ниво",
+        ["mouse_dpi_remove"] = "Отстрани DPI ниво",
+        ["mouse_angle_tuning"] = "Подесување на агол",
+        ["mouse_acceleration"] = "Забрзување",
+        ["mouse_deceleration"] = "Забавување",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Брзина на анимација",
+        ["mouse_animation_direction"] = "Насока на анимација",
+        ["mouse_clockwise"] = "Во насока на стрелките",
+        ["mouse_counter_clockwise"] = "Спротивно на стрелките",
+        ["mouse_sync_aura"] = "Синхронизирај со лаптопот",
 
     };
 }

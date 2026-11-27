@@ -1,16 +1,70 @@
-namespace GHelper.Linux.Peripherals.Mouse.Models;
+using GHelper.Linux.Helpers;
+using System.Drawing;
 
-public class MD200 : AsusMouse
+namespace GHelper.Linux.Peripherals.Mouse.Models
 {
-    public MD200()
-        : base(0x0B05, 0x1A24, "mi_02", true) { }
+    public class MD200 : AsusMouse
+    {
+        public MD200() : base(0x0B05, 0x1A24, "mi_02", true)
+        {
+        }
 
-    public override string GetDisplayName() => "ASUS MD200";
-    public override int ProfileCount() => 2;
-    public override int DPIProfileCount() => 2;
-    public override uint MaxDPI() => 4200;
-    public override bool HasAngleSnapping() => false;
-    public override PollingRate[] SupportedPollingrates() =>
-        [PollingRate.PR125Hz, PollingRate.PR250Hz];
-    public override LightingZone[] SupportedLightingZones() => [];
+        public override int DPIProfileCount()
+        {
+            return 2;
+        }
+
+        public override string GetDisplayName()
+        {
+            return "ASUS Mouse MD200";
+        }
+
+        public override PollingRate[] SupportedPollingrates()
+        {
+            return new PollingRate[] {
+                PollingRate.PR125Hz,
+                PollingRate.PR250Hz,
+            };
+        }
+
+        public override int ProfileCount()
+        {
+            return 4;
+        }
+
+        public override int MinDPI()
+        {
+            return 100;
+        }
+
+        public override int MaxDPI()
+        {
+            return 4_200;
+        }
+
+        public override bool HasBattery()
+        {
+            return true;
+        }
+
+        public override bool HasLiftOffSetting()
+        {
+            return false;
+        }
+
+        public override bool HasRGB()
+        {
+            return false;
+        }
+
+        public override bool HasDebounceSetting()
+        {
+            return true;
+        }
+
+        public override bool HasAngleSnapping()
+        {
+            return false;
+        }
+    }
 }

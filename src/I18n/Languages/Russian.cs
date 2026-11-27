@@ -1152,6 +1152,23 @@ public static class Russian
         ["mouse_host_switch_msg_fmt"] = "Переключиться на хост {0}? Мышь отключится.",
         ["mouse_switch"] = "Переключить",
         ["mouse_cancel"] = "Отмена",
+        ["mouse_profile"] = "Профиль",
+        ["mouse_synchronize"] = "Синхронизировать с мышью",
+        ["mouse_import"] = "Импорт профиля",
+        ["mouse_export"] = "Экспорт профиля",
+        ["mouse_import_failed"] = "Импорт не удался. Файл не является профилем мыши или повреждён.",
+        ["mouse_dpi_add"] = "Добавить уровень DPI",
+        ["mouse_dpi_remove"] = "Удалить уровень DPI",
+        ["mouse_angle_tuning"] = "Настройка угла",
+        ["mouse_acceleration"] = "Ускорение",
+        ["mouse_deceleration"] = "Замедление",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Скорость анимации",
+        ["mouse_animation_direction"] = "Направление анимации",
+        ["mouse_clockwise"] = "По часовой стрелке",
+        ["mouse_counter_clockwise"] = "Против часовой стрелки",
+        ["mouse_sync_aura"] = "Синхронизировать с ноутбуком",
 
     };
 }

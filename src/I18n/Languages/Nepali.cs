@@ -1207,6 +1207,23 @@ public static class Nepali
         ["mouse_host_switch_msg_fmt"] = "होस्ट {0} मा स्विच गर्ने? माउस विच्छेदन हुनेछ।",
         ["mouse_switch"] = "स्विच",
         ["mouse_cancel"] = "रद्द",
+        ["mouse_profile"] = "प्रोफाइल",
+        ["mouse_synchronize"] = "माउससँग सिंक गर्नुहोस्",
+        ["mouse_import"] = "प्रोफाइल इम्पोर्ट",
+        ["mouse_export"] = "प्रोफाइल एक्सपोर्ट",
+        ["mouse_import_failed"] = "इम्पोर्ट असफल भयो। फाइल मान्य माउस प्रोफाइल होइन, वा बिग्रिएको छ।",
+        ["mouse_dpi_add"] = "DPI स्तर थप्नुहोस्",
+        ["mouse_dpi_remove"] = "DPI स्तर हटाउनुहोस्",
+        ["mouse_angle_tuning"] = "कोण ट्युनिङ",
+        ["mouse_acceleration"] = "एक्सेलेरेसन",
+        ["mouse_deceleration"] = "डिसेलेरेसन",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "एनिमेसन गति",
+        ["mouse_animation_direction"] = "एनिमेसन दिशा",
+        ["mouse_clockwise"] = "घडीको दिशामा",
+        ["mouse_counter_clockwise"] = "घडीको उल्टो दिशामा",
+        ["mouse_sync_aura"] = "ल्यापटपसँग सिंक",
 
     };
 }

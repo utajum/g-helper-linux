@@ -1155,6 +1155,23 @@ public static class ChineseSimplified
         ["mouse_host_switch_msg_fmt"] = "切换到主机 {0}?鼠标将断开连接。",
         ["mouse_switch"] = "切换",
         ["mouse_cancel"] = "取消",
+        ["mouse_profile"] = "配置",
+        ["mouse_synchronize"] = "和鼠标同步",
+        ["mouse_import"] = "导入配置",
+        ["mouse_export"] = "导出配置文件",
+        ["mouse_import_failed"] = "导入失败，选中的文件不是有效的配置文件或已损坏。",
+        ["mouse_dpi_add"] = "添加 DPI 档位",
+        ["mouse_dpi_remove"] = "删除 DPI 档位",
+        ["mouse_angle_tuning"] = "角度调整",
+        ["mouse_acceleration"] = "加速",
+        ["mouse_deceleration"] = "减速",
+        ["mouse_motion_sync"] = "动态同步",
+        ["mouse_zone_mode"] = "Zone 模式",
+        ["mouse_animation_speed"] = "动画速度",
+        ["mouse_animation_direction"] = "动画方向",
+        ["mouse_clockwise"] = "顺时针",
+        ["mouse_counter_clockwise"] = "逆时针",
+        ["mouse_sync_aura"] = "与笔记本同步",
 
     };
 }

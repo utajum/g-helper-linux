@@ -1152,6 +1152,23 @@ public static class Ukrainian
         ["mouse_host_switch_msg_fmt"] = "Перемкнути на хост {0}? Миша від'єднається.",
         ["mouse_switch"] = "Перемкнути",
         ["mouse_cancel"] = "Скасувати",
+        ["mouse_profile"] = "Профіль",
+        ["mouse_synchronize"] = "Синхронізувати з мишею",
+        ["mouse_import"] = "Імпорт профілю",
+        ["mouse_export"] = "Експортувати профіль",
+        ["mouse_import_failed"] = "Не вдалося імпортувати профіль. Файл не є допустимим профілем миші або пошкоджений.",
+        ["mouse_dpi_add"] = "Додати рівень DPI",
+        ["mouse_dpi_remove"] = "Видалити рівень DPI",
+        ["mouse_angle_tuning"] = "Налаштування кута",
+        ["mouse_acceleration"] = "Прискорення",
+        ["mouse_deceleration"] = "Уповільнення",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Швидкість анімації",
+        ["mouse_animation_direction"] = "Напрямок анімації",
+        ["mouse_clockwise"] = "Направо",
+        ["mouse_counter_clockwise"] = "Наліво",
+        ["mouse_sync_aura"] = "Синхронізувати з ноутбуком",
 
     };
 }

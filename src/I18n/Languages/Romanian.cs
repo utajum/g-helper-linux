@@ -1152,6 +1152,23 @@ public static class Romanian
         ["mouse_host_switch_msg_fmt"] = "Comutați la gazda {0}? Mouse-ul va fi deconectat.",
         ["mouse_switch"] = "Comută",
         ["mouse_cancel"] = "Anulare",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Sincronizare cu mouse-ul",
+        ["mouse_import"] = "Importă profil",
+        ["mouse_export"] = "Exportă profil",
+        ["mouse_import_failed"] = "Importul a eșuat. Fișierul nu este un profil de mouse valid sau este deteriorat.",
+        ["mouse_dpi_add"] = "Adaugă nivel DPI",
+        ["mouse_dpi_remove"] = "Elimină nivel DPI",
+        ["mouse_angle_tuning"] = "Reglare unghi",
+        ["mouse_acceleration"] = "Accelerare",
+        ["mouse_deceleration"] = "Decelerare",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Viteza animației",
+        ["mouse_animation_direction"] = "Direcție animație",
+        ["mouse_clockwise"] = "În sensul acelor de ceas",
+        ["mouse_counter_clockwise"] = "În sens invers acelor de ceas",
+        ["mouse_sync_aura"] = "Sincronizează cu laptopul",
 
     };
 }

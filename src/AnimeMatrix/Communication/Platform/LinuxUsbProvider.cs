@@ -54,7 +54,7 @@ public class LinuxUsbProvider : UsbProvider
         _stream = target.Open(config);
     }
 
-    /// <summary>Opens a HID device matching vendor/product IDs and device path. Used for Slash.</summary>
+    /// <summary>Opens a HID device matching vendor/product IDs and a Windows path hint (see PathMatches).</summary>
     public LinuxUsbProvider(ushort vendorId, ushort productId, string path, int timeout = 500)
         : base(vendorId, productId)
     {
@@ -63,7 +63,7 @@ public class LinuxUsbProvider : UsbProvider
         HidDevice? target = null;
         foreach (var device in devices)
         {
-            if (device.DevicePath.Contains(path, StringComparison.OrdinalIgnoreCase))
+            if (PathMatches(device, path))
             {
                 target = device;
                 break;
@@ -145,6 +145,58 @@ public class LinuxUsbProvider : UsbProvider
         catch (IOException ex)
         {
             WrapException(ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public override void Drain(int packetSize)
+    {
+        if (_stream is null)
+            return;
+        int saved = _stream.ReadTimeout;
+        _stream.ReadTimeout = 1;
+        try
+        {
+            byte[] buf = new byte[packetSize];
+            while (true)
+            {
+                try
+                { _stream.Read(buf); }
+                catch { break; }
+            }
+        }
+        finally
+        {
+            _stream.ReadTimeout = saved;
+        }
+    }
+
+    /// <summary>
+    /// Matches a Windows HID path hint on Linux. "mi_XX" is the USB interface number of
+    /// the hidraw node; all collections ("&amp;colYY") of an interface share one node.
+    /// Other hints match the device path as text.
+    /// </summary>
+    public static bool PathMatches(HidDevice device, string path) => PathMatches(device.DevicePath, path);
+
+    internal static bool PathMatches(string devicePath, string path, string sysClass = "/sys/class/hidraw")
+    {
+        if (!path.StartsWith("mi_", StringComparison.OrdinalIgnoreCase) || path.Length < 5)
+            return devicePath.Contains(path, StringComparison.OrdinalIgnoreCase);
+        if (!int.TryParse(path.AsSpan(3, 2), System.Globalization.NumberStyles.HexNumber, null, out int iface))
+            return false;
+        try
+        {
+            // hidrawN/device -> .../1-3:1.2/0003:0B05:1ACE.0007; the parent is the USB interface
+            var hid = Directory.ResolveLinkTarget(Path.Combine(sysClass, Path.GetFileName(devicePath), "device"), true);
+            string? usbInterface = Path.GetDirectoryName(hid?.FullName);
+            if (usbInterface is null)
+                return false;
+            string number = File.ReadAllText(Path.Combine(usbInterface, "bInterfaceNumber")).Trim();
+            return int.TryParse(number, System.Globalization.NumberStyles.HexNumber, null, out int n) && n == iface;
+        }
+        catch
+        {
+            return false;
         }
     }
 

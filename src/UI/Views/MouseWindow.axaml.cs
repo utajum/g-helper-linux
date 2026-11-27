@@ -50,6 +50,7 @@ public partial class MouseWindow : Window
     {
         _requestedMouse = mouse;
         InitializeComponent();
+        InitAsusHandlers();
 
         PeripheralsProvider.DeviceChanged += OnDeviceChanged;
         Closing += (_, _) => PeripheralsProvider.DeviceChanged -= OnDeviceChanged;
@@ -158,6 +159,7 @@ public partial class MouseWindow : Window
         buttonColor.Content = Labels.Get("mouse_pick_color");
         lblIdleEffect.Text = Labels.Get("mouse_idle_effect");
         lblIdleTimeout.Text = Labels.Get("mouse_idle_timeout");
+        ApplyAsusLabels();
     }
 
     /// <summary>Preview when no device is present: all sections visible but disabled.</summary>
@@ -217,6 +219,7 @@ public partial class MouseWindow : Window
         labelBrightness.Text = "100";
         borderColor.Background = Brushes.White;
 
+        ShowAsus(null);
         SetSectionsEnabled(false);
     }
 
@@ -234,13 +237,13 @@ public partial class MouseWindow : Window
         // DPI
         panelDpi.IsVisible = true;
         int profileCount = mouse.DpiSettings.Length;
-        int profile = Math.Clamp(mouse.DpiProfile, 0, profileCount - 1);
+        int profile = Math.Clamp(mouse.DpiProfile, 0, Math.Max(profileCount - 1, 0));
         FillCombo(comboDpiProfile, Enumerable.Range(1, profileCount).Select(i => Labels.Format("mouse_profile_fmt", i)), profile);
         sliderDpi.Minimum = mouse.MinDPI();
         sliderDpi.Maximum = mouse.MaxDPI();
         sliderDpi.TickFrequency = mouse.DPIIncrement();
-        sliderDpi.Value = mouse.DpiSettings[profile].DPI;
-        labelDpiValue.Text = mouse.DpiSettings[profile].DPI.ToString();
+        sliderDpi.Value = profileCount > 0 ? mouse.DpiSettings[profile]?.DPI ?? 800 : 800;
+        labelDpiValue.Text = ((int)sliderDpi.Value).ToString();
 
         rowSensitivitySwitch.IsVisible = mouse.HasSensitivitySwitch();
         if (rowSensitivitySwitch.IsVisible)
@@ -649,17 +652,18 @@ public partial class MouseWindow : Window
             }
         }
 
+        ShowAsus(mouse as AsusMouse);
         SetSectionsEnabled(true);
     }
 
     private void RefreshLightingControls(IMousePeripheral mouse)
     {
         var setting = mouse.LightingSettings[_zoneIndex];
-        int modeIndex = Math.Max(0, Array.IndexOf(_lightingModes, setting.Mode));
+        int modeIndex = Math.Max(0, Array.IndexOf(_lightingModes, setting.LightingMode));
         FillCombo(comboLightingMode, _lightingModes.Select(LightingModeName), modeIndex);
         sliderBrightness.Value = Math.Min(setting.Brightness, (byte)mouse.MaxBrightness());
         labelBrightness.Text = ((int)sliderBrightness.Value).ToString();
-        borderColor.Background = new SolidColorBrush(Color.FromRgb(setting.R, setting.G, setting.B));
+        borderColor.Background = new SolidColorBrush(Color.FromRgb(setting.RGBColor.R, setting.RGBColor.G, setting.RGBColor.B));
     }
 
     private void SetSectionsEnabled(bool enabled)
@@ -692,6 +696,12 @@ public partial class MouseWindow : Window
         if (_loading || _mouse is null || comboDpiProfile.SelectedIndex < 0)
             return;
 
+        if (_mouse is AsusMouse am)
+        {
+            AsusDpiProfile_Changed(am);
+            return;
+        }
+
         _mouse.DpiProfile = comboDpiProfile.SelectedIndex;
         _mouse.WriteDPI();
         PersistIfLogitech();
@@ -708,6 +718,9 @@ public partial class MouseWindow : Window
         if (_loading || _mouse is null)
             return;
 
+        if (_mouse is AsusMouse)
+            return;
+
         int profile = Math.Clamp(_mouse.DpiProfile, 0, _mouse.DpiSettings.Length - 1);
         _mouse.DpiSettings[profile].DPI = (uint)sliderDpi.Value;
         _mouse.WriteDPI();
@@ -718,6 +731,12 @@ public partial class MouseWindow : Window
     {
         if (_loading || _mouse is null || comboPollingRate.SelectedIndex < 0)
             return;
+
+        if (_mouse is AsusMouse am)
+        {
+            AsusPollingRate_Changed(am);
+            return;
+        }
 
         _mouse.PollingRate = _pollingRates[comboPollingRate.SelectedIndex];
         _mouse.WritePollingRate();
@@ -737,6 +756,12 @@ public partial class MouseWindow : Window
     {
         if (_loading || _mouse is null || comboDebounce.SelectedIndex < 0)
             return;
+
+        if (_mouse is AsusMouse am)
+        {
+            AsusDebounce_Changed(am);
+            return;
+        }
 
         _mouse.Debounce = DebounceValues[comboDebounce.SelectedIndex];
         _mouse.WriteDebounce();
@@ -766,6 +791,9 @@ public partial class MouseWindow : Window
         if (_loading || _mouse is null)
             return;
 
+        if (_mouse is AsusMouse)
+            return;
+
         _mouse.LowBatteryWarning = (byte)sliderLowBattery.Value;
         _mouse.WriteLowBatteryWarning();
     }
@@ -774,6 +802,12 @@ public partial class MouseWindow : Window
     {
         if (_loading || _mouse is null || comboLightingZone.SelectedIndex < 0)
             return;
+
+        if (_mouse is AsusMouse am)
+        {
+            AsusLightingZone_Changed(am);
+            return;
+        }
 
         _zoneIndex = comboLightingZone.SelectedIndex;
         _loading = true;
@@ -786,7 +820,13 @@ public partial class MouseWindow : Window
         if (_loading || _mouse is null || comboLightingMode.SelectedIndex < 0)
             return;
 
-        _mouse.LightingSettings[_zoneIndex].Mode = _lightingModes[comboLightingMode.SelectedIndex];
+        if (_mouse is AsusMouse am)
+        {
+            AsusLightingMode_Changed(am);
+            return;
+        }
+
+        _mouse.LightingSettings[_zoneIndex].LightingMode = _lightingModes[comboLightingMode.SelectedIndex];
         _mouse.WriteLightingSetting();
         PersistIfLogitech();
     }
@@ -795,6 +835,9 @@ public partial class MouseWindow : Window
     {
         labelBrightness.Text = ((int)sliderBrightness.Value).ToString();
         if (_loading || _mouse is null)
+            return;
+
+        if (_mouse is AsusMouse)
             return;
 
         _mouse.LightingSettings[_zoneIndex].Brightness = (byte)sliderBrightness.Value;
@@ -806,13 +849,16 @@ public partial class MouseWindow : Window
     {
         if (_mouse is null)
             return;
+        if (_mouse is AsusMouse am)
+        {
+            AsusLightingColor_Click(am);
+            return;
+        }
 
         var setting = _mouse.LightingSettings[_zoneIndex];
-        Helpers.ColorPicker.Show(this, setting.R, setting.G, setting.B, (r, g, b) =>
+        Helpers.ColorPicker.Show(this, setting.RGBColor.R, setting.RGBColor.G, setting.RGBColor.B, (r, g, b) =>
         {
-            setting.R = r;
-            setting.G = g;
-            setting.B = b;
+            setting.RGBColor = System.Drawing.Color.FromArgb(r, g, b);
             _mouse.WriteLightingSetting();
             PersistIfLogitech();
             borderColor.Background = new SolidColorBrush(Color.FromRgb(r, g, b));

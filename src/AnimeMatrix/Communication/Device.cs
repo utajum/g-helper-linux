@@ -22,6 +22,16 @@ public abstract class Device : IDisposable
     /// <summary>Minimum feature report length for HID interface matching.</summary>
     protected int _maxFeatureReportLength;
 
+    public ushort VendorID()
+    {
+        return _vendorId;
+    }
+
+    public ushort ProductID()
+    {
+        return _productId;
+    }
+
     protected virtual string LogName => "Device";
 
     protected Device(ushort vendorId, ushort productId)
@@ -84,6 +94,12 @@ public abstract class Device : IDisposable
     public void Write(byte[] data)
     {
         _usbProvider?.Write(data);
+    }
+
+    /// <summary>Drops input reports that are still queued.</summary>
+    public void Drain(int packetSize)
+    {
+        _usbProvider?.Drain(packetSize);
     }
 
     /// <inheritdoc />

@@ -1207,6 +1207,23 @@ public static class Malay
         ["mouse_host_switch_msg_fmt"] = "Tukar ke hos {0}? Tetikus akan terputus.",
         ["mouse_switch"] = "Tukar",
         ["mouse_cancel"] = "Batal",
+        ["mouse_profile"] = "Profil",
+        ["mouse_synchronize"] = "Segerakkan dengan tetikus",
+        ["mouse_import"] = "Import Profil",
+        ["mouse_export"] = "Eksport Profil",
+        ["mouse_import_failed"] = "Import gagal. Fail bukan profil tetikus yang sah, atau fail rosak.",
+        ["mouse_dpi_add"] = "Tambah tahap DPI",
+        ["mouse_dpi_remove"] = "Buang tahap DPI",
+        ["mouse_angle_tuning"] = "Penalaan Sudut",
+        ["mouse_acceleration"] = "Pecutan",
+        ["mouse_deceleration"] = "Nyahpecutan",
+        ["mouse_motion_sync"] = "Motion Sync",
+        ["mouse_zone_mode"] = "Zone Mode",
+        ["mouse_animation_speed"] = "Kelajuan Animasi",
+        ["mouse_animation_direction"] = "Arah Animasi",
+        ["mouse_clockwise"] = "Ikut arah jam",
+        ["mouse_counter_clockwise"] = "Lawan arah jam",
+        ["mouse_sync_aura"] = "Segerakkan dengan komputer riba",
 
     };
 }
