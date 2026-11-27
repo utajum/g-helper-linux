@@ -346,7 +346,7 @@ public class GPUModeControl
     public void ReconcileBpfAuto() => _bpf.Reconcile();
 
     /// <summary>Cleanup when the user changes the GPU backend. See <see cref="BpfGpuBackend.OnBackendChanged"/>.</summary>
-    public void OnBackendChanged(string oldBackend, string newBackend) => _bpf.OnBackendChanged(oldBackend, newBackend);
+    public void OnBackendChanged(GpuBackendKind oldBackend, GpuBackendKind newBackend) => _bpf.OnBackendChanged(oldBackend, newBackend);
 
     /// <summary>True when the dGPU driver holds the hardware. See <see cref="DgpuDriver.IsActive"/>.</summary>
     public bool IsDgpuDriverActive() => DgpuDriver.IsActive();
@@ -398,66 +398,6 @@ public class GPUModeControl
         }
         return false;
     }
-
-    /// <summary>Alias kept for the installer gate (ghelper-gpu-boot.service
-    /// applicability): identical semantics to <see cref="HasSecondGpu"/>.</summary>
-    public static bool HasDiscreteGpu() => HasSecondGpu();
-
-    /// <summary>
-    /// Optional root prefix for the four ghelper system paths. Empty in
-    /// production (paths resolve under real /etc); the test harness sets
-    /// <c>GHELPER_TEST_ROOT=/tmp/scenario-N</c> so writes are confined to a
-    /// sandbox and the sudo / pkexec branches can be skipped.
-    /// Mirrors the same env var the boot-script test harness uses.
-    /// </summary>
-    internal static readonly string TestPathPrefix =
-        Environment.GetEnvironmentVariable("GHELPER_TEST_ROOT") ?? "";
-
-    internal static bool IsTestMode => !string.IsNullOrEmpty(TestPathPrefix);
-
-    // Boot file paths, kept here for callers and tests.
-    internal static string ModprobeBlockPath => GpuBootFiles.ModprobeBlockPath;
-    internal static string UdevRemovePath => GpuBootFiles.UdevRemovePath;
-    internal static string TriggerPath => GpuBootFiles.TriggerPath;
-    internal static string PersistentTriggerPath => GpuBootFiles.PersistentTriggerPath;
-    internal static string BackendPath => GpuBootFiles.BackendPath;
-    internal static string RecoveryMarkerPath => GpuBootFiles.RecoveryMarkerPath;
-
-    /// <summary>Backend marker content the boot service will read, or "" when missing.</summary>
-    internal static string ReadBackendMarker() => GpuBootFiles.ReadBackend();
-
-    /// <summary>Drop the boot recovery marker once shown; true when it is gone. See <see cref="GpuBootFiles.ClearRecovery"/>.</summary>
-    public static bool ClearRecoveryMarker() => GpuBootFiles.ClearRecovery();
-
-    /// <summary>
-    /// Push the backend selector marker (/etc/ghelper/backend) without
-    /// touching any block artifacts. Called when the user toggles the
-    /// "Use PCI dGPU disable" checkbox so the boot service sees the new
-    /// backend on the next boot even if the user never schedules a mode
-    /// change. Idempotent - no-op if the marker already matches.
-    /// </summary>
-    public bool PushBackendMarker(string backend)
-    {
-        if (backend != "pci" && backend != "asus-wmi" && backend != "ebpf")
-        {
-            Logger.WriteLine($"GPUModeControl: PushBackendMarker rejected invalid backend '{backend}'");
-            return false;
-        }
-
-        // The MUX=0 latch flag and in-memory pending latch encode REAL
-        // firmware state (gpu_mux_mode=0 is pending an actual reboot). The
-        // backend selector is a UI preference - toggling it does not change
-        // firmware state. Clearing the latch here would re-introduce the
-        // exact impossible-state chain this guard is designed to prevent:
-        // user clicks Ultimate -> toggles PCI -> clicks Eco -> blocks
-        // written -> reboot -> MUX=0 settles + udev removes dGPU = black
-        // screen. Keep the latch; rely on WouldCreateImpossibleState to
-        // refuse the subsequent Eco click and surface the new toast.
-
-        return GpuBootFiles.SetBackend(backend);
-    }
-
-    internal void SetEcoPersistent(bool persistent) => GpuBootFiles.SetEcoPersistent(persistent);
 
     /// <summary>Check config flag (UI state). May be true even before the file is written.</summary>
     internal static bool IsEcoPersistentConfig()

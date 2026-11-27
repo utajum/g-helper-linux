@@ -116,10 +116,10 @@ internal static class Latvian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Katrā palaišanā atkal iestata Eco. Dažas aparātprogrammatūras pēc restarta aizmirst Eco iestatījumu.",
         ["ExtraWindow.checkDgpuMonitor"] = "Nolasa dGPU temperatūru galvenajam logam un teknei. Izslēdziet, lai dGPU varētu aizmigt (RTD3), jo nolasīšana to pamodina.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Izslēdz dGPU ar kodola rīkiem, nevis ASUS aparātprogrammatūru: draivera bloķēšanas saraksts un udev noteikums, kas noņem karti. Vajadzīgs klēpjdatoriem bez ASUS aparātprogrammatūras.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Paslēpj dGPU no lietotnēm ar kodola eBPF filtru. Karte var gulēt D3cold stāvoklī un atgriežas uzreiz, bez restarta. Lietotnes, kas jau izmanto dGPU, patur to, līdz aizveras.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Izslēdz dGPU ar kodola rīkiem: draivera bloķēšanas saraksts un udev noteikums, kas noņem karti. Izmantojiet to tur, kur eBPF nevar darboties.",
         ["ExtraWindow.checkBpfOptimized"] = "Pievieno režīma Optimizēts pogu: Eco no akumulatora, Standarta no tīkla.",
         ["ExtraWindow.buttonGpuApps"] = "Atver to lietotņu sarakstu, kas joprojām var izmantot dGPU, kamēr eBPF bloķēšana to slēpj.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Izslēdz dGPU ASUS aparātprogrammatūrā, nevis ar eBPF. Klēpjdatoros ar MUX slēdzi parāda arī pogu Ultimate. Dažām režīma maiņām vajag restartu.",
         ["ExtraWindow.checkRawWmi"] = "Sazinās ar ASUS aparātprogrammatūru tieši caur debugfs. Tikai vecākām Vivobook un Zenbook aparātprogrammatūrām bez dgpu_disable. Restartē lietotni.",
         ["ExtraWindow.comboApuMem"] = "Atmiņa, kas rezervēta integrētajam GPU (UMA buferis). Vairāk atmiņas palīdz spēlēm, mazāk atstāj vairāk RAM lietotnēm. Vajag restartu.",
         ["ExtraWindow.checkXGMLights"] = "Ieslēdz vai izslēdz XG Mobile doka gaismas.",

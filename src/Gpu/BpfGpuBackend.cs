@@ -68,7 +68,7 @@ internal sealed class BpfGpuBackend : IGpuBackend
         }
 
         bool blocked = Block.GpuBlockControl.IsActive();
-        GpuBootFiles.SetBackend("ebpf");
+        GpuBootFiles.SetBackend(GpuBackendKind.Ebpf);
 
         if (wantEco == blocked)
         {
@@ -141,13 +141,9 @@ internal sealed class BpfGpuBackend : IGpuBackend
     public GpuSwitchResult ApplyPendingOnStartup()
     {
         // The boot service follows the marker, so an ebpf config it never got falls back to it.
-        string marker = GpuBootFiles.ReadBackend();
-        if (marker != "ebpf")
+        if (GpuBootFiles.ReadBackend() != GpuBackendKind.Ebpf)
         {
-            string fallback = marker is "pci" or "asus-wmi" ? marker : AppConfig.DefaultGpuBackend();
-            Logger.WriteLine($"GPUModeControl: backend marker '{marker}' is not ebpf - using {fallback}");
-            AppConfig.Set("gpu_backend", fallback);
-            OnBackendChanged("ebpf", fallback);
+            OnBackendChanged(GpuBackendKind.Ebpf, GpuBackendChoice.LeaveBpf());
             return GpuSwitchResult.AlreadySet;
         }
 
@@ -278,7 +274,7 @@ internal sealed class BpfGpuBackend : IGpuBackend
     }
 
     /// <summary>Leaving ebpf detaches the filter; entering it undoes firmware or PCI Eco. Background thread.</summary>
-    public void OnBackendChanged(string oldBackend, string newBackend)
+    public void OnBackendChanged(GpuBackendKind oldBackend, GpuBackendKind newBackend)
     {
         if (oldBackend == newBackend)
             return;
@@ -291,7 +287,7 @@ internal sealed class BpfGpuBackend : IGpuBackend
 
         try
         {
-            if (oldBackend == "ebpf")
+            if (oldBackend == GpuBackendKind.Ebpf)
             {
                 if (Block.GpuBlockControl.IsActive())
                 {
@@ -307,7 +303,7 @@ internal sealed class BpfGpuBackend : IGpuBackend
                     GPUModeControl.SaveModeToConfig(GpuMode.Standard);
             }
 
-            if (newBackend == "ebpf")
+            if (newBackend == GpuBackendKind.Ebpf)
             {
                 bool leftEco = false;
 

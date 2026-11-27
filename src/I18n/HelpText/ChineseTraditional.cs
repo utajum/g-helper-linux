@@ -116,10 +116,10 @@ internal static class ChineseTraditional
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "每次啟動時重新設定節能。部分韌體在重新開機後會忘記節能設定。",
         ["ExtraWindow.checkDgpuMonitor"] = "為主視窗和系統匣讀取 dGPU 溫度。讀取會喚醒 dGPU，因此要讓 dGPU 睡眠（RTD3）請關閉此項。",
-        ["ExtraWindow.checkPciGpuBackend"] = "以核心工具而不是 ASUS 韌體關閉 dGPU：驅動程式封鎖清單加上一條移除顯示卡的 udev 規則。沒有 ASUS 韌體的筆電需要此項。",
-        ["ExtraWindow.checkBpfGpuBackend"] = "以核心 eBPF 篩選器對應用程式隱藏 dGPU。顯示卡可以在 D3cold 中睡眠，並能立即恢復，不需重新開機。已在使用 dGPU 的應用程式會一直使用它，直到關閉。",
+        ["ExtraWindow.checkPciGpuBackend"] = "以核心工具關閉 dGPU：驅動程式封鎖清單加上一條移除顯示卡的 udev 規則。在無法執行 eBPF 的裝置上使用。",
         ["ExtraWindow.checkBpfOptimized"] = "新增最佳化模式按鈕：使用電池時為節能，接上電源時為標準。",
         ["ExtraWindow.buttonGpuApps"] = "開啟在 eBPF 封鎖隱藏 dGPU 期間仍可使用 dGPU 的應用程式清單。",
+        ["ExtraWindow.checkMuxGpuBackend"] = "以 ASUS 韌體而不是 eBPF 關閉 dGPU。在有 MUX 開關的筆電上還會顯示極致按鈕。部分模式切換需要重新開機。",
         ["ExtraWindow.checkRawWmi"] = "透過 debugfs 直接與 ASUS 韌體通訊。僅適用於沒有 dgpu_disable 的舊款 Vivobook 和 Zenbook 韌體。會重新啟動應用程式。",
         ["ExtraWindow.comboApuMem"] = "為內建 GPU 保留的記憶體（UMA 緩衝區）。較多記憶體有利於遊戲，較少則為應用程式留下更多 RAM。需要重新開機。",
         ["ExtraWindow.checkXGMLights"] = "開啟或關閉 XG Mobile 擴充基座的燈光。",

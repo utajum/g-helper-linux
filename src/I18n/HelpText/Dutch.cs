@@ -116,10 +116,10 @@ internal static class Dutch
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Zet Eco bij elke start opnieuw. Sommige firmware vergeet de Eco-instelling na een herstart.",
         ["ExtraWindow.checkDgpuMonitor"] = "Leest de dGPU-temperatuur voor het hoofdvenster en het systeemvak. Zet uit om de dGPU te laten slapen (RTD3), want uitlezen maakt hem wakker.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Zet de dGPU uit met kerneltools in plaats van de ASUS-firmware: een blokkadelijst voor het stuurprogramma plus een udev-regel die de kaart verwijdert. Nodig op laptops zonder ASUS-firmware.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Verbergt de dGPU voor apps met een eBPF-filter in de kernel. De kaart kan in D3cold slapen en is meteen terug, zonder herstart. Apps die de dGPU al gebruiken houden hem tot ze sluiten.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Zet de dGPU uit met kerneltools: een blokkadelijst voor het stuurprogramma plus een udev-regel die de kaart verwijdert. Gebruik dit waar eBPF niet kan draaien.",
         ["ExtraWindow.checkBpfOptimized"] = "Voegt de knop voor de modus Geoptimaliseerd toe: Eco op de accu, Standaard op netstroom.",
         ["ExtraWindow.buttonGpuApps"] = "Opent de lijst met apps die de dGPU nog mogen gebruiken terwijl de eBPF-blokkade hem verbergt.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Zet de dGPU uit in de ASUS-firmware in plaats van met eBPF. Op laptops met een MUX-schakelaar toont het ook de knop Ultiem. Sommige moduswissels vereisen een herstart.",
         ["ExtraWindow.checkRawWmi"] = "Praat via debugfs direct met de ASUS-firmware. Alleen voor oudere Vivobook- en Zenbook-firmware zonder dgpu_disable. Herstart de app.",
         ["ExtraWindow.comboApuMem"] = "Geheugen gereserveerd voor de geïntegreerde GPU (UMA-buffer). Meer geheugen helpt games, minder laat meer RAM over voor apps. Vereist een herstart.",
         ["ExtraWindow.checkXGMLights"] = "Zet de lampjes van het XG Mobile-dock aan of uit.",

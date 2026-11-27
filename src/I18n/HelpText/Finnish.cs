@@ -116,10 +116,10 @@ internal static class Finnish
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Asettaa Ekon uudelleen jokaisessa käynnistyksessä. Jotkin laiteohjelmistot unohtavat Eko-asetuksen uudelleenkäynnistyksen jälkeen.",
         ["ExtraWindow.checkDgpuMonitor"] = "Lukee dGPU:n lämpötilan pääikkunaan ja ilmoitusalueelle. Poista käytöstä, jotta dGPU voi nukkua (RTD3), koska lukeminen herättää sen.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Sammuttaa dGPU:n ytimen työkaluilla ASUS-laiteohjelmiston sijaan: ajurin estoluettelo ja udev-sääntö, joka poistaa kortin. Tarvitaan kannettavissa, joissa ei ole ASUS-laiteohjelmistoa.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Piilottaa dGPU:n sovelluksilta ytimen eBPF-suodattimella. Kortti voi nukkua D3cold-tilassa ja palaa heti ilman uudelleenkäynnistystä. Jo dGPU:ta käyttävät sovellukset pitävät sen, kunnes ne suljetaan.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Sammuttaa dGPU:n ytimen työkaluilla: ajurin estoluettelo ja udev-sääntö, joka poistaa kortin. Käytä tätä, kun eBPF ei voi toimia.",
         ["ExtraWindow.checkBpfOptimized"] = "Lisää Optimoitu-tilan painikkeen: Eko akulla, Standardi verkkovirralla.",
         ["ExtraWindow.buttonGpuApps"] = "Avaa luettelon sovelluksista, jotka voivat yhä käyttää dGPU:ta, kun eBPF-esto piilottaa sen.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Sammuttaa dGPU:n ASUS-laiteohjelmistossa eBPF:n sijaan. Kannettavissa, joissa on MUX-kytkin, näyttää myös Huippu-painikkeen. Jotkin tilanvaihdot vaativat uudelleenkäynnistyksen.",
         ["ExtraWindow.checkRawWmi"] = "Keskustelee ASUS-laiteohjelmiston kanssa suoraan debugfs:n kautta. Vain vanhemmille Vivobook- ja Zenbook-laiteohjelmistoille ilman dgpu_disable-määritettä. Käynnistää sovelluksen uudelleen.",
         ["ExtraWindow.comboApuMem"] = "Integroidulle GPU:lle varattu muisti (UMA-puskuri). Enemmän auttaa pelejä, vähemmän jättää sovelluksille enemmän RAM-muistia. Vaatii uudelleenkäynnistyksen.",
         ["ExtraWindow.checkXGMLights"] = "Kytkee XG Mobile -telakan valot päälle tai pois.",

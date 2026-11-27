@@ -608,13 +608,13 @@
                     </Border>
 
                     <!-- GPU BACKEND how ghelper disables the dGPU.
-                         Three orthogonal options:
+                         eBPF mode (default, no box ticked) or one of:
+                           * MUX mode:      ASUS firmware dgpu_disable + MUX
                            * PCI mode:      modprobe block + udev hot-remove rule
-                           * eBPF mode:     LSM filter hides the dGPU device nodes
                            * Raw WMI mode:  ACPI debugfs DSTS/DEVS
                          All ship with explanatory hints so the user can pick the
                          right one for their laptop. Panel visibility is gated by
-                         IAsusWmi.CanToggleGpuBackend(). -->
+                         GPUModeControl.HasSecondGpu(). -->
                     <Border Classes="panel" x:Name="panelGpuBackend" IsVisible="False">
                         <StackPanel>
                             <Border Classes="panel-header" Margin="0,0,0,8">
@@ -622,7 +622,7 @@
                             </Border>
 
                             <TextBlock x:Name="labelGpuBackendIntro" Classes="label-dim"
-                                       Text="Choose how ghelper switches the dGPU on and off. ASUS WMI (firmware) is the default; the alternatives below help when the firmware path is missing or unreliable on your hardware."
+                                       Text="Choose how ghelper switches the dGPU on and off. eBPF is the default; the options below use the ASUS firmware (MUX) or the PCI path instead."
                                        FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap" />
 
                             <StackPanel>
@@ -631,15 +631,14 @@
                                           Margin="0,4"
                                           IsCheckedChanged="CheckPciGpuBackend_Changed" />
                                 <TextBlock x:Name="labelPciGpuBackendHint" Classes="label-dim"
-                                           Text="Disables the dGPU via a modprobe blacklist plus a udev hot-remove rule. Required on non-ASUS laptops where there is no ASUS firmware to talk to, optional on ASUS where you prefer the kernel-only path. Every mode change requires a reboot because the rules only apply on the next boot."
+                                           Text="Disables the dGPU via a modprobe blacklist plus a udev hot-remove rule. Use it where eBPF cannot run. Mode changes apply live when possible, otherwise at the next boot."
                                            FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap" />
                             </StackPanel>
 
                             <StackPanel>
-                                <CheckBox x:Name="checkBpfGpuBackend"
-                                          Content="Use eBPF dGPU block"
-                                          Margin="0,4"
-                                          IsCheckedChanged="CheckBpfGpuBackend_Changed" />
+                                <TextBlock x:Name="labelBpfGpuBackend"
+                                           Text="eBPF dGPU block (default)"
+                                           Margin="0,4" />
                                 <TextBlock x:Name="labelBpfGpuBackendHint" Classes="label-dim"
                                            Text="Hides the dGPU from applications with a kernel eBPF filter instead of unloading the driver, so the card idles into D3cold and switching back is instant with no reboot. Apps that already use the GPU keep it until they close, and G-Helper offers to close them. Needs a kernel booted with bpf in the LSM list; use Updates to set that up."
                                            FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap" />
@@ -657,6 +656,16 @@
                                         Margin="20,0,0,8" HorizontalAlignment="Left" Click="ButtonGpuApps_Click">
                                     <TextBlock x:Name="labelGpuApps" Text="dGPU apps" FontSize="11" />
                                 </Button>
+                            </StackPanel>
+
+                            <StackPanel x:Name="panelMuxGpuBackend">
+                                <CheckBox x:Name="checkMuxGpuBackend"
+                                          Content="Use MUX mode (ASUS firmware)"
+                                          Margin="0,4"
+                                          IsCheckedChanged="CheckMuxGpuBackend_Changed" />
+                                <TextBlock x:Name="labelMuxGpuBackendHint" Classes="label-dim"
+                                           Text="Turns the dGPU off in the ASUS firmware (dgpu_disable) and allows Ultimate mode through the MUX switch. Some mode changes need a reboot."
+                                           FontSize="10" Margin="20,0,0,8" TextWrapping="Wrap" />
                             </StackPanel>
 
                             <StackPanel>

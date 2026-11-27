@@ -116,10 +116,10 @@ internal static class Bengali
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "প্রতিবার চালুতে আবার Eco সেট করে। কিছু ফার্মওয়্যার রিবুটের পরে Eco সেটিং ভুলে যায়।",
         ["ExtraWindow.checkDgpuMonitor"] = "মূল উইন্ডো ও ট্রের জন্য dGPU-র তাপমাত্রা পড়ে। dGPU-কে ঘুমাতে (RTD3) দিতে বন্ধ করুন, কারণ পড়লে এটি জেগে ওঠে।",
-        ["ExtraWindow.checkPciGpuBackend"] = "ASUS ফার্মওয়্যারের বদলে কার্নেল টুল দিয়ে dGPU বন্ধ করে: ড্রাইভার ব্লক তালিকা এবং কার্ড সরানোর একটি udev নিয়ম। ASUS ফার্মওয়্যার ছাড়া ল্যাপটপে দরকার।",
-        ["ExtraWindow.checkBpfGpuBackend"] = "কার্নেল eBPF ফিল্টার দিয়ে অ্যাপ থেকে dGPU লুকায়। কার্ড D3cold-এ ঘুমাতে পারে এবং রিবুট ছাড়াই সাথে সাথে ফেরে। যেসব অ্যাপ আগে থেকেই dGPU ব্যবহার করছে, তারা বন্ধ না হওয়া পর্যন্ত এটি রাখে।",
+        ["ExtraWindow.checkPciGpuBackend"] = "কার্নেল টুল দিয়ে dGPU বন্ধ করে: ড্রাইভার ব্লক তালিকা এবং কার্ড সরানোর একটি udev নিয়ম। যেখানে eBPF চলতে পারে না সেখানে এটি ব্যবহার করুন।",
         ["ExtraWindow.checkBpfOptimized"] = "অপ্টিমাইজড মোডের বোতাম যোগ করে: ব্যাটারিতে Eco, AC পাওয়ারে স্ট্যান্ডার্ড।",
         ["ExtraWindow.buttonGpuApps"] = "eBPF ব্লক dGPU লুকিয়ে রাখার সময়ও যেসব অ্যাপ এটি ব্যবহার করতে পারে তাদের তালিকা খোলে।",
+        ["ExtraWindow.checkMuxGpuBackend"] = "eBPF-এর বদলে ASUS ফার্মওয়্যারে dGPU বন্ধ করে। MUX সুইচ থাকা ল্যাপটপে Ultimate বোতামও দেখায়। কিছু মোড পরিবর্তনে রিবুট দরকার।",
         ["ExtraWindow.checkRawWmi"] = "debugfs দিয়ে সরাসরি ASUS ফার্মওয়্যারের সাথে কথা বলে। শুধু dgpu_disable ছাড়া পুরনো Vivobook ও Zenbook ফার্মওয়্যারের জন্য। অ্যাপ আবার চালু করে।",
         ["ExtraWindow.comboApuMem"] = "ইন্টিগ্রেটেড GPU-র জন্য সংরক্ষিত মেমরি (UMA বাফার)। বেশি মেমরি গেমে সাহায্য করে, কম মেমরি অ্যাপের জন্য বেশি RAM রাখে। রিবুট লাগে।",
         ["ExtraWindow.checkXGMLights"] = "XG Mobile ডকের আলো চালু বা বন্ধ করে।",

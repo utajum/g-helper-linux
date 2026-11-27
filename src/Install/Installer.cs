@@ -463,7 +463,7 @@ public static partial class Installer
     /// boot service is a pure no-op, so it is treated as "not applicable": never
     /// flagged as missing, never auto-installed/enabled - but still shown (and
     /// removable) in the integrity panel. Uses a universal, Eco-resilient check.</summary>
-    private static bool BootGpuApplies() => Gpu.GPUModeControl.HasDiscreteGpu();
+    private static bool BootGpuApplies() => Gpu.GPUModeControl.HasSecondGpu();
 
     private const string EbpfLsmId = "ebpf_lsm";
     private const string EbpfLibbpfId = "ebpf_libbpf";

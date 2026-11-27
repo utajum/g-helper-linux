@@ -141,6 +141,7 @@ public class App : Application
     {
         // Initialize Linux platform backends
         InitializePlatform();
+        Gpu.GpuBackendChoice.ResolveAtStartup(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable);
 
         // Initialize i18n before any UI
         Labels.Initialize();
@@ -325,7 +326,6 @@ public class App : Application
                 Logger.WriteLine("Startup: gpu_optimized_enabled=0 - clearing stale gpu_auto");
                 AppConfig.Set("gpu_auto", 0);
             }
-            AppConfig.AutoDetectGpuBackendIfUnset();
 
             // Update tray icon to match current mode
             UpdateTrayIcon();
@@ -348,10 +348,18 @@ public class App : Application
 
                 GpuModeCtrl?.CacheDgpuSlotIfPresent();
 
+                // The system files prompt can make eBPF possible while the app owns the choice.
+                if (Gpu.GpuBackendChoice.RetryAutoDefault(Wmi, Gpu.Block.GpuBlockCapability.IsAvailable,
+                        Install.Installer.WaitForStartupDecision))
+                {
+                    SyncUdevMonitor();
+                    RefreshTrayMenu();
+                }
+
                 // Check for boot recovery marker (impossible state was fixed during boot)
                 try
                 {
-                    string markerPath = Gpu.GPUModeControl.RecoveryMarkerPath;
+                    string markerPath = Gpu.GpuBootFiles.RecoveryMarkerPath;
                     if (File.Exists(markerPath))
                     {
                         string reason = File.ReadAllText(markerPath).Trim();
@@ -364,7 +372,7 @@ public class App : Application
                                 "dialog-warning");
                             AppConfig.Set("gpu_recovery_seen", reason);
                         }
-                        if (Gpu.GPUModeControl.ClearRecoveryMarker())
+                        if (Gpu.GpuBootFiles.ClearRecovery())
                             AppConfig.Set("gpu_recovery_seen", "");
                     }
                     else if (!string.IsNullOrEmpty(AppConfig.GetString("gpu_recovery_seen")))

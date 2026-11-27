@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GHelper.Linux.Helpers;
+using GHelper.Linux.Platform.Linux;
 
 namespace GHelper.Linux.Gpu.Block;
 
@@ -49,7 +50,7 @@ public static class GpuProcessList
     private static List<(string Node, string Bdf)> ReadDrmNodes()
     {
         var result = new List<(string, string)>();
-        string drmRoot = GPUModeControl.TestPathPrefix + "/sys/class/drm";
+        string drmRoot = SysfsHelper.HostPath("/sys/class/drm");
         try
         {
             if (!Directory.Exists(drmRoot))

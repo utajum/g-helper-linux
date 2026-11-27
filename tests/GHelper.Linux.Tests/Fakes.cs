@@ -14,7 +14,6 @@ public sealed class FakeAsusWmi : IHardwareControl
     public int MuxMode = 1;            // 1 = hybrid, 0 = Ultimate (dGPU direct)
     public bool DgpuDisableSupported = true;
     public bool MuxModeSupported = true;
-    public bool CanToggleBackendValue = true;
     public bool ThrowOnSetGpuEco;      // simulate firmware rejection
     public bool ThrowOnSetGpuMuxMode;
     public Exception? NextSetGpuEcoException;
@@ -80,7 +79,6 @@ public sealed class FakeAsusWmi : IHardwareControl
     }
 
     public bool IsGpuEcoAvailable() => DgpuDisableSupported;
-    public bool CanToggleGpuBackend() => CanToggleBackendValue;
     public int FanCount => 2;
 
     public event Action<int>? WmiEvent;

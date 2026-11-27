@@ -1,5 +1,6 @@
 using GHelper.Linux.Helpers;
 using GHelper.Linux.Platform;
+using GHelper.Linux.Platform.Linux;
 
 namespace GHelper.Linux.Gpu;
 
@@ -677,7 +678,7 @@ internal sealed class FirmwareGpuBackend : IGpuBackend
             // Switching away from Eco - remove block artifacts (dGPU driver should be loadable)
             GpuBootFiles.Clean();
 
-            if (GPUModeControl.IsTestMode)
+            if (SysfsHelper.IsTestMode)
             {
                 Logger.WriteLine("GPUModeControl: test mode - skipping live dGPU hardware re-enable");
                 return GpuSwitchResult.Applied;

@@ -381,9 +381,8 @@ public partial class UpdatesWindow : Window
             // The eBPF backend left with its helper; the GPU panel must stop using it.
             if (Helpers.AppConfig.IsBpfGpuBackend() && !File.Exists(SysfsHelper.GpuHelperPath))
             {
-                string fallback = Helpers.AppConfig.DefaultGpuBackend();
-                Helpers.AppConfig.Set("gpu_backend", fallback);
-                await Task.Run(() => App.GpuModeCtrl?.OnBackendChanged("ebpf", fallback));
+                var fallback = Gpu.GpuBackendChoice.LeaveBpf();
+                await Task.Run(() => App.GpuModeCtrl?.OnBackendChanged(Gpu.GpuBackendKind.Ebpf, fallback));
             }
             // Expand the panel so the result line (which lives in the collapsed
             // body) is actually visible.

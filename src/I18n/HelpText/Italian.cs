@@ -116,10 +116,10 @@ internal static class Italian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Rimette Eco a ogni avvio. Alcuni firmware dimenticano l'impostazione Eco dopo un riavvio.",
         ["ExtraWindow.checkDgpuMonitor"] = "Legge la temperatura della dGPU per la finestra principale e l'area di notifica. Disattiva per lasciar dormire la dGPU (RTD3), perché la lettura la sveglia.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Spegne la dGPU con strumenti del kernel invece del firmware ASUS: una blocklist del driver più una regola udev che rimuove la scheda. Necessario sui portatili senza firmware ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Nasconde la dGPU alle app con un filtro eBPF del kernel. La scheda può dormire in D3cold e torna subito, senza riavvio. Le app che usano già la dGPU la tengono finché non si chiudono.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Spegne la dGPU con strumenti del kernel: una blocklist del driver più una regola udev che rimuove la scheda. Usalo dove eBPF non può funzionare.",
         ["ExtraWindow.checkBpfOptimized"] = "Aggiunge il pulsante della modalità Ottimizzato: Eco a batteria, Standard con l'alimentatore.",
         ["ExtraWindow.buttonGpuApps"] = "Apre l'elenco delle app che possono ancora usare la dGPU mentre il blocco eBPF la nasconde.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Spegne la dGPU nel firmware ASUS invece che con eBPF. Sui portatili con switch MUX mostra anche il pulsante Massimo. Alcuni cambi di modalità richiedono un riavvio.",
         ["ExtraWindow.checkRawWmi"] = "Parla direttamente con il firmware ASUS tramite debugfs. Solo per firmware Vivobook e Zenbook più vecchi senza dgpu_disable. Riavvia l'app.",
         ["ExtraWindow.comboApuMem"] = "Memoria riservata alla GPU integrata (buffer UMA). Più memoria aiuta i giochi, meno lascia più RAM alle app. Richiede un riavvio.",
         ["ExtraWindow.checkXGMLights"] = "Accende o spegne le luci del dock XG Mobile.",

@@ -116,10 +116,10 @@ internal static class Norwegian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Setter Øko på nytt ved hver start. Noen fastvarer glemmer Øko-innstillingen etter omstart.",
         ["ExtraWindow.checkDgpuMonitor"] = "Leser dGPU-temperaturen for hovedvinduet og systemstatusfeltet. Slå av for å la dGPU-en sove (RTD3), fordi lesingen vekker den.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Slår av dGPU-en med kjerneverktøy i stedet for ASUS-fastvaren: en driverblokkliste pluss en udev-regel som fjerner kortet. Nødvendig på bærbare uten ASUS-fastvare.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Skjuler dGPU-en for apper med et eBPF-filter i kjernen. Kortet kan sove i D3cold og er straks tilbake, uten omstart. Apper som allerede bruker dGPU-en, beholder den til de lukkes.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Slår av dGPU-en med kjerneverktøy: en driverblokkliste pluss en udev-regel som fjerner kortet. Bruk den der eBPF ikke kan kjøre.",
         ["ExtraWindow.checkBpfOptimized"] = "Legger til knappen for modusen Optimalisert: Øko på batteri, Standard på strømnettet.",
         ["ExtraWindow.buttonGpuApps"] = "Åpner listen over apper som fortsatt kan bruke dGPU-en mens eBPF-blokkeringen skjuler den.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Slår av dGPU-en i ASUS-fastvaren i stedet for med eBPF. På bærbare med MUX-bryter viser den også knappen Ultimat. Noen modusbytter krever omstart.",
         ["ExtraWindow.checkRawWmi"] = "Snakker direkte med ASUS-fastvaren via debugfs. Bare for eldre Vivobook- og Zenbook-fastvare uten dgpu_disable. Starter appen på nytt.",
         ["ExtraWindow.comboApuMem"] = "Minne reservert for den innebygde GPU-en (UMA-buffer). Mer hjelper spill, mindre gir apper mer RAM. Krever omstart.",
         ["ExtraWindow.checkXGMLights"] = "Slår lysene på XG Mobile-docken på eller av.",

@@ -116,10 +116,10 @@ internal static class Czech
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Nastaví Eko znovu při každém spuštění. Některý firmware po restartu nastavení Eko zapomene.",
         ["ExtraWindow.checkDgpuMonitor"] = "Čte teplotu dGPU pro hlavní okno a oznamovací oblast. Vypnutím necháte dGPU spát (RTD3), protože čtení ji budí.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Vypne dGPU nástroji jádra místo firmwaru ASUS: seznamem blokovaných ovladačů a pravidlem udev, které kartu odebere. Nutné na noteboocích bez firmwaru ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Skryje dGPU před aplikacemi filtrem eBPF v jádře. Karta může spát v D3cold a vrátí se hned, bez restartu. Aplikace, které už dGPU používají, si ji ponechají, dokud se nezavřou.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Vypne dGPU nástroji jádra: seznamem blokovaných ovladačů a pravidlem udev, které kartu odebere. Použijte tam, kde eBPF nemůže běžet.",
         ["ExtraWindow.checkBpfOptimized"] = "Přidá tlačítko režimu Optimalizovaný: Eko na baterii, Standard na síti.",
         ["ExtraWindow.buttonGpuApps"] = "Otevře seznam aplikací, které mohou dGPU dál používat, zatímco ji blokování eBPF skrývá.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Vypíná dGPU ve firmwaru ASUS místo eBPF. Na noteboocích s přepínačem MUX také zobrazí tlačítko Ultimátní. Některé změny režimu vyžadují restart.",
         ["ExtraWindow.checkRawWmi"] = "Komunikuje s firmwarem ASUS přímo přes debugfs. Jen pro starší firmware Vivobook a Zenbook bez dgpu_disable. Restartuje aplikaci.",
         ["ExtraWindow.comboApuMem"] = "Paměť vyhrazená integrované GPU (vyrovnávací paměť UMA). Víc paměti pomáhá hrám, míň nechá víc RAM aplikacím. Vyžaduje restart.",
         ["ExtraWindow.checkXGMLights"] = "Zapne nebo vypne světla doku XG Mobile.",

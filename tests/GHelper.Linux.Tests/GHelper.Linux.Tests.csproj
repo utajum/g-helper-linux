@@ -57,6 +57,7 @@
     <Compile Include="../../src/Gpu/DgpuDriver.cs" />
     <Compile Include="../../src/Gpu/DgpuPci.cs" />
     <Compile Include="../../src/Gpu/GpuBootFiles.cs" />
+    <Compile Include="../../src/Gpu/GpuBackendChoice.cs" />
     <Compile Include="../../src/Gpu/GpuSwitchNotice.cs" />
     <Compile Include="../../src/Gpu/MuxLatch.cs" />
     <Compile Include="../../src/Gpu/NVidia/GpuQueryGate.cs" />

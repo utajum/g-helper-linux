@@ -116,10 +116,10 @@ internal static class Thai
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "ตั้งโหมดประหยัดใหม่ทุกครั้งที่เริ่มเครื่อง เฟิร์มแวร์บางตัวลืมการตั้งค่าประหยัดหลังรีบูต",
         ["ExtraWindow.checkDgpuMonitor"] = "อ่านอุณหภูมิ dGPU สำหรับหน้าต่างหลักและถาดระบบ ปิดเพื่อให้ dGPU พักได้ (RTD3) เพราะการอ่านจะปลุก dGPU",
-        ["ExtraWindow.checkPciGpuBackend"] = "ปิด dGPU ด้วยเครื่องมือของเคอร์เนลแทนเฟิร์มแวร์ ASUS: รายการบล็อกไดรเวอร์และกฎ udev ที่ถอดการ์ดออก จำเป็นสำหรับโน้ตบุ๊กที่ไม่มีเฟิร์มแวร์ ASUS",
-        ["ExtraWindow.checkBpfGpuBackend"] = "ซ่อน dGPU จากแอปด้วยตัวกรอง eBPF ของเคอร์เนล การ์ดพักใน D3cold ได้และกลับมาทันทีโดยไม่ต้องรีบูต แอปที่ใช้ dGPU อยู่แล้วจะใช้ต่อจนกว่าจะปิด",
+        ["ExtraWindow.checkPciGpuBackend"] = "ปิด dGPU ด้วยเครื่องมือของเคอร์เนล: รายการบล็อกไดรเวอร์และกฎ udev ที่ถอดการ์ดออก ใช้ในกรณีที่ eBPF ทำงานไม่ได้",
         ["ExtraWindow.checkBpfOptimized"] = "เพิ่มปุ่มโหมดปรับแต่งอัตโนมัติ: ประหยัดเมื่อใช้แบตเตอรี่ มาตรฐานเมื่อเสียบไฟ",
         ["ExtraWindow.buttonGpuApps"] = "เปิดรายการแอปที่ยังใช้ dGPU ได้ขณะที่การบล็อก eBPF ซ่อน dGPU อยู่",
+        ["ExtraWindow.checkMuxGpuBackend"] = "ปิด dGPU ในเฟิร์มแวร์ ASUS แทน eBPF บนโน้ตบุ๊กที่มีสวิตช์ MUX จะแสดงปุ่มสูงสุดด้วย การเปลี่ยนโหมดบางครั้งต้องรีบูต",
         ["ExtraWindow.checkRawWmi"] = "สื่อสารกับเฟิร์มแวร์ ASUS โดยตรงผ่าน debugfs สำหรับเฟิร์มแวร์ Vivobook และ Zenbook รุ่นเก่าที่ไม่มี dgpu_disable เท่านั้น จะรีสตาร์ทแอป",
         ["ExtraWindow.comboApuMem"] = "หน่วยความจำที่สงวนไว้สำหรับ GPU ในตัว (บัฟเฟอร์ UMA) มากขึ้นช่วยเกม น้อยลงเหลือ RAM ให้แอปมากขึ้น ต้องรีบูต",
         ["ExtraWindow.checkXGMLights"] = "เปิดหรือปิดไฟของแท่น XG Mobile",

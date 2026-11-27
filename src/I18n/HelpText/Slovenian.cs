@@ -116,10 +116,10 @@ internal static class Slovenian
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Ob vsakem zagonu znova nastavi Eco. Nekatera strojna programska oprema po ponovnem zagonu pozabi nastavitev Eco.",
         ["ExtraWindow.checkDgpuMonitor"] = "Bere temperaturo dGPU za glavno okno in sistemsko vrstico. Izklopite, da dGPU lahko spi (RTD3), ker jo branje zbudi.",
-        ["ExtraWindow.checkPciGpuBackend"] = "Izklopi dGPU z orodji jedra namesto strojne programske opreme ASUS: s seznamom blokiranih gonilnikov in pravilom udev, ki kartico odstrani. Potrebno na prenosnikih brez strojne programske opreme ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "Skrije dGPU pred aplikacijami s filtrom eBPF v jedru. Kartica lahko spi v D3cold in se vrne takoj, brez ponovnega zagona. Aplikacije, ki dGPU že uporabljajo, jo obdržijo, dokler se ne zaprejo.",
+        ["ExtraWindow.checkPciGpuBackend"] = "Izklopi dGPU z orodji jedra: s seznamom blokiranih gonilnikov in pravilom udev, ki kartico odstrani. Uporabite ga tam, kjer eBPF ne more delovati.",
         ["ExtraWindow.checkBpfOptimized"] = "Doda gumb načina Optimiziran: Eco na bateriji, Standardni na omrežju.",
         ["ExtraWindow.buttonGpuApps"] = "Odpre seznam aplikacij, ki lahko dGPU še uporabljajo, medtem ko jo blokada eBPF skriva.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "Izklopi dGPU v strojni programski opremi ASUS namesto z eBPF. Na prenosnikih s stikalom MUX prikaže tudi gumb Ultimate. Nekatere menjave načina zahtevajo ponovni zagon.",
         ["ExtraWindow.checkRawWmi"] = "Komunicira s strojno programsko opremo ASUS neposredno prek debugfs. Samo za starejšo strojno programsko opremo Vivobook in Zenbook brez dgpu_disable. Znova zažene aplikacijo.",
         ["ExtraWindow.comboApuMem"] = "Pomnilnik, rezerviran za vgrajeno GPU (medpomnilnik UMA). Več pomnilnika pomaga igram, manj pusti več RAM-a aplikacijam. Zahteva ponovni zagon.",
         ["ExtraWindow.checkXGMLights"] = "Vklopi ali izklopi luči postaje XG Mobile.",

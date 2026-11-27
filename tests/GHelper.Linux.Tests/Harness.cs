@@ -29,12 +29,12 @@ public static class Harness
 
         public Sandbox(string scenarioName)
         {
-            // GHELPER_TEST_ROOT is consumed at static-ctor time of
-            // GPUModeControl, so we cannot vary it per scenario. Place
+            // GHELPER_TEST_ROOT is read once by SysfsHelper, so we
+            // cannot vary it per scenario. Place
             // all scenarios under a shared root that was set before the
             // first SUT touch (see Program.Main).
             string root = Environment.GetEnvironmentVariable("GHELPER_TEST_ROOT")
-                ?? throw new InvalidOperationException("GHELPER_TEST_ROOT not set - Program.Main must set it before any GPUModeControl access");
+                ?? throw new InvalidOperationException("GHELPER_TEST_ROOT not set - Program.Main must set it before any SysfsHelper access");
             TempRoot = root;
 
             // Wipe every test path so each scenario starts clean.
@@ -60,13 +60,16 @@ public static class Harness
             string sysModule = Path.Combine(TempRoot, "sys", "module");
             string libModules = Path.Combine(TempRoot, "lib", "modules");
             string procKernel = Path.Combine(TempRoot, "proc", "sys", "kernel");
-            foreach (var d in new[] { sysBusPci, sysBusPciSlots, sysModule, libModules, procKernel })
+            string sysPlatform = Path.Combine(TempRoot, "sys", "devices", "platform");
+            string sysKernel = Path.Combine(TempRoot, "sys", "kernel");
+            foreach (var d in new[] { sysBusPci, sysBusPciSlots, sysModule, libModules, procKernel, sysPlatform, sysKernel })
             {
                 if (Directory.Exists(d))
                     Directory.Delete(d, recursive: true);
                 Directory.CreateDirectory(d);
             }
             LinuxAsusWmi.InvalidateGpuPresenceCache();
+            Gpu.Block.DgpuPowerMonitor.ForgetBdf();
 
             // Fresh per-scenario config directory.
             ConfigDir = Path.Combine(TempRoot, "config", scenarioName);
@@ -81,6 +84,7 @@ public static class Harness
             // Always install the seam so no scenario can shell out to the
             // real privileged helper by accident.
             Gpu.Block.GpuBlockControl.TestOps = BlockOps;
+            Gpu.Block.GpuBlockCapability.TestCaps = null;
             // Model the display topology too, or results would depend on
             // whatever monitors the machine running the tests has plugged in.
             ExternalDisplay = false;
@@ -92,12 +96,12 @@ public static class Harness
 
         // Convenience helpers -------------------------------------------------
 
-        public string ModprobePath => GPUModeControl.ModprobeBlockPath;
-        public string UdevPath => GPUModeControl.UdevRemovePath;
-        public string TriggerPath => GPUModeControl.TriggerPath;
-        public string BackendPath => GPUModeControl.BackendPath;
+        public string ModprobePath => GpuBootFiles.ModprobeBlockPath;
+        public string UdevPath => GpuBootFiles.UdevRemovePath;
+        public string TriggerPath => GpuBootFiles.TriggerPath;
+        public string BackendPath => GpuBootFiles.BackendPath;
 
-        public string PersistentPath => GPUModeControl.PersistentTriggerPath;
+        public string PersistentPath => GpuBootFiles.PersistentTriggerPath;
 
         public bool ModprobePresent() => File.Exists(ModprobePath);
         public bool UdevPresent() => File.Exists(UdevPath);
@@ -217,6 +221,44 @@ public static class Harness
             File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
             File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
             File.WriteAllText(Path.Combine(dev, "boot_vga"), "1\n");
+            LinuxAsusWmi.InvalidateGpuPresenceCache();
+        }
+
+        /// <summary>AMD iGPU without boot_vga (Ally class): only the connected eDP panel marks it.</summary>
+        public void WriteFakeAmdIgpuPanelOnly()
+        {
+            string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:e2:00.0");
+            string conn = Path.Combine(dev, "drm", "card0", "card0-eDP-1");
+            Directory.CreateDirectory(conn);
+            File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
+            File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
+            File.WriteAllText(Path.Combine(conn, "status"), "connected\n");
+            LinuxAsusWmi.InvalidateGpuPresenceCache();
+        }
+
+        /// <summary>asus-nb-wmi platform device: the laptop counts as ASUS.</summary>
+        public void WriteFakeAsusPlatform()
+            => Directory.CreateDirectory(Path.Combine(TempRoot, "sys", "devices", "platform", "asus-nb-wmi"));
+
+        /// <summary>Intel iGPU: boot display at 00:02.0, vendor 0x8086.</summary>
+        public void WriteFakeIntelIgpuDevice()
+        {
+            string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:00:02.0");
+            Directory.CreateDirectory(dev);
+            File.WriteAllText(Path.Combine(dev, "vendor"), "0x8086\n");
+            File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
+            File.WriteAllText(Path.Combine(dev, "boot_vga"), "1\n");
+            LinuxAsusWmi.InvalidateGpuPresenceCache();
+        }
+
+        /// <summary>AMD dGPU: non-boot VGA function with a DRM card (RX 6800S class).</summary>
+        public void WriteFakeAmdDgpuDevice()
+        {
+            string dev = Path.Combine(TempRoot, "sys", "bus", "pci", "devices", "0000:03:00.0");
+            Directory.CreateDirectory(Path.Combine(dev, "drm", "card1"));
+            File.WriteAllText(Path.Combine(dev, "vendor"), "0x1002\n");
+            File.WriteAllText(Path.Combine(dev, "class"), "0x030000\n");
+            File.WriteAllText(Path.Combine(dev, "boot_vga"), "0\n");
             LinuxAsusWmi.InvalidateGpuPresenceCache();
         }
 

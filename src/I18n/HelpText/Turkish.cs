@@ -116,10 +116,10 @@ internal static class Turkish
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "Her başlangıçta Eko'yu yeniden ayarlar. Bazı donanım yazılımları yeniden başlatmadan sonra Eko ayarını unutur.",
         ["ExtraWindow.checkDgpuMonitor"] = "Ana pencere ve tepsi için dGPU sıcaklığını okur. dGPU'nun uyuyabilmesi (RTD3) için kapat, çünkü okuma onu uyandırır.",
-        ["ExtraWindow.checkPciGpuBackend"] = "dGPU'yu ASUS donanım yazılımı yerine çekirdek araçlarıyla kapatır: bir sürücü engel listesi ve kartı kaldıran bir udev kuralı. ASUS donanım yazılımı olmayan dizüstülerde gereklidir.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "dGPU'yu bir çekirdek eBPF filtresiyle uygulamalardan gizler. Kart D3cold'da uyuyabilir ve yeniden başlatma olmadan hemen geri gelir. dGPU'yu zaten kullanan uygulamalar kapanana kadar onu tutar.",
+        ["ExtraWindow.checkPciGpuBackend"] = "dGPU'yu çekirdek araçlarıyla kapatır: bir sürücü engel listesi ve kartı kaldıran bir udev kuralı. eBPF'nin çalışamadığı yerlerde kullanın.",
         ["ExtraWindow.checkBpfOptimized"] = "Optimize mod düğmesini ekler: pilde Eko, prizde Standart.",
         ["ExtraWindow.buttonGpuApps"] = "eBPF engeli dGPU'yu gizlerken onu hâlâ kullanabilen uygulamaların listesini açar.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "dGPU'yu eBPF yerine ASUS donanım yazılımında kapatır. MUX anahtarı olan dizüstülerde Maksimum düğmesini de gösterir. Bazı mod değişiklikleri yeniden başlatma gerektirir.",
         ["ExtraWindow.checkRawWmi"] = "ASUS donanım yazılımıyla doğrudan debugfs üzerinden konuşur. Sadece dgpu_disable olmayan eski Vivobook ve Zenbook donanım yazılımları için. Uygulamayı yeniden başlatır.",
         ["ExtraWindow.comboApuMem"] = "Dahili GPU için ayrılan bellek (UMA arabelleği). Daha fazlası oyunlara yardım eder, daha azı uygulamalara daha çok RAM bırakır. Yeniden başlatma gerekir.",
         ["ExtraWindow.checkXGMLights"] = "XG Mobile dock ışıklarını açar veya kapatır.",

@@ -116,10 +116,10 @@ internal static class Arabic
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "يضبط بيئي مجددًا عند كل تشغيل. بعض البرامج الثابتة تنسى إعداد بيئي بعد إعادة التشغيل.",
         ["ExtraWindow.checkDgpuMonitor"] = "يقرأ حرارة dGPU للنافذة الرئيسية وشريط النظام. أطفئه لتسمح لوحدة dGPU بالسكون (RTD3)، لأن القراءة توقظها.",
-        ["ExtraWindow.checkPciGpuBackend"] = "يطفئ dGPU بأدوات النواة بدلًا من البرنامج الثابت من ASUS: قائمة حظر لبرنامج التشغيل وقاعدة udev تزيل البطاقة. مطلوب في الحواسيب المحمولة التي ليس لها برنامج ثابت من ASUS.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "يخفي dGPU عن التطبيقات بمرشّح eBPF في النواة. يمكن للبطاقة أن تنام في D3cold وتعود فورًا، دون إعادة تشغيل. التطبيقات التي تستخدم dGPU بالفعل تحتفظ بها حتى تُغلق.",
+        ["ExtraWindow.checkPciGpuBackend"] = "يطفئ dGPU بأدوات النواة: قائمة حظر لبرنامج التشغيل وقاعدة udev تزيل البطاقة. استخدمه حيث لا يمكن تشغيل eBPF.",
         ["ExtraWindow.checkBpfOptimized"] = "يضيف زر الوضع المُحسَّن: بيئي على البطارية، وقياسي عند التوصيل بالكهرباء.",
         ["ExtraWindow.buttonGpuApps"] = "يفتح قائمة التطبيقات التي ما زال بإمكانها استخدام dGPU أثناء إخفائها بحظر eBPF.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "يطفئ dGPU في البرنامج الثابت من ASUS بدلًا من eBPF. في الحواسيب المحمولة التي فيها مفتاح MUX يُظهر أيضًا زر فائق. بعض تغييرات الوضع تحتاج إلى إعادة التشغيل.",
         ["ExtraWindow.checkRawWmi"] = "يتواصل مع البرنامج الثابت من ASUS مباشرة عبر debugfs. فقط للبرامج الثابتة القديمة في Vivobook و Zenbook التي ليس فيها dgpu_disable. يعيد تشغيل التطبيق.",
         ["ExtraWindow.comboApuMem"] = "الذاكرة المحجوزة لوحدة GPU المدمجة (مخزن UMA). ذاكرة أكثر تساعد الألعاب، وأقل تترك ذاكرة RAM أكثر للتطبيقات. يحتاج إلى إعادة تشغيل.",
         ["ExtraWindow.checkXGMLights"] = "يشغّل أو يطفئ أضواء قاعدة XG Mobile.",

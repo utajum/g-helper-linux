@@ -753,25 +753,9 @@ public class LinuxNvidiaGpuControl : IGpuControl
         if (_rtStatusPath == null && DateTime.UtcNow >= _rtRescanUtc)
         {
             _rtRescanUtc = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-            try
-            {
-                foreach (var dev in Directory.EnumerateDirectories("/sys/bus/pci/devices"))
-                {
-                    string cls = SysfsHelper.ReadAttribute(Path.Combine(dev, "class")) ?? "";
-                    if (!cls.StartsWith("0x0300", StringComparison.Ordinal)
-                        && !cls.StartsWith("0x0302", StringComparison.Ordinal))
-                        continue;
-                    if (SysfsHelper.ReadInt(Path.Combine(dev, "boot_vga"), 0) == 1)
-                        continue; // iGPU
-                    if ((SysfsHelper.ReadAttribute(Path.Combine(dev, "vendor")) ?? "")
-                        .StartsWith("0x10de", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _rtStatusPath = Path.Combine(dev, "power/runtime_status");
-                        break;
-                    }
-                }
-            }
-            catch { }
+            string? bdf = DgpuPci.Find("0x10de")?.bdf;
+            if (bdf != null)
+                _rtStatusPath = SysfsHelper.HostPath($"/sys/bus/pci/devices/{bdf}/power/runtime_status");
         }
         return _rtStatusPath != null
             && SysfsHelper.ReadAttribute(_rtStatusPath) == "suspended";

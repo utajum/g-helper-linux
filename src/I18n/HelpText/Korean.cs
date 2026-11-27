@@ -116,10 +116,10 @@ internal static class Korean
         // Extra window: GPU
         ["ExtraWindow.checkEcoPersistent"] = "시작할 때마다 에코를 다시 설정합니다. 일부 펌웨어는 재부팅 후 에코 설정을 잊습니다.",
         ["ExtraWindow.checkDgpuMonitor"] = "메인 창과 트레이에 표시할 dGPU 온도를 읽습니다. 읽으면 dGPU가 깨어나므로, dGPU를 절전(RTD3)시키려면 끄세요.",
-        ["ExtraWindow.checkPciGpuBackend"] = "ASUS 펌웨어 대신 커널 도구로 dGPU를 끕니다: 드라이버 차단 목록과 카드를 제거하는 udev 규칙. ASUS 펌웨어가 없는 노트북에서 필요합니다.",
-        ["ExtraWindow.checkBpfGpuBackend"] = "커널 eBPF 필터로 앱에서 dGPU를 숨깁니다. 카드는 D3cold로 절전할 수 있고 재부팅 없이 바로 돌아옵니다. 이미 dGPU를 사용하는 앱은 종료할 때까지 계속 사용합니다.",
+        ["ExtraWindow.checkPciGpuBackend"] = "커널 도구로 dGPU를 끕니다: 드라이버 차단 목록과 카드를 제거하는 udev 규칙. eBPF를 실행할 수 없는 경우에 사용합니다.",
         ["ExtraWindow.checkBpfOptimized"] = "최적화 모드 버튼을 추가합니다: 배터리에서는 에코, AC 전원에서는 표준.",
         ["ExtraWindow.buttonGpuApps"] = "eBPF 차단으로 dGPU가 숨겨져 있는 동안에도 dGPU를 사용할 수 있는 앱 목록을 엽니다.",
+        ["ExtraWindow.checkMuxGpuBackend"] = "eBPF 대신 ASUS 펌웨어에서 dGPU를 끕니다. MUX 스위치가 있는 노트북에서는 최고 버튼도 표시합니다. 일부 모드 변경은 재부팅이 필요합니다.",
         ["ExtraWindow.checkRawWmi"] = "debugfs를 통해 ASUS 펌웨어와 직접 통신합니다. dgpu_disable이 없는 오래된 Vivobook 및 Zenbook 펌웨어 전용입니다. 앱을 다시 시작합니다.",
         ["ExtraWindow.comboApuMem"] = "내장 GPU용으로 예약한 메모리(UMA 버퍼). 많으면 게임에 도움이 되고, 적으면 앱에 RAM이 더 남습니다. 재부팅이 필요합니다.",
         ["ExtraWindow.checkXGMLights"] = "XG Mobile 독 조명을 켜거나 끕니다.",

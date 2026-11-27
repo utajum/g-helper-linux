@@ -472,20 +472,20 @@ public static class GpuSwitchTests
 
         Harness.Scenario("Persistent_Toggle_WritesAndRemovesMarker", sb =>
         {
-            sb.Controller.SetEcoPersistent(true);
-            Harness.Assert(File.Exists(GPUModeControl.PersistentTriggerPath), "marker written");
+            GpuBootFiles.SetEcoPersistent(true);
+            Harness.Assert(File.Exists(GpuBootFiles.PersistentTriggerPath), "marker written");
             Harness.Assert(AppConfig.Is("gpu_eco_persistent"), "config on");
-            sb.Controller.SetEcoPersistent(false);
-            Harness.Assert(!File.Exists(GPUModeControl.PersistentTriggerPath), "marker removed");
+            GpuBootFiles.SetEcoPersistent(false);
+            Harness.Assert(!File.Exists(GpuBootFiles.PersistentTriggerPath), "marker removed");
             Harness.Assert(!AppConfig.Is("gpu_eco_persistent"), "config off");
         });
 
         Harness.Scenario("Persistent_ClickStandard_RemovesMarker_KeepsSetting", sb =>
         {
             Wmi(sb, 1, true);
-            sb.Controller.SetEcoPersistent(true);
+            GpuBootFiles.SetEcoPersistent(true);
             Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Standard), "result");
-            Harness.Assert(!File.Exists(GPUModeControl.PersistentTriggerPath), "boot script must not force Eco");
+            Harness.Assert(!File.Exists(GpuBootFiles.PersistentTriggerPath), "boot script must not force Eco");
             Harness.Assert(AppConfig.Is("gpu_eco_persistent"), "user setting kept");
         });
 
@@ -494,14 +494,14 @@ public static class GpuSwitchTests
             Wmi(sb, 1, false);
             AppConfig.Set("gpu_eco_persistent", 1);
             Harness.AssertEqual(GpuSwitchResult.Applied, sb.Controller.RequestModeSwitch(GpuMode.Eco), "result");
-            Harness.Assert(File.Exists(GPUModeControl.PersistentTriggerPath), "marker written");
+            Harness.Assert(File.Exists(GpuBootFiles.PersistentTriggerPath), "marker written");
         });
 
         Harness.Scenario("Persistent_StartupEcoMatches_KeepsBlocks", sb =>
         {
             Wmi(sb, 1, true);
             AppConfig.Set("gpu_mode", "eco");
-            sb.Controller.SetEcoPersistent(true);
+            GpuBootFiles.SetEcoPersistent(true);
             sb.WriteBlockArtifacts();
             Harness.AssertEqual(GpuSwitchResult.AlreadySet, sb.Controller.ApplyPendingOnStartup(), "result");
             Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks kept for the next boot");
@@ -990,11 +990,11 @@ public static class GpuSwitchTests
             }
         });
 
-        Harness.Scenario("PushBackendMarker_KeepsBlocksAndTrigger", sb =>
+        Harness.Scenario("SelectBackend_KeepsBlocksAndTrigger", sb =>
         {
             sb.WriteBlockArtifacts();
             sb.WriteTrigger("eco");
-            sb.Controller.PushBackendMarker("pci");
+            GpuBackendChoice.Select(GpuBackendKind.Pci);
             Harness.Assert(sb.ModprobePresent() && sb.UdevPresent(), "blocks kept");
             Harness.AssertEqual("eco", sb.TriggerContent(), "trigger kept");
         });
@@ -1076,24 +1076,24 @@ public static class GpuSwitchTests
 
         Harness.Scenario("Backend_Values", _ =>
         {
-            foreach (var (raw, want) in new[] { ("pci", "pci"), (" PCI ", "pci"), ("asus-wmi", "asus-wmi"), ("ASUS-WMI", "asus-wmi"), ("garbage", "asus-wmi"), ("", "asus-wmi") })
+            foreach (var (raw, want) in new[] { ("pci", GpuBackendKind.Pci), (" PCI ", GpuBackendKind.Pci), ("asus-wmi", GpuBackendKind.AsusWmi), ("ASUS-WMI", GpuBackendKind.AsusWmi), ("garbage", GpuBackendKind.AsusWmi), ("", GpuBackendKind.AsusWmi) })
             {
                 AppConfig.Set("gpu_backend", raw);
                 Harness.AssertEqual(want, AppConfig.GetGpuBackend(), $"gpu_backend '{raw}'");
-                Harness.AssertEqual(want == "pci", AppConfig.IsPciGpuBackend(), $"IsPciGpuBackend '{raw}'");
+                Harness.AssertEqual(want == GpuBackendKind.Pci, AppConfig.IsPciGpuBackend(), $"IsPciGpuBackend '{raw}'");
             }
         });
 
         Harness.Scenario("Backend_Unset_AsusWmi", _ =>
-            Harness.AssertEqual("asus-wmi", AppConfig.GetGpuBackend(), "default"));
+            Harness.AssertEqual(GpuBackendKind.AsusWmi, AppConfig.GetGpuBackend(), "default"));
 
-        Harness.Scenario("Backend_AutoDetectKeepsUserChoice", _ =>
+        Harness.Scenario("Backend_StartupKeepsUserChoice", sb =>
         {
-            foreach (var choice in new[] { "asus-wmi", "pci" })
+            foreach (var choice in new[] { "asus-wmi", "pci", "ebpf" })
             {
                 AppConfig.Set("gpu_backend", choice);
-                AppConfig.AutoDetectGpuBackendIfUnset();
-                Harness.AssertEqual(choice, AppConfig.GetGpuBackend(), "user choice kept");
+                GpuBackendChoice.ResolveAtStartup(sb.Wmi, () => true);
+                Harness.AssertEqual(choice, GpuBackendChoice.Name(AppConfig.GetGpuBackend()), "user choice kept");
             }
         });
 
