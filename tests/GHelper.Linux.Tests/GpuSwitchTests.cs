@@ -11,7 +11,8 @@ public static class GpuSwitchTests
 {
     private static string? BootId()
     {
-        try { return File.ReadAllText("/proc/sys/kernel/random/boot_id").Trim(); }
+        try
+        { return File.ReadAllText("/proc/sys/kernel/random/boot_id").Trim(); }
         catch { return null; }
     }
 

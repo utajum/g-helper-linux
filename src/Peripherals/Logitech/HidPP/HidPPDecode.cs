@@ -81,27 +81,44 @@ public static class HidPPDecode
             case 0x00: // off
                 break;
             case 0x01: // static: color @0, ramp @3
-                p[0] = r; p[1] = g; p[2] = b;
+                p[0] = r;
+                p[1] = g;
+                p[2] = b;
                 break;
             case 0x02: // pulse: color @0, speed @3 (one byte; unit unverified, period / 100 used)
-                p[0] = r; p[1] = g; p[2] = b;
+                p[0] = r;
+                p[1] = g;
+                p[2] = b;
                 p[3] = (byte)(period / 100);
                 break;
             case 0x03: // cycle: period @5, intensity @7
-                p[5] = (byte)(period >> 8); p[6] = (byte)period; p[7] = 100;
+                p[5] = (byte)(period >> 8);
+                p[6] = (byte)period;
+                p[7] = 100;
                 break;
             case 0x0A: // breathe: color @0, period @3, form @5, intensity @6
-                p[0] = r; p[1] = g; p[2] = b;
-                p[3] = (byte)(period >> 8); p[4] = (byte)period; p[6] = 100;
+                p[0] = r;
+                p[1] = g;
+                p[2] = b;
+                p[3] = (byte)(period >> 8);
+                p[4] = (byte)period;
+                p[6] = 100;
                 break;
             case 0x15: // cycle with saturation: saturation @1, period @6, intensity @8
-                p[1] = 255; p[6] = (byte)(period >> 8); p[7] = (byte)period; p[8] = 100;
+                p[1] = 255;
+                p[6] = (byte)(period >> 8);
+                p[7] = (byte)period;
+                p[8] = 100;
                 break;
             case 0x16: // wave with saturation: saturation @1, period @6, intensity @8, direction @9
-                p[1] = 255; p[6] = (byte)(period >> 8); p[7] = (byte)period; p[8] = 100;
+                p[1] = 255;
+                p[6] = (byte)(period >> 8);
+                p[7] = (byte)period;
+                p[8] = 100;
                 break;
             case 0x04: // wave: period @6, direction @9 (layout assumed from 0x16, unverified)
-                p[6] = (byte)(period >> 8); p[7] = (byte)period;
+                p[6] = (byte)(period >> 8);
+                p[7] = (byte)period;
                 break;
             default:
                 return null;

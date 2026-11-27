@@ -42,8 +42,10 @@ public sealed class FakeAsusWmi : IHardwareControl
             NextSetGpuEcoException = null;
             throw ex;
         }
-        if (ThrowOnSetGpuEco) throw new IOException("simulated firmware rejection");
-        if (IgnoreSetGpuEco) return;
+        if (ThrowOnSetGpuEco)
+            throw new IOException("simulated firmware rejection");
+        if (IgnoreSetGpuEco)
+            return;
         EcoEnabled = enabled;
     }
 
@@ -56,18 +58,24 @@ public sealed class FakeAsusWmi : IHardwareControl
     public void SetGpuMuxMode(int mode)
     {
         Calls.Add(("SetGpuMuxMode", mode));
-        if (ThrowOnSetGpuMuxMode) throw new IOException("simulated MUX rejection");
-        if (EcoEnabled) throw new InvalidOperationException("MUX write rejected while dgpu_disable=1");
-        if (MuxLatchedUntilReboot) PendingMux = mode;
-        else MuxMode = mode;
+        if (ThrowOnSetGpuMuxMode)
+            throw new IOException("simulated MUX rejection");
+        if (EcoEnabled)
+            throw new InvalidOperationException("MUX write rejected while dgpu_disable=1");
+        if (MuxLatchedUntilReboot)
+            PendingMux = mode;
+        else
+            MuxMode = mode;
     }
 
     public bool IsFeatureSupported(string feature)
     {
         Calls.Add(("IsFeatureSupported", feature));
         // The two feature checks that matter to GPUModeControl paths
-        if (feature == "dgpu_disable") return DgpuDisableSupported;
-        if (feature == "gpu_mux_mode") return MuxModeSupported;
+        if (feature == "dgpu_disable")
+            return DgpuDisableSupported;
+        if (feature == "gpu_mux_mode")
+            return MuxModeSupported;
         return false;
     }
 

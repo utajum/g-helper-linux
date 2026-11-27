@@ -15,8 +15,8 @@ using GHelper.Linux.Helpers;
 using GHelper.Linux.Mode;
 using GHelper.Linux.Platform.Linux;
 using static GHelper.Linux.Tests.Harness;
-using Gate = GHelper.Linux.Gpu.NVidia.GpuQueryGate;
 using Block = GHelper.Linux.Gpu.Block;
+using Gate = GHelper.Linux.Gpu.NVidia.GpuQueryGate;
 
 namespace GHelper.Linux.Tests;
 
@@ -264,109 +264,112 @@ public static class Scenarios
         // Ultimate hw-state is not realistic in PCI mode (no MUX), so it is
         // covered only in the WMI half of the matrix.
         foreach (var rawWmi in new[] { false, true })
-        foreach (var hw in new[] { HwState.Standard, HwState.Eco })
-        foreach (var blocks in new[] { false, true })
-        foreach (var button in new[] { GpuMode.Eco, GpuMode.Standard, GpuMode.Ultimate, GpuMode.Optimized })
-        {
-            // Skip nonsensical combos: PCI mode in "Eco hw" without blocks
-            // is impossible (PCI mode reads blocks as the source of truth).
-            // Encode that mismatch only when it would test something real.
-            if (hw == HwState.Eco && !blocks) continue;
-            if (hw == HwState.Standard && blocks) continue;
+            foreach (var hw in new[] { HwState.Standard, HwState.Eco })
+                foreach (var blocks in new[] { false, true })
+                    foreach (var button in new[] { GpuMode.Eco, GpuMode.Standard, GpuMode.Ultimate, GpuMode.Optimized })
+                    {
+                        // Skip nonsensical combos: PCI mode in "Eco hw" without blocks
+                        // is impossible (PCI mode reads blocks as the source of truth).
+                        // Encode that mismatch only when it would test something real.
+                        if (hw == HwState.Eco && !blocks)
+                            continue;
+                        if (hw == HwState.Standard && blocks)
+                            continue;
 
-            string name = $"Matrix_Pci_{(rawWmi ? "rawwmi" : "norawwmi")}_{hw}_Click{button}";
-            Scenario(name, sb =>
-            {
-                AppConfig.Set("gpu_backend", "pci");
-                AppConfig.Set("raw_wmi", rawWmi ? 1 : 0);
-                (sb.Wmi.MuxMode, sb.Wmi.EcoEnabled) = HwSetup(hw);
-                if (blocks) sb.WriteBlockArtifacts();
+                        string name = $"Matrix_Pci_{(rawWmi ? "rawwmi" : "norawwmi")}_{hw}_Click{button}";
+                        Scenario(name, sb =>
+                        {
+                            AppConfig.Set("gpu_backend", "pci");
+                            AppConfig.Set("raw_wmi", rawWmi ? 1 : 0);
+                            (sb.Wmi.MuxMode, sb.Wmi.EcoEnabled) = HwSetup(hw);
+                            if (blocks)
+                                sb.WriteBlockArtifacts();
 
-                var result = sb.Controller.RequestModeSwitch(button);
+                            var result = sb.Controller.RequestModeSwitch(button);
 
-                // Expectation matrix for PCI:
-                // - Eco hw + click Eco → AlreadySet
-                // - Eco hw + click Std/Ult/Opt → Applied (live recovery)
-                // - Std hw + click Eco → Applied (live, driver idle)
-                // - Std hw + click Std/Opt/Ult → AlreadySet
-                bool wantEco = (button == GpuMode.Eco);
-                if (hw == HwState.Eco && wantEco)
-                    AssertEqual(GpuSwitchResult.AlreadySet, result, "Eco→Eco AlreadySet");
-                else if (hw == HwState.Eco && !wantEco)
-                    AssertEqual(GpuSwitchResult.Applied, result, "Eco→Std/Ult/Opt live Applied");
-                else if (hw == HwState.Standard && wantEco)
-                    AssertEqual(GpuSwitchResult.Applied, result, "Std→Eco live Applied");
-                else
-                    AssertEqual(GpuSwitchResult.AlreadySet, result, "Std→Std/Ult/Opt AlreadySet");
-            });
-        }
+                            // Expectation matrix for PCI:
+                            // - Eco hw + click Eco → AlreadySet
+                            // - Eco hw + click Std/Ult/Opt → Applied (live recovery)
+                            // - Std hw + click Eco → Applied (live, driver idle)
+                            // - Std hw + click Std/Opt/Ult → AlreadySet
+                            bool wantEco = (button == GpuMode.Eco);
+                            if (hw == HwState.Eco && wantEco)
+                                AssertEqual(GpuSwitchResult.AlreadySet, result, "Eco→Eco AlreadySet");
+                            else if (hw == HwState.Eco && !wantEco)
+                                AssertEqual(GpuSwitchResult.Applied, result, "Eco→Std/Ult/Opt live Applied");
+                            else if (hw == HwState.Standard && wantEco)
+                                AssertEqual(GpuSwitchResult.Applied, result, "Std→Eco live Applied");
+                            else
+                                AssertEqual(GpuSwitchResult.AlreadySet, result, "Std→Std/Ult/Opt AlreadySet");
+                        });
+                    }
 
         // ASUS-WMI backend × all hw × all buttons.
         foreach (var rawWmi in new[] { false, true })
-        foreach (var hw in new[] { HwState.Standard, HwState.Eco, HwState.Ultimate })
-        foreach (var button in new[] { GpuMode.Eco, GpuMode.Standard, GpuMode.Ultimate, GpuMode.Optimized })
-        {
-            string name = $"Matrix_Wmi_{(rawWmi ? "rawwmi" : "norawwmi")}_{hw}_Click{button}";
-            Scenario(name, sb =>
-            {
-                AppConfig.Set("gpu_backend", "asus-wmi");
-                AppConfig.Set("raw_wmi", rawWmi ? 1 : 0);
-                (sb.Wmi.MuxMode, sb.Wmi.EcoEnabled) = HwSetup(hw);
+            foreach (var hw in new[] { HwState.Standard, HwState.Eco, HwState.Ultimate })
+                foreach (var button in new[] { GpuMode.Eco, GpuMode.Standard, GpuMode.Ultimate, GpuMode.Optimized })
+                {
+                    string name = $"Matrix_Wmi_{(rawWmi ? "rawwmi" : "norawwmi")}_{hw}_Click{button}";
+                    Scenario(name, sb =>
+                    {
+                        AppConfig.Set("gpu_backend", "asus-wmi");
+                        AppConfig.Set("raw_wmi", rawWmi ? 1 : 0);
+                        (sb.Wmi.MuxMode, sb.Wmi.EcoEnabled) = HwSetup(hw);
 
-                var result = sb.Controller.RequestModeSwitch(button);
+                        var result = sb.Controller.RequestModeSwitch(button);
 
-                // Build expected outcome from the same rules ComputeAndExecute follows.
-                var (mux, eco) = HwSetup(hw);
-                GpuSwitchResult expected;
-                if (button == GpuMode.Eco)
-                {
-                    if (hw == HwState.Eco)
-                        expected = GpuSwitchResult.AlreadySet;
-                    else if (hw == HwState.Ultimate)
-                        // Ultimate→Eco latches MUX→1 first, deferred.
-                        expected = GpuSwitchResult.RebootRequired;
-                    else
-                        // Standard→Eco applies live (driver idle in test env).
-                        expected = GpuSwitchResult.Applied;
-                }
-                else if (button == GpuMode.Standard)
-                {
-                    if (hw == HwState.Standard)
-                        expected = GpuSwitchResult.AlreadySet;
-                    else if (hw == HwState.Eco)
-                        // Eco→Standard always safe, applies live.
-                        expected = GpuSwitchResult.Applied;
-                    else
-                        // Ultimate→Standard requires MUX latch.
-                        expected = GpuSwitchResult.RebootRequired;
-                }
-                else if (button == GpuMode.Ultimate)
-                {
-                    if (hw == HwState.Ultimate)
-                        expected = GpuSwitchResult.AlreadySet;
-                    else
-                        // Switching INTO Ultimate latches MUX→0 - reboot.
-                        expected = GpuSwitchResult.RebootRequired;
-                }
-                else // Optimized
-                {
-                    // Optimized targetMux=1. From Std/Eco that matches; from
-                    // Ultimate it requires MUX→1 latch.
-                    if (hw == HwState.Ultimate)
-                        expected = GpuSwitchResult.RebootRequired;
-                    else if (hw == HwState.Eco)
-                        // hardware in Eco but Optimized doesn't target Eco
-                        // unconditionally - depends on AC state. AC=true in
-                        // FakePowerManager so target is Standard (dGPU on).
-                        // ComputeAndExecute calls ExecuteEnableDgpu → Applied.
-                        expected = GpuSwitchResult.Applied;
-                    else // Standard
-                        expected = GpuSwitchResult.AlreadySet;
-                }
+                        // Build expected outcome from the same rules ComputeAndExecute follows.
+                        var (mux, eco) = HwSetup(hw);
+                        GpuSwitchResult expected;
+                        if (button == GpuMode.Eco)
+                        {
+                            if (hw == HwState.Eco)
+                                expected = GpuSwitchResult.AlreadySet;
+                            else if (hw == HwState.Ultimate)
+                                // Ultimate→Eco latches MUX→1 first, deferred.
+                                expected = GpuSwitchResult.RebootRequired;
+                            else
+                                // Standard→Eco applies live (driver idle in test env).
+                                expected = GpuSwitchResult.Applied;
+                        }
+                        else if (button == GpuMode.Standard)
+                        {
+                            if (hw == HwState.Standard)
+                                expected = GpuSwitchResult.AlreadySet;
+                            else if (hw == HwState.Eco)
+                                // Eco→Standard always safe, applies live.
+                                expected = GpuSwitchResult.Applied;
+                            else
+                                // Ultimate→Standard requires MUX latch.
+                                expected = GpuSwitchResult.RebootRequired;
+                        }
+                        else if (button == GpuMode.Ultimate)
+                        {
+                            if (hw == HwState.Ultimate)
+                                expected = GpuSwitchResult.AlreadySet;
+                            else
+                                // Switching INTO Ultimate latches MUX→0 - reboot.
+                                expected = GpuSwitchResult.RebootRequired;
+                        }
+                        else // Optimized
+                        {
+                            // Optimized targetMux=1. From Std/Eco that matches; from
+                            // Ultimate it requires MUX→1 latch.
+                            if (hw == HwState.Ultimate)
+                                expected = GpuSwitchResult.RebootRequired;
+                            else if (hw == HwState.Eco)
+                                // hardware in Eco but Optimized doesn't target Eco
+                                // unconditionally - depends on AC state. AC=true in
+                                // FakePowerManager so target is Standard (dGPU on).
+                                // ComputeAndExecute calls ExecuteEnableDgpu → Applied.
+                                expected = GpuSwitchResult.Applied;
+                            else // Standard
+                                expected = GpuSwitchResult.AlreadySet;
+                        }
 
-                AssertEqual(expected, result, $"{hw}→{button} (rawWmi={rawWmi})");
-            });
-        }
+                        AssertEqual(expected, result, $"{hw}→{button} (rawWmi={rawWmi})");
+                    });
+                }
     }
 
     // 
@@ -403,7 +406,8 @@ public static class Scenarios
             AssertEqual(bootId, AppConfig.GetString("mux_zero_latched_boot_id") ?? "",
                 "latch preserved across backend toggle");
 
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
             AssertEqual(GpuSwitchResult.EcoBlocked, result, "Eco refused while latch is set");
@@ -420,7 +424,8 @@ public static class Scenarios
             sb.WriteBlockArtifacts();
             // Toggle off.
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             AssertEqual(GpuMode.Eco, sb.Controller.GetCurrentMode(),
                 "blocks present override live dgpu_disable readback");
@@ -456,7 +461,8 @@ public static class Scenarios
             // Cross-boot stale flag (stored boot_id != current).
             AppConfig.Set("mux_zero_latched_boot_id", "some-old-boot-id-that-doesnt-match");
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             sb.Controller.ApplyPendingOnStartup();
 
@@ -479,7 +485,8 @@ public static class Scenarios
         => Scenario(nameof(Regression_WmiEcoLiveApply_DoesNotLeaveStaleTrigger), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
             AssertEqual(GpuSwitchResult.Applied, result, "live applied");
@@ -519,11 +526,13 @@ public static class Scenarios
             // Persistent flag set this boot + PCI mode + Eco click → refused.
             AppConfig.Set("gpu_backend", "pci");
             string bootId;
-            try { bootId = File.ReadAllText("/proc/sys/kernel/random/boot_id").Trim(); }
+            try
+            { bootId = File.ReadAllText("/proc/sys/kernel/random/boot_id").Trim(); }
             catch { return; }
             AppConfig.Set("mux_zero_latched_boot_id", bootId);
 
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
             AssertEqual(GpuSwitchResult.EcoBlocked, result, "Eco refused due to latch");
@@ -537,7 +546,8 @@ public static class Scenarios
             // Live MUX=0 (no persistent flag, just hardware in Ultimate) +
             // PCI mode + Eco click → refused via GetEffectiveMux check.
             AppConfig.Set("gpu_backend", "pci");
-            sb.Wmi.MuxMode = 0; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 0;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -551,7 +561,8 @@ public static class Scenarios
             // dGPU driver loaded: live Eco is unsafe, so the UI gets the Switch
             // Now / After Reboot dialog (DriverBlocking) - no artifacts yet.
             AppConfig.Set("gpu_backend", "pci");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             sb.WriteFakeNvidiaModule();
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
@@ -586,7 +597,8 @@ public static class Scenarios
         => Scenario(nameof(Pci_FromStandard_ClickEco_WritesBlocks_AndAppliesLive), sb =>
         {
             AppConfig.Set("gpu_backend", "pci");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -605,7 +617,8 @@ public static class Scenarios
         {
             AppConfig.Set("gpu_backend", "pci");
             sb.WriteBlockArtifacts();
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -764,7 +777,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromStandard_ClickEco_DriverIdle_AppliesLive), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -778,7 +792,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromEco_ClickStandard_EnablesDgpu), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = true;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = true;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Standard);
 
@@ -791,14 +806,17 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromEco_ClickEco_AlreadySet), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = true;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = true;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
             AssertEqual(GpuSwitchResult.AlreadySet, result, "result");
             // SetGpuEco must NOT be called again
             int writes = 0;
-            foreach (var c in sb.Wmi.Calls) if (c.Method == "SetGpuEco") writes++;
+            foreach (var c in sb.Wmi.Calls)
+                if (c.Method == "SetGpuEco")
+                    writes++;
             AssertEqual(0, writes, "no redundant SetGpuEco");
         });
 
@@ -806,7 +824,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromStandard_ClickStandard_AlreadySet), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Standard);
 
@@ -817,7 +836,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromStandard_ClickUltimate_LatchesMuxAndRequiresReboot), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Ultimate);
 
@@ -830,7 +850,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromUltimate_ClickStandard_LatchesMuxAndRequiresReboot), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 0; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 0;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Standard);
 
@@ -843,7 +864,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromUltimate_ClickEco_LatchesMuxFirst_RebootRequired), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 0; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 0;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -864,7 +886,8 @@ public static class Scenarios
             // recovers any impossible pair. The persistent flag specifically
             // guards the deferred path so blocks aren't laid down for a
             // boot that would land in MUX=0 + udev-removed dGPU.
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             try
             {
@@ -888,7 +911,8 @@ public static class Scenarios
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
             AppConfig.Set("gpu_mode", "standard"); // baseline
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             sb.Wmi.NextSetGpuEcoException = new IOException("firmware EIO");
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
@@ -901,7 +925,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_BlocksPresent_GetCurrentMode_ReturnsEco), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false; // hw says standard
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false; // hw says standard
             sb.WriteBlockArtifacts();                       // but blocks say eco
 
             // The fix from the previous bug: block files should make
@@ -914,7 +939,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_FromStandard_ClickEco_ScheduledTriggerWrittenForBootScript), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             // Live path applies because driver isn't active in test env.
             // Confirm config is saved correctly even on a live apply (no
@@ -996,7 +1022,8 @@ public static class Scenarios
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
             AppConfig.Set("raw_wmi", 1);
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = true;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = true;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Standard);
 
@@ -1009,7 +1036,8 @@ public static class Scenarios
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
             AppConfig.Set("raw_wmi", 1);
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -1036,7 +1064,8 @@ public static class Scenarios
             AppConfig.Set("gpu_backend", "asus-wmi");
 
             // dgpu_disable=0 (live state), but blocks present → UI eco.
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             AssertEqual(GpuMode.Eco, sb.Controller.GetCurrentMode(),
                 "blocks present + asus-wmi backend = Eco (will reapply on reboot via udev)");
         });
@@ -1048,7 +1077,8 @@ public static class Scenarios
             // In PCI mode the source of truth is block files; the firmware
             // dgpu_disable is irrelevant. With no blocks → UI = Standard.
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = true;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = true;
 
             sb.Controller.PushBackendMarker("pci");
             AppConfig.Set("gpu_backend", "pci");
@@ -1067,7 +1097,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_Ultimate_FromEco_EnablesDgpuFirst), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = true;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = true;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Ultimate);
 
@@ -1081,7 +1112,8 @@ public static class Scenarios
         => Scenario(nameof(Wmi_Ultimate_Twice_AlreadySet), sb =>
         {
             AppConfig.Set("gpu_backend", "asus-wmi");
-            sb.Wmi.MuxMode = 0; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 0;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Ultimate);
             AssertEqual(GpuSwitchResult.AlreadySet, result, "Ultimate is the current mode → no-op");
@@ -2086,7 +2118,8 @@ public static class Scenarios
             // service found no device to attach the filter to and the box came
             // up with the dGPU gone instead of hidden.
             AppConfig.Set("gpu_backend", "ebpf");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.ScheduleModeForReboot(GpuMode.Eco);
             AssertEqual(GpuSwitchResult.RebootRequired, result, "deferred ebpf eco is a reboot-required result");
@@ -2102,7 +2135,8 @@ public static class Scenarios
         => Scenario(nameof(Ebpf_ScheduleForReboot_Standard_CleansUp), sb =>
         {
             AppConfig.Set("gpu_backend", "ebpf");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             // Leftovers from a previous asus-wmi/pci session.
             sb.WriteBlockArtifacts();
             sb.WriteTrigger("eco");
@@ -2126,7 +2160,8 @@ public static class Scenarios
         => Scenario(nameof(Ebpf_FromStandard_ClickEco_DriverIdle_AppliesLive), sb =>
         {
             AppConfig.Set("gpu_backend", "ebpf");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
@@ -2145,7 +2180,8 @@ public static class Scenarios
             // The driver stays loaded, so a busy driver alone is no reason to
             // ask: only apps holding the card are. None here, so no dialog.
             AppConfig.Set("gpu_backend", "ebpf");
-            sb.Wmi.MuxMode = 1; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 1;
+            sb.Wmi.EcoEnabled = false;
             sb.WriteFakeNvidiaModule();
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
@@ -2254,7 +2290,8 @@ public static class Scenarios
         {
             // MUX=0 means the dGPU drives the panel: hiding its nodes blanks it.
             AppConfig.Set("gpu_backend", "ebpf");
-            sb.Wmi.MuxMode = 0; sb.Wmi.EcoEnabled = false;
+            sb.Wmi.MuxMode = 0;
+            sb.Wmi.EcoEnabled = false;
 
             var result = sb.Controller.RequestModeSwitch(GpuMode.Eco);
 
