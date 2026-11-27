@@ -205,7 +205,7 @@ public class LogitechMouse : IMousePeripheral
     public virtual bool HasAngleSnapping() => false;
     public virtual bool HasAngleTuning() => false;
     public virtual bool HasDPIColors() => false;
-    public virtual bool HasAutoPowerOff() => _wireless;
+    public virtual bool HasAutoPowerOff() => false;
     public virtual bool HasLowBatteryWarning() => false;
     public virtual bool HasDebounce() => false;
     public virtual bool HasAcceleration() => false;

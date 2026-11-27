@@ -365,33 +365,6 @@ public class AnimeMatrixDevice : Device
         frameIndex++;
     }
 
-    /// <summary>Renders the current time/date to the display. Colon blinks on odd seconds.</summary>
-    public void PresentClock()
-    {
-        string timeFormat = AppConfig.GetString("matrix_time", "HH:mm") ?? "HH:mm";
-        string dateFormat = AppConfig.GetString("matrix_date", "yy.MM.dd") ?? "yy.MM.dd";
-
-        if (DateTime.Now.Second % 2 != 0)
-            timeFormat = timeFormat.Replace(":", "  ");
-
-        Clear();
-
-        switch (_model)
-        {
-            case AnimeType.STRIX:
-                // STRIX: time only, single text block
-                RenderTextDiagonal(DateTime.Now.ToString(timeFormat), 15, 4, 20);
-                break;
-            default:
-                // GA401/GA402/GU604: time + date
-                RenderTextDiagonal(DateTime.Now.ToString(timeFormat), 15, 7 - FullRows / 2, 25);
-                RenderTextDiagonal(DateTime.Now.ToString(dateFormat), 11.5f, 0, 14);
-                break;
-        }
-
-        Present();
-    }
-
     /// <summary>Draws one bar of a 20-bar audio visualiser, using planar or diagonal layout.</summary>
     public void DrawBar(int pos, double h)
     {
@@ -478,13 +451,6 @@ public class AnimeMatrixDevice : Device
                     SetLedDiagonal(x, y, (byte)color, deltaX, height + deltaY - (FullRows / 2) - 1);
             }
         }
-    }
-
-    /// <summary>Renders text diagonally. Stub - needs a font rasteriser (e.g. SkiaSharp).</summary>
-    public void RenderTextDiagonal(string text, float fontSize, int x, int y)
-    {
-        // TODO: Implement text rendering using SkiaSharp or similar.
-        Logger.WriteLine($"Matrix: RenderText stub called: \"{text}\" size={fontSize} at ({x},{y})");
     }
 
     /// <summary>Detects the AnimeMatrix model based on the laptop product name.</summary>

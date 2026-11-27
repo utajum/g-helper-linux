@@ -275,7 +275,7 @@ public partial class MouseWindow : Window
         int debounceIndex = Math.Max(0, Array.IndexOf(DebounceValues, mouse.Debounce));
         FillCombo(comboDebounce, DebounceValues.Select(DebounceName), debounceIndex);
 
-        rowLiftOff.IsVisible = true;
+        rowLiftOff.IsVisible = mouse is AsusMouse;
         FillCombo(comboLiftOff, [Labels.Get("mouse_liftoff_low"), Labels.Get("mouse_liftoff_high")], (int)mouse.LiftOff);
 
         // Energy

@@ -435,9 +435,6 @@ public partial class HandheldWindow : Window
         AllyControl.DisableXBoxController(disabled);
     }
 
-    // Stub: kept for code compatibility; the IsCheckedChanged signature carries
-    // RoutedEventArgs in Avalonia, so the existing handler above just works.
-
     private void ButtonReset_Click(object? sender, RoutedEventArgs e)
     {
         // Wipe every stick / trigger / vibration knob.
