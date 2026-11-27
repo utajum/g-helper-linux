@@ -70,7 +70,8 @@ public static class Harness
 
             // Fresh per-scenario config directory.
             ConfigDir = Path.Combine(TempRoot, "config", scenarioName);
-            if (Directory.Exists(ConfigDir)) Directory.Delete(ConfigDir, recursive: true);
+            if (Directory.Exists(ConfigDir))
+                Directory.Delete(ConfigDir, recursive: true);
             Directory.CreateDirectory(ConfigDir);
             AppConfig.ResetForTest(ConfigDir);
 
@@ -267,7 +268,8 @@ public static class Harness
 
     public static void Assert(bool cond, string message)
     {
-        if (!cond) throw new AssertException(message);
+        if (!cond)
+            throw new AssertException(message);
     }
 
     public static void AssertEqual<T>(T expected, T actual, string what)

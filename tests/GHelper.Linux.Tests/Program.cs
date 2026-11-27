@@ -38,7 +38,9 @@ public static class Program
         }
         finally
         {
-            try { Directory.Delete(testRoot, recursive: true); } catch { /* best effort */ }
+            try
+            { Directory.Delete(testRoot, recursive: true); }
+            catch { /* best effort */ }
         }
 
         Console.WriteLine();
