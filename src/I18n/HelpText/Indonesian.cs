@@ -421,7 +421,7 @@ internal static class Indonesian
         ["MouseWindow.buttonHapticPlay"] = "Memutar pola haptik terpilih satu kali.",
         ["MouseWindow.comboPowerOff"] = "Waktu tanpa pemakaian sebelum mouse mati.",
         ["MouseWindow.sliderLowBattery"] = "Tingkat baterai saat mouse memperingatkan Anda.",
-        ["MouseWindow.sliderSleepTimeout"] = "Waktu tanpa pemakaian sebelum mouse tidur.",
+        ["MouseWindow.sliderSleepTimeout"] = "Waktu tanpa pemakaian, dalam detik, sebelum lampu mati.",
         ["MouseWindow.comboSmartShift"] = "Mode roda gulir: ratchet (berklik) atau putar bebas.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Kecepatan gulir saat roda berganti dari ratchet ke putar bebas.",
         ["MouseWindow.checkHiResScroll"] = "Gulir resolusi tinggi: lebih banyak langkah gulir untuk gulir lebih halus.",

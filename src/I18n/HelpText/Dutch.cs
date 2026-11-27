@@ -421,7 +421,7 @@ internal static class Dutch
         ["MouseWindow.buttonHapticPlay"] = "Speelt het gekozen haptische patroon één keer af.",
         ["MouseWindow.comboPowerOff"] = "Tijd zonder gebruik voordat de muis uitgaat.",
         ["MouseWindow.sliderLowBattery"] = "Accuniveau waarop de muis je waarschuwt.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tijd zonder gebruik voordat de muis gaat slapen.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tijd zonder gebruik, in seconden, voordat de verlichting uitgaat.",
         ["MouseWindow.comboSmartShift"] = "Modus van het scrollwiel: ratel (klikken) of vrij draaien.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Scrollsnelheid waarbij het wiel van ratel naar vrij draaien wisselt.",
         ["MouseWindow.checkHiResScroll"] = "Scrollen met hoge resolutie: meer scrollstappen voor vloeiender scrollen.",

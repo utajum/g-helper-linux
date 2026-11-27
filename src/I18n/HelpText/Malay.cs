@@ -421,7 +421,7 @@ internal static class Malay
         ["MouseWindow.buttonHapticPlay"] = "Memainkan corak haptik terpilih sekali.",
         ["MouseWindow.comboPowerOff"] = "Masa tanpa penggunaan sebelum tetikus mati.",
         ["MouseWindow.sliderLowBattery"] = "Tahap bateri di mana tetikus memberi amaran kepada anda.",
-        ["MouseWindow.sliderSleepTimeout"] = "Masa tanpa penggunaan sebelum tetikus tidur.",
+        ["MouseWindow.sliderSleepTimeout"] = "Masa tanpa penggunaan, dalam saat, sebelum lampu dimatikan.",
         ["MouseWindow.comboSmartShift"] = "Mod roda tatal: berdetik (klik) atau putaran bebas.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Kelajuan tatal di mana roda bertukar dari berdetik ke putaran bebas.",
         ["MouseWindow.checkHiResScroll"] = "Tatal resolusi tinggi: lebih banyak langkah tatal untuk tatal lebih lancar.",

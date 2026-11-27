@@ -421,7 +421,7 @@ internal static class Filipino
         ["MouseWindow.buttonHapticPlay"] = "Pinapatugtog nang isang beses ang napiling haptic pattern.",
         ["MouseWindow.comboPowerOff"] = "Oras na walang gamit bago mag-off ang mouse.",
         ["MouseWindow.sliderLowBattery"] = "Battery level kung saan nagbababala sa iyo ang mouse.",
-        ["MouseWindow.sliderSleepTimeout"] = "Oras na walang gamit bago matulog ang mouse.",
+        ["MouseWindow.sliderSleepTimeout"] = "Oras na walang gamit, sa segundo, bago mamatay ang ilaw.",
         ["MouseWindow.comboSmartShift"] = "Mode ng scroll wheel: ratchet (may click) o free spin.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Bilis ng scroll kung saan lumilipat ang wheel mula ratchet papuntang free spin.",
         ["MouseWindow.checkHiResScroll"] = "Hi-res scrolling: mas maraming hakbang sa scroll para sa mas makinis na pag-scroll.",

@@ -421,7 +421,7 @@ internal static class Greek
         ["MouseWindow.buttonHapticPlay"] = "Παίζει μία φορά το επιλεγμένο απτικό μοτίβο.",
         ["MouseWindow.comboPowerOff"] = "Χρόνος χωρίς χρήση πριν σβήσει το ποντίκι.",
         ["MouseWindow.sliderLowBattery"] = "Στάθμη μπαταρίας στην οποία το ποντίκι σας προειδοποιεί.",
-        ["MouseWindow.sliderSleepTimeout"] = "Χρόνος χωρίς χρήση πριν το ποντίκι πάει σε αναστολή.",
+        ["MouseWindow.sliderSleepTimeout"] = "Χρόνος χωρίς χρήση σε δευτερόλεπτα πριν σβήσει ο φωτισμός.",
         ["MouseWindow.comboSmartShift"] = "Λειτουργία ροδέλας κύλισης: με εγκοπές (κλικ) ή ελεύθερη περιστροφή.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Ταχύτητα κύλισης στην οποία η ροδέλα περνά από εγκοπές σε ελεύθερη περιστροφή.",
         ["MouseWindow.checkHiResScroll"] = "Κύλιση υψηλής ανάλυσης: περισσότερα βήματα για πιο ομαλή κύλιση.",

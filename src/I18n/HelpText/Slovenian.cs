@@ -421,7 +421,7 @@ internal static class Slovenian
         ["MouseWindow.buttonHapticPlay"] = "Enkrat predvaja izbrani haptični vzorec.",
         ["MouseWindow.comboPowerOff"] = "Čas nedejavnosti, po katerem se miška izklopi.",
         ["MouseWindow.sliderLowBattery"] = "Raven baterije, pri kateri vas miška opozori.",
-        ["MouseWindow.sliderSleepTimeout"] = "Čas nedejavnosti, po katerem miška zaspi.",
+        ["MouseWindow.sliderSleepTimeout"] = "Čas nedejavnosti v sekundah, po katerem se osvetlitev izklopi.",
         ["MouseWindow.comboSmartShift"] = "Način koleščka: s kliki ali prosto vrtenje.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Hitrost drsenja, pri kateri kolešček preide s klikov na prosto vrtenje.",
         ["MouseWindow.checkHiResScroll"] = "Drsenje z visoko ločljivostjo: več korakov za bolj tekoče drsenje.",

@@ -421,7 +421,7 @@ internal static class Macedonian
         ["MouseWindow.buttonHapticPlay"] = "Еднаш ја пушта избраната хаптичка шема.",
         ["MouseWindow.comboPowerOff"] = "Време на неактивност по кое глувчето се исклучува.",
         ["MouseWindow.sliderLowBattery"] = "Ниво на батерија на кое глувчето ве предупредува.",
-        ["MouseWindow.sliderSleepTimeout"] = "Време на неактивност по кое глувчето заспива.",
+        ["MouseWindow.sliderSleepTimeout"] = "Време на неактивност во секунди по кое осветлувањето се исклучува.",
         ["MouseWindow.comboSmartShift"] = "Режим на тркалцето: со кликови или слободно вртење.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Брзина на лизгање при која тркалцето преминува од кликови на слободно вртење.",
         ["MouseWindow.checkHiResScroll"] = "Лизгање со висока резолуција: повеќе чекори за помазно лизгање.",

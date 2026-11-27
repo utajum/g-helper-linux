@@ -421,7 +421,7 @@ internal static class ChineseTraditional
         ["MouseWindow.buttonHapticPlay"] = "播放一次所選的觸覺模式。",
         ["MouseWindow.comboPowerOff"] = "滑鼠關閉前的閒置時間。",
         ["MouseWindow.sliderLowBattery"] = "滑鼠發出警告的電量。",
-        ["MouseWindow.sliderSleepTimeout"] = "滑鼠進入睡眠前的閒置時間。",
+        ["MouseWindow.sliderSleepTimeout"] = "燈光關閉前的閒置時間（秒）。",
         ["MouseWindow.comboSmartShift"] = "滾輪模式：段落（有喀噠感）或自由滾動。",
         ["MouseWindow.sliderSmartShiftThreshold"] = "滾輪從段落切換為自由滾動的捲動速度。",
         ["MouseWindow.checkHiResScroll"] = "高解析度捲動：更多捲動步進，捲動更平滑。",

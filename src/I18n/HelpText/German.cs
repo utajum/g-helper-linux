@@ -421,7 +421,7 @@ internal static class German
         ["MouseWindow.buttonHapticPlay"] = "Spielt das gewählte haptische Muster einmal ab.",
         ["MouseWindow.comboPowerOff"] = "Zeit ohne Nutzung, bevor die Maus sich ausschaltet.",
         ["MouseWindow.sliderLowBattery"] = "Akkustand, bei dem die Maus dich warnt.",
-        ["MouseWindow.sliderSleepTimeout"] = "Zeit ohne Nutzung, bevor die Maus schlafen geht.",
+        ["MouseWindow.sliderSleepTimeout"] = "Zeit ohne Nutzung in Sekunden, bevor die Beleuchtung ausgeht.",
         ["MouseWindow.comboSmartShift"] = "Modus des Scrollrads: Raster (Klicks) oder freier Lauf.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Scrolltempo, ab dem das Rad vom Raster in den freien Lauf wechselt.",
         ["MouseWindow.checkHiResScroll"] = "Hochauflösendes Scrollen: mehr Scrollschritte für flüssigeres Scrollen.",

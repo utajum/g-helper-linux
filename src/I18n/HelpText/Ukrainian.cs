@@ -421,7 +421,7 @@ internal static class Ukrainian
         ["MouseWindow.buttonHapticPlay"] = "Один раз відтворює вибраний тактильний шаблон.",
         ["MouseWindow.comboPowerOff"] = "Час без використання, після якого миша вимикається.",
         ["MouseWindow.sliderLowBattery"] = "Рівень заряду, за якого миша попереджає вас.",
-        ["MouseWindow.sliderSleepTimeout"] = "Час без використання, після якого миша засинає.",
+        ["MouseWindow.sliderSleepTimeout"] = "Час без використання в секундах, після якого підсвічування вимикається.",
         ["MouseWindow.comboSmartShift"] = "Режим коліщатка прокрутки: з клацаннями або вільне обертання.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Швидкість прокрутки, за якої коліщатко переходить з клацань на вільне обертання.",
         ["MouseWindow.checkHiResScroll"] = "Прокрутка високої роздільності: більше кроків для плавнішої прокрутки.",

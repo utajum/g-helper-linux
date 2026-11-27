@@ -421,7 +421,7 @@ internal static class Swedish
         ["MouseWindow.buttonHapticPlay"] = "Spelar upp det valda haptiska mönstret en gång.",
         ["MouseWindow.comboPowerOff"] = "Tid utan användning innan musen stängs av.",
         ["MouseWindow.sliderLowBattery"] = "Batterinivå där musen varnar dig.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tid utan användning innan musen går i viloläge.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tid utan användning, i sekunder, innan belysningen släcks.",
         ["MouseWindow.comboSmartShift"] = "Skrollhjulets läge: klick eller fri rotation.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Skrollhastighet där hjulet byter från klick till fri rotation.",
         ["MouseWindow.checkHiResScroll"] = "Högupplöst skrollning: fler skrollsteg för jämnare skrollning.",

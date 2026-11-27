@@ -421,7 +421,7 @@ internal static class Hungarian
         ["MouseWindow.buttonHapticPlay"] = "Egyszer lejátssza a kiválasztott haptikus mintát.",
         ["MouseWindow.comboPowerOff"] = "Használat nélküli idő, amely után az egér kikapcsol.",
         ["MouseWindow.sliderLowBattery"] = "Az akkuszint, amelynél az egér figyelmeztet.",
-        ["MouseWindow.sliderSleepTimeout"] = "Használat nélküli idő, amely után az egér alvó módba lép.",
+        ["MouseWindow.sliderSleepTimeout"] = "Használat nélküli idő másodpercben, amely után a világítás kikapcsol.",
         ["MouseWindow.comboSmartShift"] = "A görgő módja: kattogó vagy szabadon pörgő.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "A görgetési sebesség, amelynél a görgő kattogóról szabadon pörgőre vált.",
         ["MouseWindow.checkHiResScroll"] = "Nagy felbontású görgetés: több görgetési lépés a simább görgetésért.",

@@ -421,7 +421,7 @@ internal static class Serbian
         ["MouseWindow.buttonHapticPlay"] = "Једном пушта изабрани хаптички образац.",
         ["MouseWindow.comboPowerOff"] = "Време неактивности после ког се миш искључује.",
         ["MouseWindow.sliderLowBattery"] = "Ниво батерије на ком вас миш упозорава.",
-        ["MouseWindow.sliderSleepTimeout"] = "Време неактивности после ког миш заспи.",
+        ["MouseWindow.sliderSleepTimeout"] = "Време неактивности у секундама после ког се осветљење гаси.",
         ["MouseWindow.comboSmartShift"] = "Режим точкића: са кликовима или слободно окретање.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Брзина скроловања при којој точкић прелази са кликова на слободно окретање.",
         ["MouseWindow.checkHiResScroll"] = "Скроловање високе резолуције: више корака за глаткије скроловање.",

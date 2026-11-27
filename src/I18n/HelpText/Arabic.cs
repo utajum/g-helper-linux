@@ -421,7 +421,7 @@ internal static class Arabic
         ["MouseWindow.buttonHapticPlay"] = "يشغّل النمط اللمسي المختار مرة واحدة.",
         ["MouseWindow.comboPowerOff"] = "مدة عدم الاستخدام قبل أن ينطفئ الماوس.",
         ["MouseWindow.sliderLowBattery"] = "مستوى البطارية الذي يحذّرك عنده الماوس.",
-        ["MouseWindow.sliderSleepTimeout"] = "مدة عدم الاستخدام قبل أن ينام الماوس.",
+        ["MouseWindow.sliderSleepTimeout"] = "مدة عدم الاستخدام بالثواني قبل أن تنطفئ الإضاءة.",
         ["MouseWindow.comboSmartShift"] = "وضع عجلة التمرير: مسنّن (بنقرات) أو دوران حر.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "سرعة التمرير التي تنتقل عندها العجلة من المسنّن إلى الدوران الحر.",
         ["MouseWindow.checkHiResScroll"] = "تمرير عالي الدقة: خطوات تمرير أكثر لتمرير أنعم.",

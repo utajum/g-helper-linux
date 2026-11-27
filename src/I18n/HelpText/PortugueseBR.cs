@@ -421,7 +421,7 @@ internal static class PortugueseBR
         ["MouseWindow.buttonHapticPlay"] = "Reproduz uma vez o padrão háptico escolhido.",
         ["MouseWindow.comboPowerOff"] = "Tempo sem uso antes de o mouse desligar.",
         ["MouseWindow.sliderLowBattery"] = "Nível de bateria em que o mouse avisa você.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tempo sem uso antes de o mouse dormir.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tempo sem uso, em segundos, antes de a iluminação apagar.",
         ["MouseWindow.comboSmartShift"] = "Modo da roda de rolagem: com cliques ou giro livre.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Velocidade de rolagem em que a roda passa dos cliques para o giro livre.",
         ["MouseWindow.checkHiResScroll"] = "Rolagem de alta resolução: mais passos para uma rolagem mais suave.",

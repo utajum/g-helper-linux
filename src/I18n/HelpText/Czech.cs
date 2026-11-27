@@ -421,7 +421,7 @@ internal static class Czech
         ["MouseWindow.buttonHapticPlay"] = "Jednou přehraje vybraný hmatový vzor.",
         ["MouseWindow.comboPowerOff"] = "Doba nečinnosti, po které se myš vypne.",
         ["MouseWindow.sliderLowBattery"] = "Úroveň baterie, při které vás myš varuje.",
-        ["MouseWindow.sliderSleepTimeout"] = "Doba nečinnosti, po které myš usne.",
+        ["MouseWindow.sliderSleepTimeout"] = "Doba nečinnosti v sekundách, po které se podsvícení vypne.",
         ["MouseWindow.comboSmartShift"] = "Režim kolečka: s cvakáním (kliky) nebo volné otáčení.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Rychlost posouvání, při které kolečko přejde z cvakání na volné otáčení.",
         ["MouseWindow.checkHiResScroll"] = "Posouvání ve vysokém rozlišení: víc kroků pro plynulejší posouvání.",

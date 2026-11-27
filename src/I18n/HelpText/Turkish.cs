@@ -421,7 +421,7 @@ internal static class Turkish
         ["MouseWindow.buttonHapticPlay"] = "Seçilen dokunsal deseni bir kez oynatır.",
         ["MouseWindow.comboPowerOff"] = "Fare kapanmadan önceki kullanılmama süresi.",
         ["MouseWindow.sliderLowBattery"] = "Farenin seni uyardığı pil seviyesi.",
-        ["MouseWindow.sliderSleepTimeout"] = "Fare uykuya geçmeden önceki kullanılmama süresi.",
+        ["MouseWindow.sliderSleepTimeout"] = "Aydınlatma kapanmadan önceki kullanılmama süresi (saniye).",
         ["MouseWindow.comboSmartShift"] = "Kaydırma tekerleği modu: tıkırtılı veya serbest dönüş.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Tekerleğin tıkırtılıdan serbest dönüşe geçtiği kaydırma hızı.",
         ["MouseWindow.checkHiResScroll"] = "Yüksek çözünürlüklü kaydırma: daha akıcı kaydırma için daha çok adım.",

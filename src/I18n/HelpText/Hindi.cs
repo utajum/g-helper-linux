@@ -421,7 +421,7 @@ internal static class Hindi
         ["MouseWindow.buttonHapticPlay"] = "चुना गया हैप्टिक पैटर्न एक बार बजाता है।",
         ["MouseWindow.comboPowerOff"] = "बिना उपयोग का समय जिसके बाद माउस बंद होता है।",
         ["MouseWindow.sliderLowBattery"] = "बैटरी स्तर जिस पर माउस आपको चेतावनी देता है।",
-        ["MouseWindow.sliderSleepTimeout"] = "बिना उपयोग का समय जिसके बाद माउस स्लीप में जाता है।",
+        ["MouseWindow.sliderSleepTimeout"] = "बिना उपयोग का समय, सेकंड में, जिसके बाद लाइटिंग बंद होती है।",
         ["MouseWindow.comboSmartShift"] = "स्क्रॉल व्हील मोड: रैचेट (क्लिक) या फ़्री स्पिन।",
         ["MouseWindow.sliderSmartShiftThreshold"] = "स्क्रॉल गति जिस पर व्हील रैचेट से फ़्री स्पिन में बदलता है।",
         ["MouseWindow.checkHiResScroll"] = "हाई-रेज़ स्क्रॉलिंग: स्मूद स्क्रॉलिंग के लिए ज़्यादा स्क्रॉल कदम।",

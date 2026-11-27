@@ -421,7 +421,7 @@ internal static class Italian
         ["MouseWindow.buttonHapticPlay"] = "Riproduce una volta lo schema aptico scelto.",
         ["MouseWindow.comboPowerOff"] = "Tempo senza uso prima che il mouse si spenga.",
         ["MouseWindow.sliderLowBattery"] = "Livello di batteria al quale il mouse ti avvisa.",
-        ["MouseWindow.sliderSleepTimeout"] = "Tempo senza uso prima che il mouse vada in sospensione.",
+        ["MouseWindow.sliderSleepTimeout"] = "Tempo senza uso, in secondi, prima che l'illuminazione si spenga.",
         ["MouseWindow.comboSmartShift"] = "Modalità della rotella: a scatti (clic) o rotazione libera.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Velocità di scorrimento alla quale la rotella passa dagli scatti alla rotazione libera.",
         ["MouseWindow.checkHiResScroll"] = "Scorrimento ad alta risoluzione: più passi per uno scorrimento più fluido.",

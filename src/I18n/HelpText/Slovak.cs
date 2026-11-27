@@ -421,7 +421,7 @@ internal static class Slovak
         ["MouseWindow.buttonHapticPlay"] = "Raz prehrá vybraný hmatový vzor.",
         ["MouseWindow.comboPowerOff"] = "Doba nečinnosti, po ktorej sa myš vypne.",
         ["MouseWindow.sliderLowBattery"] = "Úroveň batérie, pri ktorej vás myš varuje.",
-        ["MouseWindow.sliderSleepTimeout"] = "Doba nečinnosti, po ktorej myš zaspí.",
+        ["MouseWindow.sliderSleepTimeout"] = "Doba nečinnosti v sekundách, po ktorej sa podsvietenie vypne.",
         ["MouseWindow.comboSmartShift"] = "Režim kolieska: s cvakaním (kliky) alebo voľné otáčanie.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Rýchlosť posúvania, pri ktorej koliesko prejde z cvakania na voľné otáčanie.",
         ["MouseWindow.checkHiResScroll"] = "Posúvanie vo vysokom rozlíšení: viac krokov pre plynulejšie posúvanie.",

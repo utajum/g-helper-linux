@@ -421,7 +421,7 @@ internal static class Polish
         ["MouseWindow.buttonHapticPlay"] = "Odtwarza raz wybrany wzór haptyczny.",
         ["MouseWindow.comboPowerOff"] = "Czas bez użycia, po którym mysz się wyłącza.",
         ["MouseWindow.sliderLowBattery"] = "Poziom baterii, przy którym mysz cię ostrzega.",
-        ["MouseWindow.sliderSleepTimeout"] = "Czas bez użycia, po którym mysz zasypia.",
+        ["MouseWindow.sliderSleepTimeout"] = "Czas bez użycia w sekundach, po którym podświetlenie gaśnie.",
         ["MouseWindow.comboSmartShift"] = "Tryb kółka przewijania: zapadkowy (kliknięcia) lub swobodny obrót.",
         ["MouseWindow.sliderSmartShiftThreshold"] = "Szybkość przewijania, przy której kółko przechodzi z zapadek w swobodny obrót.",
         ["MouseWindow.checkHiResScroll"] = "Przewijanie w wysokiej rozdzielczości: więcej kroków dla płynniejszego przewijania.",
