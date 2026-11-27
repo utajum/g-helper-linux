@@ -63,6 +63,7 @@ public static class Slovak
         ["backlight_low"] = "Nízke",
         ["backlight_medium"] = "Stredné",
         ["backlight_high"] = "Vysoké",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Úroveň {0}",
         ["backlight_prefix"] = "Podsvietenie: {0}",
         ["color_primary"] = "Primárna farba",

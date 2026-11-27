@@ -63,6 +63,7 @@ public static class Arabic
         ["backlight_low"] = "منخفض",
         ["backlight_medium"] = "متوسط",
         ["backlight_high"] = "مرتفع",
+        ["backlight_auto"] = "تلقائي",
         ["backlight_level"] = "المستوى {0}",
         ["backlight_prefix"] = "الإضاءة الخلفية: {0}",
         ["color_primary"] = "اللون الأساسي",

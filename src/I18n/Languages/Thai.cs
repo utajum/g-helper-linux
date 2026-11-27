@@ -63,6 +63,7 @@ public static class Thai
         ["backlight_low"] = "ต่ำ",
         ["backlight_medium"] = "ปานกลาง",
         ["backlight_high"] = "สูง",
+        ["backlight_auto"] = "อัตโนมัติ",
         ["backlight_level"] = "ระดับ {0}",
         ["backlight_prefix"] = "ไฟส่องสว่าง: {0}",
         ["color_primary"] = "สีหลัก",

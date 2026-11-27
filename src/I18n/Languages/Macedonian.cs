@@ -63,6 +63,7 @@ public static class Macedonian
         ["backlight_low"] = "Ниско",
         ["backlight_medium"] = "Средно",
         ["backlight_high"] = "Високо",
+        ["backlight_auto"] = "Авто",
         ["backlight_level"] = "Ниво {0}",
         ["backlight_prefix"] = "Позадинско осветлување: {0}",
         ["color_primary"] = "Примарна боја",

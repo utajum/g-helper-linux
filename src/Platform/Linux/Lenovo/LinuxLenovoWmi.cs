@@ -33,6 +33,7 @@ public class LinuxLenovoWmi : IHardwareControl
     private readonly string? _batteryDir;
     private readonly string? _kbdLedDir;
     private readonly int _kbdMaxBrightness = 1;
+    private readonly bool _kbdHasAuto;
 
     private Thread? _profileWatchThread;
     private volatile bool _watching;
@@ -61,8 +62,11 @@ public class LinuxLenovoWmi : IHardwareControl
         _kbdLedDir = LenovoSysfs.KbdBacklightLed();
 
         if (_kbdLedDir != null)
+        {
             _kbdMaxBrightness = Math.Max(1,
                 SysfsHelper.ReadInt(Path.Combine(_kbdLedDir, "max_brightness"), 1));
+            _kbdHasAuto = KbdAutoTrigger().Listed;
+        }
 
         if (_fanHwmonDir != null)
         {
@@ -439,12 +443,22 @@ public class LinuxLenovoWmi : IHardwareControl
         LenovoSysfs.KbdBacklightLed() is string led
         && File.Exists(Path.Combine(led, "brightness_hw_changed"));
 
-    public int KbdMaxBrightness => _kbdMaxBrightness;
+    // Kernel 7.5+ with a light sensor: Auto is the "ideapad-auto" LED trigger,
+    // shown as one level above max (the firmware's own value for Auto).
+
+    public int KbdMaxBrightness => _kbdHasAuto ? _kbdMaxBrightness + 1 : _kbdMaxBrightness;
+
+    public int KbdAutoLevel => _kbdHasAuto ? _kbdMaxBrightness + 1 : -1;
+
+    private (bool Listed, bool Active) KbdAutoTrigger() => SysfsHelper.ParseLedTrigger(
+        SysfsHelper.ReadAttributeSilent(Path.Combine(_kbdLedDir!, "trigger")), "ideapad-auto");
 
     public int GetKeyboardBrightness()
     {
         if (_kbdLedDir == null)
             return -1;
+        if (_kbdHasAuto && KbdAutoTrigger().Active)
+            return KbdAutoLevel;
         return SysfsHelper.ReadInt(Path.Combine(_kbdLedDir, "brightness"), -1);
     }
 
@@ -452,6 +466,15 @@ public class LinuxLenovoWmi : IHardwareControl
     {
         if (_kbdLedDir == null)
             return;
+        string trigger = Path.Combine(_kbdLedDir, "trigger");
+        if (_kbdHasAuto && level >= KbdAutoLevel)
+        {
+            SysfsHelper.WriteAttribute(trigger, "ideapad-auto");
+            return;
+        }
+        // Leave Auto first: a brightness write alone can keep the trigger active.
+        if (_kbdHasAuto && KbdAutoTrigger().Active)
+            SysfsHelper.WriteAttribute(trigger, "none");
         SysfsHelper.WriteInt(Path.Combine(_kbdLedDir, "brightness"),
             Math.Clamp(level, 0, _kbdMaxBrightness));
     }

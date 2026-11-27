@@ -60,6 +60,7 @@ public static class Czech
         ["backlight_low"] = "Nízké",
         ["backlight_medium"] = "Střední",
         ["backlight_high"] = "Vysoké",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Úroveň {0}",
         ["backlight_prefix"] = "Podsvícení: {0}",
         ["color_primary"] = "Hlavní barva",

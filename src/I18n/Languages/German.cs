@@ -60,6 +60,7 @@ public static class German
         ["backlight_low"] = "Niedrig",
         ["backlight_medium"] = "Mittel",
         ["backlight_high"] = "Hoch",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Stufe {0}",
         ["backlight_prefix"] = "Beleuchtung: {0}",
         ["color_primary"] = "Primärfarbe",

@@ -60,6 +60,7 @@ public static class Polish
         ["backlight_low"] = "Niskie",
         ["backlight_medium"] = "Średnie",
         ["backlight_high"] = "Wysokie",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Poziom {0}",
         ["backlight_prefix"] = "Podświetlenie: {0}",
         ["color_primary"] = "Kolor główny",

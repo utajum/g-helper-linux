@@ -63,6 +63,7 @@ public static class Norwegian
         ["backlight_low"] = "Lav",
         ["backlight_medium"] = "Middels",
         ["backlight_high"] = "Høy",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Nivå {0}",
         ["backlight_prefix"] = "Bakbelysning: {0}",
         ["color_primary"] = "Primærfarge",

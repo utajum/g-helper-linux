@@ -287,6 +287,11 @@ public static class Scenarios
         MiniLed_Reapply_ForcedModel_WritesReportedMode();
         MiniLed_Reapply_OtherModel_NoWrite();
         MiniLed_Reapply_NoMiniLed_NoWrite();
+
+        Console.WriteLine("\n LED trigger (Lenovo keyboard Auto) ");
+        LedTrigger_ListedActive();
+        LedTrigger_ListedInactive();
+        LedTrigger_NotListed();
     }
 
     // 
@@ -2397,6 +2402,33 @@ public static class Scenarios
             GHelper.Linux.Display.MiniLed.Reapply(sb.Wmi);
 
             AssertEqual(0, sb.Wmi.MiniLedWrites.Count, "no write");
+        });
+
+    // Lenovo keyboard Auto (kernel 7.5+): the "ideapad-auto" LED trigger.
+
+    static void LedTrigger_ListedActive()
+        => Scenario(nameof(LedTrigger_ListedActive), _ =>
+        {
+            var t = SysfsHelper.ParseLedTrigger("none kbd-backlight [ideapad-auto]\n", "ideapad-auto");
+            Assert(t.Listed, "listed");
+            Assert(t.Active, "active");
+        });
+
+    static void LedTrigger_ListedInactive()
+        => Scenario(nameof(LedTrigger_ListedInactive), _ =>
+        {
+            var t = SysfsHelper.ParseLedTrigger("[none] kbd-backlight ideapad-auto", "ideapad-auto");
+            Assert(t.Listed, "listed");
+            Assert(!t.Active, "not active");
+        });
+
+    static void LedTrigger_NotListed()
+        => Scenario(nameof(LedTrigger_NotListed), _ =>
+        {
+            var t = SysfsHelper.ParseLedTrigger("[none] kbd-backlight", "ideapad-auto");
+            Assert(!t.Listed, "not listed");
+            Assert(!t.Active, "not active");
+            Assert(!SysfsHelper.ParseLedTrigger(null, "ideapad-auto").Listed, "no file");
         });
 
     // ── Power limit bounds ───────────────────────────────────────────────

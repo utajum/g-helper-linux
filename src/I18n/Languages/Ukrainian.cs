@@ -60,6 +60,7 @@ public static class Ukrainian
         ["backlight_low"] = "Низьке",
         ["backlight_medium"] = "Середнє",
         ["backlight_high"] = "Високе",
+        ["backlight_auto"] = "Авто",
         ["backlight_level"] = "Рівень {0}",
         ["backlight_prefix"] = "Підсвічування: {0}",
         ["color_primary"] = "Основний колір",

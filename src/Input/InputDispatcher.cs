@@ -436,6 +436,7 @@ public static class InputDispatcher
         AppConfig.Set(USB.Aura.GetBrightnessConfigKey(), next);
         string level = next switch
         {
+            _ when next == App.Wmi?.KbdAutoLevel => Labels.Get("backlight_auto"),
             0 => Labels.Get("kbd_off"),
             1 => Labels.Get("kbd_low"),
             2 => Labels.Get("kbd_medium"),

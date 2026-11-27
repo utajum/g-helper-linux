@@ -63,6 +63,7 @@ public static class Hindi
         ["backlight_low"] = "कम",
         ["backlight_medium"] = "मध्यम",
         ["backlight_high"] = "उच्च",
+        ["backlight_auto"] = "ऑटो",
         ["backlight_level"] = "स्तर {0}",
         ["backlight_prefix"] = "बैकलाइट: {0}",
         ["color_primary"] = "प्राथमिक रंग",

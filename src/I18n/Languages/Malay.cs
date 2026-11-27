@@ -63,6 +63,7 @@ public static class Malay
         ["backlight_low"] = "Rendah",
         ["backlight_medium"] = "Sederhana",
         ["backlight_high"] = "Tinggi",
+        ["backlight_auto"] = "Auto",
         ["backlight_level"] = "Tahap {0}",
         ["backlight_prefix"] = "Lampu latar: {0}",
         ["color_primary"] = "Warna utama",

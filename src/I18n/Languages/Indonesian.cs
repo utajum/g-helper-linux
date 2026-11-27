@@ -63,6 +63,7 @@ public static class Indonesian
         ["backlight_low"] = "Rendah",
         ["backlight_medium"] = "Sedang",
         ["backlight_high"] = "Tinggi",
+        ["backlight_auto"] = "Otomatis",
         ["backlight_level"] = "Level {0}",
         ["backlight_prefix"] = "Lampu Latar: {0}",
         ["color_primary"] = "Warna utama",

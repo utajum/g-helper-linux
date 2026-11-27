@@ -63,6 +63,7 @@ public static class ChineseSimplified
         ["backlight_low"] = "低",
         ["backlight_medium"] = "中",
         ["backlight_high"] = "高",
+        ["backlight_auto"] = "自动",
         ["backlight_level"] = "级别 {0}",
         ["backlight_prefix"] = "背光：{0}",
         ["color_primary"] = "主色",
