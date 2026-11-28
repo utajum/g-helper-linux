@@ -49,8 +49,8 @@ internal static class ChineseSimplified
         ["MainWindow.buttonDevPanels"] = "开发者工具：显示或隐藏隐藏面板，用于测试布局。",
         ["MainWindow.buttonDevWindows"] = "开发者工具：打开应用的任意窗口进行测试。",
         ["MainWindow.buttonArcade"] = "打开一个小型格斗游戏。仅供娱乐。",
-        ["MainWindow.buttonDonate"] = "支持本项目。每次点击增加一枚硬币；最后一次点击两秒后，捐赠页面会在浏览器中打开。",
-        ["MainWindow.borderCoinMute"] = "打开或关闭捐赠按钮的硬币音效。",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux 由一名开发者维护。捐赠用于支付开发时间和托管费用。任何金额都有帮助。",
+        ["MainWindow.borderCoinMute"] = "打开或关闭支持按钮的硬币音效。",
         ["MainWindow.buttonUpdates"] = "打开 BIOS 和驱动更新、G-Helper 更新、系统文件检查、诊断和错误报告。",
         ["MainWindow.buttonQuit"] = "完全关闭 G-Helper，包括托盘图标。已写入固件的设置会保留；自动模式和按键重映射等应用功能会停止。",
 
@@ -568,6 +568,8 @@ internal static class ChineseSimplified
         ["buttonUpdateNow"] = "下载新版本并立即安装。",
         ["buttonUpdateLater"] = "关闭此提示。下次启动时会再次显示。",
         ["buttonUpdateChangelog"] = "显示新版本的新内容。",
+        ["buttonUpdateSupport"] = "在浏览器中打开捐赠页面。",
+        ["borderCoinMute"] = "打开或关闭支持按钮的硬币音效。",
         ["buttonChangelogLink"] = "在浏览器中打开此链接。",
         ["imageChangelog"] = "点击在浏览器中打开图片。",
 

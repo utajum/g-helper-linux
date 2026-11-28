@@ -49,8 +49,8 @@ internal static class Korean
         ["MainWindow.buttonDevPanels"] = "개발자 도구: 레이아웃 확인을 위해 숨겨진 패널을 표시하거나 숨깁니다.",
         ["MainWindow.buttonDevWindows"] = "개발자 도구: 테스트를 위해 앱의 아무 창이나 엽니다.",
         ["MainWindow.buttonArcade"] = "작은 격투 게임을 엽니다. 재미로만 즐기세요.",
-        ["MainWindow.buttonDonate"] = "프로젝트를 후원합니다. 클릭할 때마다 동전이 하나 추가되며, 마지막 클릭 2초 후 브라우저에서 기부 페이지가 열립니다.",
-        ["MainWindow.borderCoinMute"] = "기부 버튼의 동전 소리를 켜거나 끕니다.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux는 개발자 한 명이 유지 관리합니다. 후원금은 개발 시간과 호스팅 비용에 쓰입니다. 금액에 상관없이 도움이 됩니다.",
+        ["MainWindow.borderCoinMute"] = "후원 버튼의 동전 소리를 켜거나 끕니다.",
         ["MainWindow.buttonUpdates"] = "BIOS 및 드라이버 업데이트, G-Helper 업데이트, 시스템 파일 검사, 진단, 버그 보고를 엽니다.",
         ["MainWindow.buttonQuit"] = "트레이 아이콘을 포함해 G-Helper를 완전히 종료합니다. 펌웨어에 기록된 설정은 유지되며, 자동 모드와 키 재매핑 같은 앱 기능은 멈춥니다.",
 
@@ -568,6 +568,8 @@ internal static class Korean
         ["buttonUpdateNow"] = "새 버전을 내려받아 지금 설치합니다.",
         ["buttonUpdateLater"] = "이 확인 창을 닫습니다. 다음 시작 때 다시 표시됩니다.",
         ["buttonUpdateChangelog"] = "새 버전의 새로운 내용을 표시합니다.",
+        ["buttonUpdateSupport"] = "브라우저에서 기부 페이지를 엽니다.",
+        ["borderCoinMute"] = "후원 버튼의 동전 소리를 켜거나 끕니다.",
         ["buttonChangelogLink"] = "이 링크를 브라우저에서 엽니다.",
         ["imageChangelog"] = "클릭하면 이미지를 브라우저에서 엽니다.",
 

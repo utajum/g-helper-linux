@@ -49,8 +49,8 @@ internal static class Slovak
         ["MainWindow.buttonDevPanels"] = "Nástroj pre vývojárov: zobrazí alebo skryje skryté panely na test rozloženia.",
         ["MainWindow.buttonDevWindows"] = "Nástroj pre vývojárov: otvorí ľubovoľné okno aplikácie na test.",
         ["MainWindow.buttonArcade"] = "Otvorí malú bojovú hru. Len pre zábavu.",
-        ["MainWindow.buttonDonate"] = "Podporte projekt. Každé kliknutie pridá mincu; dve sekundy po poslednom kliknutí sa v prehliadači otvorí stránka s darom.",
-        ["MainWindow.borderCoinMute"] = "Zapne alebo vypne zvuk mincí tlačidla Darovať.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux udržiava jeden vývojár. Dary platia čas na vývoj a hosting. Pomôže akákoľvek suma.",
+        ["MainWindow.borderCoinMute"] = "Zapne alebo vypne zvuk mincí tlačidla Podporiť.",
         ["MainWindow.buttonUpdates"] = "Otvorí aktualizácie BIOSu a ovládačov, aktualizáciu G-Helper, kontrolu systémových súborov, diagnostiku a hlásenie chyby.",
         ["MainWindow.buttonQuit"] = "Úplne zatvorí G-Helper vrátane ikony v oblasti oznámení. Nastavenia zapísané do firmvéru zostanú; funkcie aplikácie ako automatické režimy a premapovanie klávesov sa zastavia.",
 
@@ -568,6 +568,8 @@ internal static class Slovak
         ["buttonUpdateNow"] = "Stiahne novú verziu a teraz ju nainštaluje.",
         ["buttonUpdateLater"] = "Zatvorí túto otázku. Pri ďalšom spustení sa objaví znova.",
         ["buttonUpdateChangelog"] = "Ukáže, čo je nové v novej verzii.",
+        ["buttonUpdateSupport"] = "Otvorí v prehliadači stránku s darom.",
+        ["borderCoinMute"] = "Zapne alebo vypne zvuk mincí tlačidla Podporiť.",
         ["buttonChangelogLink"] = "Otvorí tento odkaz v prehliadači.",
         ["imageChangelog"] = "Kliknutím otvoríte obrázok v prehliadači.",
 

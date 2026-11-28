@@ -49,8 +49,8 @@ internal static class Latvian
         ["MainWindow.buttonDevPanels"] = "Izstrādātāja rīks: rāda vai paslēpj slēptos paneļus izkārtojuma pārbaudei.",
         ["MainWindow.buttonDevWindows"] = "Izstrādātāja rīks: atver jebkuru lietotnes logu pārbaudei.",
         ["MainWindow.buttonArcade"] = "Atver nelielu cīņas spēli. Tikai izklaidei.",
-        ["MainWindow.buttonDonate"] = "Atbalstiet projektu. Katrs klikšķis pievieno monētu; divas sekundes pēc pēdējā klikšķa ziedojumu lapa atveras pārlūkā.",
-        ["MainWindow.borderCoinMute"] = "Ieslēdz vai izslēdz pogas Ziedot monētu skaņu.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux uztur viens izstrādātājs. Ziedojumi sedz izstrādes laiku un hostingu. Palīdz jebkura summa.",
+        ["MainWindow.borderCoinMute"] = "Ieslēdz vai izslēdz pogas Atbalstīt monētu skaņu.",
         ["MainWindow.buttonUpdates"] = "Atver BIOS un draiveru atjauninājumus, G-Helper atjauninājumu, sistēmas failu pārbaudi, diagnostiku un kļūdas ziņojumu.",
         ["MainWindow.buttonQuit"] = "Pilnībā aizver G-Helper, ieskaitot teknes ikonu. Aparātprogrammatūrā ierakstītie iestatījumi paliek; lietotnes funkcijas, piemēram, automātiskie režīmi un taustiņu pārkartēšana, apstājas.",
 
@@ -568,6 +568,8 @@ internal static class Latvian
         ["buttonUpdateNow"] = "Lejupielādē jauno versiju un instalē to tūlīt.",
         ["buttonUpdateLater"] = "Aizver šo jautājumu. Nākamajā palaišanā to redzēsiet atkal.",
         ["buttonUpdateChangelog"] = "Rāda, kas jauns jaunajā versijā.",
+        ["buttonUpdateSupport"] = "Atver ziedojumu lapu pārlūkā.",
+        ["borderCoinMute"] = "Ieslēdz vai izslēdz pogas Atbalstīt monētu skaņu.",
         ["buttonChangelogLink"] = "Atver šo saiti pārlūkā.",
         ["imageChangelog"] = "Noklikšķiniet, lai atvērtu attēlu pārlūkā.",
 

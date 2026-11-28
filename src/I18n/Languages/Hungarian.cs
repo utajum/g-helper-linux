@@ -19,6 +19,7 @@ public static class Hungarian
         ["failed"] = "Sikertelen",
         ["n_a"] = "N/A",
         ["donate"] = "Támogatás",
+        ["donate_message"] = "A G-Helper Linuxot egyetlen fejlesztő tartja karban. Az adományok a fejlesztési időt és a tárhelyet fedezik. Minden összeg segít.",
         ["updates"] = "Frissítések",
         ["quit"] = "Kilépés",
         ["settings"] = "Beállítások",

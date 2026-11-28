@@ -49,8 +49,8 @@ internal static class Norwegian
         ["MainWindow.buttonDevPanels"] = "Utviklerverktøy: viser eller skjuler skjulte paneler for å teste oppsettet.",
         ["MainWindow.buttonDevWindows"] = "Utviklerverktøy: åpner hvilket som helst vindu i appen for testing.",
         ["MainWindow.buttonArcade"] = "Åpner et lite kampspill. Bare for moro skyld.",
-        ["MainWindow.buttonDonate"] = "Støtt prosjektet. Hvert klikk legger til en mynt; to sekunder etter siste klikk åpnes donasjonssiden i nettleseren.",
-        ["MainWindow.borderCoinMute"] = "Slår myntlyden på knappen Doner på eller av.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux vedlikeholdes av én utvikler. Donasjoner betaler for utviklingstid og hosting. Ethvert beløp hjelper.",
+        ["MainWindow.borderCoinMute"] = "Slår myntlyden på knappen Støtt på eller av.",
         ["MainWindow.buttonUpdates"] = "Åpner BIOS- og driveroppdateringer, G-Helper-oppdateringen, kontrollen av systemfiler, diagnostikk og feilrapporten.",
         ["MainWindow.buttonQuit"] = "Lukker G-Helper helt, også ikonet i systemstatusfeltet. Innstillinger skrevet til fastvaren blir værende; appfunksjoner som automatiske moduser og tasteomdefineringer stopper.",
 
@@ -568,6 +568,8 @@ internal static class Norwegian
         ["buttonUpdateNow"] = "Laster ned den nye versjonen og installerer den nå.",
         ["buttonUpdateLater"] = "Lukker dette spørsmålet. Du får det igjen ved neste start.",
         ["buttonUpdateChangelog"] = "Viser hva som er nytt i den nye versjonen.",
+        ["buttonUpdateSupport"] = "Åpner donasjonssiden i nettleseren.",
+        ["borderCoinMute"] = "Slår myntlyden på knappen Støtt på eller av.",
         ["buttonChangelogLink"] = "Åpner denne lenken i nettleseren.",
         ["imageChangelog"] = "Klikk for å åpne bildet i nettleseren.",
 

@@ -49,8 +49,8 @@ internal static class Lithuanian
         ["MainWindow.buttonDevPanels"] = "Kūrėjo įrankis: rodo arba slepia paslėptus skydelius išdėstymui tikrinti.",
         ["MainWindow.buttonDevWindows"] = "Kūrėjo įrankis: atidaro bet kurį programos langą tikrinimui.",
         ["MainWindow.buttonArcade"] = "Atidaro nedidelį kovos žaidimą. Tik dėl smagumo.",
-        ["MainWindow.buttonDonate"] = "Paremkite projektą. Kiekvienas spustelėjimas prideda monetą; praėjus dviem sekundėms po paskutinio spustelėjimo aukojimo puslapis atsidaro naršyklėje.",
-        ["MainWindow.borderCoinMute"] = "Įjungia arba išjungia mygtuko Paaukoti monetų garsą.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux prižiūri vienas kūrėjas. Aukos padengia kūrimo laiką ir prieglobą. Padeda bet kokia suma.",
+        ["MainWindow.borderCoinMute"] = "Įjungia arba išjungia mygtuko Paremti monetų garsą.",
         ["MainWindow.buttonUpdates"] = "Atidaro BIOS ir tvarkyklių atnaujinimus, G-Helper atnaujinimą, sistemos failų patikrą, diagnostiką ir klaidos pranešimą.",
         ["MainWindow.buttonQuit"] = "Visiškai uždaro G-Helper, įskaitant dėklo piktogramą. Į programinę aparatinę įrangą įrašyti nustatymai lieka; programos funkcijos, pavyzdžiui, automatiniai režimai ir klavišų perskyrimai, sustoja.",
 
@@ -568,6 +568,8 @@ internal static class Lithuanian
         ["buttonUpdateNow"] = "Atsisiunčia naują versiją ir ją dabar įdiegia.",
         ["buttonUpdateLater"] = "Uždaro šį klausimą. Kito paleidimo metu jį pamatysite vėl.",
         ["buttonUpdateChangelog"] = "Rodo, kas naujo naujoje versijoje.",
+        ["buttonUpdateSupport"] = "Atidaro aukojimo puslapį naršyklėje.",
+        ["borderCoinMute"] = "Įjungia arba išjungia mygtuko Paremti monetų garsą.",
         ["buttonChangelogLink"] = "Atidaro šią nuorodą naršyklėje.",
         ["imageChangelog"] = "Spustelėkite, kad atidarytumėte vaizdą naršyklėje.",
 

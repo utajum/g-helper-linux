@@ -49,8 +49,8 @@ internal static class Czech
         ["MainWindow.buttonDevPanels"] = "Nástroj pro vývojáře: zobrazí nebo skryje skryté panely pro test rozvržení.",
         ["MainWindow.buttonDevWindows"] = "Nástroj pro vývojáře: otevře libovolné okno aplikace k testu.",
         ["MainWindow.buttonArcade"] = "Otevře malou bojovou hru. Jen pro zábavu.",
-        ["MainWindow.buttonDonate"] = "Podpořte projekt. Každé kliknutí přidá minci; dvě sekundy po posledním kliknutí se v prohlížeči otevře stránka s darem.",
-        ["MainWindow.borderCoinMute"] = "Zapne nebo vypne zvuk mincí tlačítka Darovat.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux udržuje jeden vývojář. Dary platí čas na vývoj a hosting. Pomůže jakákoli částka.",
+        ["MainWindow.borderCoinMute"] = "Zapne nebo vypne zvuk mincí tlačítka Podpořit.",
         ["MainWindow.buttonUpdates"] = "Otevře aktualizace BIOSu a ovladačů, aktualizaci G-Helper, kontrolu systémových souborů, diagnostiku a hlášení chyby.",
         ["MainWindow.buttonQuit"] = "Úplně zavře G-Helper včetně ikony v oznamovací oblasti. Nastavení zapsaná do firmwaru zůstanou; funkce aplikace jako automatické režimy a přemapování kláves se zastaví.",
 
@@ -568,6 +568,8 @@ internal static class Czech
         ["buttonUpdateNow"] = "Stáhne novou verzi a teď ji nainstaluje.",
         ["buttonUpdateLater"] = "Zavře tento dotaz. Při dalším spuštění se objeví znovu.",
         ["buttonUpdateChangelog"] = "Ukáže, co je nového v nové verzi.",
+        ["buttonUpdateSupport"] = "Otevře v prohlížeči stránku s darem.",
+        ["borderCoinMute"] = "Zapne nebo vypne zvuk mincí tlačítka Podpořit.",
         ["buttonChangelogLink"] = "Otevře tento odkaz v prohlížeči.",
         ["imageChangelog"] = "Kliknutím otevřete obrázek v prohlížeči.",
 

@@ -67,7 +67,9 @@ Pull requests and feature requests are welcome!
 
 <div align="center">
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
+G-Helper Linux is maintained by one developer. Donations pay for development time and hosting. Any amount helps.
+
+[![Support G-Helper Linux](https://img.shields.io/badge/Support%20G--Helper%20Linux-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
 
 </div>
 
@@ -615,7 +617,7 @@ Same license as the original G-Helper project.
 
 <div align="center">
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
+[![Support G-Helper Linux](https://img.shields.io/badge/Support%20G--Helper%20Linux-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/utajum)
 
 ```
   ░▒▓█ END OF TRANSMISSION █▓▒░

@@ -49,8 +49,8 @@ internal static class Romanian
         ["MainWindow.buttonDevPanels"] = "Unealtă pentru dezvoltatori: arată sau ascunde panourile ascunse pentru a testa aspectul.",
         ["MainWindow.buttonDevWindows"] = "Unealtă pentru dezvoltatori: deschide orice fereastră a aplicației pentru test.",
         ["MainWindow.buttonArcade"] = "Deschide un mic joc de luptă. Doar pentru distracție.",
-        ["MainWindow.buttonDonate"] = "Susține proiectul. Fiecare clic adaugă o monedă; la două secunde după ultimul clic, pagina de donații se deschide în browser.",
-        ["MainWindow.borderCoinMute"] = "Pornește sau oprește sunetul de monede al butonului Donează.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux este întreținut de un singur dezvoltator. Donațiile plătesc timpul de dezvoltare și găzduirea. Orice sumă ajută.",
+        ["MainWindow.borderCoinMute"] = "Pornește sau oprește sunetul de monede al butonului Susține.",
         ["MainWindow.buttonUpdates"] = "Deschide actualizările de BIOS și drivere, actualizarea G-Helper, verificarea fișierelor de sistem, diagnosticarea și raportul de eroare.",
         ["MainWindow.buttonQuit"] = "Închide complet G-Helper, inclusiv pictograma din zona de notificare. Setările scrise în firmware rămân; funcțiile aplicației, cum ar fi modurile automate și remapările de taste, se opresc.",
 
@@ -568,6 +568,8 @@ internal static class Romanian
         ["buttonUpdateNow"] = "Descarcă noua versiune și o instalează acum.",
         ["buttonUpdateLater"] = "Închide această întrebare. O primești din nou la următoarea pornire.",
         ["buttonUpdateChangelog"] = "Arată ce e nou în noua versiune.",
+        ["buttonUpdateSupport"] = "Deschide pagina de donații în browser.",
+        ["borderCoinMute"] = "Pornește sau oprește sunetul de monede al butonului Susține.",
         ["buttonChangelogLink"] = "Deschide acest link în browser.",
         ["imageChangelog"] = "Fă clic pentru a deschide imaginea în browser.",
 

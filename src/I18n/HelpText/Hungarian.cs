@@ -49,8 +49,8 @@ internal static class Hungarian
         ["MainWindow.buttonDevPanels"] = "Fejlesztői eszköz: megjeleníti vagy elrejti a rejtett paneleket az elrendezés teszteléséhez.",
         ["MainWindow.buttonDevWindows"] = "Fejlesztői eszköz: megnyitja az alkalmazás bármely ablakát teszteléshez.",
         ["MainWindow.buttonArcade"] = "Megnyit egy kis verekedős játékot. Csak szórakozásból.",
-        ["MainWindow.buttonDonate"] = "Támogasd a projektet. Minden kattintás hozzáad egy érmét; két másodperccel az utolsó kattintás után megnyílik az adományoldal a böngészőben.",
-        ["MainWindow.borderCoinMute"] = "Be- vagy kikapcsolja az Adományozás gomb érmehangját.",
+        ["MainWindow.buttonDonate"] = "A G-Helper Linuxot egyetlen fejlesztő tartja karban. Az adományok a fejlesztési időt és a tárhelyet fedezik. Minden összeg segít.",
+        ["MainWindow.borderCoinMute"] = "Be- vagy kikapcsolja a Támogatás gomb érmehangját.",
         ["MainWindow.buttonUpdates"] = "Megnyitja a BIOS- és illesztőprogram-frissítéseket, a G-Helper frissítését, a rendszerfájlok ellenőrzését, a diagnosztikát és a hibajelentést.",
         ["MainWindow.buttonQuit"] = "Teljesen bezárja a G-Helpert, a tálcaikonnal együtt. A firmware-be írt beállítások megmaradnak; az alkalmazás funkciói, például az automatikus módok és a billentyű-újrarendelések, leállnak.",
 
@@ -568,6 +568,8 @@ internal static class Hungarian
         ["buttonUpdateNow"] = "Letölti az új verziót, és most telepíti.",
         ["buttonUpdateLater"] = "Bezárja ezt a kérdést. A következő indításkor újra megkapod.",
         ["buttonUpdateChangelog"] = "Megmutatja, mi új az új verzióban.",
+        ["buttonUpdateSupport"] = "Megnyitja az adományoldalt a böngészőben.",
+        ["borderCoinMute"] = "Be- vagy kikapcsolja a Támogatás gomb érmehangját.",
         ["buttonChangelogLink"] = "Megnyitja ezt a hivatkozást a böngészőben.",
         ["imageChangelog"] = "Kattints a kép megnyitásához a böngészőben.",
 

@@ -1532,6 +1532,8 @@ public partial class UpdatesWindow : Window
             Foreground = new SolidColorBrush(Color.Parse("#CCCCCC")),
         });
 
+        root.Children.Add(BuildSupportCard());
+
         var dontShow = new CheckBox
         {
             Name = "checkUpdateDontShow",
@@ -1620,5 +1622,38 @@ public partial class UpdatesWindow : Window
 
         dialog.Content = root;
         dialog.Show();
+    }
+
+    // Donation ask under the update message, with the main window coin button.
+    private static Border BuildSupportCard()
+    {
+        var btnSupport = CoinButton.Create(name: "buttonUpdateSupport");
+        btnSupport.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+        btnSupport.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        btnSupport.Margin = new Avalonia.Thickness(12, 0, 0, 0);
+
+        var text = new TextBlock
+        {
+            Text = Labels.Get("donate_message"),
+            TextWrapping = TextWrapping.Wrap,
+            FontSize = 12,
+            Foreground = new SolidColorBrush(Color.Parse("#E6DCB8")),
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
+
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        Grid.SetColumn(btnSupport, 1);
+        grid.Children.Add(text);
+        grid.Children.Add(btnSupport);
+
+        return new Border
+        {
+            Background = new SolidColorBrush(Color.Parse("#2A2414")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#6B5410")),
+            BorderThickness = new Avalonia.Thickness(1),
+            CornerRadius = new Avalonia.CornerRadius(6),
+            Padding = new Avalonia.Thickness(12, 10),
+            Child = grid,
+        };
     }
 }

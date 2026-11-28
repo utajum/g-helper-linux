@@ -49,8 +49,8 @@ internal static class Malay
         ["MainWindow.buttonDevPanels"] = "Alat pembangun: menunjukkan atau menyembunyikan panel tersembunyi untuk menguji susun atur.",
         ["MainWindow.buttonDevWindows"] = "Alat pembangun: membuka mana-mana tetingkap aplikasi untuk ujian.",
         ["MainWindow.buttonArcade"] = "Membuka permainan lawan kecil. Sekadar untuk berseronok.",
-        ["MainWindow.buttonDonate"] = "Sokong projek ini. Setiap klik menambah satu syiling; dua saat selepas klik terakhir, halaman derma dibuka dalam pelayar anda.",
-        ["MainWindow.borderCoinMute"] = "Menghidupkan atau mematikan bunyi syiling pada butang Derma.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux diselenggara oleh seorang pembangun. Derma membiayai masa pembangunan dan pengehosan. Sebarang jumlah membantu.",
+        ["MainWindow.borderCoinMute"] = "Menghidupkan atau mematikan bunyi syiling pada butang Sokong.",
         ["MainWindow.buttonUpdates"] = "Membuka kemas kini BIOS dan pemacu, kemas kini G-Helper, semakan fail sistem, diagnostik dan laporan pepijat.",
         ["MainWindow.buttonQuit"] = "Menutup G-Helper sepenuhnya, termasuk ikon dulang. Tetapan yang ditulis ke perisian tegar kekal; ciri aplikasi seperti mod automatik dan pemetaan semula kekunci berhenti.",
 
@@ -568,6 +568,8 @@ internal static class Malay
         ["buttonUpdateNow"] = "Memuat turun versi baharu dan memasangnya sekarang.",
         ["buttonUpdateLater"] = "Menutup gesaan ini. Anda akan melihatnya semula pada permulaan seterusnya.",
         ["buttonUpdateChangelog"] = "Menunjukkan apa yang baharu dalam versi baharu.",
+        ["buttonUpdateSupport"] = "Membuka halaman derma dalam pelayar anda.",
+        ["borderCoinMute"] = "Menghidupkan atau mematikan bunyi syiling pada butang Sokong.",
         ["buttonChangelogLink"] = "Membuka pautan ini dalam pelayar anda.",
         ["imageChangelog"] = "Klik untuk membuka imej dalam pelayar anda.",
 

@@ -49,8 +49,8 @@ internal static class Spanish
         ["MainWindow.buttonDevPanels"] = "Herramienta de desarrollo: muestra u oculta paneles ocultos para probar el diseño.",
         ["MainWindow.buttonDevWindows"] = "Herramienta de desarrollo: abre cualquier ventana de la app para probarla.",
         ["MainWindow.buttonArcade"] = "Abre un pequeño juego de lucha. Solo por diversión.",
-        ["MainWindow.buttonDonate"] = "Apoya el proyecto. Cada clic añade una moneda; dos segundos después del último clic se abre la página de donación en tu navegador.",
-        ["MainWindow.borderCoinMute"] = "Activa o desactiva el sonido de monedas del botón Donar.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux lo mantiene un solo desarrollador. Las donaciones pagan el tiempo de desarrollo y el alojamiento. Cualquier cantidad ayuda.",
+        ["MainWindow.borderCoinMute"] = "Activa o desactiva el sonido de monedas del botón Apoyar.",
         ["MainWindow.buttonUpdates"] = "Abre las actualizaciones de BIOS y drivers, la actualización de G-Helper, la comprobación de archivos del sistema, el diagnóstico y el informe de errores.",
         ["MainWindow.buttonQuit"] = "Cierra G-Helper por completo, incluido el icono de la bandeja. Los ajustes escritos en el firmware se mantienen; las funciones de la app como los modos automáticos y las reasignaciones de teclas se detienen.",
 
@@ -568,6 +568,8 @@ internal static class Spanish
         ["buttonUpdateNow"] = "Descarga la nueva versión y la instala ahora.",
         ["buttonUpdateLater"] = "Cierra este aviso. Volverá en el próximo inicio.",
         ["buttonUpdateChangelog"] = "Muestra las novedades de la nueva versión.",
+        ["buttonUpdateSupport"] = "Abre la página de donación en tu navegador.",
+        ["borderCoinMute"] = "Activa o desactiva el sonido de monedas del botón Apoyar.",
         ["buttonChangelogLink"] = "Abre este enlace en tu navegador.",
         ["imageChangelog"] = "Haz clic para abrir la imagen en tu navegador.",
 
