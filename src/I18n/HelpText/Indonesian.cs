@@ -49,8 +49,8 @@ internal static class Indonesian
         ["MainWindow.buttonDevPanels"] = "Alat pengembang: menampilkan atau menyembunyikan panel tersembunyi untuk menguji tata letak.",
         ["MainWindow.buttonDevWindows"] = "Alat pengembang: membuka jendela mana pun dari aplikasi untuk pengujian.",
         ["MainWindow.buttonArcade"] = "Membuka game pertarungan kecil. Hanya untuk hiburan.",
-        ["MainWindow.buttonDonate"] = "Dukung proyek ini. Setiap klik menambah satu koin; dua detik setelah klik terakhir, halaman donasi terbuka di browser Anda.",
-        ["MainWindow.borderCoinMute"] = "Menyalakan atau mematikan suara koin pada tombol Donasi.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux dikelola oleh satu pengembang. Donasi membiayai waktu pengembangan dan hosting. Berapa pun jumlahnya sangat membantu.",
+        ["MainWindow.borderCoinMute"] = "Menyalakan atau mematikan suara koin pada tombol Dukung.",
         ["MainWindow.buttonUpdates"] = "Membuka pembaruan BIOS dan driver, pembaruan G-Helper, pemeriksaan file sistem, diagnostik, dan laporan bug.",
         ["MainWindow.buttonQuit"] = "Menutup G-Helper sepenuhnya, termasuk ikon tray. Pengaturan yang ditulis ke firmware tetap ada; fitur aplikasi seperti mode otomatis dan pemetaan ulang tombol berhenti.",
 
@@ -568,6 +568,8 @@ internal static class Indonesian
         ["buttonUpdateNow"] = "Mengunduh versi baru dan memasangnya sekarang.",
         ["buttonUpdateLater"] = "Menutup pertanyaan ini. Anda akan melihatnya lagi pada startup berikutnya.",
         ["buttonUpdateChangelog"] = "Menampilkan hal baru di versi baru.",
+        ["buttonUpdateSupport"] = "Membuka halaman donasi di browser Anda.",
+        ["borderCoinMute"] = "Menyalakan atau mematikan suara koin pada tombol Dukung.",
         ["buttonChangelogLink"] = "Membuka tautan ini di browser Anda.",
         ["imageChangelog"] = "Klik untuk membuka gambar di browser Anda.",
 

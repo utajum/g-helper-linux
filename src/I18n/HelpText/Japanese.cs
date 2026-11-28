@@ -49,8 +49,8 @@ internal static class Japanese
         ["MainWindow.buttonDevPanels"] = "開発者ツール: レイアウト確認のため、隠しパネルを表示または非表示にします。",
         ["MainWindow.buttonDevWindows"] = "開発者ツール: テストのため、アプリの任意のウィンドウを開きます。",
         ["MainWindow.buttonArcade"] = "小さな格闘ゲームを開きます。お楽しみ用です。",
-        ["MainWindow.buttonDonate"] = "プロジェクトを支援します。クリックごとにコインが 1 枚増えます。最後のクリックから 2 秒後、ブラウザーで寄付ページが開きます。",
-        ["MainWindow.borderCoinMute"] = "寄付ボタンのコインの音をオンまたはオフにします。",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux は 1 人の開発者が保守しています。寄付は開発時間とホスティング費用に使われます。金額はいくらでも助かります。",
+        ["MainWindow.borderCoinMute"] = "支援ボタンのコインの音をオンまたはオフにします。",
         ["MainWindow.buttonUpdates"] = "BIOS とドライバーの更新、G-Helper の更新、システムファイルの確認、診断、バグ報告を開きます。",
         ["MainWindow.buttonQuit"] = "トレイアイコンも含めて G-Helper を完全に終了します。ファームウェアに書き込んだ設定は残ります。自動モードやキーの割り当てなどのアプリ機能は止まります。",
 
@@ -568,6 +568,8 @@ internal static class Japanese
         ["buttonUpdateNow"] = "新しいバージョンをダウンロードし、今すぐインストールします。",
         ["buttonUpdateLater"] = "この確認を閉じます。次回の起動時に再び表示されます。",
         ["buttonUpdateChangelog"] = "新しいバージョンの新機能を表示します。",
+        ["buttonUpdateSupport"] = "ブラウザーで寄付ページを開きます。",
+        ["borderCoinMute"] = "支援ボタンのコインの音をオンまたはオフにします。",
         ["buttonChangelogLink"] = "このリンクをブラウザーで開きます。",
         ["imageChangelog"] = "クリックすると画像をブラウザーで開きます。",
 

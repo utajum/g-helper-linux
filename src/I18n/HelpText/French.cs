@@ -49,8 +49,8 @@ internal static class French
         ["MainWindow.buttonDevPanels"] = "Outil de développement : affiche ou masque les panneaux cachés pour tester la mise en page.",
         ["MainWindow.buttonDevWindows"] = "Outil de développement : ouvre n'importe quelle fenêtre de l'application pour la tester.",
         ["MainWindow.buttonArcade"] = "Ouvre un petit jeu de combat. Juste pour le plaisir.",
-        ["MainWindow.buttonDonate"] = "Soutenez le projet. Chaque clic ajoute une pièce ; deux secondes après le dernier clic, la page de dons s'ouvre dans votre navigateur.",
-        ["MainWindow.borderCoinMute"] = "Active ou désactive le son des pièces du bouton Don.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux est maintenu par un seul développeur. Les dons paient le temps de développement et l'hébergement. Tout montant est le bienvenu.",
+        ["MainWindow.borderCoinMute"] = "Active ou désactive le son des pièces du bouton Soutenir.",
         ["MainWindow.buttonUpdates"] = "Ouvre les mises à jour du BIOS et des pilotes, la mise à jour de G-Helper, la vérification des fichiers système, le diagnostic et le rapport de bug.",
         ["MainWindow.buttonQuit"] = "Ferme complètement G-Helper, icône de la barre système comprise. Les réglages écrits dans le firmware restent ; les fonctions de l'application comme les modes auto et les réaffectations de touches s'arrêtent.",
 
@@ -568,6 +568,8 @@ internal static class French
         ["buttonUpdateNow"] = "Télécharge la nouvelle version et l'installe maintenant.",
         ["buttonUpdateLater"] = "Ferme cette demande. Elle reviendra au prochain démarrage.",
         ["buttonUpdateChangelog"] = "Affiche les nouveautés de la nouvelle version.",
+        ["buttonUpdateSupport"] = "Ouvre la page de dons dans votre navigateur.",
+        ["borderCoinMute"] = "Active ou désactive le son des pièces du bouton Soutenir.",
         ["buttonChangelogLink"] = "Ouvre ce lien dans votre navigateur.",
         ["imageChangelog"] = "Cliquez pour ouvrir l'image dans votre navigateur.",
 

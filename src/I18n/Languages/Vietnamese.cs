@@ -19,6 +19,7 @@ public static class Vietnamese
         ["failed"] = "Thất bại",
         ["n_a"] = "N/A",
         ["donate"] = "Ủng hộ",
+        ["donate_message"] = "G-Helper Linux do một nhà phát triển duy trì. Tiền ủng hộ dùng để trả thời gian phát triển và phí lưu trữ. Số tiền nào cũng giúp ích.",
         ["updates"] = "Cập nhật",
         ["quit"] = "Thoát",
         ["settings"] = "Cài đặt",

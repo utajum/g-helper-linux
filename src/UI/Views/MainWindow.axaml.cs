@@ -34,19 +34,9 @@ public partial class MainWindow : Window
     private DateTime _versionClickStart;
     private ArcadeWindow? _arcadeWindow;
 
-    // Donate button state
-    private int _coinClickCount;
-    private bool _coinMuted;
-    private DispatcherTimer? _coinDebounceTimer;
-    private DispatcherTimer? _coinShakeTimer;
-    private int _coinShakeFrame;
-    private TranslateTransform? _coinTransform;
-
     // Accent colors matching G-Helper's RForm.cs
     private static readonly IBrush AccentBrush = new SolidColorBrush(Color.Parse("#4CC2FF"));
     private static readonly IBrush TransparentBrush = Brushes.Transparent;
-    private static readonly IBrush CoinGoldBrush = new SolidColorBrush(Color.Parse("#FFD700"));
-    private static readonly IBrush CoinDarkBrush = new SolidColorBrush(Color.Parse("#8B6914"));
 
     public MainWindow()
     {
@@ -2657,17 +2647,9 @@ public partial class MainWindow : Window
     }
 
 
-    private const string DonateUrl = "https://buymeacoffee.com/utajum";
-
     private void InitDonate()
     {
-        Helpers.CoinSound.EnsureReady();
-
-        _coinMuted = Helpers.AppConfig.Get("donate_muted", 1) == 1;
-        UpdateMuteVisual();
-
-        _coinTransform = new TranslateTransform();
-        buttonDonate.RenderTransform = _coinTransform;
+        _ = new CoinButton(buttonDonate, labelCoinCount, borderCoinMute, labelCoinMute);
 
         // Easter egg: 7 clicks on version label within 3 seconds
         labelVersion.PointerPressed += (_, _) =>
@@ -2687,22 +2669,6 @@ public partial class MainWindow : Window
                 OpenArcade();
             }
         };
-
-        // Hover events
-        buttonDonate.PointerEntered += ButtonDonate_PointerEntered;
-        buttonDonate.PointerExited += ButtonDonate_PointerExited;
-
-        // Mute toggle - intercept click on the mute badge (Border + TextBlock)
-        borderCoinMute.PointerPressed += LabelCoinMute_PointerPressed;
-        labelCoinMute.PointerPressed += LabelCoinMute_PointerPressed;
-
-        // Debounce timer: fires 2s after last click → opens URL
-        _coinDebounceTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _coinDebounceTimer.Tick += CoinDebounce_Tick;
-
-        // Shake timer: runs at ~30ms for oscillation frames
-        _coinShakeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(30) };
-        _coinShakeTimer.Tick += CoinShake_Tick;
     }
 
     private void ButtonArcade_Click(object? sender, RoutedEventArgs e) => OpenArcade();
@@ -2719,91 +2685,6 @@ public partial class MainWindow : Window
         {
             _arcadeWindow.Activate();
         }
-    }
-
-    private void ButtonDonate_Click(object? sender, RoutedEventArgs e)
-    {
-        _coinClickCount++;
-        labelCoinCount.Text = $"\u00D7{_coinClickCount}";
-
-        if (!_coinMuted)
-            Helpers.CoinSound.Play();
-        StartCoinShake();
-
-        // Restart 2-second debounce
-        _coinDebounceTimer?.Stop();
-        _coinDebounceTimer?.Start();
-    }
-
-    private void ButtonDonate_PointerEntered(object? sender, PointerEventArgs e)
-    {
-        if (!_coinMuted)
-            Helpers.CoinSound.Play();
-        StartCoinShake();
-    }
-
-    private void ButtonDonate_PointerExited(object? sender, PointerEventArgs e)
-    {
-        StopCoinShake();
-    }
-
-    private void LabelCoinMute_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        e.Handled = true; // Don't trigger parent button click
-        _coinMuted = !_coinMuted;
-        UpdateMuteVisual();
-        Helpers.AppConfig.Set("donate_muted", _coinMuted ? 1 : 0);
-    }
-
-    private void UpdateMuteVisual()
-    {
-        labelCoinMute.Text = _coinMuted ? "M" : "\u266A";
-        labelCoinMute.Foreground = _coinMuted ? CoinDarkBrush : CoinGoldBrush;
-    }
-
-    private void CoinDebounce_Tick(object? sender, EventArgs e)
-    {
-        _coinDebounceTimer?.Stop();
-
-        try
-        {
-            string url = $"{DonateUrl}?coins={_coinClickCount}";
-            Process.Start(new ProcessStartInfo("xdg-open", url) { UseShellExecute = false });
-            Helpers.Logger.WriteLine($"Donate: opened {url}");
-        }
-        catch (Exception ex)
-        {
-            Helpers.Logger.WriteLine($"Donate: failed to open URL: {ex.Message}");
-        }
-
-        _coinClickCount = 0;
-        labelCoinCount.Text = "";
-    }
-
-    private void StartCoinShake()
-    {
-        _coinShakeFrame = 0;
-        _coinShakeTimer?.Start();
-    }
-
-    private void StopCoinShake()
-    {
-        _coinShakeTimer?.Stop();
-        if (_coinTransform != null)
-            _coinTransform.X = 0;
-    }
-
-    // Shake pattern: decaying oscillation over ~10 frames (300ms)
-    private static readonly double[] ShakeOffsets = { 3, -3, 2.5, -2.5, 2, -2, 1.5, -1.5, 1, 0 };
-
-    private void CoinShake_Tick(object? sender, EventArgs e)
-    {
-        if (_coinTransform == null || _coinShakeFrame >= ShakeOffsets.Length)
-        {
-            StopCoinShake();
-            return;
-        }
-        _coinTransform.X = ShakeOffsets[_coinShakeFrame++];
     }
 
     // Updates + Quit

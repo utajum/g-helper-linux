@@ -49,8 +49,8 @@ internal static class German
         ["MainWindow.buttonDevPanels"] = "Entwicklerwerkzeug: zeigt oder versteckt verborgene Bereiche, um das Layout zu testen.",
         ["MainWindow.buttonDevWindows"] = "Entwicklerwerkzeug: öffnet jedes Fenster der App zum Testen.",
         ["MainWindow.buttonArcade"] = "Öffnet ein kleines Kampfspiel. Nur zum Spaß.",
-        ["MainWindow.buttonDonate"] = "Unterstütze das Projekt. Jeder Klick fügt eine Münze hinzu; zwei Sekunden nach dem letzten Klick öffnet sich die Spendenseite im Browser.",
-        ["MainWindow.borderCoinMute"] = "Schaltet den Münzton der Spenden-Taste ein oder aus.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux wird von einem einzigen Entwickler gepflegt. Spenden bezahlen Entwicklungszeit und Hosting. Jeder Betrag hilft.",
+        ["MainWindow.borderCoinMute"] = "Schaltet den Münzton der Unterstützen-Taste ein oder aus.",
         ["MainWindow.buttonUpdates"] = "Öffnet BIOS- und Treiber-Updates, das G-Helper-Update, die Prüfung der Systemdateien, die Diagnose und den Fehlerbericht.",
         ["MainWindow.buttonQuit"] = "Beendet G-Helper ganz, auch das Tray-Symbol. In die Firmware geschriebene Einstellungen bleiben; App-Funktionen wie automatische Modi und Tastenbelegungen stoppen.",
 
@@ -568,6 +568,8 @@ internal static class German
         ["buttonUpdateNow"] = "Lädt die neue Version herunter und installiert sie jetzt.",
         ["buttonUpdateLater"] = "Schließt diese Abfrage. Du bekommst sie beim nächsten Start wieder.",
         ["buttonUpdateChangelog"] = "Zeigt, was in der neuen Version neu ist.",
+        ["buttonUpdateSupport"] = "Öffnet die Spendenseite im Browser.",
+        ["borderCoinMute"] = "Schaltet den Münzton der Unterstützen-Taste ein oder aus.",
         ["buttonChangelogLink"] = "Öffnet diesen Link im Browser.",
         ["imageChangelog"] = "Klicke, um das Bild im Browser zu öffnen.",
 

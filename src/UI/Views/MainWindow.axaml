@@ -549,8 +549,7 @@
                     <!-- Donate + Updates + Quit -->
                     <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                         <Button Grid.Column="0" x:Name="buttonDonate" Classes="ghelper-coin"
-                                Margin="0,0,6,0" Height="36" MinWidth="140"
-                                Click="ButtonDonate_Click">
+                                Margin="0,0,6,0" Height="36" MinWidth="140">
                             <Grid>
                                 <StackPanel Orientation="Horizontal" Spacing="6"
                                             HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -568,7 +567,7 @@
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Margin="1,0,0,2" />
                                     </Border>
-                                    <TextBlock x:Name="labelDonateText" Text="Donate" FontSize="12" FontWeight="Bold"
+                                    <TextBlock x:Name="labelDonateText" Text="Support" FontSize="12" FontWeight="Bold"
                                                Foreground="#4A3800" VerticalAlignment="Center" />
                                     <TextBlock x:Name="labelCoinCount" Text="" FontSize="12"
                                                VerticalAlignment="Center" FontWeight="Bold"

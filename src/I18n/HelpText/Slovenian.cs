@@ -49,8 +49,8 @@ internal static class Slovenian
         ["MainWindow.buttonDevPanels"] = "Orodje za razvijalce: prikaže ali skrije skrite plošče za preizkus postavitve.",
         ["MainWindow.buttonDevWindows"] = "Orodje za razvijalce: odpre katero koli okno aplikacije za preizkus.",
         ["MainWindow.buttonArcade"] = "Odpre majhno pretepaško igro. Samo za zabavo.",
-        ["MainWindow.buttonDonate"] = "Podprite projekt. Vsak klik doda kovanec; dve sekundi po zadnjem kliku se v brskalniku odpre stran za donacije.",
-        ["MainWindow.borderCoinMute"] = "Vklopi ali izklopi zvok kovancev gumba Doniraj.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux vzdržuje en sam razvijalec. Donacije plačajo čas za razvoj in gostovanje. Pomaga vsak znesek.",
+        ["MainWindow.borderCoinMute"] = "Vklopi ali izklopi zvok kovancev gumba Podpri.",
         ["MainWindow.buttonUpdates"] = "Odpre posodobitve BIOS-a in gonilnikov, posodobitev G-Helper, preverjanje sistemskih datotek, diagnostiko in prijavo napake.",
         ["MainWindow.buttonQuit"] = "Popolnoma zapre G-Helper, skupaj z ikono v sistemski vrstici. Nastavitve, zapisane v strojno programsko opremo, ostanejo; funkcije aplikacije, kot so samodejni načini in preslikave tipk, se ustavijo.",
 
@@ -568,6 +568,8 @@ internal static class Slovenian
         ["buttonUpdateNow"] = "Prenese novo različico in jo zdaj namesti.",
         ["buttonUpdateLater"] = "Zapre to vprašanje. Ob naslednjem zagonu se pojavi znova.",
         ["buttonUpdateChangelog"] = "Pokaže, kaj je novega v novi različici.",
+        ["buttonUpdateSupport"] = "V brskalniku odpre stran za donacije.",
+        ["borderCoinMute"] = "Vklopi ali izklopi zvok kovancev gumba Podpri.",
         ["buttonChangelogLink"] = "Odpre to povezavo v brskalniku.",
         ["imageChangelog"] = "Kliknite, da odprete sliko v brskalniku.",
 

@@ -49,8 +49,8 @@ internal static class Dutch
         ["MainWindow.buttonDevPanels"] = "Ontwikkelaarstool: toont of verbergt verborgen panelen om de indeling te testen.",
         ["MainWindow.buttonDevWindows"] = "Ontwikkelaarstool: opent elk venster van de app om te testen.",
         ["MainWindow.buttonArcade"] = "Opent een klein vechtspel. Gewoon voor de lol.",
-        ["MainWindow.buttonDonate"] = "Steun het project. Elke klik voegt een munt toe; twee seconden na de laatste klik opent de donatiepagina in je browser.",
-        ["MainWindow.borderCoinMute"] = "Zet het muntgeluid van de knop Doneren aan of uit.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux wordt onderhouden door één ontwikkelaar. Donaties betalen ontwikkeltijd en hosting. Elk bedrag helpt.",
+        ["MainWindow.borderCoinMute"] = "Zet het muntgeluid van de knop Steunen aan of uit.",
         ["MainWindow.buttonUpdates"] = "Opent BIOS- en stuurprogramma-updates, de G-Helper-update, de controle van systeembestanden, diagnose en het foutrapport.",
         ["MainWindow.buttonQuit"] = "Sluit G-Helper helemaal af, ook het systeemvakpictogram. Instellingen die in de firmware zijn geschreven blijven; app-functies zoals automatische modi en toetstoewijzingen stoppen.",
 
@@ -568,6 +568,8 @@ internal static class Dutch
         ["buttonUpdateNow"] = "Downloadt de nieuwe versie en installeert hem nu.",
         ["buttonUpdateLater"] = "Sluit deze vraag. Je krijgt hem bij de volgende start weer.",
         ["buttonUpdateChangelog"] = "Toont wat er nieuw is in de nieuwe versie.",
+        ["buttonUpdateSupport"] = "Opent de donatiepagina in je browser.",
+        ["borderCoinMute"] = "Zet het muntgeluid van de knop Steunen aan of uit.",
         ["buttonChangelogLink"] = "Opent deze link in je browser.",
         ["imageChangelog"] = "Klik om de afbeelding in je browser te openen.",
 

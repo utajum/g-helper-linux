@@ -49,8 +49,8 @@ internal static class Finnish
         ["MainWindow.buttonDevPanels"] = "Kehittäjätyökalu: näyttää tai piilottaa piilotetut paneelit asettelun testaamiseksi.",
         ["MainWindow.buttonDevWindows"] = "Kehittäjätyökalu: avaa minkä tahansa sovelluksen ikkunan testausta varten.",
         ["MainWindow.buttonArcade"] = "Avaa pienen taistelupelin. Ihan vain huvin vuoksi.",
-        ["MainWindow.buttonDonate"] = "Tue projektia. Jokainen napsautus lisää kolikon; kaksi sekuntia viimeisen napsautuksen jälkeen lahjoitussivu avautuu selaimessa.",
-        ["MainWindow.borderCoinMute"] = "Kytkee Lahjoita-painikkeen kolikkoäänen päälle tai pois.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux -sovellusta ylläpitää yksi kehittäjä. Lahjoitukset maksavat kehitystyön ja palvelinkulut. Jokainen summa auttaa.",
+        ["MainWindow.borderCoinMute"] = "Kytkee Tue-painikkeen kolikkoäänen päälle tai pois.",
         ["MainWindow.buttonUpdates"] = "Avaa BIOS- ja ajuripäivitykset, G-Helperin päivityksen, järjestelmätiedostojen tarkistuksen, diagnostiikan ja virheraportin.",
         ["MainWindow.buttonQuit"] = "Sulkee G-Helperin kokonaan, myös ilmoitusalueen kuvakkeen. Laiteohjelmistoon kirjoitetut asetukset säilyvät; sovelluksen toiminnot, kuten automaattiset tilat ja näppäinten uudelleenmääritykset, pysähtyvät.",
 
@@ -568,6 +568,8 @@ internal static class Finnish
         ["buttonUpdateNow"] = "Lataa uuden version ja asentaa sen nyt.",
         ["buttonUpdateLater"] = "Sulkee tämän kyselyn. Saat sen uudelleen seuraavassa käynnistyksessä.",
         ["buttonUpdateChangelog"] = "Näyttää, mitä uutta uudessa versiossa on.",
+        ["buttonUpdateSupport"] = "Avaa lahjoitussivun selaimessa.",
+        ["borderCoinMute"] = "Kytkee Tue-painikkeen kolikkoäänen päälle tai pois.",
         ["buttonChangelogLink"] = "Avaa tämän linkin selaimessa.",
         ["imageChangelog"] = "Napsauta avataksesi kuvan selaimessa.",
 

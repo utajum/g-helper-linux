@@ -50,8 +50,8 @@ internal static class English
         ["MainWindow.buttonDevPanels"] = "Developer tool: shows or hides hidden panels to test the layout.",
         ["MainWindow.buttonDevWindows"] = "Developer tool: opens any window of the app for testing.",
         ["MainWindow.buttonArcade"] = "Opens a small fighting game. Just for fun.",
-        ["MainWindow.buttonDonate"] = "Support the project. Each click adds a coin; two seconds after the last click the donation page opens in your browser.",
-        ["MainWindow.borderCoinMute"] = "Turns the coin sound of the Donate button on or off.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux is maintained by one developer. Donations pay for development time and hosting. Any amount helps.",
+        ["MainWindow.borderCoinMute"] = "Turns the coin sound of the Support button on or off.",
         ["MainWindow.buttonUpdates"] = "Opens BIOS and driver updates, the G-Helper update, the system files check, diagnostics and the bug report.",
         ["MainWindow.buttonQuit"] = "Closes G-Helper completely, including the tray icon. Settings written to the firmware stay; app features such as auto modes and key remaps stop.",
 
@@ -569,6 +569,8 @@ internal static class English
         ["buttonUpdateNow"] = "Downloads the new version and installs it now.",
         ["buttonUpdateLater"] = "Closes this prompt. You get it again at the next start.",
         ["buttonUpdateChangelog"] = "Shows what is new in the new version.",
+        ["buttonUpdateSupport"] = "Opens the donation page in your browser.",
+        ["borderCoinMute"] = "Turns the coin sound of the Support button on or off.",
         ["buttonChangelogLink"] = "Opens this link in your browser.",
         ["imageChangelog"] = "Click to open the image in your browser.",
 

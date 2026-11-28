@@ -49,8 +49,8 @@ internal static class Turkish
         ["MainWindow.buttonDevPanels"] = "Geliştirici aracı: düzeni test etmek için gizli panelleri gösterir veya gizler.",
         ["MainWindow.buttonDevWindows"] = "Geliştirici aracı: test için uygulamanın herhangi bir penceresini açar.",
         ["MainWindow.buttonArcade"] = "Küçük bir dövüş oyunu açar. Sadece eğlence için.",
-        ["MainWindow.buttonDonate"] = "Projeyi destekle. Her tıklama bir jeton ekler; son tıklamadan iki saniye sonra bağış sayfası tarayıcında açılır.",
-        ["MainWindow.borderCoinMute"] = "Bağış düğmesinin jeton sesini açar veya kapatır.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux'u tek bir geliştirici sürdürüyor. Bağışlar geliştirme zamanını ve barındırma masraflarını karşılar. Her miktar yardımcı olur.",
+        ["MainWindow.borderCoinMute"] = "Destekle düğmesinin jeton sesini açar veya kapatır.",
         ["MainWindow.buttonUpdates"] = "BIOS ve sürücü güncellemelerini, G-Helper güncellemesini, sistem dosyası kontrolünü, tanılamayı ve hata raporunu açar.",
         ["MainWindow.buttonQuit"] = "G-Helper'ı tepsi simgesiyle birlikte tamamen kapatır. Donanım yazılımına yazılan ayarlar kalır; otomatik modlar ve tuş eşlemeleri gibi uygulama özellikleri durur.",
 
@@ -568,6 +568,8 @@ internal static class Turkish
         ["buttonUpdateNow"] = "Yeni sürümü indirir ve şimdi kurar.",
         ["buttonUpdateLater"] = "Bu soruyu kapatır. Bir sonraki başlangıçta yine görürsün.",
         ["buttonUpdateChangelog"] = "Yeni sürümdeki yenilikleri gösterir.",
+        ["buttonUpdateSupport"] = "Bağış sayfasını tarayıcıda açar.",
+        ["borderCoinMute"] = "Destekle düğmesinin jeton sesini açar veya kapatır.",
         ["buttonChangelogLink"] = "Bu bağlantıyı tarayıcında açar.",
         ["imageChangelog"] = "Resmi tarayıcında açmak için tıkla.",
 

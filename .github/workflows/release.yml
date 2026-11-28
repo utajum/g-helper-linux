@@ -162,6 +162,8 @@ jobs:
             ![ghelper Downloads](https://img.shields.io/github/downloads/utajum/g-helper-linux/${{ needs.version.outputs.new_version }}/ghelper?style=flat-square&label=ghelper%20downloads)
             ![AppImage Downloads](https://img.shields.io/github/downloads/utajum/g-helper-linux/${{ needs.version.outputs.new_version }}/GHelper-x86_64.AppImage?style=flat-square&label=appimage%20downloads)
 
+            G-Helper Linux is maintained by one developer. Donations pay for development time and hosting. Any amount helps: [Support G-Helper Linux](https://buymeacoffee.com/utajum)
+
             ### Commits
             ${{ steps.changelog.outputs.changelog }}
 

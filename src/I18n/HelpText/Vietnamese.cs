@@ -49,7 +49,7 @@ internal static class Vietnamese
         ["MainWindow.buttonDevPanels"] = "Công cụ nhà phát triển: hiện hoặc ẩn các bảng ẩn để kiểm tra bố cục.",
         ["MainWindow.buttonDevWindows"] = "Công cụ nhà phát triển: mở bất kỳ cửa sổ nào của ứng dụng để kiểm tra.",
         ["MainWindow.buttonArcade"] = "Mở một trò chơi đối kháng nhỏ. Chỉ để giải trí.",
-        ["MainWindow.buttonDonate"] = "Ủng hộ dự án. Mỗi lần nhấp thêm một đồng xu; hai giây sau lần nhấp cuối, trang ủng hộ sẽ mở trong trình duyệt.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux do một nhà phát triển duy trì. Tiền ủng hộ dùng để trả thời gian phát triển và phí lưu trữ. Số tiền nào cũng giúp ích.",
         ["MainWindow.borderCoinMute"] = "Bật hoặc tắt âm thanh đồng xu của nút Ủng hộ.",
         ["MainWindow.buttonUpdates"] = "Mở cập nhật BIOS và trình điều khiển, cập nhật G-Helper, kiểm tra tệp hệ thống, chẩn đoán và báo lỗi.",
         ["MainWindow.buttonQuit"] = "Đóng hoàn toàn G-Helper, kể cả biểu tượng trên khay hệ thống. Các cài đặt đã ghi vào firmware vẫn giữ; các tính năng của ứng dụng như chế độ tự động và gán lại phím sẽ dừng.",
@@ -568,6 +568,8 @@ internal static class Vietnamese
         ["buttonUpdateNow"] = "Tải phiên bản mới và cài đặt ngay.",
         ["buttonUpdateLater"] = "Đóng lời nhắc này. Bạn sẽ thấy lại ở lần khởi động tiếp theo.",
         ["buttonUpdateChangelog"] = "Hiện những điểm mới trong phiên bản mới.",
+        ["buttonUpdateSupport"] = "Mở trang ủng hộ trong trình duyệt.",
+        ["borderCoinMute"] = "Bật hoặc tắt âm thanh đồng xu của nút Ủng hộ.",
         ["buttonChangelogLink"] = "Mở liên kết này trong trình duyệt.",
         ["imageChangelog"] = "Nhấp để mở ảnh trong trình duyệt.",
 

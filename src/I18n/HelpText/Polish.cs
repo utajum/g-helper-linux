@@ -49,7 +49,7 @@ internal static class Polish
         ["MainWindow.buttonDevPanels"] = "Narzędzie deweloperskie: pokazuje lub ukrywa ukryte panele, aby przetestować układ.",
         ["MainWindow.buttonDevWindows"] = "Narzędzie deweloperskie: otwiera dowolne okno aplikacji do testów.",
         ["MainWindow.buttonArcade"] = "Otwiera małą bijatykę. Tylko dla zabawy.",
-        ["MainWindow.buttonDonate"] = "Wesprzyj projekt. Każde kliknięcie dodaje monetę; dwie sekundy po ostatnim kliknięciu strona darowizn otwiera się w przeglądarce.",
+        ["MainWindow.buttonDonate"] = "G-Helper Linux utrzymuje jeden programista. Darowizny pokrywają czas pracy nad projektem i hosting. Każda kwota pomaga.",
         ["MainWindow.borderCoinMute"] = "Włącza lub wyłącza dźwięk monet przycisku Wesprzyj.",
         ["MainWindow.buttonUpdates"] = "Otwiera aktualizacje BIOS i sterowników, aktualizację G-Helper, sprawdzanie plików systemowych, diagnostykę i zgłoszenie błędu.",
         ["MainWindow.buttonQuit"] = "Całkowicie zamyka G-Helper, razem z ikoną w zasobniku. Ustawienia zapisane w firmware zostają; funkcje aplikacji, takie jak tryby automatyczne i przemapowanie klawiszy, przestają działać.",
@@ -568,6 +568,8 @@ internal static class Polish
         ["buttonUpdateNow"] = "Pobiera nową wersję i instaluje ją teraz.",
         ["buttonUpdateLater"] = "Zamyka to pytanie. Wróci przy następnym starcie.",
         ["buttonUpdateChangelog"] = "Pokazuje nowości w nowej wersji.",
+        ["buttonUpdateSupport"] = "Otwiera stronę darowizn w przeglądarce.",
+        ["borderCoinMute"] = "Włącza lub wyłącza dźwięk monet przycisku Wesprzyj.",
         ["buttonChangelogLink"] = "Otwiera ten link w przeglądarce.",
         ["imageChangelog"] = "Kliknij, aby otworzyć obraz w przeglądarce.",
 

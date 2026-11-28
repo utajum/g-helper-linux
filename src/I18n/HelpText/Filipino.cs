@@ -49,8 +49,8 @@ internal static class Filipino
         ["MainWindow.buttonDevPanels"] = "Tool ng developer: ipinapakita o itinatago ang mga nakatagong panel para subukan ang layout.",
         ["MainWindow.buttonDevWindows"] = "Tool ng developer: binubuksan ang kahit anong window ng app para sa pagsubok.",
         ["MainWindow.buttonArcade"] = "Nagbubukas ng maliit na fighting game. Para lang sa kasiyahan.",
-        ["MainWindow.buttonDonate"] = "Suportahan ang proyekto. Bawat click ay nagdaragdag ng barya; dalawang segundo pagkatapos ng huling click, bubukas sa browser mo ang donation page.",
-        ["MainWindow.borderCoinMute"] = "Ino-on o ino-off ang tunog ng barya ng Mag-donate na button.",
+        ["MainWindow.buttonDonate"] = "Iisang developer ang nagme-maintain ng G-Helper Linux. Ang mga donasyon ay pambayad sa oras ng development at hosting. Malaking tulong ang kahit anong halaga.",
+        ["MainWindow.borderCoinMute"] = "Ino-on o ino-off ang tunog ng barya ng Suportahan na button.",
         ["MainWindow.buttonUpdates"] = "Binubuksan ang BIOS at driver update, ang G-Helper update, ang system files check, diagnostics at ang bug report.",
         ["MainWindow.buttonQuit"] = "Ganap na isinasara ang G-Helper, kasama ang tray icon. Nananatili ang mga setting na naisulat sa firmware; humihinto ang mga feature ng app tulad ng auto mode at key remap.",
 
@@ -568,6 +568,8 @@ internal static class Filipino
         ["buttonUpdateNow"] = "Dina-download ang bagong bersyon at ini-install ito ngayon.",
         ["buttonUpdateLater"] = "Isinasara ang tanong na ito. Makikita mo ulit ito sa susunod na pagbukas.",
         ["buttonUpdateChangelog"] = "Ipinapakita kung ano ang bago sa bagong bersyon.",
+        ["buttonUpdateSupport"] = "Binubuksan ang donation page sa browser mo.",
+        ["borderCoinMute"] = "Ino-on o ino-off ang tunog ng barya ng Suportahan na button.",
         ["buttonChangelogLink"] = "Binubuksan ang link na ito sa browser mo.",
         ["imageChangelog"] = "I-click para buksan ang larawan sa browser mo.",
 

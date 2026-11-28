@@ -19,6 +19,7 @@ public static class Polish
         ["failed"] = "Niepowodzenie",
         ["n_a"] = "Brak",
         ["donate"] = "Wesprzyj",
+        ["donate_message"] = "G-Helper Linux utrzymuje jeden programista. Darowizny pokrywają czas pracy nad projektem i hosting. Każda kwota pomaga.",
         ["updates"] = "Aktualizacje",
         ["quit"] = "Zamknij",
         ["settings"] = "Ustawienia",

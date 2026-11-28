@@ -49,8 +49,8 @@ internal static class Arabic
         ["MainWindow.buttonDevPanels"] = "أداة المطوّر: تُظهر اللوحات المخفية أو تخفيها لاختبار التخطيط.",
         ["MainWindow.buttonDevWindows"] = "أداة المطوّر: تفتح أي نافذة من التطبيق للاختبار.",
         ["MainWindow.buttonArcade"] = "يفتح لعبة قتال صغيرة. للتسلية فقط.",
-        ["MainWindow.buttonDonate"] = "ادعم المشروع. كل نقرة تضيف عملة؛ وبعد ثانيتين من آخر نقرة تُفتح صفحة التبرع في المتصفح.",
-        ["MainWindow.borderCoinMute"] = "يشغّل أو يطفئ صوت العملات لزر تبرّع.",
+        ["MainWindow.buttonDonate"] = "يطوّر G-Helper Linux ويصونه مطوّر واحد. تغطي التبرعات وقت التطوير والاستضافة. أي مبلغ يساعد.",
+        ["MainWindow.borderCoinMute"] = "يشغّل أو يطفئ صوت العملات لزر ادعم.",
         ["MainWindow.buttonUpdates"] = "يفتح تحديثات BIOS وبرامج التشغيل، وتحديث G-Helper، وفحص ملفات النظام، والتشخيص، وتقرير الخطأ.",
         ["MainWindow.buttonQuit"] = "يغلق G-Helper تمامًا، بما في ذلك أيقونة شريط النظام. الإعدادات المكتوبة في البرنامج الثابت تبقى؛ وتتوقف ميزات التطبيق مثل الأوضاع التلقائية وإعادة تعيين المفاتيح.",
 
@@ -568,6 +568,8 @@ internal static class Arabic
         ["buttonUpdateNow"] = "ينزّل الإصدار الجديد ويثبّته الآن.",
         ["buttonUpdateLater"] = "يغلق هذا السؤال. ستراه مجددًا عند التشغيل التالي.",
         ["buttonUpdateChangelog"] = "يعرض الجديد في الإصدار الجديد.",
+        ["buttonUpdateSupport"] = "يفتح صفحة التبرع في المتصفح.",
+        ["borderCoinMute"] = "يشغّل أو يطفئ صوت العملات لزر ادعم.",
         ["buttonChangelogLink"] = "يفتح هذا الرابط في المتصفح.",
         ["imageChangelog"] = "انقر لفتح الصورة في المتصفح.",
 
